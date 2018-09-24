@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'lfs_lab_cert_tracker',
 ]
 
 MIDDLEWARE = [

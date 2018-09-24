@@ -1,3 +1,8 @@
+# Project Goals
+A Django site that allows for user profiles, containing a user's certification and training records.
+
+Records will be used for determining access to labs and fulfill Worksafe BC requirements.
+
 # Dev
 ## Python Environment
 1. Use pyenv-virtualenv to create a virtual environment for development
