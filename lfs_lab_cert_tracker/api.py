@@ -1,6 +1,6 @@
 from django.forms.models import model_to_dict
 
-from lfs_lab_cert_tracker.models import Cert, LabCert
+from lfs_lab_cert_tracker.models import Lab, Cert, LabCert
 
 def get_certs(n=None):
     return [model_to_dict(cert) for cert in Cert.objects.all()]

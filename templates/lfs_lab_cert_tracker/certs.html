@@ -1,0 +1,18 @@
+{% block content %}
+
+<div>
+	<h1>View Certs</h1>
+	{% for cert in cert_list %}
+	<p>
+		{{ cert.name }}
+	</p>
+	{% endfor %}
+</div>
+
+<form method="post" action="/api/certificates/">
+{% csrf_token %}
+{{ cert_form }}
+<input type="submit" value="Submit Form"/>
+</form>
+
+{% endblock %}

@@ -16,19 +16,22 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
-from lfs_lab_cert_tracker import views
+from lfs_lab_cert_tracker import views, api_views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
-    url(r'^api/labs/', views.labs),
-    url(r'^api/labs/<int:lab_id>/', views.labs),
+    url(r'^labs/', views.labs),
+    url(r'^certificates/', views.certificates),
 
-    url(r'^api/certificates/', views.certificates),
-    url(r'^api/certificates/<int:cert_id>/', views.certificates),
+    url(r'^api/labs/', api_views.labs),
+    url(r'^api/labs/<int:lab_id>/', api_views.labs),
 
-    url(r'^api/labs/<int:lab_id>/certificates/', views.lab_certificates),
-    url(r'^api/labs/<int:lab_id>/certificates/<int:cert_id>', views.lab_certificates),
+    url(r'^api/certificates/', api_views.certificates),
+    url(r'^api/certificates/<int:cert_id>/', api_views.certificates),
+
+    url(r'^api/labs/<int:lab_id>/certificates/', api_views.lab_certificates),
+    url(r'^api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certificates),
 
     # url(r'^api/users/<int:user_id/certificates/', views.user_certificates),
     # url(r'^api/users/<int:user_id>/certificates/<int:cert_id>', views.user_certificates),

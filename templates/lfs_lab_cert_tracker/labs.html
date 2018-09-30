@@ -1,0 +1,18 @@
+{% block content %}
+
+<div>
+	<h1>View Labs</h1>
+	{% for lab in lab_list %}
+	<p>
+		{{ lab.name }}
+	</p>
+	{% endfor %}
+</div>
+
+<form method="post" action="/api/labs/">
+{% csrf_token %}
+{{ lab_form }}
+<input type="submit" value="Submit Form"/>
+</form>
+
+{% endblock %}
