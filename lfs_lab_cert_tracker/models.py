@@ -4,12 +4,13 @@ class User(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     email = models.CharField(max_length=256)
+    cwl = models.CharField(max_length=256)
 
 class Cert(models.Model):
-    name = models.IntegerField()
+    name = models.CharField(max_length=256)
 
 class Lab(models.Model):
-    name = models.IntegerField()
+    name = models.CharField(max_length=256)
 
 class UserCert(models.Model):
     """
