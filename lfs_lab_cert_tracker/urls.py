@@ -21,6 +21,8 @@ from lfs_lab_cert_tracker import views, api_views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
+    url(r'^$', views.index),
+
     url(r'^labs/', views.labs),
     url(r'^certificates/', views.certificates),
 

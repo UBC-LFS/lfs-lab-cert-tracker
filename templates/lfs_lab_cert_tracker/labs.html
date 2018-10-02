@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+
 {% block content %}
 
 <div>
@@ -9,10 +11,11 @@
 	{% endfor %}
 </div>
 
-<form method="post" action="/api/labs/">
+<form id="create_lab_form" action="/api/labs/" method="post">
 {% csrf_token %}
 {{ lab_form }}
 <input type="submit" value="Submit Form"/>
+
 </form>
 
 {% endblock %}

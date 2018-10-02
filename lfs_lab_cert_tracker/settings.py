@@ -50,9 +50,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = [
-    'lfs_lab_cert_tracker.auth.BackendCWL',
-]
+# AUTHENTICATION_BACKENDS = [
+#     'lfs_lab_cert_tracker.auth.BackendCWL',
+# ]
 
 ROOT_URLCONF = 'lfs_lab_cert_tracker.urls'
 
@@ -127,3 +127,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+LOGIN_REDIRECT_URL = '/'
