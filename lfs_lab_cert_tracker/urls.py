@@ -14,29 +14,36 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url, include
+from django.urls import path
 from django.contrib import admin
 
 from lfs_lab_cert_tracker import views, api_views
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
 
-    url(r'^$', views.index),
+    path('', views.index),
 
-    url(r'^labs/', views.labs),
-    url(r'^certificates/', views.certificates),
+    path('labs/', views.labs),
+    path('certificates/', views.certificates),
 
-    url(r'^api/labs/', api_views.labs),
-    url(r'^api/labs/<int:lab_id>/', api_views.labs),
+    path('users/<int:user_id>/labs/', views.user_labs),
+    path('users/<int:user_id>/certificates/', views.user_certificates),
 
-    url(r'^api/certificates/', api_views.certificates),
-    url(r'^api/certificates/<int:cert_id>/', api_views.certificates),
+    path('api/labs/', api_views.labs),
+    path('api/labs/<int:lab_id>/', api_views.labs),
 
-    url(r'^api/labs/<int:lab_id>/certificates/', api_views.lab_certificates),
-    url(r'^api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certificates),
+    path('api/certificates/', api_views.certificates),
+    path('api/certificates/<int:cert_id>/', api_views.certificates),
 
-    # url(r'^api/users/<int:user_id/certificates/', views.user_certificates),
-    # url(r'^api/users/<int:user_id>/certificates/<int:cert_id>', views.user_certificates),
+    path('api/labs/<int:lab_id>/certificates/', api_views.lab_certificates),
+    path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certificates),
+
+    url(r'^api/users/<int:user_id>/certificates/', views.user_certificates),
+    url(r'^api/users/<int:user_id>/certificates/<int:cert_id>', views.user_certificates),
+
+    url(r'^api/users/<int:user_id>/labs/', views.user_certificates),
+    url(r'^api/users/<int:user_id>/labs/<int:lab_id>', views.user_certificates),
 ]
 
 urlpatterns += [

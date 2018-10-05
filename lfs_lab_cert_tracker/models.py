@@ -41,13 +41,13 @@ class UserLab(models.Model):
     STUDENT = 0
     PI = 1
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    lab_id = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField()
 
 class LabCert(models.Model):
     """
     Keeps track of what certificate the labs require
     """
-    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
-    cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
+    lab_id = models.ForeignKey(Lab, on_delete=models.CASCADE)
+    cert_id = models.ForeignKey(Cert, on_delete=models.CASCADE)

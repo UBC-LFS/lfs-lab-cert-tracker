@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div>
+	<h1>Your Labs</h1>
+	{% for user_lab in user_lab_list %}
+	<p>
+		{{ user_lab.name }}
+	</p>
+	{% endfor %}
+</div>
+<ul>
+</ul>
+{% endblock %}

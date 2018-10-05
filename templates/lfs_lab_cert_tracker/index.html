@@ -1,5 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>LFS Lab Cert Tracker</h1>
+<h1>LFS Lab Cert Tracker</h1>
+<ul>
+	<li>
+		<a href="users/{{ user_id }}/labs">View My Labs</a>
+	</li>
+	<li>
+		<a href="users/{{ user_id }}/certificates">View My Certificates</a>
+	</li>
+	<li>
+		<a href="labs">View All Labs</a>
+	</li>
+	<li>
+		<a href="certificates">View All Certificates</a>
+	</li>
+</ul>
 {% endblock %}

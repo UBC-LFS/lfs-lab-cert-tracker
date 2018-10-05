@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div>
+	<h1>Your Certificates</h1>
+	{% for user_cert in user_cert_list %}
+	<p>
+		{{ user_cert.name }}
+	</p>
+	{% endfor %}
+</div>
+<ul>
+</ul>
+{% endblock %}

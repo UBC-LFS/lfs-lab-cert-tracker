@@ -8,7 +8,36 @@ from lfs_lab_cert_tracker.forms import LabForm, CertForm
 @login_required
 @require_http_methods(['GET'])
 def index(request):
-    return render(request, 'lfs_lab_cert_tracker/index.html')
+    return render(request,
+            'lfs_lab_cert_tracker/index.html',
+            {
+                'user_id': request.user.id,
+            }
+    )
+
+@login_required
+@require_http_methods(['GET'])
+def user_labs(request, user_id):
+    request_user_id = request.user.id
+    return render(request,
+            'lfs_lab_cert_tracker/user_labs.html',
+            {
+                'user_id': request_user_id,
+                'user_lab_list': api.get_user_labs(request_user_id),
+            }
+    )
+
+@login_required
+@require_http_methods(['GET'])
+def user_certificates(request, user_id):
+    request_user_id = request.user.id
+    return render(request,
+            'lfs_lab_cert_tracker/user_certificates.html',
+            {
+                'user_id': request.user.id,
+                'user_cert_list': api.get_user_certs(request_user_id),
+            }
+    )
 
 @login_required
 @require_http_methods(['GET'])
@@ -33,4 +62,3 @@ def certificates(request):
                 'cert_form': CertForm(),
             }
     )
-
