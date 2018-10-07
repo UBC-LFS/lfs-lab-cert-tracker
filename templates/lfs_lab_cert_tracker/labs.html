@@ -11,11 +11,31 @@
 	{% endfor %}
 </div>
 
-<form id="create_lab_form" action="/api/labs/" method="post">
-{% csrf_token %}
-{{ lab_form }}
-<input type="submit" value="Submit Form"/>
-
+{% if can_create_lab %}
+	<form id="create_lab_form" action="/api/labs/" method="post">
+	{% csrf_token %}
+	{{ lab_form }}
+	<input id="submit_create_lab_form" type="button" value="Submit Form"/>
 </form>
+<script>
+$('input#submit_create_lab_form').click(function() {
+	console.log($('form#create_lab_form').attr('action'));
+	$.ajax({
+		url: $('form#create_lab_form').attr('action'),
+		type: 'post',
+		dataType: 'json',
+		data: $('form#create_lab_form').serialize(),
+		success: function(data) {
+			console.log(data);
+			location.reload();
+		},
+		error: function(data) {
+			alert(data);
+		},
+	});
+});
+</script>
+{% endif %}
+
 
 {% endblock %}

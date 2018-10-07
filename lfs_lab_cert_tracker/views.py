@@ -43,10 +43,12 @@ def user_certificates(request, user_id):
 @require_http_methods(['GET'])
 def labs(request):
     labs = api.get_labs()
+    can_create_lab = request.user.groups.filter(name='admin').exists()
     return render(request,
         'lfs_lab_cert_tracker/labs.html',
         {
             'lab_list': labs,
+            'can_create_lab': can_create_lab,
             'lab_form': LabForm(),
         }
     )
@@ -55,10 +57,12 @@ def labs(request):
 @require_http_methods(['GET'])
 def certificates(request):
     certs = api.get_certs()
+    can_create_cert = request.user.groups.filter(name='admin').exists()
     return render(request,
-            'lfs_lab_cert_tracker/certs.html',
-            {
-                'cert_list': certs,
-                'cert_form': CertForm(),
-            }
+        'lfs_lab_cert_tracker/certs.html',
+        {
+            'cert_list': certs,
+            'can_create_cert': can_create_cert,
+            'cert_form': CertForm(),
+        }
     )
