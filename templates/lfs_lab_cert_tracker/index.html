@@ -15,5 +15,10 @@
 	<li>
 		<a href="certificates">View All Certificates</a>
 	</li>
+{% if can_view_users %}
+	<li>
+		<a href="users">View All Users</a>
+	</li>
+{% endif %}
 </ul>
 {% endblock %}

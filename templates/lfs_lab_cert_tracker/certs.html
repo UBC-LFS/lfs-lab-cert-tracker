@@ -19,10 +19,9 @@
 </form>
 <script>
 $('input#submit_create_cert_form').click(function() {
-	console.log($('form#create_cert_form').attr('action'));
 	$.ajax({
 		url: $('form#create_cert_form').attr('action'),
-		type: 'post',
+		type: 'POST',
 		dataType: 'json',
 		data: $('form#create_cert_form').serialize(),
 		success: function(data) {
@@ -30,7 +29,7 @@ $('input#submit_create_cert_form').click(function() {
 			location.reload();
 		},
 		error: function(data) {
-			alert(data);
+			alert("Operation failed");
 		},
 	});
 });

@@ -1,6 +1,11 @@
 from django.forms.models import model_to_dict
 
+from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab
+
+# User CRUD
+def get_users(n=None):
+    return [model_to_dict(user) for user in User.objects.all()]
 
 # Cert CRUD
 def get_certs(n=None):

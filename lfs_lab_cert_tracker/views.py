@@ -3,15 +3,17 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 
 from lfs_lab_cert_tracker import api
-from lfs_lab_cert_tracker.forms import LabForm, CertForm
+from lfs_lab_cert_tracker.forms import LabForm, CertForm, UserForm
 
 @login_required
 @require_http_methods(['GET'])
 def index(request):
+    can_view_users = request.user.groups.filter(name='admin').exists()
     return render(request,
             'lfs_lab_cert_tracker/index.html',
             {
                 'user_id': request.user.id,
+                'can_view_users': can_view_users,
             }
     )
 
@@ -64,5 +66,18 @@ def certificates(request):
             'cert_list': certs,
             'can_create_cert': can_create_cert,
             'cert_form': CertForm(),
+        }
+    )
+
+@login_required
+@permission_required('lfs_lab_cert_tracker.view_user')
+@require_http_methods(['GET'])
+def users(request):
+    users = api.get_users()
+    return render(request,
+        'lfs_lab_cert_tracker/users.html',
+        {
+            'user_list': users,
+            'user_form': UserForm(),
         }
     )
