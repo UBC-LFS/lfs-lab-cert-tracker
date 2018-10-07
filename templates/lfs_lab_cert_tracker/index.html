@@ -20,5 +20,10 @@
 		<a href="users">View All Users</a>
 	</li>
 {% endif %}
+{% if can_edit_user_lab %}
+	<li>
+		<a href="users/edit_labs">Add User to Lab</a>
+	</li>
+{% endif %}
 </ul>
 {% endblock %}
