@@ -6,11 +6,17 @@ class User(models.Model):
     email = models.CharField(max_length=256)
     cwl = models.CharField(max_length=256)
 
+    def __str__(self):
+        return self.cwl
+
 class Cert(models.Model):
     name = models.CharField(max_length=256)
 
 class Lab(models.Model):
     name = models.CharField(max_length=256)
+
+    def __str__(self):
+        return self.name
 
 class UserCert(models.Model):
     """

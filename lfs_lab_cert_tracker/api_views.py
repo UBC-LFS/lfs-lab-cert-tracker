@@ -51,7 +51,7 @@ def lab_certificates(request, lab_id=None, cert_id=None):
 
 @login_required
 @require_http_methods(['GET', 'POST', 'DELETE'])
-def user_certificates(request, user_id=None, cert_id=None): 
+def user_certificates(request, user_id=None, cert_id=None):
     if request.method == 'GET':
         res = api.get_user_certs(user_id)
         return JsonResponse(res, safe=False)
@@ -66,7 +66,7 @@ def user_certificates(request, user_id=None, cert_id=None):
 
 @login_required
 @require_http_methods(['GET', 'POST', 'DELETE'])
-def user_labs(request, user_id=None, lab_id=None): 
+def user_labs(request, user_id=None, lab_id=None):
     if request.method == 'GET':
         res = api.get_user_labs(user_id)
         return JsonResponse(res, safe=False)
