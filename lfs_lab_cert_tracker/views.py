@@ -76,10 +76,12 @@ def certificates(request):
 @require_http_methods(['GET'])
 def users(request):
     users = api.get_users()
+    can_create_user = request.user.groups.filter(name='admin').exists()
     return render(request,
         'lfs_lab_cert_tracker/users.html',
         {
             'user_list': users,
+            'can_create_user': can_create_user,
             'user_form': UserForm(),
         }
     )

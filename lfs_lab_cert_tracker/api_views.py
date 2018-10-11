@@ -78,3 +78,16 @@ def user_labs(request, user_id=None, lab_id=None):
         data = request.POST
         res = api.delete_user_lab(data['user_id'], data['lab_id'])
         return JsonResponse(res)
+
+@login_required
+@require_http_methods(['POST'])
+def users(request):
+    if request.method == 'POST':
+        data = request.POST
+        res = api.create_user(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            cwl=data['cwl'],
+        )
+        return JsonResponse(res)

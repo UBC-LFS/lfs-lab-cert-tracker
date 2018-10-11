@@ -4,7 +4,7 @@ class User(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)
     email = models.CharField(max_length=256)
-    cwl = models.CharField(max_length=256)
+    cwl = models.CharField(max_length=256, unique=True)
 
     def __str__(self):
         return self.cwl

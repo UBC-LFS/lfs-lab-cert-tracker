@@ -31,4 +31,8 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 ### Authentication
 1. Use `python manage.py createsuperuser` to create a super user, just use something simple for development
 2. Follow the prompts
-3. Once completed login with the new user at `http://127.0.0.1/admin`
+3. Once completed login with the new admin user at `http://127.0.0.1/admin`
+4. Once logged in create a group called "admin", "principal\_investigator", "student"
+5. The "admin" group should be allowed all permissions
+6. The "student" group should be allowed limited permissions TODO: Define these permissions
+7. The "principal\_investigator" group should be allowed limited permissions TODO: Define these permissions

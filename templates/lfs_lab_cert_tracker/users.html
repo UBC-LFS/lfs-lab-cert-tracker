@@ -4,17 +4,17 @@
 
 <div>
 	<h1>View Users</h1>
-	{% for lab in lab_list %}
+	{% for user in user_list %}
 	<p>
 		{{ lab.name }}
 	</p>
 	{% endfor %}
 </div>
 
-{% if can_create_lab %}
+{% if can_create_user %}
 	<form id="create_user_form" action="/api/users/" method="post">
 	{% csrf_token %}
-	{{ lab_form }}
+	{{ user_form }}
 	<input id="submit_create_user_form" type="button" value="Submit Form"/>
 </form>
 <script>
@@ -35,6 +35,5 @@ $('input#submit_create_user_form').click(function() {
 });
 </script>
 {% endif %}
-
 
 {% endblock %}

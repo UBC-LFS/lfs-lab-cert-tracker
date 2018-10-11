@@ -7,14 +7,16 @@
 {{ user_lab_form }}
 <input id="submit_add_user_lab_form" type="button" value="Submit Form"/>
 </form>
+
 <script>
 $('input#add_user_lab_form').click(function() {
-	var url = '/api/users/' + user_id + '/labs';
+	var data = $('form#add_lab_form').serialize();
+	var url = '/api/users/' + data.user_id + '/labs';
 	$.ajax({
 		url: $('form#add_user_lab_form').attr('action'),
 		type: 'POST',
 		dataType: 'json',
-		data: $('form#add_lab_form').serialize(),
+		data: data,
 		success: function(data) {
 			console.log(data);
 			location.reload();
@@ -25,5 +27,5 @@ $('input#add_user_lab_form').click(function() {
 	});
 });
 </script>
-
 {% endblock %}
+

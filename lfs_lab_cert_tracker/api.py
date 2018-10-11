@@ -1,7 +1,7 @@
 from django.forms.models import model_to_dict
 
-from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab
+from django.contrib.auth.models import User as AuthUser
+from lfs_lab_cert_tracker.models import User, Lab, Cert, LabCert, UserCert, UserLab
 
 # User CRUD
 def get_users(n=None):
@@ -75,3 +75,20 @@ def create_lab_cert(lab_id, cert_id):
 def delete_lab_cert(lab_id, cert_id):
     lab_cert = LabCert.objects.delete(lab_id=lab_id, cert_id=cert_id)
     return model_to_dict(lab_cert)
+
+# User CRUD
+def create_user(first_name, last_name, email, cwl):
+    user = User.objects.create(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        cwl=cwl
+    )
+
+    # TODO: Replace the need to create an AuthUser with a password
+    AuthUser.objects.create(
+        username=cwl,
+        email=email,
+        password='foobar',
+    )
+    return model_to_dict(user)
