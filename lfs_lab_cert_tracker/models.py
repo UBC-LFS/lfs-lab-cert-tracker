@@ -12,6 +12,9 @@ class User(models.Model):
 class Cert(models.Model):
     name = models.CharField(max_length=256)
 
+    def __str__(self):
+        return self.name
+
 class Lab(models.Model):
     name = models.CharField(max_length=256)
 
@@ -32,7 +35,7 @@ class UserCert(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
-    cert_path = models.CharField(max_length=256)
+    cert_path = models.CharField(max_length=256, null=True)
     status = models.IntegerField()
     approved_by_user_id = models.IntegerField(null=True)
 

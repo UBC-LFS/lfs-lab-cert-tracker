@@ -3,19 +3,21 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 
 from lfs_lab_cert_tracker import api
-from lfs_lab_cert_tracker.forms import LabForm, CertForm, UserForm, UserLabForm
+from lfs_lab_cert_tracker.forms import LabForm, CertForm, UserForm, UserLabForm, LabCertForm
 
 @login_required
 @require_http_methods(['GET'])
 def index(request):
     can_view_users = request.user.groups.filter(name='admin').exists()
     can_edit_user_lab = request.user.groups.filter(name='admin').exists()
+    can_edit_lab_cert = request.user.groups.filter(name='admin').exists()
     return render(request,
             'lfs_lab_cert_tracker/index.html',
             {
                 'user_id': request.user.id,
                 'can_view_users': can_view_users,
                 'can_edit_user_lab': can_edit_user_lab,
+                'can_edit_lab_cert': can_edit_lab_cert,
             }
     )
 
@@ -101,3 +103,19 @@ def edit_user_labs(request):
             'user_lab_form': UserLabForm(),
         }
     )
+
+@login_required
+@permission_required('lfs_lab_cert_tracker.add_labcert')
+@require_http_methods(['GET'])
+def edit_lab_certs(request):
+    labs = api.get_labs()
+    certs = api.get_certs()
+    return render(request,
+            'lfs_lab_cert_tracker/edit_lab_certs.html',
+            {
+                'lab_list': labs,
+                'cert_list': certs,
+                'cert_lab_form': LabCertForm(),
+            }
+    )
+

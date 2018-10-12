@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form id="add_lab_cert_form" method="post">
+{% csrf_token %}
+{{ cert_lab_form }}
+<input id="submit_add_lab_cert_form" type="button" value="Submit Form"/>
+</form>
+
+<script>
+$('input#submit_add_lab_cert_form').click(function() {
+	let lab_id = $('select#id_lab').val();
+	let url = '/api/labs/' + lab_id + '/certificates/';
+	$.ajax({
+		url: url,
+		type: 'POST',
+		dataType: 'json',
+		data: $('form#add_lab_cert_form').serialize(),
+		success: function(data) {
+			console.log(data);
+			location.reload();
+		},
+		error: function(data) {
+			alert("Operation failed");
+		},
+	});
+});
+</script>
+{% endblock %}
+

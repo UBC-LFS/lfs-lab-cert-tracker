@@ -1,6 +1,6 @@
 from django.forms import ModelForm, ModelMultipleChoiceField
 
-from lfs_lab_cert_tracker.models import Lab, Cert, User, UserLab
+from lfs_lab_cert_tracker.models import Lab, Cert, User, UserLab, UserCert, LabCert
 
 class LabForm(ModelForm):
     class Meta:
@@ -16,6 +16,16 @@ class UserLabForm(ModelForm):
     class Meta:
         model = UserLab
         fields = ['user', 'lab', 'role']
+
+class LabCertForm(ModelForm):
+    class Meta:
+        model = LabCert
+        fields = ['lab', 'cert']
+
+class UserCertForm(ModelForm):
+    class Meta:
+        model = UserCert
+        fields = ['user', 'cert', 'cert_path']
 
 class UserForm(ModelForm):
     class Meta:

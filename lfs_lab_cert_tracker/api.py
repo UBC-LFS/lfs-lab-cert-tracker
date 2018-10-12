@@ -73,7 +73,9 @@ def get_lab_certs(lab_id, n=None):
     return [model_to_dict(lab_cert) for lab_cert in lab_certs]
 
 def create_lab_cert(lab_id, cert_id):
-    lab_cert = LabCert.objects.create(lab=lab_id, cert=cert_id)
+    lab = Lab.objects.get(id=lab_id)
+    cert = Cert.objects.get(id=cert_id)
+    lab_cert = LabCert.objects.create(lab=lab, cert=cert)
     return model_to_dict(lab_cert)
 
 def delete_lab_cert(lab_id, cert_id):

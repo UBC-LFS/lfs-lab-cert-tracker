@@ -25,5 +25,10 @@
 		<a href="users/edit_labs">Add User to Lab</a>
 	</li>
 {% endif %}
+{% if can_edit_lab_cert %}
+	<li>
+		<a href="labs/edit_certs">Add Cert to Lab</a>
+	</li>
+{% endif %}
 </ul>
 {% endblock %}

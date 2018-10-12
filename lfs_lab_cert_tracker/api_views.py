@@ -42,7 +42,7 @@ def lab_certificates(request, lab_id=None, cert_id=None):
         return JsonResponse(res, safe=False)
     elif request.method == 'POST':
         data = request.POST
-        res = api.create_lab_cert(data['lab_id'], data['cert_id'])
+        res = api.create_lab_cert(data['lab'], data['cert'])
         return JsonResponse(res)
     elif request.method == 'DELETE':
         data = request.POST
@@ -72,11 +72,11 @@ def user_labs(request, user_id=None, lab_id=None):
         return JsonResponse(res, safe=False)
     elif request.method == 'POST':
         data = request.POST
-        res = api.create_user_lab(data['user_id'], data['lab_id'], data['role'])
+        res = api.create_user_lab(data['user'], data['lab'], data['role'])
         return JsonResponse(res)
     elif request.method == 'DELETE':
         data = request.POST
-        res = api.delete_user_lab(data['user_id'], data['lab_id'])
+        res = api.delete_user_lab(data['user'], data['lab'])
         return JsonResponse(res)
 
 @login_required
