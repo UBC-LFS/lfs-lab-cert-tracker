@@ -15,7 +15,7 @@ class CertForm(ModelForm):
 class UserLabForm(ModelForm):
     class Meta:
         model = UserLab
-        fields = ['user_id', 'lab_id', 'role']
+        fields = ['user', 'lab', 'role']
 
 class UserForm(ModelForm):
     class Meta:

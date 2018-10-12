@@ -30,8 +30,8 @@ class UserCert(models.Model):
     INVALID = 2
     EXPIRED = 3
 
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    cert_id = models.ForeignKey(Cert, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
     cert_path = models.CharField(max_length=256)
     status = models.IntegerField()
     approved_by_user_id = models.IntegerField(null=True)
@@ -47,13 +47,13 @@ class UserLab(models.Model):
     STUDENT = 0
     PI = 1
 
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    lab_id = models.ForeignKey(Lab, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField()
 
 class LabCert(models.Model):
     """
     Keeps track of what certificate the labs require
     """
-    lab_id = models.ForeignKey(Lab, on_delete=models.CASCADE)
-    cert_id = models.ForeignKey(Cert, on_delete=models.CASCADE)
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
+    cert = models.ForeignKey(Cert, on_delete=models.CASCADE)

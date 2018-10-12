@@ -43,13 +43,13 @@ urlpatterns = [
     path('api/labs/<int:lab_id>/certificates/', api_views.lab_certificates),
     path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certificates),
 
-    url(r'^api/users/<int:user_id>/certificates/', views.user_certificates),
-    url(r'^api/users/<int:user_id>/certificates/<int:cert_id>', views.user_certificates),
+    path('api/users/<int:user_id>/certificates/', api_views.user_certificates),
+    path('api/users/<int:user_id>/certificates/<int:cert_id>', api_views.user_certificates),
 
-    url(r'^api/users/<int:user_id>/labs/', views.user_certificates),
-    url(r'^api/users/<int:user_id>/labs/<int:lab_id>', views.user_certificates),
+    path('api/users/<int:user_id>/labs/', api_views.user_labs),
+    path('api/users/<int:user_id>/labs/<int:lab_id>', api_views.user_labs),
 ]
 
 urlpatterns += [
-    url(r'^accounts/', include('django.contrib.auth.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ]

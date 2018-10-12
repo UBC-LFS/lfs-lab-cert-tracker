@@ -2,21 +2,21 @@
 
 {% block content %}
 
-<form id="add_user_lab_form" action="/api/labs/" method="post">
+<form id="add_user_lab_form" method="post">
 {% csrf_token %}
 {{ user_lab_form }}
 <input id="submit_add_user_lab_form" type="button" value="Submit Form"/>
 </form>
 
 <script>
-$('input#add_user_lab_form').click(function() {
-	var data = $('form#add_lab_form').serialize();
-	var url = '/api/users/' + data.user_id + '/labs';
+$('input#submit_add_user_lab_form').click(function() {
+	let user_id = $('select#id_user').val();
+	let url = '/api/users/' + user_id + '/labs/';
 	$.ajax({
-		url: $('form#add_user_lab_form').attr('action'),
+		url: url,
 		type: 'POST',
 		dataType: 'json',
-		data: data,
+		data: $('form#add_user_lab_form').serialize(),
 		success: function(data) {
 			console.log(data);
 			location.reload();

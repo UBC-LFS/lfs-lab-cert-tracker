@@ -72,7 +72,7 @@ def user_labs(request, user_id=None, lab_id=None):
         return JsonResponse(res, safe=False)
     elif request.method == 'POST':
         data = request.POST
-        res = api.ceate_user_lab(data['user_id'], data['lab_id'])
+        res = api.create_user_lab(data['user_id'], data['lab_id'], data['role'])
         return JsonResponse(res)
     elif request.method == 'DELETE':
         data = request.POST

@@ -12,6 +12,7 @@
 </div>
 
 {% if can_create_lab %}
+	<h1>Create Labs</h1>
 	<form id="create_lab_form" action="/api/labs/" method="post">
 	{% csrf_token %}
 	{{ lab_form }}

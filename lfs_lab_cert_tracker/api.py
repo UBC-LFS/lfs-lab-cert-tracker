@@ -1,3 +1,5 @@
+from django.contrib.auth.hashers import make_password
+
 from django.forms.models import model_to_dict
 
 from django.contrib.auth.models import User as AuthUser
@@ -43,52 +45,56 @@ def get_user_certs(user_id, n=None):
     return [model_to_dict(user_cert) for user_cert in user_certs]
 
 def create_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.create(user_id=user_id, cert_id=cert_id)
+    user_cert = UserCert.objects.create(user=user_id, cert=cert_id)
     return model_to_dict(user_cert)
 
 def delete_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.delete(user_id=user_id, cert_id=cert_id)
+    user_cert = UserCert.objects.delete(user=user_id, cert=cert_id)
     return model_to_dict(user_cert)
 
 # UserLab CRUD
 def get_user_labs(user_id, n=None):
-    user_labs = UserLab.objects.filter(user_id=user_id)
-    return [model_to_dict(user_lab) for user_lab in user_labs]
+    user_labs = UserLab.objects.filter(user=user_id)
+    return [model_to_dict(user_lab.lab) for user_lab in user_labs]
 
-def create_user_lab(user_id, lab_id):
-    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id)
+def create_user_lab(user_id, lab_id, role):
+    user = User.objects.get(id=user_id)
+    lab = Lab.objects.get(id=lab_id)
+    user_lab = UserLab.objects.create(user_id=user, lab_id=lab, role=role)
     return model_to_dict(user_lab)
 
 def delete_user_lab(user_id, lab_id):
-    user_lab = UserLab.objects.delete(user_id=user_id, lab_id=lab_id)
+    user_lab = UserLab.objects.delete(user=user_id, lab=lab_id)
     return model_to_dict(user_lab)
 
 # LabCert CRUD
 def get_lab_certs(lab_id, n=None):
-    lab_certs = LabCert.objects.filter(lab_id=lab_id)
+    lab_certs = LabCert.objects.filter(lab=lab_id)
     return [model_to_dict(lab_cert) for lab_cert in lab_certs]
 
 def create_lab_cert(lab_id, cert_id):
-    lab_cert = LabCert.objects.create(lab_id=lab_id, cert_id=cert_id)
+    lab_cert = LabCert.objects.create(lab=lab_id, cert=cert_id)
     return model_to_dict(lab_cert)
 
 def delete_lab_cert(lab_id, cert_id):
-    lab_cert = LabCert.objects.delete(lab_id=lab_id, cert_id=cert_id)
+    lab_cert = LabCert.objects.delete(lab=lab_id, cert=cert_id)
     return model_to_dict(lab_cert)
 
 # User CRUD
 def create_user(first_name, last_name, email, cwl):
+    # TODO: Replace the need to create an AuthUser with a password
+    auth_user = AuthUser.objects.create(
+        username=cwl,
+        email=email,
+        password=make_password('foobar'),
+    )
+
     user = User.objects.create(
+        id=auth_user.id,
         first_name=first_name,
         last_name=last_name,
         email=email,
         cwl=cwl
     )
 
-    # TODO: Replace the need to create an AuthUser with a password
-    AuthUser.objects.create(
-        username=cwl,
-        email=email,
-        password='foobar',
-    )
     return model_to_dict(user)

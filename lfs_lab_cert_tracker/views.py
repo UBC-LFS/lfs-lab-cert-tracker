@@ -23,11 +23,12 @@ def index(request):
 @require_http_methods(['GET'])
 def user_labs(request, user_id):
     request_user_id = request.user.id
+    user_lab_list = api.get_user_labs(request_user_id)
     return render(request,
             'lfs_lab_cert_tracker/user_labs.html',
             {
                 'user_id': request_user_id,
-                'user_lab_list': api.get_user_labs(request_user_id),
+                'user_lab_list': user_lab_list,
             }
     )
 
