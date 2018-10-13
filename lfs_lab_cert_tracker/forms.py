@@ -1,6 +1,7 @@
-from django.forms import ModelForm, ModelMultipleChoiceField
+from django.forms import ModelForm, HiddenInput, FileInput, FileField, CharField
 
-from lfs_lab_cert_tracker.models import Lab, Cert, User, UserLab, UserCert, LabCert
+from lfs_lab_cert_tracker.models import (Lab, Cert, User,
+        UserLab, UserCert, LabCert)
 
 class LabForm(ModelForm):
     class Meta:
@@ -23,9 +24,12 @@ class LabCertForm(ModelForm):
         fields = ['lab', 'cert']
 
 class UserCertForm(ModelForm):
+    cert_file = FileField()
+    redirect_url = CharField(widget=HiddenInput())
     class Meta:
         model = UserCert
-        fields = ['user', 'cert', 'cert_path']
+        fields = ['user', 'cert', 'cert_file', 'redirect_url']
+        widgets = {'user': HiddenInput()}
 
 class UserForm(ModelForm):
     class Meta:

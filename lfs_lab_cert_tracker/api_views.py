@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
@@ -57,7 +58,13 @@ def user_certificates(request, user_id=None, cert_id=None):
         return JsonResponse(res, safe=False)
     elif request.method == 'POST':
         data = request.POST
-        res = api.ceate_user_cert(data['user_id'], data['cert_id'])
+        files = request.FILES
+        redirect_url = data.get('redirect_url', None)
+        res = api.create_user_cert(data['user'], data['cert'], files['cert_file'])
+        # Added since uploading files with ajax is a pain
+        # So in this case just redirect to the client specified url
+        if redirect_url:
+            return redirect(redirect_url)
         return JsonResponse(res)
     elif request.method == 'DELETE':
         data = request.POST

@@ -55,9 +55,12 @@ def get_missing_certs(user_id):
 
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
 
-def create_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.create(user_id=user_id, cert_id=cert_id)
-    return model_to_dict(user_cert)
+def create_user_cert(user_id, cert_id, cert_file):
+    # TODO: Complete this function
+    # Write to /var/application/certificates/<user_id>/<cert_file>
+    return {}
+    #user_cert = UserCert.objects.create(user_id=user_id, cert_id=cert_id)
+    #return model_to_dict(user_cert)
 
 def delete_user_cert(user_id, cert_id):
     user_cert = UserCert.objects.delete(user_id=user_id, cert_id=cert_id)
