@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<h1>Add User to Lab</h1>
+
 <form id="add_user_lab_form" method="post">
 {% csrf_token %}
 {{ user_lab_form.as_p }}

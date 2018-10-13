@@ -40,9 +40,20 @@ def delete_lab(lab_id):
         return False
 
 # UserCert CRUD
-def get_user_certs(user_id, n=None):
+def get_user_certs(user_id):
     user_certs = UserCert.objects.filter(user_id=user_id)
     return [model_to_dict(user_cert) for user_cert in user_certs]
+
+# UserCert CRUD
+def get_missing_certs(user_id):
+    # Get the labs that the user is signed up for
+    user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
+    lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).prefetch_related('cert')
+    # From these labs determine which certs are missing 
+    user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
+    missing_user_certs = lab_certs.exclude(cert_id__in=user_cert_ids)
+
+    return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
 
 def create_user_cert(user_id, cert_id):
     user_cert = UserCert.objects.create(user_id=user_id, cert_id=cert_id)

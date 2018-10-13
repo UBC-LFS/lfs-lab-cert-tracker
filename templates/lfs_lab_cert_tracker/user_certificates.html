@@ -8,6 +8,12 @@
 		{{ user_cert.name }}
 	</p>
 	{% endfor %}
+	<h1>Missing Certificates</h1>
+	{% for missing_cert in missing_cert_list %}
+	<p>
+		{{ missing_cert.name }}
+	</p>
+	{% endfor %}
 </div>
 <ul>
 </ul>

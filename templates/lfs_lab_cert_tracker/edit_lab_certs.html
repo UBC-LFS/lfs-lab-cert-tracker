@@ -2,9 +2,11 @@
 
 {% block content %}
 
+<h1>Add Cert to Lab</h1>
+
 <form id="add_lab_cert_form" method="post">
 {% csrf_token %}
-{{ cert_lab_form }}
+{{ cert_lab_form.as_p }}
 <input id="submit_add_lab_cert_form" type="button" value="Submit Form"/>
 </form>
 
