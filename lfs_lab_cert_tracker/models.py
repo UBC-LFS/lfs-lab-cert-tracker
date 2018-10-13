@@ -10,13 +10,13 @@ class User(models.Model):
         return self.cwl
 
 class Cert(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, unique=True)
 
     def __str__(self):
         return self.name
 
 class Lab(models.Model):
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, unique=True)
 
     def __str__(self):
         return self.name
@@ -43,6 +43,9 @@ class UserCert(models.Model):
     approved_date = models.DateField()
     expiry_date = models.DateField()
 
+    class Meta:
+        unique_together = (('user', 'cert'))
+
 class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
@@ -54,9 +57,15 @@ class UserLab(models.Model):
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField()
 
+    class Meta:
+        unique_together = (('user', 'lab'))
+
 class LabCert(models.Model):
     """
     Keeps track of what certificate the labs require
     """
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (('lab', 'cert'))
