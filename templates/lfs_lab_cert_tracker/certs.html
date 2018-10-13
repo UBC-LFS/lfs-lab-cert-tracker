@@ -14,7 +14,7 @@
 {% if can_create_cert %}
 	<form id="create_cert_form" action="/api/certificates/" method="POST">
 	{% csrf_token %}
-	{{ cert_form }}
+	{{ cert_form.as_p }}
 	<input id="submit_create_cert_form" type="button" value="Submit Form"/>
 </form>
 <script>

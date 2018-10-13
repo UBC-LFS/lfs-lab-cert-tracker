@@ -15,7 +15,7 @@
 	<h1>Create Labs</h1>
 	<form id="create_lab_form" action="/api/labs/" method="post">
 	{% csrf_token %}
-	{{ lab_form }}
+	{{ lab_form.as_p }}
 	<input id="submit_create_lab_form" type="button" value="Submit Form"/>
 </form>
 <script>

@@ -4,7 +4,7 @@
 
 <form id="add_user_lab_form" method="post">
 {% csrf_token %}
-{{ user_lab_form }}
+{{ user_lab_form.as_p }}
 <input id="submit_add_user_lab_form" type="button" value="Submit Form"/>
 </form>
 
