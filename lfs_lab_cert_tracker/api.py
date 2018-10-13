@@ -45,11 +45,11 @@ def get_user_certs(user_id, n=None):
     return [model_to_dict(user_cert) for user_cert in user_certs]
 
 def create_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.create(user=user_id, cert=cert_id)
+    user_cert = UserCert.objects.create(user_id=user_id, cert_id=cert_id)
     return model_to_dict(user_cert)
 
 def delete_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.delete(user=user_id, cert=cert_id)
+    user_cert = UserCert.objects.delete(user_id=user_id, cert_id=cert_id)
     return model_to_dict(user_cert)
 
 # UserLab CRUD
@@ -58,13 +58,11 @@ def get_user_labs(user_id, n=None):
     return [model_to_dict(user_lab.lab) for user_lab in user_labs]
 
 def create_user_lab(user_id, lab_id, role):
-    user = User.objects.get(id=user_id)
-    lab = Lab.objects.get(id=lab_id)
-    user_lab = UserLab.objects.create(user_id=user, lab_id=lab, role=role)
+    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
     return model_to_dict(user_lab)
 
 def delete_user_lab(user_id, lab_id):
-    user_lab = UserLab.objects.delete(user=user_id, lab=lab_id)
+    user_lab = UserLab.objects.delete(user_id=user_id, lab=lab_id)
     return model_to_dict(user_lab)
 
 # LabCert CRUD
@@ -73,13 +71,11 @@ def get_lab_certs(lab_id, n=None):
     return [model_to_dict(lab_cert) for lab_cert in lab_certs]
 
 def create_lab_cert(lab_id, cert_id):
-    lab = Lab.objects.get(id=lab_id)
-    cert = Cert.objects.get(id=cert_id)
-    lab_cert = LabCert.objects.create(lab=lab, cert=cert)
+    lab_cert = LabCert.objects.create(lab_id=lab_id, cert_id=cert_id)
     return model_to_dict(lab_cert)
 
 def delete_lab_cert(lab_id, cert_id):
-    lab_cert = LabCert.objects.delete(lab=lab_id, cert=cert_id)
+    lab_cert = LabCert.objects.delete(lab_id=lab_id, cert_id=cert_id)
     return model_to_dict(lab_cert)
 
 # User CRUD
