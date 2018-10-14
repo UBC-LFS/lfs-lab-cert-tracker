@@ -36,3 +36,6 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 5. The "admin" group should be allowed all permissions
 6. The "student" group should be allowed limited permissions TODO: Define these permissions
 7. The "principal\_investigator" group should be allowed limited permissions TODO: Define these permissions
+
+### Media Files
+Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions

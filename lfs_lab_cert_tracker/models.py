@@ -1,3 +1,4 @@
+import os
 from django.db import models
 
 class User(models.Model):
@@ -21,6 +22,9 @@ class Lab(models.Model):
     def __str__(self):
         return self.name
 
+def create_user_cert_disk_path(instance, filename):
+    return os.path.join('users', str(instance.user.id), 'certificates', str(instance.cert.id))
+
 class UserCert(models.Model):
     """
     Keeps track of which certs a user has or will need to complete
@@ -35,13 +39,15 @@ class UserCert(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
-    cert_path = models.CharField(max_length=256, null=True)
+
+    cert_file = models.FileField(upload_to=create_user_cert_disk_path)
+
     status = models.IntegerField()
     approved_by_user_id = models.IntegerField(null=True)
 
-    completed_date = models.DateField()
-    approved_date = models.DateField()
-    expiry_date = models.DateField()
+    uploaded_date = models.DateField(null=True)
+    approved_date = models.DateField(null=True)
+    expiry_date = models.DateField(null=True)
 
     class Meta:
         unique_together = (('user', 'cert'))

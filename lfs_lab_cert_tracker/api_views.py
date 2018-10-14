@@ -60,7 +60,7 @@ def user_certificates(request, user_id=None, cert_id=None):
         data = request.POST
         files = request.FILES
         redirect_url = data.get('redirect_url', None)
-        res = api.create_user_cert(data['user'], data['cert'], files['cert_file'])
+        res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'])
         # Added since uploading files with ajax is a pain
         # So in this case just redirect to the client specified url
         if redirect_url:

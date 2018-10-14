@@ -129,3 +129,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 LOGIN_REDIRECT_URL = '/'
+
+MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/'
+MEDIA_URL = '/media/'

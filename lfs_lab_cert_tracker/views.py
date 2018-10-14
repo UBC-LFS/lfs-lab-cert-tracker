@@ -43,6 +43,7 @@ def user_certificates(request, user_id):
     missing_cert_list = api.get_missing_certs(request_user_id)
     post_redirect_url = '/users/%d/certificates/' % request_user_id
     user_cert_form = UserCertForm(initial={'user': request_user_id, 'redirect_url': post_redirect_url})
+    print(user_cert_list, missing_cert_list)
     return render(request,
             'lfs_lab_cert_tracker/user_certificates.html',
             {

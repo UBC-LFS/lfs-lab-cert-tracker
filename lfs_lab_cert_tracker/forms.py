@@ -24,7 +24,6 @@ class LabCertForm(ModelForm):
         fields = ['lab', 'cert']
 
 class UserCertForm(ModelForm):
-    cert_file = FileField()
     redirect_url = CharField(widget=HiddenInput())
     class Meta:
         model = UserCert
