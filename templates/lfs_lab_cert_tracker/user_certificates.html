@@ -4,13 +4,13 @@
 <h1>Your Certificates</h1>
 {% for user_cert in user_cert_list %}
 <p>
-	{{ user_cert.cert.name }}
+	{{ user_cert.name }}
 </p>
 {% endfor %}
 <h1>Missing Certificates</h1>
 {% for missing_cert in missing_cert_list %}
 <p>
-	{{ missing_cert.cert.name }}
+	{{ missing_cert.name }}
 </p>
 {% endfor %}
 
