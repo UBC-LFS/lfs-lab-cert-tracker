@@ -41,7 +41,7 @@ def user_certificates(request, user_id):
     request_user_id = request.user.id
     user_cert_list = api.get_user_certs(request_user_id)
     missing_cert_list = api.get_missing_certs(request_user_id)
-    post_redirect_url = '/users/%d/certificates/' % request_user_id
+    redirect_url = '/users/%d/certificates/' % request_user_id
     user_cert_form = UserCertForm(initial={'user': request_user_id, 'redirect_url': post_redirect_url})
     return render(request,
             'lfs_lab_cert_tracker/user_certificates.html',
@@ -58,12 +58,13 @@ def user_certificates(request, user_id):
 def labs(request):
     labs = api.get_labs()
     can_create_lab = request.user.groups.filter(name='admin').exists()
+    redirect_url = '/labs/'
     return render(request,
         'lfs_lab_cert_tracker/labs.html',
         {
             'lab_list': labs,
             'can_create_lab': can_create_lab,
-            'lab_form': LabForm(),
+            'lab_form': LabForm(initial={'redirect_url': redirect_url}),
         }
     )
 
@@ -72,12 +73,13 @@ def labs(request):
 def certificates(request):
     certs = api.get_certs()
     can_create_cert = request.user.groups.filter(name='admin').exists()
+    redirect_url = '/certificates/'
     return render(request,
         'lfs_lab_cert_tracker/certs.html',
         {
             'cert_list': certs,
             'can_create_cert': can_create_cert,
-            'cert_form': CertForm(),
+            'cert_form': CertForm(initial={'redirect_url': redirect_url}),
         }
     )
 
@@ -87,12 +89,13 @@ def certificates(request):
 def users(request):
     users = api.get_users()
     can_create_user = request.user.groups.filter(name='admin').exists()
+    redirect_url = '/users/'
     return render(request,
         'lfs_lab_cert_tracker/users.html',
         {
             'user_list': users,
             'can_create_user': can_create_user,
-            'user_form': UserForm(),
+            'user_form': UserForm(initial={'redirect_url': redirect_url}),
         }
     )
 
@@ -102,12 +105,13 @@ def users(request):
 def edit_user_labs(request):
     users = api.get_users()
     labs = api.get_labs()
+    redirect_url = '/users/edit_labs/'
     return render(request,
         'lfs_lab_cert_tracker/edit_user_labs.html',
         {
             'lab_list': labs,
             'user_list': users,
-            'user_lab_form': UserLabForm(),
+            'user_lab_form': UserLabForm(initial={'redirect_url': redirect_url}),
         }
     )
 
@@ -117,12 +121,13 @@ def edit_user_labs(request):
 def edit_lab_certs(request):
     labs = api.get_labs()
     certs = api.get_certs()
+    redirect_url = '/labs/edit_certs/'
     return render(request,
             'lfs_lab_cert_tracker/edit_lab_certs.html',
             {
                 'lab_list': labs,
                 'cert_list': certs,
-                'cert_lab_form': LabCertForm(),
+                'cert_lab_form': LabCertForm(initial={'redirect_url': redirect_url}),
             }
     )
 

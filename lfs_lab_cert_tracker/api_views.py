@@ -15,6 +15,9 @@ def certificates(request, cert_id=None):
     elif request.method == 'POST' and user.has_perm('lfs_lab_cert_tracker.add_cert'):
         data = request.POST
         res = api.create_cert(data['name'])
+        redirect_url = data.get('redirect_url', None)
+        if redirect_url:
+            return redirect(redirect_url)
         return JsonResponse(res)
     elif request.method == 'DELETE' and user.has_perm('lfs_lab_cert_tracker.delete_cert'):
         res = api.delete_cert(cert_id)
@@ -30,6 +33,9 @@ def labs(request, lab_id=None):
     elif request.method == 'POST' and user.has_perm('lfs_lab_cert_tracker.add_lab'):
         data = request.POST
         res = api.create_lab(data['name'])
+        redirect_url = data.get('redirect_url', None)
+        if redirect_url:
+            return redirect(redirect_url)
         return JsonResponse(res)
     elif request.method == 'DELETE' and user.has_perm('lfs_lab_cert_tracker.delete_lab'):
         res = api.delete_lab(lab_id)
@@ -44,6 +50,9 @@ def lab_certificates(request, lab_id=None, cert_id=None):
     elif request.method == 'POST':
         data = request.POST
         res = api.create_lab_cert(data['lab'], data['cert'])
+        redirect_url = data.get('redirect_url', None)
+        if redirect_url:
+            return redirect(redirect_url)
         return JsonResponse(res)
     elif request.method == 'DELETE':
         data = request.POST
@@ -59,10 +68,10 @@ def user_certificates(request, user_id=None, cert_id=None):
     elif request.method == 'POST':
         data = request.POST
         files = request.FILES
-        redirect_url = data.get('redirect_url', None)
         res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'])
         # Added since uploading files with ajax is a pain
         # So in this case just redirect to the client specified url
+        redirect_url = data.get('redirect_url', None)
         if redirect_url:
             return redirect(redirect_url)
         return JsonResponse(res)
