@@ -33,6 +33,8 @@ urlpatterns = [
     path('users/<int:user_id>/labs/', views.user_labs),
     path('users/<int:user_id>/certificates/', views.user_certificates),
 
+    path('labs/<int:lab_id>/', views.lab_details),
+
     path('api/users/', api_views.users),
 
     path('api/labs/', api_views.labs),

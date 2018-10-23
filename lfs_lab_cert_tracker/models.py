@@ -56,12 +56,14 @@ class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
     """
-    STUDENT = 0
-    PI = 1
+    ROLE_CHOICES = [
+        (0, "Student"),
+        (1, "Principal Investigator"),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
-    role = models.IntegerField()
+    role = models.IntegerField(choices=ROLE_CHOICES)
 
     class Meta:
         unique_together = (('user', 'lab'))

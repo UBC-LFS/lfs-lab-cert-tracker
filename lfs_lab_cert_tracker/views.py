@@ -27,11 +27,13 @@ def index(request):
 def user_labs(request, user_id):
     request_user_id = request.user.id
     user_lab_list = api.get_user_labs(request_user_id)
+    pi_user_lab_list = api.get_user_labs(request_user_id, is_principal_investigator=True)
     return render(request,
             'lfs_lab_cert_tracker/user_labs.html',
             {
                 'user_id': request_user_id,
                 'user_lab_list': user_lab_list,
+                'pi_user_lab_list': pi_user_lab_list,
             }
     )
 
@@ -131,3 +133,18 @@ def edit_lab_certs(request):
             }
     )
 
+
+@login_required
+@require_http_methods(['GET'])
+def lab_details(request, lab_id):
+    request_user_id = request.user.id
+    # TODO Check to see if the user is an admin, or is a PI for the lab
+    users_in_lab = api.get_users_in_lab(lab_id)
+    users_missing_certs = api.get_users_missing_certs(lab_id)
+    return render(request,
+            'lfs_lab_cert_tracker/lab_details.html',
+            {
+                'users_in_lab': users_in_lab,
+                'users_missing_certs': users_missing_certs,
+            }
+    )

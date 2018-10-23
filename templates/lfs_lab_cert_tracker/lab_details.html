@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div>
+	<h1>Users in Lab</h1>
+	{% for user_in_lab in users_in_lab %}
+	<p>
+		{{ user_in_lab.cwl}}
+	</p>
+	{% endfor %}
+
+	<h1>Users Missing Certs</h1>
+	{% for user_missing_certs in users_missing_certs %}
+	<p>
+		{{ user_missing_certs.cwl}}
+	</p>
+	{% endfor %}
+</div>
+
+{% endblock %}
+

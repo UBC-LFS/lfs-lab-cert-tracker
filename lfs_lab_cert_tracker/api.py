@@ -72,9 +72,34 @@ def delete_user_cert(user_id, cert_id):
     return model_to_dict(user_cert)
 
 # UserLab CRUD
-def get_user_labs(user_id, n=None):
-    user_labs = UserLab.objects.filter(user=user_id)
+def get_user_labs(user_id, is_principal_investigator=None):
+    if is_principal_investigator == True:
+        # TODO: Get rid of magic constant
+        user_labs = UserLab.objects.filter(user=user_id, role=1)
+    else:
+        user_labs = UserLab.objects.filter(user=user_id)
     return [model_to_dict(user_lab.lab) for user_lab in user_labs]
+
+def get_users_in_lab(lab_id):
+    users_in_lab = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
+    return [model_to_dict(user_in_lab.user) for user_in_lab in users_in_lab]
+
+def get_users_missing_certs(lab_id):
+    lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
+    users_missing_certs = []
+    for lab_user in lab_users:
+        if get_missing_certs(lab_user.user_id, lab_id):
+            users_missing_certs.append(lab_user)
+    return [model_to_dict(user_missing_certs.user) for user_missing_certs in users_missing_certs]
+
+def get_missing_certs(user_id, lab_id):
+    user_certs = set(UserCert.objects.filter(user=user_id).values_list('cert', flat=True))
+    required_certs = set(LabCert.objects.filter(lab=lab_id).values_list('cert', flat=True))
+    missing = []
+    for rc in required_certs:
+        if rc not in user_certs:
+            missing.append(rc)
+    return missing
 
 def create_user_lab(user_id, lab_id, role):
     user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
