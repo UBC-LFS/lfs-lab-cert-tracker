@@ -5,8 +5,7 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 Examples:
 Function views
     1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
-Class-based views
+    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home') Class-based views
     1. Add an import:  from other_app.views import Home
     2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
 Including another URLconf
@@ -16,14 +15,13 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.urls import path
 from django.contrib import admin
-
+from django.conf import settings
 from lfs_lab_cert_tracker import views, api_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', views.index),
-
     path('labs/', views.labs),
     path('certificates/', views.certificates),
     path('users/', views.users),
@@ -32,6 +30,7 @@ urlpatterns = [
 
     path('users/<int:user_id>/labs/', views.user_labs),
     path('users/<int:user_id>/certificates/', views.user_certificates),
+    path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
 
     path('labs/<int:lab_id>/', views.lab_details),
 

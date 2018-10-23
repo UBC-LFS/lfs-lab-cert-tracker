@@ -148,3 +148,17 @@ def lab_details(request, lab_id):
                 'users_missing_certs': users_missing_certs,
             }
     )
+
+@login_required
+@require_http_methods(['GET'])
+def user_cert_details(request, user_id, cert_id):
+    # Retrieve information about the user cert
+    # TODO Check to see if requesting user matches or the user is an admin
+    user_cert = api.get_user_cert(user_id, cert_id)
+    return render(request,
+            'lfs_lab_cert_tracker/user_cert_details.html',
+            {
+                'user_cert': user_cert,
+                'user_id': user_id,
+            }
+    )

@@ -49,6 +49,10 @@ def get_user_certs(user_id):
         res.append(dict_user_cert)
     return res
 
+def get_user_cert(user_id, cert_id):
+    user_cert = UserCert.objects.get(user=user_id, cert=cert_id)
+    return model_to_dict(user_cert)
+
 # UserCert CRUD
 def get_missing_certs(user_id):
     # Get the labs that the user is signed up for
@@ -88,11 +92,11 @@ def get_users_missing_certs(lab_id):
     lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
     users_missing_certs = []
     for lab_user in lab_users:
-        if get_missing_certs(lab_user.user_id, lab_id):
+        if get_missing_lab_certs(lab_user.user_id, lab_id):
             users_missing_certs.append(lab_user)
     return [model_to_dict(user_missing_certs.user) for user_missing_certs in users_missing_certs]
 
-def get_missing_certs(user_id, lab_id):
+def get_missing_lab_certs(user_id, lab_id):
     user_certs = set(UserCert.objects.filter(user=user_id).values_list('cert', flat=True))
     required_certs = set(LabCert.objects.filter(lab=lab_id).values_list('cert', flat=True))
     missing = []

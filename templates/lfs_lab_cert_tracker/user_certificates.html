@@ -3,9 +3,9 @@
 {% block content %}
 <h1>Your Certificates</h1>
 {% for user_cert in user_cert_list %}
-<p>
+<a href="/users/{{user_id}}/certificates/{{user_cert.id}}">
 	{{ user_cert.name }}
-</p>
+</a>
 {% endfor %}
 <h1>Missing Certificates</h1>
 {% for missing_cert in missing_cert_list %}
