@@ -13,7 +13,10 @@
 	<h1>Users Missing Certs</h1>
 	{% for user_missing_certs in users_missing_certs %}
 	<p>
-		{{ user_missing_certs.cwl}}
+		User: {{ user_missing_certs.0.cwl}} | Missing Certs:
+		{% for missing_cert in user_missing_certs.1 %}
+			{{ missing_cert.name }}
+		{% endfor %}
 	</p>
 	{% endfor %}
 </div>

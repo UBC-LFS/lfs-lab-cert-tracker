@@ -89,21 +89,25 @@ def get_users_in_lab(lab_id):
     return [model_to_dict(user_in_lab.user) for user_in_lab in users_in_lab]
 
 def get_users_missing_certs(lab_id):
+    """
+    Given a lab returns users that are missing certs and the certs they are missing
+    """
     lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
     users_missing_certs = []
     for lab_user in lab_users:
-        if get_missing_lab_certs(lab_user.user_id, lab_id):
-            users_missing_certs.append(lab_user)
-    return [model_to_dict(user_missing_certs.user) for user_missing_certs in users_missing_certs]
+        missing_lab_certs = get_missing_lab_certs(lab_user.user_id, lab_id)
+        if missing_lab_certs:
+            users_missing_certs.append((lab_user, missing_lab_certs))
+    return [(model_to_dict(user_missing_certs.user), missing_lab_cert) for user_missing_certs, missing_lab_cert in users_missing_certs]
 
 def get_missing_lab_certs(user_id, lab_id):
     user_certs = set(UserCert.objects.filter(user=user_id).values_list('cert', flat=True))
-    required_certs = set(LabCert.objects.filter(lab=lab_id).values_list('cert', flat=True))
+    required_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
     missing = []
     for rc in required_certs:
-        if rc not in user_certs:
-            missing.append(rc)
-    return missing
+        if rc.id not in user_certs:
+            missing.append(rc.cert)
+    return [model_to_dict(m) for m in missing]
 
 def create_user_lab(user_id, lab_id, role):
     user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
