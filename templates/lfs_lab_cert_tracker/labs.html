@@ -16,25 +16,8 @@
 	<form id="create_lab_form" action="/api/labs/" method="post">
 	{% csrf_token %}
 	{{ lab_form.as_p }}
-	<input id="submit_create_lab_form" type="button" value="Submit Form"/>
+	<input id="submit_create_lab_form" type="submit" value="Submit Form"/>
 </form>
-<script>
-$('input#submit_create_lab_form').click(function() {
-	$.ajax({
-		url: $('form#create_lab_form').attr('action'),
-		type: 'POST',
-		dataType: 'json',
-		data: $('form#create_lab_form').serialize(),
-		success: function(data) {
-			console.log(data);
-			location.reload();
-		},
-		error: function(data) {
-			alert("Operation failed");
-		},
-	});
-});
-</script>
 {% endif %}
 
 

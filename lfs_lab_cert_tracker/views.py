@@ -166,3 +166,16 @@ def user_cert_details(request, user_id, cert_id):
                 'user_id': user_id,
             }
     )
+
+@login_required
+@require_http_methods(['GET'])
+def user_details(request, user_id):
+    request_user_id = request.user.id
+    # TODO Check to see if the user is an admin or is the requesting user
+    user = api.get_user(user_id)
+    return render(request,
+            'lfs_lab_cert_tracker/user_details.html',
+            {
+                'user': user,
+            }
+    )
