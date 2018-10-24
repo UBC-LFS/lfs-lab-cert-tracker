@@ -5,6 +5,10 @@ from django.forms.models import model_to_dict
 from django.contrib.auth.models import User as AuthUser
 from lfs_lab_cert_tracker.models import User, Lab, Cert, LabCert, UserCert, UserLab
 
+"""
+Provides an API to the Django ORM for any queries that are required
+"""
+
 # User CRUD
 def get_users(n=None):
     return [model_to_dict(user) for user in User.objects.all()]

@@ -6,6 +6,10 @@ from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
         UserLabForm, LabCertForm, UserCertForm)
 
+"""
+HTTP endpoints to transfer HTML
+"""
+
 @login_required
 @require_http_methods(['GET'])
 def index(request):

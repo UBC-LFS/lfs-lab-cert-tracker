@@ -5,6 +5,10 @@ from django.views.decorators.http import require_http_methods
 
 from lfs_lab_cert_tracker import api
 
+"""
+Provides HTTP endpoints to access the api
+"""
+
 @login_required
 @require_http_methods(['GET', 'POST', 'DELETE'])
 def certificates(request, cert_id=None):

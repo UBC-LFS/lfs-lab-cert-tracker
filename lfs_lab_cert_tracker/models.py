@@ -43,10 +43,8 @@ class UserCert(models.Model):
     cert_file = models.FileField(upload_to=create_user_cert_disk_path)
 
     status = models.IntegerField()
-    approved_by_user_id = models.IntegerField(null=True)
 
     uploaded_date = models.DateField(null=True)
-    approved_date = models.DateField(null=True)
     expiry_date = models.DateField(null=True)
 
     class Meta:
