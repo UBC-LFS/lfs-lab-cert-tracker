@@ -10,6 +10,9 @@ Provides an API to the Django ORM for any queries that are required
 """
 
 # User CRUD
+def get_user(user_id):
+    return User.objects.get(id=user_id)
+
 def get_users(n=None):
     return [model_to_dict(user) for user in User.objects.all()]
 

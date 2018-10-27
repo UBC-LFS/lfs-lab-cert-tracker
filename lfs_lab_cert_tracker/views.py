@@ -1,8 +1,10 @@
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.shortcuts import render
+from django.http import HttpResponseForbidden
 
 from lfs_lab_cert_tracker import api
+from lfs_lab_cert_tracker import auth_utils
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
         UserLabForm, LabCertForm, UserCertForm)
 
@@ -13,16 +15,14 @@ HTTP endpoints to transfer HTML
 @login_required
 @require_http_methods(['GET'])
 def index(request):
-    can_view_users = request.user.groups.filter(name='admin').exists()
-    can_edit_user_lab = request.user.groups.filter(name='admin').exists()
-    can_edit_lab_cert = request.user.groups.filter(name='admin').exists()
+    is_admin = auth_utils.is_admin(request.user)
     return render(request,
             'lfs_lab_cert_tracker/index.html',
             {
                 'user_id': request.user.id,
-                'can_view_users': can_view_users,
-                'can_edit_user_lab': can_edit_user_lab,
-                'can_edit_lab_cert': can_edit_lab_cert,
+                'can_view_users': is_admin,
+                'can_edit_user_lab': is_admin,
+                'can_edit_lab_cert': is_admin,
             }
     )
 
@@ -63,7 +63,7 @@ def user_certificates(request, user_id):
 @require_http_methods(['GET'])
 def labs(request):
     labs = api.get_labs()
-    can_create_lab = request.user.groups.filter(name='admin').exists()
+    can_create_lab = auth_utils.is_admin(request.user)
     redirect_url = '/labs/'
     return render(request,
         'lfs_lab_cert_tracker/labs.html',
@@ -78,7 +78,7 @@ def labs(request):
 @require_http_methods(['GET'])
 def certificates(request):
     certs = api.get_certs()
-    can_create_cert = request.user.groups.filter(name='admin').exists()
+    can_create_cert = auth_utils.is_admin(request.user)
     redirect_url = '/certificates/'
     return render(request,
         'lfs_lab_cert_tracker/certs.html',
@@ -90,9 +90,12 @@ def certificates(request):
     )
 
 @login_required
-@permission_required('lfs_lab_cert_tracker.view_user')
 @require_http_methods(['GET'])
 def users(request):
+    is_admin = auth_utils.is_admin(request.user)
+    if not is_admin:
+        # TODO: Add forbidden page
+        return HttpResponseForbidden()
     users = api.get_users()
     can_create_user = request.user.groups.filter(name='admin').exists()
     redirect_url = '/users/'
@@ -106,9 +109,12 @@ def users(request):
     )
 
 @login_required
-@permission_required('lfs_lab_cert_tracker.add_userlab')
 @require_http_methods(['GET'])
 def edit_user_labs(request):
+    is_admin = auth_utils.is_admin(request.user)
+    if not is_admin:
+        # TODO: Add forbidden page
+        return HttpResponseForbidden()
     users = api.get_users()
     labs = api.get_labs()
     redirect_url = '/users/edit_labs/'
@@ -122,9 +128,12 @@ def edit_user_labs(request):
     )
 
 @login_required
-@permission_required('lfs_lab_cert_tracker.add_labcert')
 @require_http_methods(['GET'])
 def edit_lab_certs(request):
+    is_admin = auth_utils.is_admin(request.user)
+    if not is_admin:
+        # TODO: Add forbidden page
+        return HttpResponseForbidden()
     labs = api.get_labs()
     certs = api.get_certs()
     redirect_url = '/labs/edit_certs/'
@@ -137,12 +146,16 @@ def edit_lab_certs(request):
             }
     )
 
-
 @login_required
 @require_http_methods(['GET'])
 def lab_details(request, lab_id):
     request_user_id = request.user.id
-    # TODO Check to see if the user is an admin, or is a PI for the lab
+    is_admin = auth_utils.is_admin(request.user)
+    is_pi = auth_utils.is_principal_investigator(request_user_id, lab_id)
+    if not is_admin and not is_pi:
+        # TODO: Add forbidden page
+        return HttpResponseForbidden()
+
     users_in_lab = api.get_users_in_lab(lab_id)
     users_missing_certs = api.get_users_missing_certs(lab_id)
     return render(request,
@@ -156,8 +169,13 @@ def lab_details(request, lab_id):
 @login_required
 @require_http_methods(['GET'])
 def user_cert_details(request, user_id, cert_id):
+    request_user_id = request.user.id
+    is_admin = auth_utils.is_admin(request.user)
+    if request_user_id != user_id and not is_admin:
+        # TODO: Add forbidden page
+        return HttpResponseForbidden()
+
     # Retrieve information about the user cert
-    # TODO Check to see if requesting user matches or the user is an admin
     user_cert = api.get_user_cert(user_id, cert_id)
     return render(request,
             'lfs_lab_cert_tracker/user_cert_details.html',
@@ -171,7 +189,11 @@ def user_cert_details(request, user_id, cert_id):
 @require_http_methods(['GET'])
 def user_details(request, user_id):
     request_user_id = request.user.id
-    # TODO Check to see if the user is an admin or is the requesting user
+    is_admin = auth_utils.is_admin(request.user)
+    if request_user_id != user_id and not is_admin:
+        # TODO: Add forbidden page
+        return HttpResponseForbidden()
+
     user = api.get_user(user_id)
     return render(request,
             'lfs_lab_cert_tracker/user_details.html',
