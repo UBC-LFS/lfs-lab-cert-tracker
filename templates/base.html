@@ -1,49 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<title>LFS Lab Certification Tracker</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-	{% load static %}
-</head>
-<script
-	src="https://code.jquery.com/jquery-3.3.1.min.js"
-	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-	crossorigin="anonymous">
-</script>
-<body>
-<nav class="navbar navbar-expand-md navbar-light bg-light">
-	<div class="navbar-collapse collapse" id="navbarNav">
-		<ul class="navbar-nav">
-			<li class="nav-item">
-				<a class="nav-link" href="/">Home</a>
-			</li>
-		</ul>
-		<ul class="nav navbar-nav mx-auto">
-			<li class="nav-item">
-				<a class="navbar-brand max-auto">LFS Lab Certification Tracker</a>
-			</li>
-		</ul>
-		<ul class="navbar-nav">
-			 {% if user.is_authenticated %}
-				<li class="nav-item">
-					<a class="nav-link" href="{% url 'logout'%}?next=/">Logout</a>
-				</li>
-			{% else %}
-				<li class="nav-item">
-					<a class="nav-link" href="{% url 'login'%}?next=/">Login</a>
-				</li>
-			{% endif %}
-		</ul>
-	</div>
-</nav>
-<div class="container-fluid">
-	<div class="row">
-		<div class="col"></div>
-		<div class="col-6">{% block content %}{% endblock %}</div>
-		<div class="col"></div>
-	</div>
+{% extends "header.html" %}
+
+{% block sidebar %}
+<div class="list-group">
+	<a class="list-group-item list-group-item-action" href="/users/{{ user.id }}/labs">View My Labs</a>
+	<a class="list-group-item list-group-item-action" href="/users/{{ user.id }}/certificates">View My Certificates</a>
+	<a class="list-group-item list-group-item-action" href="/labs">View All Labs</a>
+	<a class="list-group-item list-group-item-action" href="/certificates">View All Certificates</a>
+	{% if can_view_users %}
+	<a class="list-group-item list-group-item-action" href="/users">View All Users</a>
+	{% endif %}
+	{% if can_edit_user_lab %}
+	<a class="list-group-item list-group-item-action" href="/users/edit_labs">Add User to Lab</a>
+	{% endif %}
+	{% if can_edit_lab_cert %}
+	<a class="list-group-item list-group-item-action" href="/labs/edit_certs">Add Cert to Lab</a>
+	{% endif %}
 </div>
-</body>
-</html>
+{% endblock %}

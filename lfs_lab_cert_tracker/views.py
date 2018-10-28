@@ -19,10 +19,10 @@ def index(request):
     return render(request,
             'lfs_lab_cert_tracker/index.html',
             {
-                'user_id': request.user.id,
                 'can_view_users': is_admin,
                 'can_edit_user_lab': is_admin,
                 'can_edit_lab_cert': is_admin,
+                'user_id': request.user.id,
             }
     )
 
@@ -63,13 +63,13 @@ def user_certificates(request, user_id):
 @require_http_methods(['GET'])
 def labs(request):
     labs = api.get_labs()
-    can_create_lab = auth_utils.is_admin(request.user)
+    is_admin = auth_utils.is_admin(request.user)
     redirect_url = '/labs/'
     return render(request,
         'lfs_lab_cert_tracker/labs.html',
         {
             'lab_list': labs,
-            'can_create_lab': can_create_lab,
+            'can_create_lab': is_admin,
             'lab_form': LabForm(initial={'redirect_url': redirect_url}),
         }
     )

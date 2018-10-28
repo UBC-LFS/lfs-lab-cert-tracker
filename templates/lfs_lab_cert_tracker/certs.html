@@ -2,21 +2,26 @@
 
 {% block content %}
 
-<div>
-	<h1>View Certs</h1>
+<div class="row">
+	<div class="col">
+	<h3>Certificates</h3>
 	{% for cert in cert_list %}
 	<p>
 		{{ cert.name }}
 	</p>
 	{% endfor %}
-</div>
-
-{% if can_create_cert %}
+	</div>
+	<div class="col">
+	{% if can_create_cert %}
+	<h3>Create New Certificate</h3>
 	<form id="create_cert_form" action="/api/certificates/" method="POST">
-	{% csrf_token %}
-	{{ cert_form.as_p }}
-	<input id="submit_create_cert_form" type="submit" value="Submit Form"/>
-</form>
-{% endif %}
-
+		<div class="form-group">
+		{% csrf_token %}
+		{{ cert_form.as_p }}
+		</div>
+	<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Submit Form"/>
+	</form>
+	{% endif %}
+	</div>
+</div>
 {% endblock %}
