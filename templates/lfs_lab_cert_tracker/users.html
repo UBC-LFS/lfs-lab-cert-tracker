@@ -2,22 +2,25 @@
 
 {% block content %}
 
-<div>
-	<h1>View Users</h1>
-	{% for user in user_list %}
-	<p>
-		{{ user.cwl }}
-	</p>
-	{% endfor %}
+<div class="row">
+	<div class="col">
+		<h1>View Users</h1>
+		<div class="list-group">
+		{% for user in user_list %}
+			<a class="list-group-item list-group-item-action" href="/users/{{user.id}}">{{ user.cwl }}</a>
+		{% endfor %}
+		</div>
+	</div>
+	<div class="col">
+	{% if can_create_user %}
+		<h1>Create Users</h1>
+		<form id="create_user_form" action="/api/users/" method="post">
+		{% csrf_token %}
+		{{ user_form.as_p }}
+		<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Submit Form"/>
+		</form>
+	{% endif %}
+	</div>
 </div>
-
-{% if can_create_user %}
-	<h1>Create Users</h1>
-	<form id="create_user_form" action="/api/users/" method="post">
-	{% csrf_token %}
-	{{ user_form.as_p }}
-	<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Submit Form"/>
-</form>
-{% endif %}
 
 {% endblock %}

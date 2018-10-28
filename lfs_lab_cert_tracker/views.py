@@ -196,10 +196,15 @@ def user_details(request, user_id):
         # TODO: Add forbidden page
         return HttpResponseForbidden()
 
-    user = api.get_user(user_id)
+    user_lab_list = api.get_user_labs(user_id)
+    user_cert_list = api.get_user_certs(user_id)
+    missing_cert_list = api.get_missing_certs(user_id)
     return render(request,
             'lfs_lab_cert_tracker/user_details.html',
             {
-                'user': user,
+                'user_lab_list': user_lab_list,
+                'user_cert_list': user_cert_list,
+                'missing_cert_list': missing_cert_list,
+                'user_id': request.user.id,
             }
     )

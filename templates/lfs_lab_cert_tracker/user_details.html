@@ -2,9 +2,35 @@
 
 {% block content %}
 
-<div>
-	<h1>{{user.cwl}}</h1>
-</div>
+<!-- Certificates -->
+	<div class="row">
+		<div class="col">
+			<h3>Certificates</h3>
+			<div class="list-group">
+			{% for user_cert in user_cert_list %}
+			<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
+			{% endfor %}
+			</div>
+		</div> <!--end col-->
+		<div class="col">
+			<h3>Missing Certificates</h3>
+			<ul class="list-group">
+			{% for missing_cert in missing_cert_list %}
+			<li class="list-group-item">{{ missing_cert.name }}</li>
+			{% endfor %}
+		</div> <!--end col-->
+	</div> <!-- end row-->
+<!-- Labs -->
+	<div class="row">
+		<div class="col">
+			<h3>Labs</h3>
+			{% for user_lab in user_lab_list %}
+			<p>
+				{{ user_lab.name }}
+			</p>
+			{% endfor %}
+		</div> <!--end col-->
+	</div> <!--end row-->
 
 {% endblock %}
 
