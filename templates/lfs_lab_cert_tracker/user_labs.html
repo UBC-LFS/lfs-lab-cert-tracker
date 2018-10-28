@@ -1,21 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div>
-	<h1>Your Labs</h1>
+<div class="row">
+	<div class="col">
+	<h3>Your Labs</h3>
 	{% for user_lab in user_lab_list %}
 	<p>
 		{{ user_lab.name }}
 	</p>
 	{% endfor %}
-
-	<h1>PI Labs</h1>
+	</div>
+	<div class="col">
+	<h3>PI Labs</h3>
 	{% for pi_user_lab in pi_user_lab_list %}
 	<a href="/labs/{{pi_user_lab.id}}/">
 		{{ pi_user_lab.name }}
 	</a>
 	{% endfor %}
+	</div>
 </div>
-<ul>
-</ul>
 {% endblock %}

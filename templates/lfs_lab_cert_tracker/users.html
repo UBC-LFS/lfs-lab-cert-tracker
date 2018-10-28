@@ -16,7 +16,7 @@
 	<form id="create_user_form" action="/api/users/" method="post">
 	{% csrf_token %}
 	{{ user_form.as_p }}
-	<input id="submit_create_user_form" type="submit" value="Submit Form"/>
+	<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Submit Form"/>
 </form>
 {% endif %}
 

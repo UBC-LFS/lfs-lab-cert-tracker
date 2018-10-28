@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth.hashers import make_password
 
 from django.forms.models import model_to_dict
@@ -32,6 +34,9 @@ def delete_cert(cert_id):
         return False
 
 # Lab CRUD
+def get_lab(lab_id):
+    return Lab.objects.get(id=lab_id)
+
 def get_labs(n=None):
     return [model_to_dict(lab) for lab in Lab.objects.all()]
 
@@ -57,8 +62,10 @@ def get_user_certs(user_id):
     return res
 
 def get_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.get(user=user_id, cert=cert_id)
-    return model_to_dict(user_cert)
+    user_cert = UserCert.objects.filter(user=user_id, cert=cert_id).prefetch_related('cert')[0]
+    res = model_to_dict(user_cert)
+    res.update(model_to_dict(user_cert.cert))
+    return res
 
 # UserCert CRUD
 def get_missing_certs(user_id):
@@ -72,8 +79,9 @@ def get_missing_certs(user_id):
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
 
 def update_or_create_user_cert(user_id, cert_id, cert_file):
-    user_cert, created = UserCert.objects.get_or_create(user_id=user_id, cert_id=cert_id, defaults={'cert_file': cert_file, 'status': UserCert.PENDING})
+    user_cert, created = UserCert.objects.get_or_create(user_id=user_id, cert_id=cert_id, defaults={'cert_file': cert_file, 'status': UserCert.PENDING, 'uploaded_date': datetime.now()})
     if not created:
+        user_cert.uploaded_date = datetime.now()
         user_cert.cert_file = cert_file
         user_cert.save()
     return model_to_dict(user_cert)

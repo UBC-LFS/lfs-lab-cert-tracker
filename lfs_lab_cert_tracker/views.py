@@ -156,11 +156,13 @@ def lab_details(request, lab_id):
         # TODO: Add forbidden page
         return HttpResponseForbidden()
 
+    lab = api.get_lab(lab_id)
     users_in_lab = api.get_users_in_lab(lab_id)
     users_missing_certs = api.get_users_missing_certs(lab_id)
     return render(request,
             'lfs_lab_cert_tracker/lab_details.html',
             {
+                'lab': lab,
                 'users_in_lab': users_in_lab,
                 'users_missing_certs': users_missing_certs,
             }

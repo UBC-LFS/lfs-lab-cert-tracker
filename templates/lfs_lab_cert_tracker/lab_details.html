@@ -2,23 +2,38 @@
 
 {% block content %}
 
-<div>
-	<h1>Users in Lab</h1>
+<div class="row">
+	<div class="col">
+	<h3>Users in Lab: {{lab.name}}</h3>
 	{% for user_in_lab in users_in_lab %}
 	<p>
 		{{ user_in_lab.cwl}}
 	</p>
 	{% endfor %}
-
-	<h1>Users Missing Certs</h1>
-	{% for user_missing_certs in users_missing_certs %}
-	<p>
-		User: {{ user_missing_certs.0.cwl}} | Missing Certs:
-		{% for missing_cert in user_missing_certs.1 %}
-			{{ missing_cert.name }}
+	</div>
+	<div class="col">
+	<h3>Users Missing Certs</h3>
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">CWL</th>
+				<th scope="col">Missing</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for user_missing_certs in users_missing_certs %}
+			<tr>
+				<th>{{ user_missing_certs.0.cwl}}</th>
+				<td>
+					{% for missing_cert in user_missing_certs.1 %}
+						{{ missing_cert.name }}
+					{% endfor %}
+				</td>
+			</tr>
 		{% endfor %}
-	</p>
-	{% endfor %}
+		</tbody>
+	</table>
+	</div>
 </div>
 
 {% endblock %}
