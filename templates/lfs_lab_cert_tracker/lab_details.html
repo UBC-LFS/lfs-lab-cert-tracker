@@ -25,9 +25,11 @@
 			<tr>
 				<th>{{ user_missing_certs.0.cwl}}</th>
 				<td>
+					<ul>
 					{% for missing_cert in user_missing_certs.1 %}
-						{{ missing_cert.name }}
+					<li>{{ missing_cert.name }}</li>
 					{% endfor %}
+					</ul>
 				</td>
 			</tr>
 		{% endfor %}
