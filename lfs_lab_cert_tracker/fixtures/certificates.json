@@ -1,14 +1,15 @@
 [
-{"model": "lfs_lab_cert_tracker.cert", "pk": 1 , "fields": {"name": "Accident Incident Investigation Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 2 , "fields": {"name": "Active Shooter Preparedness Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 3 , "fields": {"name": "Biological Safety Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 4 , "fields": {"name": "Bullying and Harassment Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 5 , "fields": {"name": "Chemical Safety Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 6 , "fields": {"name": "Floor Warden Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 7 , "fields": {"name": "Intro to Lab Safety Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 8 , "fields": {"name": "New Worker Safety Orientation Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 9 , "fields": {"name": "Privacy Matters Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 10, "fields": {"name": "Waste Management Refresher Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 11, "fields": {"name": "WHMIS Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 12, "fields": {"name": "Workplace Violence Prevention Training Certificate"}}
+{"model": "lfs_lab_cert_tracker.cert", "pk": 1 , "fields": {"name": "Faculty of Land and Food Systems Workplace Safety Orientation & Training Needs Assessment & Record"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 2 , "fields": {"name": "Accident Incident Investigation Training Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 3 , "fields": {"name": "Active Shooter Preparedness Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 4 , "fields": {"name": "Biological Safety Training Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 5 , "fields": {"name": "Bullying and Harassment Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 6 , "fields": {"name": "Chemical Safety Training Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 7 , "fields": {"name": "Floor Warden Training Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 8 , "fields": {"name": "Intro to Lab Safety Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 9 , "fields": {"name": "New Worker Safety Orientation Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 10 , "fields": {"name": "Privacy Matters Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 11, "fields": {"name": "Waste Management Refresher Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 12, "fields": {"name": "WHMIS Certificate"}},
+{"model": "lfs_lab_cert_tracker.cert", "pk": 13, "fields": {"name": "Workplace Violence Prevention Training Certificate"}}
 ]

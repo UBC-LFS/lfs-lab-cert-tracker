@@ -7,7 +7,7 @@
 <form id="add_user_lab_form" method="post">
 {% csrf_token %}
 {{ user_lab_form.as_p }}
-<input id="submit_add_user_lab_form" type="button" value="Submit Form"/>
+<input class="btn btn-primary" id="submit_add_user_lab_form" type="button" value="Submit Form"/>
 </form>
 
 <script>
@@ -24,7 +24,7 @@ $('input#submit_add_user_lab_form').click(function() {
 			location.reload();
 		},
 		error: function(data) {
-			alert("Operation failed");
+			alert("User Already in Lab");
 		},
 	});
 });

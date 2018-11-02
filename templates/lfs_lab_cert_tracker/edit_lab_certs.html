@@ -7,7 +7,7 @@
 <form id="add_lab_cert_form" method="post">
 {% csrf_token %}
 {{ cert_lab_form.as_p }}
-<input id="submit_add_lab_cert_form" type="button" value="Submit Form"/>
+<input class="btn btn-primary" id="submit_add_lab_cert_form" type="button" value="Submit Form"/>
 </form>
 
 <script>
@@ -24,7 +24,7 @@ $('input#submit_add_lab_cert_form').click(function() {
 			location.reload();
 		},
 		error: function(data) {
-			alert("Operation failed");
+			alert("Certificate Already Added");
 		},
 	});
 });

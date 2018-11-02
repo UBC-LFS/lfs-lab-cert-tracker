@@ -1,0 +1,3 @@
+[
+{"model": "lfs_lab_cert_tracker.labcert", "pk": 1 , "fields": {"lab": 1, "cert": 1}}
+]
