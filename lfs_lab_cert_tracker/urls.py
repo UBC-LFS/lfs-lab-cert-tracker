@@ -31,6 +31,7 @@ urlpatterns = [
     path('users/<int:user_id>/labs/', views.user_labs),
     path('users/<int:user_id>/certificates/', views.user_certificates),
     path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
+    path('users/<int:user_id>/webform/<int:cert_id>', views.user_webform),
 
     path('labs/<int:lab_id>/', views.lab_details),
     path('users/<int:user_id>/', views.user_details),

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+	<div class=col">
+		<h3>Safety Training Checklist</h3>
+		<form id="safety_training_checklist" action="/api/labs/" method="post">
+		{% csrf_token %}
+		{{ safety_webform.as_p }}
+		<input class="btn btn-primary" type="submit" value="Submit Form"/>
+		</form>
+	</div>
+</div>
+{% endblock %}

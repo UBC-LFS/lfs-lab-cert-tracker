@@ -6,7 +6,7 @@ from django.http import HttpResponseForbidden
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
-        UserLabForm, LabCertForm, UserCertForm)
+        UserLabForm, LabCertForm, UserCertForm, SafetyWebForm)
 
 """
 HTTP endpoints to transfer HTML
@@ -206,5 +206,16 @@ def user_details(request, user_id):
                 'user_cert_list': user_cert_list,
                 'missing_cert_list': missing_cert_list,
                 'user_id': request.user.id,
+            }
+    )
+
+@login_required
+@require_http_methods(['GET'])
+def user_webform(request, user_id, cert_id):
+    # TODO Retrieve correct webform based on cert_id 
+    return render(request,
+            'lfs_lab_cert_tracker/lfs_safety_training_record.html',
+            {
+                'safety_webform': SafetyWebForm(),
             }
     )
