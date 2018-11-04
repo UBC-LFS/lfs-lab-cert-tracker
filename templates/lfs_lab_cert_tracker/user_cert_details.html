@@ -16,8 +16,13 @@
 		</div>
 	</div>
 	<div class="col">
-		<!-- Add stuff here for editing this certificate -->
+		<form id="add_user_cert_form" action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post">
+		{% csrf_token %}
+		{{ delete_user_cert_form.as_p }}
+		<input class="btn btn-danger" type="submit" value="DELETE"/>
+		</form>
 	</div>
 </div>
+
 
 {% endblock %}

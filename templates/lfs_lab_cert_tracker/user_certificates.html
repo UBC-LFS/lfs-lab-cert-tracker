@@ -6,16 +6,18 @@
 	<div class="col">
 		<h3>Your Certificates</h3>
 		<div class="list-group">
-		{% for user_cert in user_cert_list %}
-		<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
-		{% endfor %}
-		</div>
+			{% for user_cert in user_cert_list %}
+			<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
+			{% endfor %}
+		</div> <!--end list-->
 		<h3>Missing Certificates</h3>
 		<ul class="list-group">
-		{% for missing_cert in missing_cert_list %}
-		<li class="list-group-item">{{ missing_cert.name }}</li>
-		{% endfor %}
+			{% for missing_cert in missing_cert_list %}
+			<li class="list-group-item">{{ missing_cert.name }}</li>
+			{% endfor %}
+		</ul>
 	</div> <!--end col-->
+
 	<div class="col">
 		<h3>Add Certificates</h3>
 		<form id="add_user_cert_form" action='/api/users/{{user_id}}/certificates/' method="post" enctype="multipart/form-data">

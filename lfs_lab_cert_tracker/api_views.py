@@ -64,7 +64,7 @@ def lab_certificates(request, lab_id=None, cert_id=None):
         return JsonResponse(res)
 
 @login_required
-@require_http_methods(['GET', 'POST', 'DELETE'])
+@require_http_methods(['GET', 'POST'])
 def user_certificates(request, user_id=None, cert_id=None):
     if request.method == 'GET':
         res = api.get_user_certs(user_id)
@@ -79,10 +79,17 @@ def user_certificates(request, user_id=None, cert_id=None):
         if redirect_url:
             return redirect(redirect_url)
         return JsonResponse(res)
-    elif request.method == 'DELETE':
-        data = request.POST
-        res = api.delete_user_cert(data['user_id'], data['cert_id'])
-        return JsonResponse(res)
+
+@login_required
+@require_http_methods(['POST'])
+def delete_user_certificates(request, user_id=None, cert_id=None):
+    data = request.POST
+    res = api.delete_user_cert(user_id, cert_id)
+
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
 
 @login_required
 @require_http_methods(['GET', 'POST', 'DELETE'])

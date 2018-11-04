@@ -87,8 +87,8 @@ def update_or_create_user_cert(user_id, cert_id, cert_file):
     return model_to_dict(user_cert)
 
 def delete_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.delete(user_id=user_id, cert_id=cert_id)
-    return model_to_dict(user_cert)
+    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
+    return {'user_id': user_id, 'cert_id': cert_id}
 
 # UserLab CRUD
 def get_user_labs(user_id, is_principal_investigator=None):

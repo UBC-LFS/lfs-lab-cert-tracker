@@ -34,6 +34,9 @@ class UserCertForm(forms.ModelForm):
         fields = ['user', 'cert', 'cert_file', 'redirect_url']
         widgets = {'user': forms.HiddenInput()}
 
+class DeleteUserCertForm(forms.Form):
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+
 class UserForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
