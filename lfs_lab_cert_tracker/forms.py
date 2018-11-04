@@ -29,10 +29,13 @@ class LabCertForm(forms.ModelForm):
 
 class UserCertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
+    expiry_date = forms.DateField(required=False, widget=forms.SelectDateWidget())
     class Meta:
         model = UserCert
         fields = ['user', 'cert', 'cert_file', 'redirect_url']
-        widgets = {'user': forms.HiddenInput()}
+        widgets = {
+            'user': forms.HiddenInput(),
+        }
 
 class DeleteUserCertForm(forms.Form):
     redirect_url = forms.CharField(widget=forms.HiddenInput())

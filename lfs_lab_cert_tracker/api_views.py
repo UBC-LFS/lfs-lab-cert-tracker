@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.http import JsonResponse
@@ -72,7 +74,10 @@ def user_certificates(request, user_id=None, cert_id=None):
     elif request.method == 'POST':
         data = request.POST
         files = request.FILES
-        res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'])
+        expiry_date = None
+        if all([data['expiry_date_year'], data['expiry_date_month'], data['expiry_date_day']]):
+            expiry_date = datetime.datetime(year=int(data['expiry_date_year']), month=int(data['expiry_date_month']), day=int(data['expiry_date_day']))
+        res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], expiry_date)
         # Added since uploading files with ajax is a pain
         # So in this case just redirect to the client specified url
         redirect_url = data.get('redirect_url', None)

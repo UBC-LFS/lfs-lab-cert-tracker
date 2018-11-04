@@ -78,11 +78,12 @@ def get_missing_certs(user_id):
 
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
 
-def update_or_create_user_cert(user_id, cert_id, cert_file):
-    user_cert, created = UserCert.objects.get_or_create(user_id=user_id, cert_id=cert_id, defaults={'cert_file': cert_file, 'status': UserCert.PENDING, 'uploaded_date': datetime.now()})
+def update_or_create_user_cert(user_id, cert_id, cert_file, expiry_date):
+    user_cert, created = UserCert.objects.get_or_create(user_id=user_id, cert_id=cert_id, defaults={'cert_file': cert_file, 'status': UserCert.PENDING, 'uploaded_date': datetime.now(), 'expiry_date': expiry_date})
     if not created:
         user_cert.uploaded_date = datetime.now()
         user_cert.cert_file = cert_file
+        user_cert.expiry_date = expiry_date
         user_cert.save()
     return model_to_dict(user_cert)
 
