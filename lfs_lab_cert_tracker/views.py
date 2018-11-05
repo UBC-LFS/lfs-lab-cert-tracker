@@ -171,6 +171,7 @@ def lab_details(request, lab_id):
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_cert_details(request, user_id=None, cert_id=None):
+    request_user_id = request.user.id
     # Retrieve information about the user cert
     user_cert = api.get_user_cert(user_id, cert_id)
     redirect_url = '/users/%d/certificates/' % request_user_id

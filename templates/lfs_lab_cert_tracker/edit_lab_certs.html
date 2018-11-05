@@ -1,14 +1,19 @@
 {% extends "base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
-<h1>Add Cert to Lab</h1>
-
-<form id="add_lab_cert_form" method="post">
-{% csrf_token %}
-{{ cert_lab_form.as_p }}
-<input class="btn btn-primary" id="submit_add_lab_cert_form" type="button" value="Submit Form"/>
-</form>
+<div class="row">
+	<div class="col">
+		<h1>Add Cert to Lab</h1>
+		<form id="add_lab_cert_form" method="post">
+		{% csrf_token %}
+		{{ cert_lab_form | crispy }}
+		<input class="btn btn-primary" id="submit_add_lab_cert_form" type="button" value="Submit Form"/>
+		</form>
+	</div>
+</div>
 
 <script>
 $('input#submit_add_lab_cert_form').click(function() {

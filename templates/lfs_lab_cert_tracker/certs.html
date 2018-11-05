@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
 <div class="row">
@@ -15,10 +17,8 @@
 	{% if can_create_cert %}
 	<h3>Create New Certificate</h3>
 	<form id="create_cert_form" action="/api/certificates/" method="POST">
-		<div class="form-group">
 		{% csrf_token %}
-		{{ cert_form.as_p }}
-		</div>
+		{{ cert_form | crispy }}
 	<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Submit Form"/>
 	</form>
 	{% endif %}

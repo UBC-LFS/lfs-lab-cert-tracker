@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
 <div class="row">
@@ -7,7 +9,7 @@
 		<h3>Safety Training Checklist</h3>
 		<form id="safety_training_checklist" action="/api/labs/" method="post">
 		{% csrf_token %}
-		{{ safety_webform.as_p }}
+		{{ safety_webform | crispy }}
 		<input class="btn btn-primary" type="submit" value="Submit Form"/>
 		</form>
 	</div>

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
 <div class="row">
@@ -16,8 +18,8 @@
 		<h1>Create Users</h1>
 		<form id="create_user_form" action="/api/users/" method="post">
 		{% csrf_token %}
-		{{ user_form.as_p }}
-		<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Submit Form"/>
+		{{ user_form | crispy }}
+		<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
 		</form>
 	{% endif %}
 	</div>

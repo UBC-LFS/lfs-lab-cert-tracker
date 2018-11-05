@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
 <div class="row">
@@ -18,7 +20,7 @@
 	<div class="col">
 		<form id="add_user_cert_form" action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post">
 		{% csrf_token %}
-		{{ delete_user_cert_form.as_p }}
+		{{ delete_user_cert_form | crispy }}
 		<input class="btn btn-danger" type="submit" value="DELETE"/>
 		</form>
 	</div>

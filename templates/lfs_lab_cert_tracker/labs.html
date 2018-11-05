@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
 <div class="row">
@@ -17,10 +19,8 @@
 	{% if can_create_lab %}
 		<h3>Create Labs</h3>
 		<form id="create_lab_form" action="/api/labs/" method="post">
-		<div class="form-group">
 		{% csrf_token %}
-		{{ lab_form.as_p }}
-		</div>
+		{{ lab_form | crispy }}
 		<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Submit Form"/>
 	</form>
 	{% endif %}
