@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from lfs_lab_cert_tracker import api
+from lfs_lab_cert_tracker.auth_utils import user_or_admin
 
 """
 Provides HTTP endpoints to access the api
@@ -86,6 +87,7 @@ def user_certificates(request, user_id=None, cert_id=None):
         return JsonResponse(res)
 
 @login_required
+@user_or_admin
 @require_http_methods(['POST'])
 def delete_user_certificates(request, user_id=None, cert_id=None):
     data = request.POST
@@ -122,4 +124,7 @@ def users(request):
             email=data['email'],
             cwl=data['cwl'],
         )
+        redirect_url = data.get('redirect_url', None)
+        if redirect_url:
+            return redirect(redirect_url)
         return JsonResponse(res)

@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.shortcuts import render
@@ -27,6 +28,7 @@ def index(request):
     )
 
 @login_required
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_labs(request, user_id):
     request_user_id = request.user.id
@@ -42,6 +44,7 @@ def user_labs(request, user_id):
     )
 
 @login_required
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_certificates(request, user_id):
     request_user_id = request.user.id
@@ -94,8 +97,7 @@ def certificates(request):
 def users(request):
     is_admin = auth_utils.is_admin(request.user)
     if not is_admin:
-        # TODO: Add forbidden page
-        return HttpResponseForbidden()
+        raise PermissionDenied
     users = api.get_users()
     can_create_user = request.user.groups.filter(name='admin').exists()
     redirect_url = '/users/'
@@ -113,8 +115,7 @@ def users(request):
 def edit_user_labs(request):
     is_admin = auth_utils.is_admin(request.user)
     if not is_admin:
-        # TODO: Add forbidden page
-        return HttpResponseForbidden()
+        raise PermissionDenied
     users = api.get_users()
     labs = api.get_labs()
     redirect_url = '/users/edit_labs/'
@@ -132,8 +133,7 @@ def edit_user_labs(request):
 def edit_lab_certs(request):
     is_admin = auth_utils.is_admin(request.user)
     if not is_admin:
-        # TODO: Add forbidden page
-        return HttpResponseForbidden()
+        raise PermissionDenied
     labs = api.get_labs()
     certs = api.get_certs()
     redirect_url = '/labs/edit_certs/'
@@ -153,8 +153,7 @@ def lab_details(request, lab_id):
     is_admin = auth_utils.is_admin(request.user)
     is_pi = auth_utils.is_principal_investigator(request_user_id, lab_id)
     if not is_admin and not is_pi:
-        # TODO: Add forbidden page
-        return HttpResponseForbidden()
+        raise PermissionDenied
 
     lab = api.get_lab(lab_id)
     users_in_lab = api.get_users_in_lab(lab_id)
@@ -169,14 +168,9 @@ def lab_details(request, lab_id):
     )
 
 @login_required
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
-def user_cert_details(request, user_id, cert_id):
-    request_user_id = request.user.id
-    is_admin = auth_utils.is_admin(request.user)
-    if request_user_id != user_id and not is_admin:
-        # TODO: Add forbidden page
-        return HttpResponseForbidden()
-
+def user_cert_details(request, user_id=None, cert_id=None):
     # Retrieve information about the user cert
     user_cert = api.get_user_cert(user_id, cert_id)
     redirect_url = '/users/%d/certificates/' % request_user_id
@@ -192,14 +186,9 @@ def user_cert_details(request, user_id, cert_id):
     )
 
 @login_required
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
-def user_details(request, user_id):
-    request_user_id = request.user.id
-    is_admin = auth_utils.is_admin(request.user)
-    if request_user_id != user_id and not is_admin:
-        # TODO: Add forbidden page
-        return HttpResponseForbidden()
-
+def user_details(request, user_id=None):
     user_lab_list = api.get_user_labs(user_id)
     user_cert_list = api.get_user_certs(user_id)
     missing_cert_list = api.get_missing_certs(user_id)
@@ -214,8 +203,9 @@ def user_details(request, user_id):
     )
 
 @login_required
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
-def user_webform(request, user_id, cert_id):
+def user_webform(request, user_id=None, cert_id=None):
     # TODO Retrieve correct webform based on cert_id 
     return render(request,
             'lfs_lab_cert_tracker/lfs_safety_training_record.html',
