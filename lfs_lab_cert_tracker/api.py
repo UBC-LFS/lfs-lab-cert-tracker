@@ -135,16 +135,16 @@ def delete_user_lab(user_id, lab_id):
 
 # LabCert CRUD
 def get_lab_certs(lab_id, n=None):
-    lab_certs = LabCert.objects.filter(lab=lab_id)
-    return [model_to_dict(lab_cert) for lab_cert in lab_certs]
+    lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
+    return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
 
 def create_lab_cert(lab_id, cert_id):
     lab_cert = LabCert.objects.create(lab_id=lab_id, cert_id=cert_id)
     return model_to_dict(lab_cert)
 
 def delete_lab_cert(lab_id, cert_id):
-    lab_cert = LabCert.objects.delete(lab_id=lab_id, cert_id=cert_id)
-    return model_to_dict(lab_cert)
+    LabCert.objects.get(lab=lab_id, cert=cert_id).delete()
+    return {'lab_id': lab_id, 'cert_id': cert_id}
 
 # User CRUD
 def create_user(first_name, last_name, email, cwl):

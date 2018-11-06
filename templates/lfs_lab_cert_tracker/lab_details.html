@@ -12,8 +12,8 @@
 					{{ user_in_lab.cwl}}
 				</p>
 				<form class="d-inline float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post">
-				{% csrf_token %}
-				{{ delete_user_lab_form }}
+					{% csrf_token %}
+					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
 				<input class="btn btn-danger" type="submit" value="DELETE"/>
 				</form>
 			</div>
@@ -21,29 +21,48 @@
 		</div>
 	</div>
 	<div class="col">
-	<h3>Users Missing Certs</h3>
-	<table class="table">
-		<thead>
-			<tr>
-				<th scope="col">CWL</th>
-				<th scope="col">Missing</th>
-			</tr>
-		</thead>
-		<tbody>
-		{% for user_missing_certs in users_missing_certs %}
-			<tr>
-				<th>{{ user_missing_certs.0.cwl}}</th>
-				<td>
-					<ul>
-					{% for missing_cert in user_missing_certs.1 %}
-					<li>{{ missing_cert.name }}</li>
-					{% endfor %}
-					</ul>
-				</td>
-			</tr>
-		{% endfor %}
-		</tbody>
-	</table>
+		<div class="row">
+			<h3>Required Certs</h3>
+			<div class="list-group">
+				{% for required_cert in required_certs %}
+				<div class="list-group-item">
+					<p class="d-inline float-left">
+						{{ required_cert.name }}
+					</p>
+					<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post">
+						{% csrf_token %}
+						<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+						<input class="btn btn-danger" type="submit" value="DELETE"/>
+					</form>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+		<div class="row">
+			<h3>Users Missing Certs</h3>
+			<table class="table">
+				<thead>
+					<tr>
+						<th scope="col">CWL</th>
+						<th scope="col">Missing</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for user_missing_certs in users_missing_certs %}
+					<tr>
+						<th>{{ user_missing_certs.0.cwl}}</th>
+						<td>
+							<ul>
+							{% for missing_cert in user_missing_certs.1 %}
+							<li>{{ missing_cert.name }}</li>
+							{% endfor %}
+							</ul>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
 	</div>
 </div>
 
