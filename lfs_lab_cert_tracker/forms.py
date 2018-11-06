@@ -40,6 +40,9 @@ class UserCertForm(forms.ModelForm):
 class DeleteUserCertForm(forms.Form):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
 
+class DeleteUserLabForm(forms.Form):
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+
 class UserForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:

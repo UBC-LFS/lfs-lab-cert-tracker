@@ -7,7 +7,7 @@ from django.http import HttpResponseForbidden
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
-        UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm)
+        UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm, DeleteUserLabForm)
 
 """
 HTTP endpoints to transfer HTML
@@ -158,12 +158,15 @@ def lab_details(request, lab_id):
     lab = api.get_lab(lab_id)
     users_in_lab = api.get_users_in_lab(lab_id)
     users_missing_certs = api.get_users_missing_certs(lab_id)
+    redirect_url = '/labs/%d' % lab_id
+    delete_user_lab_form = DeleteUserLabForm(initial={'redirect_url': redirect_url})
     return render(request,
             'lfs_lab_cert_tracker/lab_details.html',
             {
                 'lab': lab,
                 'users_in_lab': users_in_lab,
                 'users_missing_certs': users_missing_certs,
+                'delete_user_lab_form': delete_user_lab_form,
             }
     )
 

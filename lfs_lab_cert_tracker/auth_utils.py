@@ -15,3 +15,11 @@ def user_or_admin(func):
         else:
             raise PermissionDenied
     return user_or_admin
+
+def admin_only(func):
+    def admin_only(request, *args, **kwargs):
+        if is_admin(request.user):
+            return func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return admin_only

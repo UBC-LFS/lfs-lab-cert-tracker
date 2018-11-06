@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from lfs_lab_cert_tracker import api
-from lfs_lab_cert_tracker.auth_utils import user_or_admin
+from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only
 
 """
 Provides HTTP endpoints to access the api
@@ -99,7 +99,7 @@ def delete_user_certificates(request, user_id=None, cert_id=None):
     return JsonResponse(res)
 
 @login_required
-@require_http_methods(['GET', 'POST', 'DELETE'])
+@require_http_methods(['GET', 'POST'])
 def user_labs(request, user_id=None, lab_id=None):
     if request.method == 'GET':
         res = api.get_user_labs(user_id)
@@ -108,10 +108,18 @@ def user_labs(request, user_id=None, lab_id=None):
         data = request.POST
         res = api.create_user_lab(data['user'], data['lab'], data['role'])
         return JsonResponse(res)
-    elif request.method == 'DELETE':
-        data = request.POST
-        res = api.delete_user_lab(data['user'], data['lab'])
-        return JsonResponse(res)
+
+@login_required
+@admin_only
+@require_http_methods(['POST'])
+def delete_user_lab(request, user_id=None, lab_id=None):
+    data = request.POST
+    res = api.delete_user_lab(user_id, lab_id)
+
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
 
 @login_required
 @require_http_methods(['POST'])

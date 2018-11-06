@@ -130,8 +130,8 @@ def create_user_lab(user_id, lab_id, role):
     return model_to_dict(user_lab)
 
 def delete_user_lab(user_id, lab_id):
-    user_lab = UserLab.objects.delete(user_id=user_id, lab=lab_id)
-    return model_to_dict(user_lab)
+    UserLab.objects.get(user=user_id, lab=lab_id).delete()
+    return {'user_id': user_id, 'lab_id': lab_id}
 
 # LabCert CRUD
 def get_lab_certs(lab_id, n=None):
