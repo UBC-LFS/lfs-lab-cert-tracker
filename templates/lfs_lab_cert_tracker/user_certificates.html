@@ -4,25 +4,31 @@
 
 <div class="row">
 	<div class="col-md-8">
-		<h3>Your Certificates</h3>
-		<div class="list-group">
-			{% for user_cert in user_cert_list %}
-			<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
-			{% endfor %}
-		</div> <!--end list-->
-		<h3>Missing Certificates</h3>
-		<ul class="list-group">
-			{% for missing_cert in missing_cert_list %}
-			<li class="list-group-item">{{ missing_cert.name }}</li>
-			{% endfor %}
-		</ul>
-		<h3>Add Certificates</h3>
+		<h4>Your Certificates</h4>
+		{% if user_cert_list %}
+			<div class="list-group">
+				{% for user_cert in user_cert_list %}
+				<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
+				{% endfor %}
+			</div> <!--end list-->
+		{% else %}
+			<p>You do not have any certificates</p>
+		{% endif %}
+		{% if missing_cert_list %}
+			<h4>Missing Certificates</h4>
+			<ul class="list-group">
+				{% for missing_cert in missing_cert_list %}
+				<li class="list-group-item">{{ missing_cert.name }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+		<h4>Add Certificates</h4>
 		<form id="add_user_cert_form" action='/api/users/{{user_id}}/certificates/' method="post" enctype="multipart/form-data">
 		{% csrf_token %}
 		{{ user_cert_form.as_p }}
 		<input class="btn btn-primary" id="submit_add_user_cert_form" type="submit" value="Add Certificate"/>
 		</form>
-		<h3>Web Forms</h3>
+		<h4>Web Forms</h4>
 		<div class="list-group">
 			<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/webform/1">Safety Checklist</a>
 		</div> <!-- end list -->

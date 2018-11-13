@@ -2,21 +2,26 @@
 
 {% block content %}
 <div class="row">
-	<div class="col">
-	<h3>Your Labs</h3>
-	{% for user_lab in user_lab_list %}
-	<p>
-		{{ user_lab.name }}
-	</p>
-	{% endfor %}
-	</div>
-	<div class="col">
-	<h3>PI Labs</h3>
-	{% for pi_user_lab in pi_user_lab_list %}
-	<a href="/labs/{{pi_user_lab.id}}/">
-		{{ pi_user_lab.name }}
-	</a>
-	{% endfor %}
+	<div class="col-md-8">
+		<h3>Your Labs</h3>
+		{% if user_lab_list %}
+			{% for user_lab in user_lab_list %}
+			<p>
+				{{ user_lab.name }}
+			</p>
+			{% endfor %}
+			</div>
+		{% else %}
+			<p>You are not in any labs</p>
+		{% endif %}
+		{% if pi_user_lab_list %}
+			<h3>PI Labs</h3>
+			{% for pi_user_lab in pi_user_lab_list %}
+			<a href="/labs/{{pi_user_lab.id}}/">
+				{{ pi_user_lab.name }}
+			</a>
+			{% endfor %}
+		{% endif %}
 	</div>
 </div>
 {% endblock %}
