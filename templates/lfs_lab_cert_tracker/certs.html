@@ -1,27 +1,23 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
-
 {% block content %}
 
 <div class="row">
-	<div class="col">
-	<h3>Certificates</h3>
-	{% for cert in cert_list %}
-	<p>
-		{{ cert.name }}
-	</p>
-	{% endfor %}
-	</div>
-	<div class="col">
-	{% if can_create_cert %}
-	<h3>Create New Certificate</h3>
-	<form id="create_cert_form" action="/api/certificates/" method="POST">
-		{% csrf_token %}
-		{{ cert_form | crispy }}
-	<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Submit Form"/>
-	</form>
-	{% endif %}
+	<div class="col-md-8">
+		<h4>Certificates</h4>
+		{% for cert in cert_list %}
+		<p>
+			{{ cert.name }}
+		</p>
+		{% endfor %}
+		{% if can_create_cert %}
+		<h4>Create New Certificate</h4>
+		<form id="create_cert_form" action="/api/certificates/" method="POST">
+			{% csrf_token %}
+			{{ cert_form.as_p }}
+		<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Submit Form"/>
+		</form>
+		{% endif %}
 	</div>
 </div>
 {% endblock %}

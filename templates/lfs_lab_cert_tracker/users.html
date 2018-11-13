@@ -1,24 +1,20 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
-
 {% block content %}
 
 <div class="row">
-	<div class="col">
-		<h1>View Users</h1>
+	<div class="col-md-8">
+		<h4>View Users</h4>
 		<div class="list-group">
 		{% for user in user_list %}
 			<a class="list-group-item list-group-item-action" href="/users/{{user.id}}">{{ user.cwl }}</a>
 		{% endfor %}
 		</div>
-	</div>
-	<div class="col">
 	{% if can_create_user %}
-		<h1>Create Users</h1>
+		<h4>Create Users</h4>
 		<form id="create_user_form" action="/api/users/" method="post">
 		{% csrf_token %}
-		{{ user_form | crispy }}
+		{{ user_form.as_p }}
 		<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
 		</form>
 	{% endif %}

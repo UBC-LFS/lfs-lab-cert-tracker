@@ -1,11 +1,9 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
-
 {% block content %}
 
 <div class="row">
-	<div class="col">
+	<div class="col-md-8">
 	<h3>View Labs</h3>
 	<div class="list-group">
 	{% for lab in lab_list %}
@@ -14,13 +12,11 @@
 		</a>
 	{% endfor %}
 		</div>
-	</div>
-	<div class="col"/>
 	{% if can_create_lab %}
 		<h3>Create Labs</h3>
 		<form id="create_lab_form" action="/api/labs/" method="post">
 		{% csrf_token %}
-		{{ lab_form | crispy }}
+		{{ lab_form.as_p }}
 		<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Submit Form"/>
 	</form>
 	{% endif %}

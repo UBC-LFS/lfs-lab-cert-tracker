@@ -1,11 +1,9 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
-
 {% block content %}
 
 <div class="row">
-	<div class="col">
+	<div class="col-md-8">
 		<h3>Your Certificates</h3>
 		<div class="list-group">
 			{% for user_cert in user_cert_list %}
@@ -18,19 +16,16 @@
 			<li class="list-group-item">{{ missing_cert.name }}</li>
 			{% endfor %}
 		</ul>
-	</div> <!--end col-->
-
-	<div class="col">
 		<h3>Add Certificates</h3>
 		<form id="add_user_cert_form" action='/api/users/{{user_id}}/certificates/' method="post" enctype="multipart/form-data">
 		{% csrf_token %}
-		{{ user_cert_form | crispy }}
+		{{ user_cert_form.as_p }}
 		<input class="btn btn-primary" id="submit_add_user_cert_form" type="submit" value="Add Certificate"/>
 		</form>
 		<h3>Web Forms</h3>
 		<div class="list-group">
 			<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/webform/1">Safety Checklist</a>
 		</div> <!-- end list -->
-	</div> <!--end col-->
+	</div>
 </div> <!--end row-->
 {% endblock %}
