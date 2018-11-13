@@ -23,11 +23,11 @@ urlpatterns = [
 
     path('', views.index),
     path('labs/', views.labs),
-    path('certificates/', views.certificates),
+    path('certificates/', views.certs),
     path('users/', views.users),
 
     path('users/<int:user_id>/labs/', views.user_labs),
-    path('users/<int:user_id>/certificates/', views.user_certificates),
+    path('users/<int:user_id>/certificates/', views.user_certs),
     path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
     path('users/<int:user_id>/webform/<int:cert_id>', views.user_webform),
 
@@ -37,15 +37,15 @@ urlpatterns = [
     path('api/users/', api_views.users),
     path('api/labs/', api_views.labs),
     path('api/labs/<int:lab_id>/', api_views.labs),
-    path('api/certificates/', api_views.certificates),
-    path('api/certificates/<int:cert_id>/', api_views.certificates),
-    path('api/labs/<int:lab_id>/certificates/', api_views.lab_certificates),
+    path('api/certificates/', api_views.certs),
+    path('api/certificates/<int:cert_id>/', api_views.certs),
+    path('api/labs/<int:lab_id>/certificates/', api_views.lab_certs),
     path('api/labs/<int:lab_id>/users/', api_views.user_labs),
-    path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certificates),
-    path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete', api_views.delete_lab_certificates),
-    path('api/users/<int:user_id>/certificates/', api_views.user_certificates),
-    path('api/users/<int:user_id>/certificates/<int:cert_id>', api_views.user_certificates),
-    path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certificates),
+    path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certs),
+    path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete', api_views.delete_lab_certs),
+    path('api/users/<int:user_id>/certificates/', api_views.user_certs),
+    path('api/users/<int:user_id>/certificates/<int:cert_id>', api_views.user_certs),
+    path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certs),
 
     path('api/users/<int:user_id>/labs/<int:lab_id>/delete', api_views.delete_user_lab),
 ]

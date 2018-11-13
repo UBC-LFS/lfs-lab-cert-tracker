@@ -42,14 +42,14 @@ def user_labs(request, user_id):
 @login_required
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
-def user_certificates(request, user_id):
+def user_certs(request, user_id):
     request_user_id = request.user.id
     user_cert_list = api.get_user_certs(request_user_id)
     missing_cert_list = api.get_missing_certs(request_user_id)
-    redirect_url = '/users/%d/certificates/' % request_user_id
+    redirect_url = '/users/%d/certs/' % request_user_id
     user_cert_form = UserCertForm(initial={'user': request_user_id, 'redirect_url': redirect_url})
     return render(request,
-            'lfs_lab_cert_tracker/user_certificates.html',
+            'lfs_lab_cert_tracker/user_certs.html',
             {
                 'user_id': request.user.id,
                 'user_cert_list': user_cert_list,
@@ -75,7 +75,7 @@ def labs(request):
 
 @login_required
 @require_http_methods(['GET'])
-def certificates(request):
+def certs(request):
     certs = api.get_certs()
     can_create_cert = auth_utils.is_admin(request.user)
     redirect_url = '/certificates/'

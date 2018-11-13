@@ -15,7 +15,7 @@ Provides HTTP endpoints to access the api
 @login_required
 @admin_only
 @require_http_methods(['POST'])
-def certificates(request, cert_id=None):
+def certs(request, cert_id=None):
     data = request.POST
     res = api.create_cert(data['name'])
     redirect_url = data.get('redirect_url', None)
@@ -37,7 +37,7 @@ def labs(request, lab_id=None):
 @login_required
 @admin_only
 @require_http_methods(['POST'])
-def lab_certificates(request, lab_id=None, cert_id=None):
+def lab_certs(request, lab_id=None, cert_id=None):
     data = request.POST
     res = api.create_lab_cert(lab_id, data['cert'])
     redirect_url = data.get('redirect_url', None)
@@ -48,7 +48,7 @@ def lab_certificates(request, lab_id=None, cert_id=None):
 @login_required
 @admin_only
 @require_http_methods(['POST'])
-def delete_lab_certificates(request, lab_id=None, cert_id=None):
+def delete_lab_certs(request, lab_id=None, cert_id=None):
     data = request.POST
     res = api.delete_lab_cert(lab_id, cert_id)
     redirect_url = data.get('redirect_url', None)
@@ -59,7 +59,7 @@ def delete_lab_certificates(request, lab_id=None, cert_id=None):
 @login_required
 @user_or_admin
 @require_http_methods(['POST'])
-def user_certificates(request, user_id=None, cert_id=None):
+def user_certs(request, user_id=None, cert_id=None):
     data = request.POST
     files = request.FILES
     expiry_date = None
@@ -76,7 +76,7 @@ def user_certificates(request, user_id=None, cert_id=None):
 @login_required
 @user_or_admin
 @require_http_methods(['POST'])
-def delete_user_certificates(request, user_id=None, cert_id=None):
+def delete_user_certs(request, user_id=None, cert_id=None):
     data = request.POST
     res = api.delete_user_cert(user_id, cert_id)
 
