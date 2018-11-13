@@ -40,13 +40,12 @@
 <div class="container-fluid">
 	<div class="row" style="margin-top:32px">
 		<br/>
-		<div class="col">
+		<div class="col-2">
 			{% if user.is_authenticated %}
 				{% block sidebar %}{% endblock %}
 			{% endif %}
 		</div>
-		<div class="col-8">{% block content %}{% endblock %}</div>
-		<div class="col"></div>
+		<div class="col-10">{% block content %}{% endblock %}</div>
 	</div>
 </div>
 </body>

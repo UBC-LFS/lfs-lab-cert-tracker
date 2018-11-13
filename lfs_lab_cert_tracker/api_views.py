@@ -56,7 +56,7 @@ def lab_certificates(request, lab_id=None, cert_id=None):
         return JsonResponse(res, safe=False)
     elif request.method == 'POST':
         data = request.POST
-        res = api.create_lab_cert(data['lab'], data['cert'])
+        res = api.create_lab_cert(lab_id, data['cert'])
         redirect_url = data.get('redirect_url', None)
         if redirect_url:
             return redirect(redirect_url)

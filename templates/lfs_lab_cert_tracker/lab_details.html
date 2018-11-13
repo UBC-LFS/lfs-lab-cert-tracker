@@ -4,38 +4,21 @@
 
 <div class="row">
 	<div class="col">
-	<h3>Users in Lab: {{lab.name}}</h3>
-		<div class="list-group">
-		{% for user_in_lab in users_in_lab %}
-			<div class="list-group-item">
-				<p class="d-inline">
-					{{ user_in_lab.cwl}}
-				</p>
-				<form class="d-inline float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post">
-					{% csrf_token %}
-					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-				<input class="btn btn-danger" type="submit" value="DELETE"/>
-				</form>
-			</div>
-		{% endfor %}
-		</div>
-	</div>
-	<div class="col">
 		<div class="row">
-			<h3>Required Certs</h3>
-			<div class="list-group">
-				{% for required_cert in required_certs %}
+			<h3>Users in Lab: {{lab.name}}</h3>
+			<div class="list-group col-md-12">
+			{% for user_in_lab in users_in_lab %}
 				<div class="list-group-item">
-					<p class="d-inline float-left">
-						{{ required_cert.name }}
+					<p class="float-left">
+						{{ user_in_lab.cwl}}
 					</p>
-					<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post">
+					<form class="float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post">
 						{% csrf_token %}
 						<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-						<input class="btn btn-danger" type="submit" value="DELETE"/>
+					<input class="btn btn-danger" type="submit" value="DELETE"/>
 					</form>
 				</div>
-				{% endfor %}
+			{% endfor %}
 			</div>
 		</div>
 		<div class="row">
@@ -62,6 +45,34 @@
 				{% endfor %}
 				</tbody>
 			</table>
+		</div>
+	</div>
+	<div class="col">
+		<div class="row">
+			<h3>Add Cert to Lab</h3>
+				<form action='/api/labs/{{lab.id}}/certificates/' method="post">
+					{% csrf_token %}
+					{{ lab_cert_form }}
+					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+					<input class="btn btn-primary" type="submit" value="ADD"/>
+				</form>
+		</div>
+		<div class="row">
+			<h3>Required Certs</h3>
+			<div class="list-group col-md-12">
+				{% for required_cert in required_certs %}
+				<div class="list-group-item">
+					<p class="d-inline float-left">
+						{{ required_cert.name }}
+					</p>
+					<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post">
+						{% csrf_token %}
+						<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+						<input class="btn btn-danger" type="submit" value="DELETE"/>
+					</form>
+				</div>
+				{% endfor %}
+			</div>
 		</div>
 	</div>
 </div>

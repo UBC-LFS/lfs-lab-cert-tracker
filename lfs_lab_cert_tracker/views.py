@@ -22,7 +22,6 @@ def index(request):
             {
                 'can_view_users': is_admin,
                 'can_edit_user_lab': is_admin,
-                'can_edit_lab_cert': is_admin,
                 'user_id': request.user.id,
             }
     )
@@ -130,24 +129,6 @@ def edit_user_labs(request):
 
 @login_required
 @require_http_methods(['GET'])
-def edit_lab_certs(request):
-    is_admin = auth_utils.is_admin(request.user)
-    if not is_admin:
-        raise PermissionDenied
-    labs = api.get_labs()
-    certs = api.get_certs()
-    redirect_url = '/labs/edit_certs/'
-    return render(request,
-            'lfs_lab_cert_tracker/edit_lab_certs.html',
-            {
-                'lab_list': labs,
-                'cert_list': certs,
-                'cert_lab_form': LabCertForm(initial={'redirect_url': redirect_url}),
-            }
-    )
-
-@login_required
-@require_http_methods(['GET'])
 def lab_details(request, lab_id):
     request_user_id = request.user.id
     is_admin = auth_utils.is_admin(request.user)
@@ -167,6 +148,7 @@ def lab_details(request, lab_id):
                 'users_in_lab': users_in_lab,
                 'users_missing_certs': users_missing_certs,
                 'required_certs': required_certs,
+                'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
             }
     )
 
@@ -210,7 +192,7 @@ def user_details(request, user_id=None):
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_webform(request, user_id=None, cert_id=None):
-    # TODO Retrieve correct webform based on cert_id 
+    # TODO Retrieve correct webform based on cert_id
     return render(request,
             'lfs_lab_cert_tracker/lfs_safety_training_record.html',
             {
