@@ -16,12 +16,9 @@ HTTP endpoints to transfer HTML
 @login_required
 @require_http_methods(['GET'])
 def index(request):
-    is_admin = auth_utils.is_admin(request.user)
     return render(request,
             'lfs_lab_cert_tracker/index.html',
             {
-                'can_view_users': is_admin,
-                'can_edit_user_lab': is_admin,
                 'user_id': request.user.id,
             }
     )
@@ -111,24 +108,6 @@ def users(request):
 
 @login_required
 @require_http_methods(['GET'])
-def edit_user_labs(request):
-    is_admin = auth_utils.is_admin(request.user)
-    if not is_admin:
-        raise PermissionDenied
-    users = api.get_users()
-    labs = api.get_labs()
-    redirect_url = '/users/edit_labs/'
-    return render(request,
-        'lfs_lab_cert_tracker/edit_user_labs.html',
-        {
-            'lab_list': labs,
-            'user_list': users,
-            'user_lab_form': UserLabForm(initial={'redirect_url': redirect_url}),
-        }
-    )
-
-@login_required
-@require_http_methods(['GET'])
 def lab_details(request, lab_id):
     request_user_id = request.user.id
     is_admin = auth_utils.is_admin(request.user)
@@ -149,6 +128,7 @@ def lab_details(request, lab_id):
                 'users_missing_certs': users_missing_certs,
                 'required_certs': required_certs,
                 'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
+                'lab_user_form': UserLabForm(initial={'redirect_url': redirect_url}),
             }
     )
 

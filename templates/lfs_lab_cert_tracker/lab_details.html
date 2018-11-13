@@ -42,6 +42,13 @@
 			{% endfor %}
 			</tbody>
 		</table>
+		<h4>Add User to Lab</h4>
+		<form action='/api/labs/{{lab.id}}/users/' method="post">
+			{% csrf_token %}
+			{{ lab_user_form.as_p }}
+			<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+			<input class="btn btn-primary" type="submit" value="ADD"/>
+		</form>
 		<h4>Add Cert to Lab</h4>
 		<form action='/api/labs/{{lab.id}}/certificates/' method="post">
 			{% csrf_token %}

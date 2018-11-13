@@ -90,7 +90,10 @@ def delete_user_certificates(request, user_id=None, cert_id=None):
 @require_http_methods(['POST'])
 def user_labs(request, user_id=None, lab_id=None):
     data = request.POST
-    res = api.create_user_lab(data['user'], data['lab'], data['role'])
+    res = api.create_user_lab(data['user'], lab_id, data['role'])
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
     return JsonResponse(res)
 
 @login_required
