@@ -13,54 +13,37 @@ Provides HTTP endpoints to access the api
 """
 
 @login_required
-@require_http_methods(['GET', 'POST', 'DELETE'])
+@admin_only
+@require_http_methods(['POST'])
 def certificates(request, cert_id=None):
-    user = request.user
-    if request.method == 'GET':
-        res = api.get_certs()
-        return JsonResponse(res, safe=False)
-    elif request.method == 'POST' and user.has_perm('lfs_lab_cert_tracker.add_cert'):
-        data = request.POST
-        res = api.create_cert(data['name'])
-        redirect_url = data.get('redirect_url', None)
-        if redirect_url:
-            return redirect(redirect_url)
-        return JsonResponse(res)
-    elif request.method == 'DELETE' and user.has_perm('lfs_lab_cert_tracker.delete_cert'):
-        res = api.delete_cert(cert_id)
-        return JsonResponse(res)
+    data = request.POST
+    res = api.create_cert(data['name'])
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
 
 @login_required
-@require_http_methods(['GET', 'POST', 'DELETE'])
+@admin_only
+@require_http_methods(['POST'])
 def labs(request, lab_id=None):
-    user = request.user
-    if request.method == 'GET':
-        res = api.get_labs()
-        return JsonResponse(res, safe=False)
-    elif request.method == 'POST' and user.has_perm('lfs_lab_cert_tracker.add_lab'):
-        data = request.POST
-        res = api.create_lab(data['name'])
-        redirect_url = data.get('redirect_url', None)
-        if redirect_url:
-            return redirect(redirect_url)
-        return JsonResponse(res)
-    elif request.method == 'DELETE' and user.has_perm('lfs_lab_cert_tracker.delete_lab'):
-        res = api.delete_lab(lab_id)
-        return JsonResponse(res)
+    data = request.POST
+    res = api.create_lab(data['name'])
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@admin_only
+@require_http_methods(['POST'])
 def lab_certificates(request, lab_id=None, cert_id=None):
-    if request.method == 'GET':
-        res = api.get_lab_certs(lab_id)
-        return JsonResponse(res, safe=False)
-    elif request.method == 'POST':
-        data = request.POST
-        res = api.create_lab_cert(lab_id, data['cert'])
-        redirect_url = data.get('redirect_url', None)
-        if redirect_url:
-            return redirect(redirect_url)
-        return JsonResponse(res)
+    data = request.POST
+    res = api.create_lab_cert(lab_id, data['cert'])
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
 
 @login_required
 @admin_only
@@ -74,24 +57,21 @@ def delete_lab_certificates(request, lab_id=None, cert_id=None):
     return JsonResponse(res)
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@user_or_admin
+@require_http_methods(['POST'])
 def user_certificates(request, user_id=None, cert_id=None):
-    if request.method == 'GET':
-        res = api.get_user_certs(user_id)
-        return JsonResponse(res, safe=False)
-    elif request.method == 'POST':
-        data = request.POST
-        files = request.FILES
-        expiry_date = None
-        if all([data['expiry_date_year'], data['expiry_date_month'], data['expiry_date_day']]):
-            expiry_date = datetime.datetime(year=int(data['expiry_date_year']), month=int(data['expiry_date_month']), day=int(data['expiry_date_day']))
-        res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], expiry_date)
-        # Added since uploading files with ajax is a pain
-        # So in this case just redirect to the client specified url
-        redirect_url = data.get('redirect_url', None)
-        if redirect_url:
-            return redirect(redirect_url)
-        return JsonResponse(res)
+    data = request.POST
+    files = request.FILES
+    expiry_date = None
+    if all([data['expiry_date_year'], data['expiry_date_month'], data['expiry_date_day']]):
+        expiry_date = datetime.datetime(year=int(data['expiry_date_year']), month=int(data['expiry_date_month']), day=int(data['expiry_date_day']))
+    res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], expiry_date)
+    # Added since uploading files with ajax is a pain
+    # So in this case just redirect to the client specified url
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
 
 @login_required
 @user_or_admin
@@ -106,15 +86,12 @@ def delete_user_certificates(request, user_id=None, cert_id=None):
     return JsonResponse(res)
 
 @login_required
-@require_http_methods(['GET', 'POST'])
+@admin_only
+@require_http_methods(['POST'])
 def user_labs(request, user_id=None, lab_id=None):
-    if request.method == 'GET':
-        res = api.get_user_labs(user_id)
-        return JsonResponse(res, safe=False)
-    elif request.method == 'POST':
-        data = request.POST
-        res = api.create_user_lab(data['user'], data['lab'], data['role'])
-        return JsonResponse(res)
+    data = request.POST
+    res = api.create_user_lab(data['user'], data['lab'], data['role'])
+    return JsonResponse(res)
 
 @login_required
 @admin_only
@@ -129,17 +106,17 @@ def delete_user_lab(request, user_id=None, lab_id=None):
     return JsonResponse(res)
 
 @login_required
+@admin_only
 @require_http_methods(['POST'])
 def users(request):
-    if request.method == 'POST':
-        data = request.POST
-        res = api.create_user(
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            email=data['email'],
-            cwl=data['cwl'],
-        )
-        redirect_url = data.get('redirect_url', None)
-        if redirect_url:
-            return redirect(redirect_url)
-        return JsonResponse(res)
+    data = request.POST
+    res = api.create_user(
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        email=data['email'],
+        cwl=data['cwl'],
+    )
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
