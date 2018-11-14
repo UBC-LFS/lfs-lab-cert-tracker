@@ -6,19 +6,28 @@
 	<div class="col-md-8">
 	<h4>View Labs</h4>
 	<div class="list-group">
-	{% for lab in lab_list %}
-		<a class="list-group-item list-group-item-action" href="/labs/{{lab.id}}/">
-			{{ lab.name }}
-		</a>
-	{% endfor %}
+		{% for lab in lab_list %}
+		<div class="list-group-item">
+			<a href="/labs/{{lab.id}}/">
+				{{ lab.name }}
+			</a>
+			{% if can_create_lab %}
+			<form class="float-right" action='/api/labs/{{lab.id}}/delete' method="post">
+				{% csrf_token %}
+				<input name="redirect_url" value="/labs/" type="hidden"/>
+			<input class="btn btn-danger" type="submit" value="DELETE"/>
+			</form>
+			{% endif %}
 		</div>
+		{% endfor %}
+	</div>
 	{% if can_create_lab %}
-		<h4>Create Labs</h4>
+	<h4>Create Labs</h4>
 		<form id="create_lab_form" action="/api/labs/" method="post">
 		{% csrf_token %}
 		{{ lab_form.as_p }}
 		<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Submit Form"/>
-	</form>
+		</form>
 	{% endif %}
 	</div>
 </div>

@@ -26,9 +26,31 @@ def certs(request, cert_id=None):
 @login_required
 @admin_only
 @require_http_methods(['POST'])
+def delete_certs(request, cert_id=None):
+    data = request.POST
+    res = api.delete_cert(cert_id)
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
+
+@login_required
+@admin_only
+@require_http_methods(['POST'])
 def labs(request, lab_id=None):
     data = request.POST
     res = api.create_lab(data['name'])
+    redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
+
+@login_required
+@admin_only
+@require_http_methods(['POST'])
+def delete_labs(request, lab_id=None):
+    data = request.POST
+    res = api.delete_lab(lab_id)
     redirect_url = data.get('redirect_url', None)
     if redirect_url:
         return redirect(redirect_url)

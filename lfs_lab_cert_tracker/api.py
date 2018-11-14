@@ -27,11 +27,8 @@ def create_cert(name):
     return model_to_dict(cert)
 
 def delete_cert(cert_id):
-    try:
-        Cert.objects.delete(id=cert_id)
-        return True
-    except:
-        return False
+    Cert.objects.get(id=cert_id).delete()
+    return {'cert_id': cert_id}
 
 # Lab CRUD
 def get_lab(lab_id):
@@ -45,11 +42,8 @@ def create_lab(name):
     return model_to_dict(lab)
 
 def delete_lab(lab_id):
-    try:
-        Lab.objects.delete(id=lab_id)
-        return True
-    except:
-        return False
+    Lab.objects.get(id=lab_id).delete()
+    return {'lab_id': lab_id}
 
 # UserCert CRUD
 def get_user_certs(user_id):
