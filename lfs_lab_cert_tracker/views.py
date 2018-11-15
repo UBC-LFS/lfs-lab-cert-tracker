@@ -46,7 +46,7 @@ def user_certs(request, user_id):
     request_user_id = request.user.id
     user_cert_list = api.get_user_certs(request_user_id)
     missing_cert_list = api.get_missing_certs(request_user_id)
-    redirect_url = '/users/%d/certs/' % request_user_id
+    redirect_url = '/users/%d/certificates/' % request_user_id
     user_cert_form = UserCertForm(initial={'user': request_user_id, 'redirect_url': redirect_url})
     return render(request,
             'lfs_lab_cert_tracker/user_certs.html',
@@ -173,9 +173,12 @@ def user_details(request, user_id=None):
 @require_http_methods(['GET'])
 def user_webform(request, user_id=None, cert_id=None):
     # TODO Retrieve correct webform based on cert_id
+    redirect_url = '/users/%d/certificates/' % (user_id)
     return render(request,
             'lfs_lab_cert_tracker/lfs_safety_training_record.html',
             {
-                'safety_webform': SafetyWebForm(),
+                'user_id': user_id,
+                'cert_id': cert_id,
+                'webform': SafetyWebForm(initial={'redirect_url': redirect_url}),
             }
     )

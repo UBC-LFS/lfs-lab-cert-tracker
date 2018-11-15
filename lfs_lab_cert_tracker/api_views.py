@@ -1,5 +1,9 @@
 import datetime
+import json
+from io import StringIO
+import tempfile
 
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.http import JsonResponse
@@ -85,6 +89,7 @@ def user_certs(request, user_id=None, cert_id=None):
     data = request.POST
     files = request.FILES
     expiry_date = None
+    print(type(files['cert_file']))
     if all([data['expiry_date_year'], data['expiry_date_month'], data['expiry_date_day']]):
         expiry_date = datetime.datetime(year=int(data['expiry_date_year']), month=int(data['expiry_date_month']), day=int(data['expiry_date_day']))
     res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], expiry_date)
@@ -103,6 +108,24 @@ def delete_user_certs(request, user_id=None, cert_id=None):
     res = api.delete_user_cert(user_id, cert_id)
 
     redirect_url = data.get('redirect_url', None)
+    if redirect_url:
+        return redirect(redirect_url)
+    return JsonResponse(res)
+
+@login_required
+@user_or_admin
+@require_http_methods(['POST'])
+def user_webforms(request, user_id=None, cert_id=None):
+    data = request.POST.copy()
+    redirect_url = data.get('redirect_url', None)
+    res = {}
+    hidden_fields = ['redirect_url', 'csrfmiddlewaretoken']
+    for hidden_field in hidden_fields:
+        del data[hidden_field]
+    buff = StringIO(json.dumps(data))
+    file_name = 'webform.json'
+    f = InMemoryUploadedFile(buff, 'file', file_name, None, buff.tell(), None)
+    res = api.update_or_create_user_cert(user_id, cert_id, f, None)
     if redirect_url:
         return redirect(redirect_url)
     return JsonResponse(res)
