@@ -15,6 +15,11 @@ HTTP endpoints to transfer HTML
 
 @login_required
 @require_http_methods(['GET'])
+def show_error(request, error_msg=''):
+    return render(request, 'lfs_lab_cert_tracker/error.html', {'error_msg': error_msg})
+
+@login_required
+@require_http_methods(['GET'])
 def index(request):
     return render(request,
             'lfs_lab_cert_tracker/index.html',

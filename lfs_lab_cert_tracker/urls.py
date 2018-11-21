@@ -25,6 +25,7 @@ urlpatterns = [
     path('labs/', views.labs),
     path('certificates/', views.certs),
     path('users/', views.users),
+    path('error/<str:error_msg>', views.show_error),
 
     path('users/<int:user_id>/labs/', views.user_labs),
     path('users/<int:user_id>/certificates/', views.user_certs),
