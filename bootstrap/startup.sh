@@ -5,7 +5,8 @@ apt-get install -y python-pip \
                    python3-pip \
                    supervisor \
                    nginx \
-                   postgresql \ postgresql-contrib
+                   postgresql \
+                   postgresql-contrib
 
 mkdir -p /var/log/lfs_lab_cert_tracker
 mkdir -p /srv/www/lfs-lab-cert-tracker/media
@@ -31,6 +32,15 @@ sudo -u postgres psql \
      -f lfs-lab-cert-tracker/bootstrap/setup_db.sql \
      -v POSTGRES_PASSWORD="'$LFS_LAB_CERT_TRACKER_DB_PASSWORD'" \
      postgres
+
+$(cd lfs-lab-cert-tracker; python3 manage.py migrate)
+
+# Add an admin
+$(cd lfs-lab-cert-tracker; python3 manage.py create_app_superuser \
+    --username="$APP_ADMIN_USERNAME" \
+    --password="$APP_ADMIN_PASSWORD" \
+    --email="$APP_ADMIN_EMAIL" \
+    --noinput)
 
 # Restart services
 sudo service supervisor restart
