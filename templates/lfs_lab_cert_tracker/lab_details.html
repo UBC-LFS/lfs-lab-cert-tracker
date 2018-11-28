@@ -4,7 +4,25 @@
 
 <div class="row">
 	<div class="col-md-8">
-		<h4>Users in Lab: {{lab.name}}</h4>
+		<h3>{{lab.name}}</h3>
+		<h4>Required Certificates</h4>
+		<div class="list-group">
+			{% for required_cert in required_certs %}
+			<div class="list-group-item">
+				<p class="d-inline float-left">
+					{{ required_cert.name }}
+				</p>
+				{% if can_edit_lab_cert %}
+				<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post">
+					{% csrf_token %}
+					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+					<input class="btn btn-danger" type="submit" value="DELETE"/>
+				</form>
+				{% endif %}
+			</div>
+			{% endfor %}
+		</div>
+		<h4>Users in Lab</h4>
 		<div class="list-group">
 		{% for user_in_lab in users_in_lab %}
 			<div class="list-group-item">
@@ -42,6 +60,7 @@
 			{% endfor %}
 			</tbody>
 		</table>
+		{% if can_edit_user_lab %}
 		<h4>Add User to Lab</h4>
 		<form action='/api/labs/{{lab.id}}/users/' method="post">
 			{% csrf_token %}
@@ -49,6 +68,8 @@
 			<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
 			<input class="btn btn-primary" type="submit" value="ADD"/>
 		</form>
+		{% endif %}
+		{% if can_edit_lab_cert %}
 		<h4>Add Cert to Lab</h4>
 		<form action='/api/labs/{{lab.id}}/certificates/' method="post">
 			{% csrf_token %}
@@ -56,21 +77,7 @@
 			<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
 			<input class="btn btn-primary" type="submit" value="ADD"/>
 		</form>
-		<h4>Required Certs</h4>
-		<div class="list-group">
-			{% for required_cert in required_certs %}
-			<div class="list-group-item">
-				<p class="d-inline float-left">
-					{{ required_cert.name }}
-				</p>
-				<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post">
-					{% csrf_token %}
-					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-					<input class="btn btn-danger" type="submit" value="DELETE"/>
-				</form>
-			</div>
-			{% endfor %}
-		</div>
+		{% endif %}
 	</div>
 </div>
 

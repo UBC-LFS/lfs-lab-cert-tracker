@@ -100,13 +100,11 @@ def users(request):
     if not is_admin:
         raise PermissionDenied
     users = api.get_users()
-    can_create_user = request.user.groups.filter(name='admin').exists()
     redirect_url = '/users/'
     return render(request,
         'lfs_lab_cert_tracker/users.html',
         {
             'user_list': users,
-            'can_create_user': can_create_user,
             'user_form': UserForm(initial={'redirect_url': redirect_url}),
         }
     )
@@ -132,6 +130,8 @@ def lab_details(request, lab_id):
                 'users_in_lab': users_in_lab,
                 'users_missing_certs': users_missing_certs,
                 'required_certs': required_certs,
+                'can_edit_user_lab': is_admin,
+                'can_edit_lab_cert': is_admin,
                 'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
                 'lab_user_form': UserLabForm(initial={'redirect_url': redirect_url}),
             }

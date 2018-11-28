@@ -10,14 +10,12 @@
 			<a class="list-group-item list-group-item-action" href="/users/{{user.id}}">{{ user.cwl }}</a>
 		{% endfor %}
 		</div>
-	{% if can_create_user %}
 		<h4>Create Users</h4>
 		<form id="create_user_form" action="/api/users/" method="post">
 		{% csrf_token %}
 		{{ user_form.as_p }}
 		<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
 		</form>
-	{% endif %}
 	</div>
 </div>
 
