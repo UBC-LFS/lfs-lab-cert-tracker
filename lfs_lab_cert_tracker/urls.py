@@ -15,7 +15,6 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.urls import path
 from django.contrib import admin
-from django.conf import settings
 from lfs_lab_cert_tracker import views, api_views
 
 urlpatterns = [
@@ -33,6 +32,8 @@ urlpatterns = [
 
     path('labs/<int:lab_id>/', views.lab_details),
     path('users/<int:user_id>/', views.user_details),
+
+    path('media/users/<int:user_id>/certificates/<int:cert_id>', views.download_user_cert),
 
     path('api/users/', api_views.users),
     path('api/labs/', api_views.labs),

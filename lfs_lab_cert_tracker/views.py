@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponseForbidden
 
@@ -8,6 +9,7 @@ from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
         UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm)
+from django.views.static import serve
 
 """
 HTTP endpoints to transfer HTML
@@ -27,6 +29,13 @@ def index(request):
                 'user_id': request.user.id,
             }
     )
+
+@login_required
+@auth_utils.user_or_admin
+@require_http_methods(['GET'])
+def download_user_cert(request, user_id=None, cert_id=None):
+    path = 'users/%d/certificates/%d' % (user_id, cert_id)
+    return serve(request, path, document_root=settings.MEDIA_ROOT)
 
 @login_required
 @auth_utils.user_or_admin
