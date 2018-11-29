@@ -30,7 +30,6 @@ urlpatterns = [
     path('users/<int:user_id>/labs/', views.user_labs),
     path('users/<int:user_id>/certificates/', views.user_certs),
     path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
-    path('users/<int:user_id>/webform/<int:cert_id>', views.user_webform),
 
     path('labs/<int:lab_id>/', views.lab_details),
     path('users/<int:user_id>/', views.user_details),
@@ -47,7 +46,6 @@ urlpatterns = [
     path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certs),
     path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete', api_views.delete_lab_certs),
     path('api/users/<int:user_id>/certificates/', api_views.user_certs),
-    path('api/users/<int:user_id>/webforms/<int:cert_id>', api_views.user_webforms),
     path('api/users/<int:user_id>/certificates/<int:cert_id>', api_views.user_certs),
     path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certs),
 

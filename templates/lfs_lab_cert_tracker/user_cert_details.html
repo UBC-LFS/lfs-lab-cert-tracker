@@ -8,7 +8,7 @@
 	<div class="col">
 		<h3>Certificate Details</h3>
 		<div class="row">
-			<div class="col"><p>Certificate Name</p></div><div class="col"/>{{ user_cert.name }}</div>
+			<div class="col"><p>Certificate Name</p></div><div class="col"/><a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a></div>
 		</div>
 		<div class="row">
 			<div class="col"><p>Uploaded On</p></div><div class="col"/>{{ user_cert.uploaded_date }}</div>

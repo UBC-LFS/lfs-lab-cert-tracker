@@ -172,18 +172,3 @@ def user_details(request, user_id=None):
                 'user_id': request.user.id,
             }
     )
-
-@login_required
-@auth_utils.user_or_admin
-@require_http_methods(['GET'])
-def user_webform(request, user_id=None, cert_id=None):
-    # TODO Retrieve correct webform based on cert_id
-    redirect_url = '/users/%d/certificates/' % (user_id)
-    return render(request,
-            'lfs_lab_cert_tracker/lfs_safety_training_record.html',
-            {
-                'user_id': user_id,
-                'cert_id': cert_id,
-                'webform': SafetyWebForm(initial={'redirect_url': redirect_url}),
-            }
-    )

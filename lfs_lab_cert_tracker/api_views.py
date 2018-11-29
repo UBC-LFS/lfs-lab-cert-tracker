@@ -101,23 +101,6 @@ def delete_user_certs(request, user_id=None, cert_id=None):
     return JsonResponse(res)
 
 @login_required
-@user_or_admin
-@handle_redirect
-@require_http_methods(['POST'])
-def user_webforms(request, user_id=None, cert_id=None):
-    data = request.POST.copy()
-    redirect_url = data.get('redirect_url', None)
-    res = {}
-    hidden_fields = ['redirect_url', 'csrfmiddlewaretoken']
-    for hidden_field in hidden_fields:
-        del data[hidden_field]
-    buff = StringIO(json.dumps(data))
-    file_name = 'webform.json'
-    f = InMemoryUploadedFile(buff, 'file', file_name, None, buff.tell(), None)
-    res = api.update_or_create_user_cert(user_id, cert_id, f, None)
-    return JsonResponse(res)
-
-@login_required
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
