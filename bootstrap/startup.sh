@@ -8,9 +8,12 @@ apt-get install -y python-pip \
                    postgresql \
                    postgresql-contrib
 
+# Create logging directory
 mkdir -p /var/log/lfs_lab_cert_tracker
+# Create media directory for serving files
 mkdir -p /srv/www/lfs-lab-cert-tracker/media
 
+# Whether we are working in a vagrant box or production box
 if [ "$LFS_LAB_CERT_TRACKER_ENV" = "prod" ]; then
     git clone https://github.com/UBC-LFS/lfs-lab-cert-tracker.git
 else
@@ -19,12 +22,15 @@ fi
 
 pip3 install -r lfs-lab-cert-tracker/requirements.txt
 
-# Copy over supervisord configurations
-cp lfs-lab-cert-tracker/bootstrap/supervisord.conf /etc/supervisor/conf.d/lfs_lab_cert_tracker.conf
+# Link the supervisord conf
+ln -r -f -s lfs-lab-cert-tracker/bootstrap/supervisord.conf /etc/supervisor/conf.d/lfs_lab_cert_tracker.conf
 
 # Nginx setup
 rm -f /etc/nginx/sites-enabled/default
-cp lfs-lab-cert-tracker/bootstrap/nginx /etc/nginx/sites-available/lfs_lab_cert_tracker
+
+
+# Link the Nginx configs
+ln -r -f -s lfs-lab-cert-tracker/bootstrap/nginx /etc/nginx/sites-available/lfs_lab_cert_tracker
 ln -f -s /etc/nginx/sites-available/lfs_lab_cert_tracker /etc/nginx/sites-enabled/lfs_lab_cert_tracker
 
 # Postgres setup
@@ -33,10 +39,10 @@ sudo -u postgres psql \
      -v POSTGRES_PASSWORD="'$LFS_LAB_CERT_TRACKER_DB_PASSWORD'" \
      postgres
 
-$(cd lfs-lab-cert-tracker; python3 manage.py migrate)
+echo $(cd lfs-lab-cert-tracker; python3 manage.py migrate)
 
 # Add an admin
-$(cd lfs-lab-cert-tracker; python3 manage.py create_app_superuser \
+echo $(cd lfs-lab-cert-tracker; python3 manage.py create_app_superuser \
     --username="$APP_ADMIN_USERNAME" \
     --password="$APP_ADMIN_PASSWORD" \
     --email="$APP_ADMIN_EMAIL" \
