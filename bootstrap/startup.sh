@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
 apt-get update
-apt-get install -y python-pip \
-                   python3-pip \
-                   supervisor \
+apt-get install -y supervisor \
                    nginx \
                    postgresql \
                    postgresql-contrib
@@ -20,14 +18,13 @@ else
     ln -f -s /vagrant lfs-lab-cert-tracker
 fi
 
-pip3 install -r lfs-lab-cert-tracker/requirements.txt
+docker build -t lfs_lab_cert_tracker lfs-lab-cert-tracker
 
 # Link the supervisord conf
 ln -r -f -s lfs-lab-cert-tracker/bootstrap/supervisord.conf /etc/supervisor/conf.d/lfs_lab_cert_tracker.conf
 
 # Nginx setup
 rm -f /etc/nginx/sites-enabled/default
-
 
 # Link the Nginx configs
 ln -r -f -s lfs-lab-cert-tracker/bootstrap/nginx /etc/nginx/sites-available/lfs_lab_cert_tracker
@@ -39,15 +36,17 @@ sudo -u postgres psql \
      -v POSTGRES_PASSWORD="'$LFS_LAB_CERT_TRACKER_DB_PASSWORD'" \
      postgres
 
-echo $(cd lfs-lab-cert-tracker; python3 manage.py migrate)
-
-# Add an admin
-echo $(cd lfs-lab-cert-tracker; python3 manage.py create_app_superuser \
-    --username="$APP_ADMIN_USERNAME" \
-    --password="$APP_ADMIN_PASSWORD" \
-    --email="$APP_ADMIN_EMAIL" \
-    --noinput)
-
 # Restart services
 sudo service supervisor restart
 sudo nginx -s reload
+
+# Wait for container to get started
+sleep 5
+
+docker exec lfs_lab_cert_tracker sh -c "cd /app; python3 manage.py migrate"
+
+docker exec lfs_lab_cert_tracker sh -c "cd /app; python3 manage.py create_app_superuser \
+    --username="$APP_ADMIN_USERNAME" \
+    --password="$APP_ADMIN_PASSWORD" \
+    --email="$APP_ADMIN_EMAIL" \
+    --noinput"
