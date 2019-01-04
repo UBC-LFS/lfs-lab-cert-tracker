@@ -1,4 +1,5 @@
 *
 !certs/
+!advanced_settings.json
 !settings.json
 !.gitignore
