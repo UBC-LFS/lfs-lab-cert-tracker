@@ -1,0 +1,4 @@
+*
+!certs/
+!settings.json
+!.gitignore
