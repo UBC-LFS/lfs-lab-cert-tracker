@@ -3,6 +3,9 @@ A Django site that allows for user profiles, containing a user's certification a
 
 Records will be used for determining access to labs and fulfill Worksafe BC requirements.
 
+# Dev (Local VM)
+Run `vagrant up` that should create a VM which runs this as a container.
+
 # Dev
 ## Python Environment
 1. Use pyenv-virtualenv to create a virtual environment for development
