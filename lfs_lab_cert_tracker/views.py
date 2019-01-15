@@ -20,6 +20,9 @@ HTTP endpoints to transfer HTML
 def show_error(request, error_msg=''):
     return render(request, 'lfs_lab_cert_tracker/error.html', {'error_msg': error_msg})
 
+def login(request):
+    return render(request, 'lfs_lab_cert_tracker/login.html')
+
 @login_required
 @require_http_methods(['GET'])
 def index(request):

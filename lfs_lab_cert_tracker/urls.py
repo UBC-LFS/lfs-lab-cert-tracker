@@ -15,14 +15,18 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.urls import path
 from django.contrib import admin
-from lfs_lab_cert_tracker import views, api_views
+from lfs_lab_cert_tracker import views, api_views, saml_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('', views.index),
-    path('attrs/', views.attrs),
-    path('metadata/', views.metadata),
+
+    path('accounts/login/', views.login, name='login'),
+
+    path('saml/', saml_views.saml, name='saml'),
+    path('attrs/', saml_views.attrs, name='attrs'),
+    path('metadata/', saml_views.metadata, name='metadata'),
 
     path('labs/', views.labs),
     path('certificates/', views.certs),
@@ -54,8 +58,4 @@ urlpatterns = [
     path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certs),
 
     path('api/users/<int:user_id>/labs/<int:lab_id>/delete', api_views.delete_user_lab),
-]
-
-urlpatterns += [
-    path('accounts/', include('django.contrib.auth.urls')),
 ]
