@@ -32,3 +32,9 @@ def admin_only(func):
         else:
             raise PermissionDenied
     return admin_only
+
+def get_user(username):
+    try:
+        return User.objects.get(username=username)
+    except User.DoesNotExist:
+        return None

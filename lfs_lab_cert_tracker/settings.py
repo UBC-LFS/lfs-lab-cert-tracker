@@ -48,10 +48,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = [
-    'lfs_lab_cert_tracker.saml_backend.SAMLBackend',
-]
-
 ROOT_URLCONF = 'lfs_lab_cert_tracker.urls'
 
 TEMPLATES = [

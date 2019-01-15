@@ -3,12 +3,13 @@ from django.urls import reverse
 from django.http import (HttpResponse, HttpResponseRedirect,
                          HttpResponseServerError)
 from django.shortcuts import render
-
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
+
+from lfs_lab_cert_tracker import auth_utils
 
 
 def init_saml_auth(req):
@@ -66,7 +67,8 @@ def saml(request, action=None):
             request.session['samlUserdata'] = auth.get_attributes()
             request.session['samlNameId'] = auth.get_nameid()
             request.session['samlSessionIndex'] = auth.get_session_index()
-            user = authenticate(request, auth=auth)
+            # TODO: Fetch user based on what we get back from idp
+            user = auth_utils.get_user('admin')
             login(request, user)
             return HttpResponseRedirect('/')
         else:
