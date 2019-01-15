@@ -69,8 +69,11 @@ def saml(request, action=None):
             request.session['samlSessionIndex'] = auth.get_session_index()
             # TODO: Fetch user based on what we get back from idp
             user = auth_utils.get_user('admin')
-            login(request, user)
-            return HttpResponseRedirect('/')
+            if not user:
+                error_reason = "User not found"
+            else:
+                login(request, user)
+                return HttpResponseRedirect('/')
         else:
             if auth.get_settings().is_debug_active():
                 error_reason = auth.get_last_error_reason()
