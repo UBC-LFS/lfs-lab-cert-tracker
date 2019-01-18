@@ -87,9 +87,8 @@ def delete_user_cert(user_id, cert_id):
 
 # UserLab CRUD
 def get_user_labs(user_id, is_principal_investigator=None):
-    if is_principal_investigator == True:
-        # TODO: Get rid of magic constant
-        user_labs = UserLab.objects.filter(user=user_id, role=1)
+    if is_principal_investigator:
+        user_labs = UserLab.objects.filter(user=user_id, role=UserLab.PRINCIPAL_INVESTIGATOR)
     else:
         user_labs = UserLab.objects.filter(user=user_id)
     return [model_to_dict(user_lab.lab) for user_lab in user_labs]
@@ -115,7 +114,7 @@ def get_missing_lab_certs(user_id, lab_id):
     required_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
     missing = []
     for rc in required_certs:
-        if rc.id not in user_certs:
+        if rc.cert.id not in user_certs:
             missing.append(rc.cert)
     return [model_to_dict(m) for m in missing]
 
