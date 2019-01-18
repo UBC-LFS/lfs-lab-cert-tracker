@@ -20,6 +20,9 @@ class UserLabForm(forms.ModelForm):
     class Meta:
         model = UserLab
         fields = ['user', 'role', 'redirect_url']
+        widgets = {
+            'user': forms.TextInput(),
+        }
 
 class LabCertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())

@@ -106,7 +106,8 @@ def delete_user_certs(request, user_id=None, cert_id=None):
 @require_http_methods(['POST'])
 def user_labs(request, user_id=None, lab_id=None):
     data = request.POST
-    res = api.create_user_lab(data['user'], lab_id, data['role'])
+    user = api.get_user_by_cwl(data['user'])
+    res = api.create_user_lab(user.id, lab_id, data['role'])
     return JsonResponse(res)
 
 @login_required
