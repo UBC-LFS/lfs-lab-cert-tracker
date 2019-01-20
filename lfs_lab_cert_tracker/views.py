@@ -60,6 +60,7 @@ def user_certs(request, user_id):
     request_user_id = request.user.id
     user_cert_list = api.get_user_certs(request_user_id)
     missing_cert_list = api.get_missing_certs(request_user_id)
+    expired_cert_list = api.get_expired_certs(request_user_id)
     redirect_url = '/users/%d/certificates/' % request_user_id
     user_cert_form = UserCertForm(initial={'user': request_user_id, 'redirect_url': redirect_url})
     return render(request,
@@ -68,6 +69,7 @@ def user_certs(request, user_id):
                 'user_id': request.user.id,
                 'user_cert_list': user_cert_list,
                 'missing_cert_list': missing_cert_list,
+                'expired_cert_list': expired_cert_list,
                 'user_cert_form': user_cert_form,
             }
     )
@@ -172,12 +174,15 @@ def user_details(request, user_id=None):
     user_lab_list = api.get_user_labs(user_id)
     user_cert_list = api.get_user_certs(user_id)
     missing_cert_list = api.get_missing_certs(user_id)
+    expired_cert_list = api.get_expired_certs(user_id)
+
     return render(request,
             'lfs_lab_cert_tracker/user_details.html',
             {
                 'user_lab_list': user_lab_list,
                 'user_cert_list': user_cert_list,
                 'missing_cert_list': missing_cert_list,
-                'user_id': request.user.id,
+                'expired_cert_list': expired_cert_list,
+                'user_id': user_id,
             }
     )

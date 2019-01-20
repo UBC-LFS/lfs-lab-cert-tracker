@@ -18,6 +18,11 @@
 			{% for missing_cert in missing_cert_list %}
 			<li class="list-group-item">{{ missing_cert.name }}</li>
 			{% endfor %}
+			<h3>Expired Certificates</h3>
+			<ul class="list-group">
+			{% for expired_cert in expired_cert_list %}
+			<li class="list-group-item">{{ expired_cert.name }}</li>
+			{% endfor %}
 		</div> <!--end col-->
 	</div> <!-- end row-->
 <!-- Labs -->
