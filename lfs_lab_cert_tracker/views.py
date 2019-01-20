@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponseForbidden
 
 from lfs_lab_cert_tracker import api
@@ -23,12 +23,7 @@ def show_error(request, error_msg=''):
 @login_required
 @require_http_methods(['GET'])
 def index(request):
-    return render(request,
-            'lfs_lab_cert_tracker/index.html',
-            {
-                'user_id': request.user.id,
-            }
-    )
+    return redirect('/users/%d' % (request.user.id))
 
 @login_required
 @auth_utils.user_or_admin
