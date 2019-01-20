@@ -3,6 +3,10 @@
 {% block content %}
 
 <div class="row">
+	<h3>Viewing {{ app_user.cwl }}</h3>
+</div>
+
+<div class="row">
 	<!-- Certificates -->
 	<div class="col">
 		<h3>Certificates</h3>
@@ -13,7 +17,7 @@
 				{% endfor %}
 			</div>
 		{% else %}
-			<p>You do not have any certificates</p>
+		<p>{{ app_user.cwl }} does not have any certificates</p>
 		{% endif %}
 		<h3>Missing Certificates</h3>
 		{% if missing_cert_list %}
@@ -23,7 +27,7 @@
 				{% endfor %}
 			</ul>
 		{% else %}
-			<p>You are not missing any certificates</p>
+			<p>{{ app_user.cwl }} is not missing any certificates</p>
 		{% endif %}
 		<h3>Expired Certificates</h3>
 		{% if expired_cert_list %}
@@ -33,7 +37,7 @@
 				{% endfor %}
 			</ul>
 		{% else %}
-			<p>You do not have any expired certificates</p>
+			<p>{{ app_user.cwl }} does not have any expired certificates</p>
 		{% endif %}
 	</div> <!--end col-->
 	<!-- Labs -->
@@ -46,7 +50,7 @@
 			</p>
 			{% endfor %}
 		{% else %}
-			<p>You are not in any labs</p>
+			<p>{{ app_user.cwl }} is not in any labs</p>
 		{% endif %}
 		<h3>PI Labs</h3>
 		{% if pi_user_lab_list %}
@@ -55,11 +59,9 @@
 				<a class="list-group-item list-group-item-action" href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
 			{% endfor %}
 		{% else %}
-			<p>You are not a Principal Investigator in any labs</p>
+			<p>{{ app_user.cwl }} is not a Principal Investigator in any labs</p>
 		{% endif %}
 	</div> <!--end col-->
 </div> <!--end row-->
 
 {% endblock %}
-
-

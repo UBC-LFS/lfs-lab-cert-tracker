@@ -13,7 +13,10 @@ Provides an API to the Django ORM for any queries that are required
 
 # User CRUD
 def get_user(user_id):
-    return User.objects.get(id=user_id)
+    try:
+        return User.objects.get(id=user_id)
+    except User.DoesNotExist as dne:
+        return None
 
 def get_user_by_cwl(cwl):
     return User.objects.get(cwl=cwl)
