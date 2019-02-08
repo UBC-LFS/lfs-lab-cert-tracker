@@ -16,7 +16,7 @@
 				<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post">
 					{% csrf_token %}
 					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-					<input class="btn btn-danger" type="submit" value="DELETE"/>
+					<input class="btn btn-danger" type="submit" value="REMOVE"/>
 				</form>
 				{% endif %}
 			</div>
@@ -32,7 +32,7 @@
 				<form class="float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post">
 					{% csrf_token %}
 					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-				<input class="btn btn-danger" type="submit" value="DELETE"/>
+				<input class="btn btn-danger" type="submit" value="REMOVE"/>
 				</form>
 			</div>
 		{% endfor %}

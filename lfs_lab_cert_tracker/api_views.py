@@ -1,11 +1,9 @@
 import datetime
-import json
-from io import StringIO
-import tempfile
+
+import logging
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
@@ -17,6 +15,8 @@ from lfs_lab_cert_tracker.redirect_utils import handle_redirect
 Provides HTTP endpoints to access the api
 """
 
+logger = logging.getLogger(__name__)
+
 @login_required
 @admin_only
 @handle_redirect
@@ -24,6 +24,7 @@ Provides HTTP endpoints to access the api
 def certs(request, cert_id=None):
     data = request.POST
     res = api.create_cert(data['name'])
+    logger.info("Created cert %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -33,6 +34,7 @@ def certs(request, cert_id=None):
 def delete_certs(request, cert_id=None):
     data = request.POST
     res = api.delete_cert(cert_id)
+    logger.info("Deleted cert %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -42,6 +44,7 @@ def delete_certs(request, cert_id=None):
 def labs(request, lab_id=None):
     data = request.POST
     res = api.create_lab(data['name'])
+    logger.info("Created lab %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -51,6 +54,7 @@ def labs(request, lab_id=None):
 def delete_labs(request, lab_id=None):
     data = request.POST
     res = api.delete_lab(lab_id)
+    logger.info("Deleted lab %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -60,6 +64,7 @@ def delete_labs(request, lab_id=None):
 def lab_certs(request, lab_id=None, cert_id=None):
     data = request.POST
     res = api.create_lab_cert(lab_id, data['cert'])
+    logger.info("Created lab cert %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -69,6 +74,7 @@ def lab_certs(request, lab_id=None, cert_id=None):
 def delete_lab_certs(request, lab_id=None, cert_id=None):
     data = request.POST
     res = api.delete_lab_cert(lab_id, cert_id)
+    logger.info("Deleted lab cert %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -82,13 +88,12 @@ def user_certs(request, user_id=None, cert_id=None):
     if all([data['expiry_date_year'], data['expiry_date_month'], data['expiry_date_day']]):
         expiry_date = datetime.datetime(year=int(data['expiry_date_year']), month=int(data['expiry_date_month']), day=int(data['expiry_date_day']))
     res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], expiry_date)
-    # Added since uploading files with ajax is a pain
-    # So in this case just redirect to the client specified url
-    response = {
+    res = {
         'user_id': user_id,
         'cert_id': cert_id,
     }
-    return JsonResponse(response)
+    logger.info("Created user cert %s" % (res))
+    return JsonResponse(res)
 
 @login_required
 @user_or_admin
@@ -97,7 +102,7 @@ def user_certs(request, user_id=None, cert_id=None):
 def delete_user_certs(request, user_id=None, cert_id=None):
     data = request.POST
     res = api.delete_user_cert(user_id, cert_id)
-
+    logger.info("Deleted user cert %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -106,7 +111,9 @@ def delete_user_certs(request, user_id=None, cert_id=None):
 @require_http_methods(['POST'])
 def user_labs(request, user_id=None, lab_id=None):
     data = request.POST
-    res = api.create_user_lab(data['user'], lab_id, data['role'])
+    user = api.get_user_by_cwl(data['user'])
+    res = api.create_user_lab(user.id, lab_id, data['role'])
+    logger.info("Created user lab %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -116,6 +123,7 @@ def user_labs(request, user_id=None, lab_id=None):
 def delete_user_lab(request, user_id=None, lab_id=None):
     data = request.POST
     res = api.delete_user_lab(user_id, lab_id)
+    logger.info("Deleted user lab %s" % (res))
     return JsonResponse(res)
 
 @login_required
@@ -130,4 +138,5 @@ def users(request):
         email=data['email'],
         cwl=data['cwl'],
     )
+    logger.info("Creaetd user %s" % (res))
     return JsonResponse(res)

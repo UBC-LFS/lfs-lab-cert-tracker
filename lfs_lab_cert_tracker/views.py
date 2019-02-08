@@ -2,8 +2,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
@@ -26,12 +25,7 @@ def login(request):
 @login_required
 @require_http_methods(['GET'])
 def index(request):
-    return render(request,
-            'lfs_lab_cert_tracker/index.html',
-            {
-                'user_id': request.user.id,
-            }
-    )
+    return redirect('/users/%d' % (request.user.id))
 
 @login_required
 @auth_utils.user_or_admin
@@ -63,6 +57,7 @@ def user_certs(request, user_id):
     request_user_id = request.user.id
     user_cert_list = api.get_user_certs(request_user_id)
     missing_cert_list = api.get_missing_certs(request_user_id)
+    expired_cert_list = api.get_expired_certs(request_user_id)
     redirect_url = '/users/%d/certificates/' % request_user_id
     user_cert_form = UserCertForm(initial={'user': request_user_id, 'redirect_url': redirect_url})
     return render(request,
@@ -71,6 +66,7 @@ def user_certs(request, user_id):
                 'user_id': request.user.id,
                 'user_cert_list': user_cert_list,
                 'missing_cert_list': missing_cert_list,
+                'expired_cert_list': expired_cert_list,
                 'user_cert_form': user_cert_form,
             }
     )
@@ -172,15 +168,24 @@ def user_cert_details(request, user_id=None, cert_id=None):
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_details(request, user_id=None):
+    app_user = api.get_user(user_id)
+    if app_user is None:
+        raise PermissionDenied
+
     user_lab_list = api.get_user_labs(user_id)
     user_cert_list = api.get_user_certs(user_id)
     missing_cert_list = api.get_missing_certs(user_id)
+    expired_cert_list = api.get_expired_certs(user_id)
+    pi_user_lab_list = api.get_user_labs(user_id, is_principal_investigator=True)
+
     return render(request,
             'lfs_lab_cert_tracker/user_details.html',
             {
                 'user_lab_list': user_lab_list,
+                'pi_user_lab_list': pi_user_lab_list,
                 'user_cert_list': user_cert_list,
                 'missing_cert_list': missing_cert_list,
-                'user_id': request.user.id,
+                'expired_cert_list': expired_cert_list,
+                'app_user': app_user,
             }
     )

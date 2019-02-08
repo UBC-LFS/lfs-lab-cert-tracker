@@ -26,7 +26,7 @@
 		<form id="create_cert_form" action="/api/certificates/" method="POST">
 			{% csrf_token %}
 			{{ cert_form.as_p }}
-		<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Submit Form"/>
+		<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="CREATE"/>
 		</form>
 		{% endif %}
 	</div>
