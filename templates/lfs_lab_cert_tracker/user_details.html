@@ -58,7 +58,9 @@
 		{% if pi_user_lab_list %}
 			<div class="list-group">
 			{% for pi_user_lab in pi_user_lab_list %}
-				<a class="list-group-item list-group-item-action" href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+				<li class="list-group-item">
+					<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+				</li>
 			{% endfor %}
 		{% else %}
 			<p>{{ app_user.cwl }} is not a Principal Investigator in any labs</p>

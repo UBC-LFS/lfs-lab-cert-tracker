@@ -8,7 +8,9 @@
 		{% if user_cert_list %}
 			<div class="list-group">
 				{% for user_cert in user_cert_list %}
-				<a class="list-group-item list-group-item-action" href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
+					<li class="list-group-item">
+						<a href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
+					</li>
 				{% endfor %}
 			</div> <!--end list-->
 		{% else %}
