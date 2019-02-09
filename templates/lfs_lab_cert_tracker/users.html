@@ -7,7 +7,9 @@
 		<h4>View Users</h4>
 		<div class="list-group">
 		{% for user in user_list %}
-			<a class="list-group-item list-group-item-action" href="/users/{{user.id}}">{{ user.cwl }}</a>
+			<li class="list-group-item">
+				<a href="/users/{{user.id}}">{{ user.cwl }}</a>
+			</li>
 		{% endfor %}
 		</div>
 		<h4>Create Users</h4>

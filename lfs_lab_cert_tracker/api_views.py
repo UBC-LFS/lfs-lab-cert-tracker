@@ -54,7 +54,7 @@ def labs(request, lab_id=None):
 def delete_labs(request, lab_id=None):
     data = request.POST
     res = api.delete_lab(lab_id)
-    logger.info("%s: Deleted lab %s" % (requst.user, res))
+    logger.info("%s: Deleted lab %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
