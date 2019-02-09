@@ -26,9 +26,9 @@
 		<div class="list-group">
 		{% for user_in_lab in users_in_lab %}
 			<div class="list-group-item">
-				<p class="float-left">
+				<a class="float-left" href="/users/{{ user_in_lab.id}}">
 					{{ user_in_lab.cwl}}
-				</p>
+				</a>
 				<form class="float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post">
 					{% csrf_token %}
 					<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
@@ -48,7 +48,11 @@
 			<tbody>
 			{% for user_missing_certs in users_missing_certs %}
 				<tr>
-					<th>{{ user_missing_certs.0.cwl}}</th>
+					<td>
+						<a class="float-left" href="/users/{{ user_missing_certs.0.id}}">
+							{{ user_missing_certs.0.cwl }}
+						</a>
+					</td>
 					<td>
 						<ul>
 						{% for missing_cert in user_missing_certs.1 %}

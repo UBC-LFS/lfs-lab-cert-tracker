@@ -135,8 +135,8 @@ def lab_details(request, lab_id):
                 'users_in_lab': users_in_lab,
                 'users_missing_certs': users_missing_certs,
                 'required_certs': required_certs,
-                'can_edit_user_lab': is_admin,
-                'can_edit_lab_cert': is_admin,
+                'can_edit_user_lab': is_admin or is_pi,
+                'can_edit_lab_cert': is_admin or is_pi,
                 'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
                 'lab_user_form': UserLabForm(initial={'redirect_url': redirect_url}),
             }
