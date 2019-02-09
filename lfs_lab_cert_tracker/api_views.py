@@ -58,7 +58,7 @@ def delete_labs(request, lab_id=None):
     return JsonResponse(res)
 
 @login_required
-@admin_only
+@admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def lab_certs(request, lab_id=None, cert_id=None):
@@ -68,7 +68,7 @@ def lab_certs(request, lab_id=None, cert_id=None):
     return JsonResponse(res)
 
 @login_required
-@admin_only
+@admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_lab_certs(request, lab_id=None, cert_id=None):
