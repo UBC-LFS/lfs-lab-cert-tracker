@@ -2,6 +2,10 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden
 from lfs_lab_cert_tracker.models import UserLab
 
+"""
+Utility functions for authentication, mainly for checking that a user has correct permissions
+"""
+
 def is_admin(user):
     return user.is_superuser
 

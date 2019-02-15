@@ -11,7 +11,7 @@ from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
 from django.views.static import serve
 
 """
-HTTP endpoints to transfer HTML
+HTTP endpoints, responsible for the frontend
 """
 
 @login_required
