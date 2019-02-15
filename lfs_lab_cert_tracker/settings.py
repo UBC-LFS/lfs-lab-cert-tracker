@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'lfs_lab_cert_tracker',
     'crispy_forms',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
