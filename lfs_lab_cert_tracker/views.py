@@ -186,3 +186,42 @@ def user_details(request, user_id=None):
                 'app_user': app_user,
             }
     )
+
+@login_required
+@auth_utils.user_or_admin
+@require_http_methods(['GET'])
+def user_report(request, user_id=None):
+    app_user = api.get_user(user_id)
+    if app_user is None:
+        raise PermissionDenied
+
+    missing_cert_list = api.get_missing_certs(user_id)
+    user_cert_list = api.get_user_certs(user_id)
+    user_cert_ids = set([uc['id'] for uc in user_cert_list])
+    expired_cert_ids = set([ec['id'] for ec in api.get_expired_certs(user_id)])
+
+    user_lab_list = api.get_user_labs(user_id)
+
+    user_labs = []
+
+    for user_lab in user_lab_list:
+        lab_certs = api.get_lab_certs(user_lab['id'])
+        missing_lab_certs = []
+        for lc in lab_certs:
+            if lc['id'] not in user_cert_ids or lc['id'] in expired_cert_ids:
+                missing_lab_certs.append(lc)
+        # Determine which the user has
+        # Determine which the user does not have
+        user_labs.append((user_lab, lab_certs, missing_lab_certs))
+
+    print(user_labs)
+
+    return render(request,
+            'lfs_lab_cert_tracker/user_report.html',
+            {
+                'user_lab_list': user_lab_list,
+                'user_cert_list': user_cert_list,
+                'app_user': app_user,
+                'user_labs': user_labs,
+            }
+    )
