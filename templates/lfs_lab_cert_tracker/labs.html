@@ -26,7 +26,7 @@
 		<form id="create_lab_form" action="/api/labs/" method="post">
 		{% csrf_token %}
 		{{ lab_form.as_p }}
-		<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Submit Form"/>
+		<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Create Lab"/>
 		</form>
 	{% endif %}
 	</div>
