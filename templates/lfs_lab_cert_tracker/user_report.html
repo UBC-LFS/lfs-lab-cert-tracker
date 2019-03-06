@@ -52,13 +52,19 @@ table, th, td {
 			Name
 		</th>
 		<th>
-			Expiry Date
+			Uploaded On
+		</th>
+		<th>
+			Expires On
 		</th>
 	</tr>
 	{% for uc in user_cert_list %}
 	<tr>
 		<td>
 			{{ uc.name }}
+		</td>
+		<td>
+			{{ uc.uploaded_date }}
 		</td>
 		<td>
 			{{ uc.expiry_date }}

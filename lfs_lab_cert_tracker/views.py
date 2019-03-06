@@ -210,16 +210,11 @@ def user_report(request, user_id=None):
         for lc in lab_certs:
             if lc['id'] not in user_cert_ids or lc['id'] in expired_cert_ids:
                 missing_lab_certs.append(lc)
-        # Determine which the user has
-        # Determine which the user does not have
         user_labs.append((user_lab, lab_certs, missing_lab_certs))
-
-    print(user_labs)
 
     return render(request,
             'lfs_lab_cert_tracker/user_report.html',
             {
-                'user_lab_list': user_lab_list,
                 'user_cert_list': user_cert_list,
                 'app_user': app_user,
                 'user_labs': user_labs,
