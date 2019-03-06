@@ -30,6 +30,24 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 7. To give full access of this database to the Django user run `GRANT ALL PRIVILEGES ON DATABASE lfs_lab_cert_tracker TO lfs_lab_cert_tracker_user;`
 8. Exit the sql prompt with `\q`
 9. To see if local db setup worked run `python manage.py makemigrations` if that worked then db setup was a success
+10. Then run `python manage.py migrate` to complete setting up the database
+11. To prepopulate db with certificates and labs run `./manage.py loaddata lfs_lab_cert_trackere/fixtures/*`
+
+### Admin Setup
+1. Run
+```
+./manage.py create_app_superuser \
+	--username=<admim username> \
+	--password=<admin password> \
+	--email=<admin email> \
+	--first_name=<admin first name> \
+	--last_name=<admin last name> \
+	--cwl=<admin cwl> \
+	--database=default \
+	--noinput
+```
+
+### Static Data
 
 ### Authentication
 1. Use `python manage.py createsuperuser` to create a super user, just use something simple for development
