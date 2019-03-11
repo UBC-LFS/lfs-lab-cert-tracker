@@ -1,10 +1,6 @@
-{% extends "base.html" %}
+{% extends "header.html" %}
 
 {% block content %}
-<div class="row">
-	<div class="col-md-8">
-		<h4>Encountered an Error!</h4>
-		<p class="text-danger">{{error_msg}}</p>
-	</div>
-</div>
+<h5>Encountered an Error!</h5>
+<p class="text-danger">{{error_msg}}</p>
 {% endblock %}

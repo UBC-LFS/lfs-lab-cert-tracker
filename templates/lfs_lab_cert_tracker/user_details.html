@@ -1,13 +1,13 @@
-{% extends "base.html" %}
+{% extends "header.html" %}
 
 {% block content %}
 
 <div class="row">
 	<!-- Certificates -->
 	<div class="col">
-	<h3>Viewing {{ app_user.cwl }}</h3>
+	<h5>Viewing {{ app_user.cwl }}</h5>
 	<a href="/users/{{app_user.id}}/report/">User Report</a>
-	<h3>{{ app_user.cwl }} Certificates</h3>
+	<h5>{{ app_user.cwl }} Certificates</h5>
 	{% if user_cert_list %}
 		<div class="list-group">
 			{% for user_cert in user_cert_list %}
@@ -19,7 +19,7 @@
 	{% else %}
 	<p>{{ app_user.cwl }} does not have any certificates</p>
 	{% endif %}
-	<h3>Missing Certificates</h3>
+	<h5>Missing Certificates</h5>
 	{% if missing_cert_list %}
 		<ul class="list-group">
 			{% for missing_cert in missing_cert_list %}
@@ -29,7 +29,7 @@
 	{% else %}
 		<p>{{ app_user.cwl }} is not missing any certificates</p>
 	{% endif %}
-	<h3>Expired Certificates</h3>
+	<h5>Expired Certificates</h5>
 	{% if expired_cert_list %}
 		<ul class="list-group">
 			{% for expired_cert in expired_cert_list %}
@@ -42,7 +42,7 @@
 	</div> <!--end col-->
 	<!-- Labs -->
 	<div class="col">
-		<h3>Labs</h3>
+		<h5>Labs</h5>
 		{% if user_lab_list %}
 			{% for user_lab in user_lab_list %}
 			<p>
@@ -52,7 +52,7 @@
 		{% else %}
 			<p>{{ app_user.cwl }} is not in any labs</p>
 		{% endif %}
-		<h3>PI Labs</h3>
+		<h5>PI Labs</h5>
 		{% if pi_user_lab_list %}
 			<div class="list-group">
 			{% for pi_user_lab in pi_user_lab_list %}

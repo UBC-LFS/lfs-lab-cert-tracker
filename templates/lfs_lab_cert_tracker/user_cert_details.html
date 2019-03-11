@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "header.html" %}
 
 {% load crispy_forms_tags %}
 
@@ -6,7 +6,7 @@
 
 <div class="row">
 	<div class="col">
-		<h3>Certificate Details</h3>
+		<h5>Certificate Details</h5>
 		<div class="row">
 			<div class="col"><p>Certificate Name</p></div><div class="col"/><a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a></div>
 		</div>
