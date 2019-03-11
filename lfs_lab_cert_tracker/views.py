@@ -212,11 +212,37 @@ def user_report(request, user_id=None):
                 missing_lab_certs.append(lc)
         user_labs.append((user_lab, lab_certs, missing_lab_certs))
 
-    return render(request,
-            'lfs_lab_cert_tracker/user_report.html',
+    return render_to_pdf('lfs_lab_cert_tracker/user_report.html',
             {
                 'user_cert_list': user_cert_list,
                 'app_user': app_user,
                 'user_labs': user_labs,
             }
     )
+    #return render(request,
+    #        'lfs_lab_cert_tracker/user_report.html',
+    #        {
+    #            'user_cert_list': user_cert_list,
+    #            'app_user': app_user,
+    #            'user_labs': user_labs,
+    #        }
+    #)
+
+from io import BytesIO
+from xhtml2pdf import pisa
+from django.template.loader import get_template
+from django.template import Context
+from django.http import HttpResponse
+from cgi import escape
+
+
+def render_to_pdf(template_src, context_dict):
+    template = get_template(template_src)
+    context = Context(context_dict)
+    html  = template.render(context_dict)
+    response = BytesIO()
+
+    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), response)
+    if not pdf.err:
+        return HttpResponse(response.getvalue(), content_type='application/pdf')
+    return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
