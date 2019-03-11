@@ -1,14 +1,21 @@
+from io import BytesIO
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.views.static import serve
+from django.template.loader import get_template
+from django.template import Context
+from django.http import HttpResponse
+from cgi import escape
+from xhtml2pdf import pisa
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
         UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm)
-from django.views.static import serve
 
 """
 HTTP endpoints, responsible for the frontend
@@ -219,22 +226,6 @@ def user_report(request, user_id=None):
                 'user_labs': user_labs,
             }
     )
-    #return render(request,
-    #        'lfs_lab_cert_tracker/user_report.html',
-    #        {
-    #            'user_cert_list': user_cert_list,
-    #            'app_user': app_user,
-    #            'user_labs': user_labs,
-    #        }
-    #)
-
-from io import BytesIO
-from xhtml2pdf import pisa
-from django.template.loader import get_template
-from django.template import Context
-from django.http import HttpResponse
-from cgi import escape
-
 
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
