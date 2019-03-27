@@ -18,7 +18,7 @@
 		</div>
 	</div>
 	<div class="col">
-		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post">
+		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post" onsubmit="return confirm('Delete: {{user_cert.name}}?');">
 		{% csrf_token %}
 		{{ delete_user_cert_form | crispy }}
 		<input class="btn btn-danger" type="submit" value="DELETE"/>
