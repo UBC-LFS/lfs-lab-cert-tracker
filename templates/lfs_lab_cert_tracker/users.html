@@ -1,22 +1,20 @@
-{% extends "base.html" %}
+{% extends "header.html" %}
 
 {% block content %}
 
-<div class="row">
-	<div class="col-md-8">
-		<h4>View Users</h4>
-		<div class="list-group">
-		{% for user in user_list %}
-			<a class="list-group-item list-group-item-action" href="/users/{{user.id}}">{{ user.cwl }}</a>
-		{% endfor %}
-		</div>
-		<h4>Create Users</h4>
-		<form id="create_user_form" action="/api/users/" method="post">
-		{% csrf_token %}
-		{{ user_form.as_p }}
-		<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
-		</form>
-	</div>
+<h5>View Users</h5>
+<div class="list-group">
+{% for user in user_list %}
+	<li class="list-group-item">
+		<a href="/users/{{user.id}}">{{ user.cwl }}</a>
+	</li>
+{% endfor %}
 </div>
+<h5>Create Users</h5>
+<form id="create_user_form" action="/api/users/" method="post">
+{% csrf_token %}
+{{ user_form.as_p }}
+<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
+</form>
 
 {% endblock %}

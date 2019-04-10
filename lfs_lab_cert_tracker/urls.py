@@ -1,5 +1,4 @@
 """lfs_lab_cert_tracker URL Configuration
-
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.11/topics/http/urls/
 Examples:
@@ -36,6 +35,7 @@ urlpatterns = [
     path('users/<int:user_id>/labs/', views.user_labs),
     path('users/<int:user_id>/certificates/', views.user_certs),
     path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
+    path('users/<int:user_id>/report/', views.user_report),
 
     path('labs/<int:lab_id>/', views.lab_details),
     path('users/<int:user_id>/', views.user_details),

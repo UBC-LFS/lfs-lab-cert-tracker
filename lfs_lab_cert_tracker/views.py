@@ -1,17 +1,24 @@
+from io import BytesIO
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.views.static import serve
+from django.template.loader import get_template
+from django.template import Context
+from django.http import HttpResponse
+from cgi import escape
+from xhtml2pdf import pisa
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
 from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
         UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm)
-from django.views.static import serve
 
 """
-HTTP endpoints to transfer HTML
+HTTP endpoints, responsible for the frontend
 """
 
 @login_required
@@ -138,8 +145,8 @@ def lab_details(request, lab_id):
                 'users_in_lab': users_in_lab,
                 'users_missing_certs': users_missing_certs,
                 'required_certs': required_certs,
-                'can_edit_user_lab': is_admin,
-                'can_edit_lab_cert': is_admin,
+                'can_edit_user_lab': is_admin or is_pi,
+                'can_edit_lab_cert': is_admin or is_pi,
                 'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
                 'lab_user_form': UserLabForm(initial={'redirect_url': redirect_url}),
             }
@@ -189,3 +196,47 @@ def user_details(request, user_id=None):
                 'app_user': app_user,
             }
     )
+
+@login_required
+@auth_utils.user_or_admin
+@require_http_methods(['GET'])
+def user_report(request, user_id=None):
+    app_user = api.get_user(user_id)
+    if app_user is None:
+        raise PermissionDenied
+
+    missing_cert_list = api.get_missing_certs(user_id)
+    user_cert_list = api.get_user_certs(user_id)
+    user_cert_ids = set([uc['id'] for uc in user_cert_list])
+    expired_cert_ids = set([ec['id'] for ec in api.get_expired_certs(user_id)])
+
+    user_lab_list = api.get_user_labs(user_id)
+
+    user_labs = []
+
+    for user_lab in user_lab_list:
+        lab_certs = api.get_lab_certs(user_lab['id'])
+        missing_lab_certs = []
+        for lc in lab_certs:
+            if lc['id'] not in user_cert_ids or lc['id'] in expired_cert_ids:
+                missing_lab_certs.append(lc)
+        user_labs.append((user_lab, lab_certs, missing_lab_certs))
+
+    return render_to_pdf('lfs_lab_cert_tracker/user_report.html',
+            {
+                'user_cert_list': user_cert_list,
+                'app_user': app_user,
+                'user_labs': user_labs,
+            }
+    )
+
+def render_to_pdf(template_src, context_dict):
+    template = get_template(template_src)
+    context = Context(context_dict)
+    html  = template.render(context_dict)
+    response = BytesIO()
+
+    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), response)
+    if not pdf.err:
+        return HttpResponse(response.getvalue(), content_type='application/pdf')
+    return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))

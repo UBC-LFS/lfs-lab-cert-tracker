@@ -1,67 +1,70 @@
-{% extends "base.html" %}
+{% extends "header.html" %}
 
 {% block content %}
 
 <div class="row">
-	<h3>Viewing {{ app_user.cwl }}</h3>
-</div>
+<!-- Certificates -->
+<div class="col">
+<h5>Viewing {{ app_user.cwl }}</h5>
+<a href="/users/{{app_user.id}}/report/">User Report</a>
+<h5>{{ app_user.cwl }} Certificates</h5>
+{% if user_cert_list %}
+	<div class="list-group">
+		{% for user_cert in user_cert_list %}
+			<li class="list-group-item">
+				<a href="/users/{{user_cert.user}}/certificates/{{user_cert.cert}}">{{ user_cert.name }}</a>
+			</li>
+		{% endfor %}
+	</div>
+{% else %}
+<p>{{ app_user.cwl }} does not have any certificates</p>
+{% endif %}
+<h5>Missing Certificates</h5>
+{% if missing_cert_list %}
+	<ul class="list-group">
+		{% for missing_cert in missing_cert_list %}
+			<li class="list-group-item">{{ missing_cert.name }}</li>
+		{% endfor %}
+	</ul>
+{% else %}
+	<p>{{ app_user.cwl }} is not missing any certificates</p>
+{% endif %}
+<h5>Expired Certificates</h5>
+{% if expired_cert_list %}
+	<ul class="list-group">
+		{% for expired_cert in expired_cert_list %}
+			<li class="list-group-item">{{ expired_cert.name }}</li>
+		{% endfor %}
+	</ul>
+{% else %}
+	<p>{{ app_user.cwl }} does not have any expired certificates</p>
+{% endif %}
+</div> <!--end col-->
 
-<div class="row">
-	<!-- Certificates -->
-	<div class="col">
-		<h3>Certificates</h3>
-		{% if user_cert_list %}
-			<div class="list-group">
-				{% for user_cert in user_cert_list %}
-					<a class="list-group-item list-group-item-action" href="/users/{{user_cert.user}}/certificates/{{user_cert.cert}}">{{ user_cert.name }}</a>
-				{% endfor %}
-			</div>
-		{% else %}
-		<p>{{ app_user.cwl }} does not have any certificates</p>
-		{% endif %}
-		<h3>Missing Certificates</h3>
-		{% if missing_cert_list %}
-			<ul class="list-group">
-				{% for missing_cert in missing_cert_list %}
-					<li class="list-group-item">{{ missing_cert.name }}</li>
-				{% endfor %}
-			</ul>
-		{% else %}
-			<p>{{ app_user.cwl }} is not missing any certificates</p>
-		{% endif %}
-		<h3>Expired Certificates</h3>
-		{% if expired_cert_list %}
-			<ul class="list-group">
-				{% for expired_cert in expired_cert_list %}
-					<li class="list-group-item">{{ expired_cert.name }}</li>
-				{% endfor %}
-			</ul>
-		{% else %}
-			<p>{{ app_user.cwl }} does not have any expired certificates</p>
-		{% endif %}
-	</div> <!--end col-->
-	<!-- Labs -->
-	<div class="col">
-		<h3>Labs</h3>
-		{% if user_lab_list %}
-			{% for user_lab in user_lab_list %}
-			<p>
-				{{ user_lab.name }}
-			</p>
-			{% endfor %}
-		{% else %}
-			<p>{{ app_user.cwl }} is not in any labs</p>
-		{% endif %}
-		<h3>PI Labs</h3>
-		{% if pi_user_lab_list %}
-			<div class="list-group">
-			{% for pi_user_lab in pi_user_lab_list %}
-				<a class="list-group-item list-group-item-action" href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
-			{% endfor %}
-		{% else %}
-			<p>{{ app_user.cwl }} is not a Principal Investigator in any labs</p>
-		{% endif %}
-	</div> <!--end col-->
+<!-- Labs -->
+<div class="col">
+	<h5>Labs</h5>
+	{% if user_lab_list %}
+		{% for user_lab in user_lab_list %}
+		<p>
+			{{ user_lab.name }}
+		</p>
+		{% endfor %}
+	{% else %}
+		<p>{{ app_user.cwl }} is not in any labs</p>
+	{% endif %}
+	<h5>PI Labs</h5>
+	{% if pi_user_lab_list %}
+		<div class="list-group">
+		{% for pi_user_lab in pi_user_lab_list %}
+			<li class="list-group-item">
+				<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+			</li>
+		{% endfor %}
+	{% else %}
+		<p>{{ app_user.cwl }} is not a Principal Investigator in any labs</p>
+	{% endif %}
+</div> <!--end col-->
 </div> <!--end row-->
 
 {% endblock %}

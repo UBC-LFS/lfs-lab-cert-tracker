@@ -1,6 +1,10 @@
 import os
 from django.db import models
 
+"""
+Contains app models
+"""
+
 class User(models.Model):
     first_name = models.CharField(max_length=256)
     last_name = models.CharField(max_length=256)

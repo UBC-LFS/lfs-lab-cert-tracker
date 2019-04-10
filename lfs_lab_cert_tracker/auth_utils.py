@@ -11,6 +11,10 @@ from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 from lfs_lab_cert_tracker.models import UserLab
 
+"""
+Utility functions for authentication, mainly for checking that a user has correct permissions
+"""
+
 def is_admin(user):
     return user.is_superuser
 
@@ -38,3 +42,12 @@ def get_user(username):
         return User.objects.get(username=username)
     except User.DoesNotExist:
         return None
+
+def admin_or_pi_only(func):
+    def admin_or_pi_only(request, *args, **kwargs):
+        print(request.user)
+        if is_admin(request.user) or is_principal_investigator(request.user.id, kwargs['lab_id']):
+            return func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return admin_or_pi_only

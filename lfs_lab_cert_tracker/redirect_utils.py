@@ -3,6 +3,10 @@ import logging
 from django.shortcuts import redirect
 from django.db.utils import IntegrityError
 
+"""
+Provides decorators for redirecting requests
+"""
+
 logger = logging.getLogger(__name__)
 
 def handle_redirect(func):

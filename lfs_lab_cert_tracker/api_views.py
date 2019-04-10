@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from lfs_lab_cert_tracker import api
-from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only
+from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
 
 """
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def certs(request, cert_id=None):
     data = request.POST
     res = api.create_cert(data['name'])
-    logger.info("Created cert %s" % (res))
+    logger.info("%s: Created cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -34,7 +34,7 @@ def certs(request, cert_id=None):
 def delete_certs(request, cert_id=None):
     data = request.POST
     res = api.delete_cert(cert_id)
-    logger.info("Deleted cert %s" % (res))
+    logger.info("%s: Deleted cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -44,7 +44,7 @@ def delete_certs(request, cert_id=None):
 def labs(request, lab_id=None):
     data = request.POST
     res = api.create_lab(data['name'])
-    logger.info("Created lab %s" % (res))
+    logger.info("%s: Created lab %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -54,27 +54,27 @@ def labs(request, lab_id=None):
 def delete_labs(request, lab_id=None):
     data = request.POST
     res = api.delete_lab(lab_id)
-    logger.info("Deleted lab %s" % (res))
+    logger.info("%s: Deleted lab %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
-@admin_only
+@admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def lab_certs(request, lab_id=None, cert_id=None):
     data = request.POST
     res = api.create_lab_cert(lab_id, data['cert'])
-    logger.info("Created lab cert %s" % (res))
+    logger.info("%s: Created lab cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
-@admin_only
+@admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_lab_certs(request, lab_id=None, cert_id=None):
     data = request.POST
     res = api.delete_lab_cert(lab_id, cert_id)
-    logger.info("Deleted lab cert %s" % (res))
+    logger.info("%s: Deleted lab cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -92,7 +92,7 @@ def user_certs(request, user_id=None, cert_id=None):
         'user_id': user_id,
         'cert_id': cert_id,
     }
-    logger.info("Created user cert %s" % (res))
+    logger.info("%s: Created user cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -102,28 +102,28 @@ def user_certs(request, user_id=None, cert_id=None):
 def delete_user_certs(request, user_id=None, cert_id=None):
     data = request.POST
     res = api.delete_user_cert(user_id, cert_id)
-    logger.info("Deleted user cert %s" % (res))
+    logger.info("%s: Deleted user cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
-@admin_only
+@admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def user_labs(request, user_id=None, lab_id=None):
     data = request.POST
     user = api.get_user_by_cwl(data['user'])
     res = api.create_user_lab(user.id, lab_id, data['role'])
-    logger.info("Created user lab %s" % (res))
+    logger.info("%s: Created user lab %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
-@admin_only
+@admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_user_lab(request, user_id=None, lab_id=None):
     data = request.POST
     res = api.delete_user_lab(user_id, lab_id)
-    logger.info("Deleted user lab %s" % (res))
+    logger.info("%s: Deleted user lab %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -138,5 +138,5 @@ def users(request):
         email=data['email'],
         cwl=data['cwl'],
     )
-    logger.info("Creaetd user %s" % (res))
+    logger.info("%s: Creaetd user %s" % (request.user, res))
     return JsonResponse(res)

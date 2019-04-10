@@ -1,0 +1,75 @@
+<style>
+table {
+	border-collapse: collapse;
+}
+table, th, td {
+	border: 1px solid black;
+	padding: 5px;
+}
+</style>
+
+<h5>Report for {{app_user.first_name}} {{app_user.last_name}}</h5>
+<h5>cwl: {{app_user.cwl}}</h5>
+
+<table>
+	<tr>
+		<th>
+			Registered In
+		</th>
+		<th>
+			Required Certificates
+		</th>
+		<th>
+			Missing/Expired Certificates
+		</th>
+	</tr>
+	{% for ul in user_labs %}
+	<tr>
+		<td>
+			{{ ul.0.name }}
+		</td>
+		<td>
+			<ul>
+			{% for cert in ul.1 %}
+			<li>{{ cert.name }}</li>
+			{% endfor %}
+			<ul>
+		</td>
+		<td>
+			<ul>
+			{% for cert in ul.2 %}
+			<li>{{ cert.name }}</li>
+			{% endfor %}
+			<ul>
+		</td>
+	</tr>
+	{% endfor %}
+</table>
+
+<h5>Has Certificates</h5>
+<table>
+	<tr>
+		<th>
+			Name
+		</th>
+		<th>
+			Uploaded On
+		</th>
+		<th>
+			Expires On
+		</th>
+	</tr>
+	{% for uc in user_cert_list %}
+	<tr>
+		<td>
+			{{ uc.name }}
+		</td>
+		<td>
+			{{ uc.uploaded_date }}
+		</td>
+		<td>
+			{{ uc.expiry_date }}
+		</td>
+	</tr>
+	{% endfor %}
+</table>

@@ -13,37 +13,44 @@
 </script>
 <body>
 <nav class="navbar navbar-expand-md navbar-light bg-light">
-	<div class="navbar-collapse collapse" id="navbarNav">
-		<ul class="navbar-nav">
-			{% if user.is_authenticated %}
-				<li class="nav-item">
-					<a class="nav-link" href="/">Home</a>
-				</li>
-			{% endif %}
-		</ul>
-		<ul class="nav navbar-nav mx-auto">
-			<li class="nav-item">
-				<a class="navbar-brand max-auto">LFS Lab Certification Tracker</a>
-			</li>
-		</ul>
-		<ul class="navbar-nav">
-			 {% if user.is_authenticated %}
-				<li class="nav-item">
-					<a class="nav-link" href="{% url "saml" %}?slo">Logout</a>
-				</li>
-			{% endif %}
-		</ul>
-	</div>
+	<ul class="nav navbar-nav mx-auto">
+		<li class="nav-item">
+			<a class="navbar-brand max-auto">LFS Lab Certification Tracker</a>
+		</li>
+	</ul>
 </nav>
-<div class="container-fluid">
-	<div class="row" style="margin-top:32px">
-		<br/>
-		<div class="col-2">
-			{% if user.is_authenticated %}
-				{% block sidebar %}{% endblock %}
-			{% endif %}
-		</div>
-		<div class="col-10">{% block content %}{% endblock %}</div>
+{% if user.is_authenticated %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+	<ul class="nav navbar-nav mx-auto">
+		<li class="nav-item">
+			<a class="nav-link" href="/">My Account</a>
+		</li> <li class="nav-item">
+			<a class="nav-link" href="/users/{{ user.id }}/labs">View My Labs</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="/users/{{ user.id }}/certificates">View My Certificates</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="/labs">View All Labs</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="/certificates">View All Certificates</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" href="/users">View All Users</a>
+		</li>
+	</ul>
+	<ul class="navbar navbar-nav navbar-right">
+		<li class="nav-item">
+			<a class="nav-link" href="{% url "saml" %}?slo">Logout</a>
+		</li>
+	</ul>
+</nav>
+{% endif %}
+
+<div class="container-fluid p-4">
+	<div class="row justify-content-center">
+		<div class="col-8">{% block content %}{% endblock %}</div>
 	</div>
 </div>
 </body>
