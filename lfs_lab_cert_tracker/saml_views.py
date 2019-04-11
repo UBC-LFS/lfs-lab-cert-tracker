@@ -54,6 +54,10 @@ def saml(request, action=None):
             name_id = request.session['samlNameId']
         if 'samlSessionIndex' in request.session:
             session_index = request.session['samlSessionIndex']
+
+        # Login was not done through saml
+        if not name_id and not session_index:
+            return HttpResponseRedirect('/accounts/logout')
         # Redirect to the saml logout
         return HttpResponseRedirect(auth.logout(name_id=name_id, session_index=session_index))
 

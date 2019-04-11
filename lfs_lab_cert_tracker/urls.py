@@ -21,7 +21,7 @@ urlpatterns = [
 
     path('', views.index),
 
-    path('accounts/login/', views.login, name='login'),
+    path('accounts/login/', views.login),
 
     path('saml/', saml_views.saml, name='saml'),
     path('attrs/', saml_views.attrs, name='attrs'),
@@ -58,4 +58,8 @@ urlpatterns = [
     path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certs),
 
     path('api/users/<int:user_id>/labs/<int:lab_id>/delete', api_views.delete_user_lab),
+]
+
+urlpatterns += [
+    path('accounts/admin/', include('django.contrib.auth.urls')),
 ]
