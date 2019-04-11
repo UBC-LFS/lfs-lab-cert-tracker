@@ -59,5 +59,8 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 6. The "student" group should be allowed limited permissions TODO: Define these permissions
 7. The "principal\_investigator" group should be allowed limited permissions TODO: Define these permissions
 
+### SAML
+To login without using SAML head to `http://<app url>/accounts/admin/login/`
+
 ### Media Files
 Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions

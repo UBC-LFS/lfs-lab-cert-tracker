@@ -1,32 +1,35 @@
 {% extends "header.html" %}
 
 {% block content %}
-{% if errors %}
-  <div class="alert alert-danger" role="alert">
-    <strong>Errors:</strong>
-    <ul class="list-unstyled">
-        {% for err in errors %}
-          <li>{{err}}</li>
-        {% endfor %}
-    </ul>
-    {% if error_reason %}
-      <p><b>Reason:</b> {{error_reason}}</p>
-    {% endif %}
-  </div>
+{% if user.is_authenticated %}
+	<p>Already logged in</p>
+{% else %}
+	{% if errors %}
+		<div class="alert alert-danger" role="alert">
+			<strong>Errors:</strong>
+			<ul class="list-unstyled">
+					{% for err in errors %}
+						<li>{{err}}</li>
+					{% endfor %}
+			</ul>
+			{% if error_reason %}
+				<p><b>Reason:</b> {{error_reason}}</p>
+			{% endif %}
+		</div>
+	{% endif %}
+
+	{% if not_auth_warn %}
+		<div class="alert alert-danger" role="alert">Not authenticated</div>
+	{% endif %}
+
+	{% if success_slo %}
+		<div class="alert alert-success" role="alert">Successfully logged out</div>
+	{% endif %}
+
+	<p>CWL Login</p>
+	<p>Using an unregistered CWL account will fail</p>
+	<p>Ask the administrator to get added to the application</p>
+
+	<a href="{% url "saml" %}?sso" class="btn btn-primary">Login</a>
 {% endif %}
-
-{% if not_auth_warn %}
-  <div class="alert alert-danger" role="alert">Not authenticated</div>
-{% endif %}
-
-{% if success_slo %}
-  <div class="alert alert-success" role="alert">Successfully logged out</div>
-{% endif %}
-
-<p>CWL Login</p>
-<p>Using an unregistered CWL account will fail</p>
-<p>Ask the administrator to get added to the application</p>
-
-<a href="{% url "saml" %}?sso" class="btn btn-primary">Login</a>
-
 {% endblock %}
