@@ -60,3 +60,12 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 
 ### Media Files
 Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions
+
+## Troubleshooting
+* Error
+```
+import xmlsec
+SystemError: null argument to internal routine
+```
+Solution
+If running inside alpine and not running verison 3.9 update to 3.9
