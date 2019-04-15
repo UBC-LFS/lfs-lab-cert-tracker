@@ -1,0 +1,36 @@
+#!/sbin/openrc-run
+
+app_name="cert-tracker"
+app_dir="/root/lfs-lab-cert-tracker"
+app_env="/root/envs"
+cmd_name="lfs_lab_cert_tracker"
+log_dir="/var/log/cert-tracker"
+stdout_log="$log_dir/out.log"
+stderr_log="$log_dir/err.log"
+pid_dir="/run/$app_name"
+pid_file="$pid_dir/$app_name.pid"
+
+cmd="/usr/bin/gunicorn"
+cmd_args="--bind 0.0.0.0:8000 lfs_lab_cert_tracker.wsgi:application --error-logfile $stderr_log --log-file $stdout_log"
+
+start() {
+        local retval
+        ebegin "Starting Cert Tracker"
+        mkdir -p $log_dir
+        mkdir -p $pid_dir
+        rm -f $pid_file
+        touch $pid_file
+        source $app_env
+        start-stop-daemon \
+                --start --background \
+                --pidfile ${pid_file} -d ${app_dir} \
+                --exec ${cmd} -- ${cmd_args}
+        retval=$?
+        eend $retval
+}
+
+stop() {
+        ebegin "Stopping Cert Tracker"
+        start-stop-daemon --stop  --pidfile ${pid_file}
+        eend $?
+}

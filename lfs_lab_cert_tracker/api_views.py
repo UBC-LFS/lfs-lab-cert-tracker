@@ -138,5 +138,5 @@ def users(request):
         email=data['email'],
         cwl=data['cwl'],
     )
-    logger.info("%s: Creaetd user %s" % (request.user, res))
+    logger.info("%s: Created user %s" % (request.user, res))
     return JsonResponse(res)

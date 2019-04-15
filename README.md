@@ -47,8 +47,6 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 	--noinput
 ```
 
-### Static Data
-
 ### Authentication
 1. Use `python manage.py createsuperuser` to create a super user, just use something simple for development
 2. Follow the prompts
@@ -60,6 +58,24 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 
 ### Media Files
 Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions
+
+## Deploying to Alpine 3.9
+1. Install these prerequisites
+```
+apk add postgresql-dev
+apk add gcc
+apk add libxml2-dev
+apk add libxslt-dev
+apk add libc-dev
+apk add python3-dev
+apk add xmlsec-dev
+apk add pkgconfig
+```
+
+2. To run as a service copy the file `scripts/cert-tracker` and place in `/etc/init.d`
+3. To start run `service cert-tracker start`
+4. To stop run `service cert-tracker stop`
+5. stdout and stderr are redirected to logfiles in `/var/log/cert-tracker`
 
 ## Troubleshooting
 * Error
