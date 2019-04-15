@@ -7,6 +7,11 @@
 {% for user in user_list %}
 	<li class="list-group-item">
 		<a href="/users/{{user.id}}">{{ user.cwl }}</a>
+		<form class="float-right" action='/api/users/{{user.id}}/delete' method="post" onsubmit="return confirm('Delete: {{user.cwl}}?');">
+			{% csrf_token %}
+			<input name="redirect_url" value="/users/" type="hidden"/>
+		<input class="btn btn-danger" type="submit" value="DELETE"/>
+		</form>
 	</li>
 {% endfor %}
 </div>

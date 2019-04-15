@@ -41,6 +41,16 @@ def delete_certs(request, cert_id=None):
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
+def delete_user(request, user_id=None):
+    data = request.POST
+    res = api.delete_user(user_id)
+    logger.info("%s: Deleted user %s" % (request.user, res))
+    return JsonResponse(res)
+
+@login_required
+@admin_only
+@handle_redirect
+@require_http_methods(['POST'])
 def labs(request, lab_id=None):
     data = request.POST
     res = api.create_lab(data['name'])

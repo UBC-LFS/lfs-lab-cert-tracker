@@ -24,6 +24,11 @@ def get_user_by_cwl(cwl):
 def get_users(n=None):
     return [model_to_dict(user) for user in User.objects.all()]
 
+def delete_user(user_id):
+    AuthUser.objects.get(id=user_id).delete()
+    User.objects.get(id=user_id).delete()
+    return {'user_id': user_id}
+
 # Cert CRUD
 def get_certs(n=None):
     return [model_to_dict(cert) for cert in Cert.objects.all()]
