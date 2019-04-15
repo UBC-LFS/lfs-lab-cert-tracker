@@ -12,6 +12,7 @@ Run `vagrant up` that should create a VM which runs this as a container.
 2. Run `pyenv virtualenv 3.6.6 lfs-lab-cert-tracker` to create a virtual environment. If you don't have python3.6.6 installed, install it first with `pyenv install 3.6.6`
 3. Enter the virtual environment with `pyenv activate lfs-lab-cert-tracker` exit it with `source deactivate`
 4. Making sure you're in the virtualenv run `pip install -r requirements.txt` to get all the packages for this project
+5. If shibboleth authenticator fails try `brew install libxml2-dev libxmlsec1-dev`
 
 ## Local Database
 This project uses Postgresql as its database, follow these instructions to get it running locally DON'T USE THESE STEPS IN PROD
@@ -55,6 +56,9 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 5. The "admin" group should be allowed all permissions
 6. The "student" group should be allowed limited permissions TODO: Define these permissions
 7. The "principal\_investigator" group should be allowed limited permissions TODO: Define these permissions
+
+### SAML
+To login without using SAML head to `http://<app url>/accounts/admin/login/`
 
 ### Media Files
 Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions
