@@ -74,7 +74,6 @@ WSGI_APPLICATION = 'lfs_lab_cert_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -83,18 +82,6 @@ DATABASES = {
         'PASSWORD': os.environ.get('LFS_LAB_CERT_TRACKER_DB_PASSWORD', 'dummy_password'),
         'HOST': os.environ.get('LFS_LAB_CERT_TRACKER_DB_HOST', 'localhost'),
         'PORT': '',
-    }
-}
-"""
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'lfs_lab_cert_tracker',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
     }
 }
 
@@ -175,4 +162,4 @@ EMAIL_USE_SSL = False
 EMAIL_HOST = 'smtp.mail-relay.ubc.ca'
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
-EMAIL_FROM = 'lfs.lc@ubc.ca'
+EMAIL_FROM = 'LFS Cert Tracker <lfs.lc@ubc.ca>'
