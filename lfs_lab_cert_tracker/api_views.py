@@ -97,24 +97,20 @@ def delete_lab_certs(request, lab_id=None, cert_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def user_certs(request, user_id=None, cert_id=None):
-    print('user_certs ', user_id, cert_id)
     data = request.POST
     files = request.FILES
     completion_date = None
     expiry_date = None
+    cert = api.get_cert(data['cert'])
 
     if all([data['completion_date_year'], data['completion_date_month'], data['completion_date_day']]):
         completion_date = datetime.datetime(year=int(data['completion_date_year']), month=int(data['completion_date_month']), day=int(data['completion_date_day']))
-        year = int(data['completion_date_year']) + 5
+        year = int(data['completion_date_year']) + int(cert['expiry_in_years'])
         expiry_date = datetime.datetime(year=year, month=int(data['completion_date_month']), day=int(data['completion_date_day']))
-
 
     print(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
     res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
-    res = {
-        'user_id': user_id,
-        'cert_id': cert_id,
-    }
+    res = { 'user_id': user_id, 'cert_id': cert_id }
     logger.info("%s: Created user cert %s" % (request.user, res))
     return JsonResponse(res)
 

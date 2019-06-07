@@ -40,6 +40,10 @@ def delete_cert(cert_id):
     Cert.objects.get(id=cert_id).delete()
     return {'cert_id': cert_id}
 
+def get_cert(cert_id):
+    cert = Cert.objects.get(id=cert_id)
+    return model_to_dict(cert)
+
 # Lab CRUD
 def get_lab(lab_id):
     return Lab.objects.get(id=lab_id)

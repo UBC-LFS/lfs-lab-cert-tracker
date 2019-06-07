@@ -27,12 +27,4 @@
 	<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
 </form>
 
-<h5>Users having certs expired in 30 days</h5>
-{% if all_certs_expired_in_30days %}
-	{% for cert in all_certs_expired_in_30days %}
-		<span>{{ cert.user.username }}, </span>
-	{% endfor %}
-{% endif %}
-<button >Send Notification</button>
-
 {% endblock %}

@@ -12,6 +12,7 @@ Contains app models
 
 class Cert(models.Model):
     name = models.CharField(max_length=256, unique=True)
+    expiry_in_years = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name

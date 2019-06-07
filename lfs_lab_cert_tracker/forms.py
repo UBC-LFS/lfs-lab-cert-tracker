@@ -22,7 +22,8 @@ class CertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = Cert
-        fields = ['name', 'redirect_url']
+        fields = ['name', 'expiry_in_years', 'redirect_url']
+        help_texts = { 'expiry_in_years': '(0 means "NO Expiry Date")' }
 
 class UserLabForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())

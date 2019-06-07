@@ -9,6 +9,11 @@
 	<div class="list-group-item">
 		<p class="d-inline float-left">
 			{{ cert.name }}
+			{% if cert.expiry_in_years == 0 %}
+				(Expiry in years: {{ None }})
+			{% else %}
+				(Expiry in years: {{ cert.expiry_in_years }} years)
+			{% endif %}
 		</p>
 		{% if can_create_cert %}
 		<form class="float-right" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{cert.name}}?');">

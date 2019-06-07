@@ -1,15 +1,210 @@
 [
-{"model": "lfs_lab_cert_tracker.cert", "pk": 1 , "fields": {"name": "Faculty of Land and Food Systems Workplace Safety Orientation & Training Needs Assessment & Record"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 2 , "fields": {"name": "Accident Incident Investigation Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 3 , "fields": {"name": "Active Shooter Preparedness Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 4 , "fields": {"name": "Biological Safety Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 5 , "fields": {"name": "Bullying and Harassment Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 6 , "fields": {"name": "Chemical Safety Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 7 , "fields": {"name": "Floor Warden Training Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 8 , "fields": {"name": "Intro to Lab Safety Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 9 , "fields": {"name": "New Worker Safety Orientation Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 10 , "fields": {"name": "Privacy Matters Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 11, "fields": {"name": "Waste Management Refresher Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 12, "fields": {"name": "WHMIS Certificate"}},
-{"model": "lfs_lab_cert_tracker.cert", "pk": 13, "fields": {"name": "Workplace Violence Prevention Training Certificate"}}
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 1,
+    "fields": {
+      "name": "New Worker Safety Orientation",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 2,
+    "fields": {
+      "name": "Preventing and Addressing Workplace Bullying and Harassment Training",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 3,
+    "fields": {
+      "name": "Workplace Violence Prevention Training",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 4,
+    "fields": {
+      "name": "Active Shooter Preparedness Workshop",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 5,
+    "fields": {
+      "name": "Privacy and Information Security Fundamentals Training",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 6,
+    "fields": {
+      "name": "Safety Supervision at UBC",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 7,
+    "fields": {
+      "name": "Tri-Council Policy Statement (TCPS2): Ethical Conduct for Research Involving Humans",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 8,
+    "fields": {
+      "name": "Experimental Animal User Training",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 9,
+    "fields": {
+      "name": "Biology and Husbandry of the Laboratory Rodent",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 10,
+    "fields": {
+      "name": "Anesthesia of the Laboratory Rodent",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 11,
+    "fields": {
+      "name": "General Principles of Rodent Surgery",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 12,
+    "fields": {
+      "name": "Accident/Incident Investigation Training Course",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 13,
+    "fields": {
+      "name": "Floor Warden Training Course",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 14,
+    "fields": {
+      "name": "Introduction to Lab Safety Course",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 15,
+    "fields": {
+      "name": "Chemical Safety Course",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 16,
+    "fields": {
+      "name": "Biological Safety Course",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 17,
+    "fields": {
+      "name": "Radiation Safety Course",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 18,
+    "fields": {
+      "name": "Laser Safety Course",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 19,
+    "fields": {
+      "name": "WHMIS Course",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 20,
+    "fields": {
+      "name": "Biosafety for Permit Holders",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 21,
+    "fields": {
+      "name": "Transportation of Dangerous Goods Class 7 (Radioactivity) Receiving Course for air",
+      "expiry_in_years": 2
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 22,
+    "fields": {
+      "name": "Transportation of Dangerous Goods Class 7 (Radioactivity) Receiving Course for ground",
+      "expiry_in_years": 3
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 23,
+    "fields": {
+      "name": "Transportation of Dangerous Goods Class 6.2 (Biological materials) Shipping Course for air",
+      "expiry_in_years": 2
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 24,
+    "fields": {
+      "name": "Transportation of Dangerous Goods Class 6.2 (Biological materials) Shipping Course for ground",
+      "expiry_in_years": 3
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 25,
+    "fields": {
+      "name": "Transportation of Dangerous Goods by air",
+      "expiry_in_years": 2
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 26,
+    "fields": {
+      "name": "Transportation of Dangerous Goods by ground",
+      "expiry_in_years": 3
+    }
+  }
 ]
