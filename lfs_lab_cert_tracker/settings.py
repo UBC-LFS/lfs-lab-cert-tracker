@@ -76,12 +76,12 @@ WSGI_APPLICATION = 'lfs_lab_cert_tracker.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': os.environ.get('LFS_LAB_CERT_TRACKER_DB_ENGINE', 'django.db.backends.postgresql_psycopg2'),
         'NAME': 'lfs_lab_cert_tracker',
-        'USER': 'lfs_lab_cert_tracker_user',
-        'PASSWORD': os.environ.get('LFS_LAB_CERT_TRACKER_DB_PASSWORD', 'dummy_password'),
+        'USER': os.environ.get('LFS_LAB_CERT_TRACKER_DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('LFS_LAB_CERT_TRACKER_DB_PASSWORD', 'postgres'),
         'HOST': os.environ.get('LFS_LAB_CERT_TRACKER_DB_HOST', 'localhost'),
-        'PORT': '',
+        'PORT': os.environ.get('LFS_LAB_CERT_TRACKER_DB_PORT', '5432'),
     }
 }
 
@@ -159,7 +159,7 @@ SAML_FOLDER = os.path.join(BASE_DIR, 'saml')
 # Send email
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST = 'smtp.mail-relay.ubc.ca'
+EMAIL_HOST = os.environ.get('LFS_LAB_CERT_TRACKER_EMAIL_HOST')
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
-EMAIL_FROM = 'LFS Cert Tracker <lfs.lc@ubc.ca>'
+EMAIL_FROM = os.environ.get('LFS_LAB_CERT_TRACKER_EAMIL_FROM')
