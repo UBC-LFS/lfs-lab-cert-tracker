@@ -4,12 +4,15 @@ import logging
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
+
+from http import HTTPStatus
+import json
 
 """
 Provides HTTP endpoints to access the api
@@ -25,7 +28,9 @@ def certs(request, cert_id=None):
     data = request.POST
     res = api.create_cert(data['name'])
     logger.info("%s: Created cert %s" % (request.user, res))
+    #print("certs: ", res)
     return JsonResponse(res)
+    #return HttpResponse( json.dumps(res), content_type="application/json" )
 
 @login_required
 @admin_only
@@ -92,12 +97,20 @@ def delete_lab_certs(request, lab_id=None, cert_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def user_certs(request, user_id=None, cert_id=None):
+    print('user_certs ', user_id, cert_id)
     data = request.POST
     files = request.FILES
+    completion_date = None
     expiry_date = None
-    if all([data['expiry_date_year'], data['expiry_date_month'], data['expiry_date_day']]):
-        expiry_date = datetime.datetime(year=int(data['expiry_date_year']), month=int(data['expiry_date_month']), day=int(data['expiry_date_day']))
-    res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], expiry_date)
+
+    if all([data['completion_date_year'], data['completion_date_month'], data['completion_date_day']]):
+        completion_date = datetime.datetime(year=int(data['completion_date_year']), month=int(data['completion_date_month']), day=int(data['completion_date_day']))
+        year = int(data['completion_date_year']) + 5
+        expiry_date = datetime.datetime(year=year, month=int(data['completion_date_month']), day=int(data['completion_date_day']))
+
+
+    print(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
+    res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
     res = {
         'user_id': user_id,
         'cert_id': cert_id,
@@ -113,6 +126,17 @@ def delete_user_certs(request, user_id=None, cert_id=None):
     data = request.POST
     res = api.delete_user_cert(user_id, cert_id)
     logger.info("%s: Deleted user cert %s" % (request.user, res))
+    return JsonResponse(res)
+
+@login_required
+@user_or_admin
+@handle_redirect
+@require_http_methods(['POST'])
+def update_user_certs(request, user_id=None, cert_id=None):
+    data = request.POST
+    print(data, user_id, cert_id)
+    #res = api.delete_user_cert(user_id, cert_id)
+    #logger.info("%s: Deleted user cert %s" % (request.user, res))
     return JsonResponse(res)
 
 @login_required
@@ -146,7 +170,25 @@ def users(request):
         first_name=data['first_name'],
         last_name=data['last_name'],
         email=data['email'],
-        cwl=data['cwl'],
+        username=data['username'],
     )
     logger.info("%s: Created user %s" % (request.user, res))
+    return JsonResponse(res)
+
+@login_required
+@admin_only
+@handle_redirect
+@require_http_methods(['POST'])
+def send_email(request):
+    data = request.POST
+    print("send email")
+    sender = data['sender']
+    receiver = data['receiver']
+    purpose = data['purpose']
+    print(sender)
+    print(receiver)
+    print(purpose)
+    res = {}
+    logger.info("Sent an email successfully")
+    print(res)
     return JsonResponse(res)

@@ -1,7 +1,16 @@
 from django import forms
+from django.contrib.auth.models import User as AuthUser
+from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
 
-from lfs_lab_cert_tracker.models import (Lab, Cert, User,
-        UserLab, UserCert, LabCert)
+class LoginForm(forms.Form):
+    username = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={ 'placeholder': 'Enter your username' })
+    )
+    password = forms.CharField(
+        max_length=200,
+        widget=forms.PasswordInput(attrs={ 'placeholder': 'Enter your password' })
+    )
 
 class LabForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
@@ -20,9 +29,8 @@ class UserLabForm(forms.ModelForm):
     class Meta:
         model = UserLab
         fields = ['user', 'role', 'redirect_url']
-        widgets = {
-            'user': forms.TextInput(),
-        }
+        labels = { 'user': 'CWL' }
+        widgets = { 'user': forms.TextInput() }
 
 class LabCertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
@@ -32,7 +40,7 @@ class LabCertForm(forms.ModelForm):
 
 class UserCertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
-    expiry_date = forms.DateField(required=False, widget=forms.SelectDateWidget())
+    completion_date = forms.DateField(required=False, widget=forms.SelectDateWidget(years=range(2010, 2050)))
     class Meta:
         model = UserCert
         fields = ['user', 'cert', 'cert_file', 'redirect_url']
@@ -46,8 +54,24 @@ class DeleteUserCertForm(forms.Form):
 class UserForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'email', 'cwl', 'redirect_url']
+        model = AuthUser
+        fields = ['first_name', 'last_name', 'email', 'username', 'redirect_url']
+        labels = { 'username': 'CWL' }
+        help_texts = { 'username': None }
+
+"""
+class SendEmailForm(forms.ModelForm):
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = SendEmail
+        fields = ['sender', 'receiver', 'purpose']
+        widgets = {
+            'sender': forms.HiddenInput(),
+            'receiver': forms.HiddenInput(),
+            'purpose': forms.HiddenInput(),
+        }
+"""
+
 
 class SafetyWebForm(forms.Form):
     POSITION_CHOICES = (
@@ -124,4 +148,3 @@ class SafetyWebForm(forms.Form):
     hazardous_materials = forms.MultipleChoiceField(choices=HAZARDOUS_MTRLS_CHOICES, widget=forms.CheckboxSelectMultiple)
     equipment = forms.MultipleChoiceField(choices=EQUIPMENT_CHOICES, widget=forms.CheckboxSelectMultiple)
     ppe_above_min = forms.MultipleChoiceField(choices=PPE_ABOVE_MIN_CHOICES, widget=forms.CheckboxSelectMultiple)
-

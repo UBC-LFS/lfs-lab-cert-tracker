@@ -20,25 +20,33 @@
 	</ul>
 </nav>
 {% if user.is_authenticated %}
+
+<div class="user-info" style="text-align: center;">
+	Logged in as <b>{{ loggedin_user.username }}</b>
+</div>
+
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
+
 	<ul class="nav navbar-nav mx-auto">
 		<li class="nav-item">
 			<a class="nav-link" href="/">My Account</a>
 		</li> <li class="nav-item">
-			<a class="nav-link" href="/users/{{ user.id }}/labs">View My Labs</a>
+			<a class="nav-link" href="/users/{{ user.id }}/labs">My Labs</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link" href="/users/{{ user.id }}/certificates">View My Certificates</a>
+			<a class="nav-link" href="/users/{{ user.id }}/certificates">My Certificates</a>
+		</li>
+		{% if user.is_superuser %}
+		<li class="nav-item">
+			<a class="nav-link" href="/labs">All Labs</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link" href="/labs">View All Labs</a>
+			<a class="nav-link" href="/certificates">All Certificates</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link" href="/certificates">View All Certificates</a>
+			<a class="nav-link" href="/users">All Users</a>
 		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="/users">View All Users</a>
-		</li>
+		{% endif %}
 	</ul>
 	<ul class="navbar navbar-nav navbar-right">
 		<li class="nav-item">

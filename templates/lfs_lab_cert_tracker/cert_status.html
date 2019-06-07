@@ -1,0 +1,69 @@
+{% extends "header.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<h5>Certificate Status</h5>
+
+<h6>Pending Certificates</h6>
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>CWL</th>
+      <th>Certificate</th>
+      <th>Uploaded Date</th>
+      <th>Expired Date</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cert in all_pending_certs %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ cert.user.cwl }}</td>
+        <td><a href="/media/{{ cert.cert_file }}" target="_blank">{{ cert.cert.name }}</a></td>
+        <td>{{ cert.uploaded_date }}</td>
+        <td>{{ cert.expiry_date }}</td>
+        <td>{{ cert.get_status_display }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h6>Certificates expired in 30 days</h6>
+
+<form action='/api/send_email' method="post" onsubmit="return confirm('Are you sure to send an email?');">
+  {% csrf_token %}
+  {{ send_email_form_remider_30days | crispy }}
+  <input class="btn btn-success" type="submit" value="Send remider E-mail"/>
+</form>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>CWL</th>
+      <th>Certificate</th>
+      <th>Uploaded Date</th>
+      <th>Expired Date</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cert in all_certs_expired_in_30days %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ cert.user.cwl }}</td>
+        <td><a href="/media/{{ pending_cert.cert_file }}">{{ cert.cert.name }}</a></td>
+        <td>{{ cert.uploaded_date }}</td>
+        <td>{{ cert.expiry_date }}</td>
+        <td>{{ cert.get_status_display }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

@@ -1,66 +1,87 @@
 {% extends "header.html" %}
 
 {% block content %}
-<h5>{{lab.name}}</h5>
+<h4>Lab: {{lab.name}}</h4>
+
 <h5>Required Certificates</h5>
 <div class="list-group">
-	{% for required_cert in required_certs %}
-	<div class="list-group-item">
-		<p class="d-inline float-left">
-			{{ required_cert.name }}
-		</p>
-		{% if can_edit_lab_cert %}
-		<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post" onsubmit="return confirm('Remove: {{required_cert.name}}?');">
-			{% csrf_token %}
-			<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-			<input class="btn btn-danger" type="submit" value="REMOVE"/>
-		</form>
-		{% endif %}
-	</div>
-	{% endfor %}
+	{% if required_certs %}
+		{% for required_cert in required_certs %}
+		<div class="list-group-item">
+			<p class="d-inline float-left">{{ required_cert.name }}</p>
+			{% if can_edit_lab_cert %}
+			<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post" onsubmit="return confirm('Remove: {{required_cert.name}}?');">
+				{% csrf_token %}
+				<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+				<input class="btn btn-danger" type="submit" value="REMOVE"/>
+			</form>
+			{% endif %}
+		</div>
+		{% endfor %}
+	{% else %}
+		<div class="">There are no required certificates in this lab.</div>
+	{% endif %}
 </div>
+
 <h5>Users in Lab</h5>
-<div class="list-group">
-{% for user_in_lab in users_in_lab %}
-	<div class="list-group-item">
-		<a class="float-left" href="/users/{{ user_in_lab.id}}">
-			{{ user_in_lab.cwl}}
-		</a>
-		<form class="float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Remove: {{user_in_lab.cwl}}?');">
-			{% csrf_token %}
-			<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-		<input class="btn btn-danger" type="submit" value="REMOVE"/>
-		</form>
-	</div>
-{% endfor %}
-</div>
-<h5>Users Missing Certs</h5>
-<table class="table">
-	<thead>
-		<tr>
-			<th scope="col">CWL</th>
-			<th scope="col">Missing</th>
-		</tr>
-	</thead>
-	<tbody>
-	{% for user_missing_certs in users_missing_certs %}
-		<tr>
-			<td>
-				<a class="float-left" href="/users/{{ user_missing_certs.0.id}}">
-					{{ user_missing_certs.0.cwl }}
-				</a>
-			</td>
-			<td>
-				<ul>
-				{% for missing_cert in user_missing_certs.1 %}
-				<li>{{ missing_cert.name }}</li>
-				{% endfor %}
-				</ul>
-			</td>
-		</tr>
+{% if users_in_lab %}
+	<div class="list-group">
+	{% for user_in_lab in users_in_lab %}
+		<div class="list-group-item">
+			<a class="float-left" href="/users/{{ user_in_lab.id}}">
+				{{ user_in_lab.username }}
+			</a>
+			{% if user_in_lab.isPI %}
+				(PI)
+			{% endif %}
+			<form class="float-right" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Remove: {{user_in_lab.username}}?');">
+				{% csrf_token %}
+				<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+			<input class="btn btn-danger" type="submit" value="REMOVE"/>
+			</form>
+		</div>
 	{% endfor %}
-	</tbody>
-</table>
+	</div>
+{% else %}
+	<div class="">There are no users in this lab.</div>
+{% endif %}
+
+
+<h5>Users Missing Certs</h5>
+
+{% if users_missing_certs %}
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">CWL</th>
+				<th scope="col">Missing</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for user_missing_certs in users_missing_certs %}
+			<tr>
+				<td>
+					<a class="float-left" href="/users/{{ user_missing_certs.0.id}}">
+						{{ user_missing_certs.0.username }}
+					</a>
+				</td>
+				<td>
+					<ul>
+					{% for missing_cert in user_missing_certs.1 %}
+					<li>{{ missing_cert.name }}</li>
+					{% endfor %}
+					</ul>
+				</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<div class="">There are no users missing certificates in this lab.</div>
+{% endif %}
+
+
+
 {% if can_edit_user_lab %}
 <h5>Add User to Lab</h5>
 <form action='/api/labs/{{lab.id}}/users/' method="post">
@@ -70,6 +91,7 @@
 	<input class="btn btn-primary" type="submit" value="ADD"/>
 </form>
 {% endif %}
+
 {% if can_edit_lab_cert %}
 <h5>Add Cert to Lab</h5>
 <form action='/api/labs/{{lab.id}}/certificates/' method="post">
@@ -81,4 +103,3 @@
 {% endif %}
 
 {% endblock %}
-

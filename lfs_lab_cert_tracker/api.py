@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.contrib.auth.hashers import make_password
 
 from django.forms.models import model_to_dict
 
 from django.contrib.auth.models import User as AuthUser
-from lfs_lab_cert_tracker.models import User, Lab, Cert, LabCert, UserCert, UserLab
+from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab
 
 """
 Provides an API to the Django ORM for any queries that are required
@@ -14,24 +14,23 @@ Provides an API to the Django ORM for any queries that are required
 # User CRUD
 def get_user(user_id):
     try:
-        return User.objects.get(id=user_id)
-    except User.DoesNotExist as dne:
+        return AuthUser.objects.get(id=user_id)
+    except AuthUser.DoesNotExist as dne:
         return None
 
 def get_user_by_cwl(cwl):
-    return User.objects.get(cwl=cwl)
+    return AuthUser.objects.get(username=cwl)
 
 def get_users(n=None):
-    return [model_to_dict(user) for user in User.objects.all()]
+    return [model_to_dict(user) for user in AuthUser.objects.all().order_by('id')]
 
 def delete_user(user_id):
     AuthUser.objects.get(id=user_id).delete()
-    User.objects.get(id=user_id).delete()
     return {'user_id': user_id}
 
 # Cert CRUD
 def get_certs(n=None):
-    return [model_to_dict(cert) for cert in Cert.objects.all()]
+    return [model_to_dict(cert) for cert in Cert.objects.all().order_by('id')]
 
 def create_cert(name):
     cert = Cert.objects.create(name=name)
@@ -46,7 +45,7 @@ def get_lab(lab_id):
     return Lab.objects.get(id=lab_id)
 
 def get_labs(n=None):
-    return [model_to_dict(lab) for lab in Lab.objects.all()]
+    return [model_to_dict(lab) for lab in Lab.objects.all().order_by('id')]
 
 def create_lab(name):
     lab = Lab.objects.create(name=name)
@@ -72,6 +71,13 @@ def get_user_cert(user_id, cert_id):
     res.update(model_to_dict(user_cert.cert))
     return res
 
+def all_certs_expired_in_30days():
+    min_date = datetime.now()
+    max_date = datetime.now() + timedelta(days=30)
+    certs = UserCert.objects.filter(expiry_date__gte=min_date).order_by('expiry_date')
+    return certs.filter(expiry_date__lte=max_date)
+
+
 # UserCert CRUD
 def get_missing_certs(user_id):
     # Get the labs that the user is signed up for
@@ -92,11 +98,21 @@ def get_expired_certs(user_id):
             expired_user_certs.append(uc)
     return [model_to_dict(uc.cert) for uc in expired_user_certs]
 
-def update_or_create_user_cert(user_id, cert_id, cert_file, expiry_date):
-    user_cert, created = UserCert.objects.get_or_create(user_id=user_id, cert_id=cert_id, defaults={'cert_file': cert_file, 'status': UserCert.PENDING, 'uploaded_date': datetime.now(), 'expiry_date': expiry_date})
+def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
+    user_cert, created = UserCert.objects.get_or_create(
+        user_id=user_id,
+        cert_id=cert_id,
+        defaults={
+            'cert_file': cert_file,
+            'uploaded_date': datetime.now(),
+            'completion_date': completion_date,
+            'expiry_date': expiry_date
+        }
+    )
     if not created:
-        user_cert.uploaded_date = datetime.now()
         user_cert.cert_file = cert_file
+        user_cert.uploaded_date = datetime.now()
+        user_cert.completion_date = completion_date
         user_cert.expiry_date = expiry_date
         user_cert.save()
     return model_to_dict(user_cert)
@@ -104,6 +120,11 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, expiry_date):
 def delete_user_cert(user_id, cert_id):
     UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
     return {'user_id': user_id, 'cert_id': cert_id}
+
+def update_user_cert(user_id, cert_id):
+    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
+    return {'user_id': user_id, 'cert_id': cert_id}
+
 
 # UserLab CRUD
 def get_user_labs(user_id, is_principal_investigator=None):
@@ -173,20 +194,13 @@ def delete_lab_cert(lab_id, cert_id):
     return {'lab_id': lab_id, 'cert_id': cert_id}
 
 # User CRUD
-def create_user(first_name, last_name, email, cwl):
+def create_user(first_name, last_name, email, username):
     # TODO: Replace the need to create an AuthUser with a password
     auth_user = AuthUser.objects.create(
-        username=cwl,
-        email=email,
-        password=make_password('foobar'),
-    )
-
-    user = User.objects.create(
-        id=auth_user.id,
         first_name=first_name,
         last_name=last_name,
+        username=username,
         email=email,
-        cwl=cwl
+        password=make_password('12'),
     )
-
-    return model_to_dict(user)
+    return model_to_dict(auth_user)

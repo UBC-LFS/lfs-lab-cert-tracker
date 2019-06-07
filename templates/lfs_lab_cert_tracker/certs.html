@@ -3,6 +3,7 @@
 {% block content %}
 
 <h5>Certificates</h5>
+
 <div class="list-group">
 	{% for cert in cert_list %}
 	<div class="list-group-item">
@@ -10,7 +11,7 @@
 			{{ cert.name }}
 		</p>
 		{% if can_create_cert %}
-		<form class="float-right" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Delete: {{cert.name}}?');">
+		<form class="float-right" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{cert.name}}?');">
 			{% csrf_token %}
 			<input name="redirect_url" value="/certificates/" type="hidden"/>
 		<input class="btn btn-danger" type="submit" value="DELETE"/>
@@ -19,6 +20,7 @@
 	</div>
 	{% endfor %}
 </div>
+
 {% if can_create_cert %}
 <h5>Create New Certificate</h5>
 <form id="create_cert_form" action="/api/certificates/" method="POST">

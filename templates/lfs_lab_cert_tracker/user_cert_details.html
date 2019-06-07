@@ -8,20 +8,28 @@
 	<div class="col">
 		<h5>Certificate Details</h5>
 		<div class="row">
-			<div class="col"><p>Certificate Name</p></div><div class="col"/><a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a></div>
+			<div class="col"><p>Certificate Name</p></div>
+			<div class="col"><a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a></div>
 		</div>
 		<div class="row">
-			<div class="col"><p>Uploaded On</p></div><div class="col"/>{{ user_cert.uploaded_date }}</div>
+			<div class="col"><p>Uploaded on</p></div>
+			<div class="col">{{ user_cert.uploaded_date }}</div>
 		</div>
 		<div class="row">
-			<div class="col"><p>Expires On</p></div><div class="col"/>{{ user_cert.expiry_date }}</div>
+			<div class="col"><p>Completion date</p></div>
+			<div class="col">{{ user_cert.completion_date }}</div>
+		</div>
+		<div class="row">
+			<div class="col"><p>Expiry date</p></div>
+			<div class="col">{{ user_cert.expiry_date }}</div>
 		</div>
 	</div>
+
 	<div class="col">
-		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post" onsubmit="return confirm('Delete: {{user_cert.name}}?');">
-		{% csrf_token %}
-		{{ delete_user_cert_form | crispy }}
-		<input class="btn btn-danger" type="submit" value="DELETE"/>
+		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user_cert.name}}?');">
+			{% csrf_token %}
+			{{ delete_user_cert_form | crispy }}
+			<input class="btn btn-danger" type="submit" value="DELETE"/>
 		</form>
 	</div>
 </div>

@@ -1,6 +1,7 @@
 from django.contrib.auth.management.commands import createsuperuser
 from django.core.management import CommandError
 
+"""
 from lfs_lab_cert_tracker.models import User
 
 
@@ -54,3 +55,4 @@ class Command(createsuperuser.Command):
             email=email,
             cwl=username
         )
+"""

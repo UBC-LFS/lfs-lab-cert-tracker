@@ -9,25 +9,17 @@ table, th, td {
 </style>
 
 <h5>Report for {{app_user.first_name}} {{app_user.last_name}}</h5>
-<h5>cwl: {{app_user.cwl}}</h5>
+<h5>CWL: {{app_user.username}}</h5>
 
 <table>
 	<tr>
-		<th>
-			Registered In
-		</th>
-		<th>
-			Required Certificates
-		</th>
-		<th>
-			Missing/Expired Certificates
-		</th>
+		<th>Registered In</th>
+		<th>Required Certificates</th>
+		<th>Missing Certificates</th>
 	</tr>
 	{% for ul in user_labs %}
 	<tr>
-		<td>
-			{{ ul.0.name }}
-		</td>
+		<td>{{ ul.0.name }}</td>
 		<td>
 			<ul>
 			{% for cert in ul.1 %}
@@ -49,27 +41,15 @@ table, th, td {
 <h5>Has Certificates</h5>
 <table>
 	<tr>
-		<th>
-			Name
-		</th>
-		<th>
-			Uploaded On
-		</th>
-		<th>
-			Expires On
-		</th>
+		<th>Name</th>
+		<th>Uploaded On</th>
+		<th>Completion Date</th>
 	</tr>
 	{% for uc in user_cert_list %}
 	<tr>
-		<td>
-			{{ uc.name }}
-		</td>
-		<td>
-			{{ uc.uploaded_date }}
-		</td>
-		<td>
-			{{ uc.expiry_date }}
-		</td>
+		<td>{{ uc.name }}</td>
+		<td>{{ uc.uploaded_date }}</td>
+		<td>{{ uc.completion_date }}</td>
 	</tr>
 	{% endfor %}
 </table>

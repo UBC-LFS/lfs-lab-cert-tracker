@@ -6,8 +6,12 @@
 <div class="list-group">
 {% for user in user_list %}
 	<li class="list-group-item">
-		<a href="/users/{{user.id}}">{{ user.cwl }}</a>
-		<form class="float-right" action='/api/users/{{user.id}}/delete' method="post" onsubmit="return confirm('Delete: {{user.cwl}}?');">
+		{% if user.is_superuser %}
+			<a href="/users/{{user.id}}">{{ user.username }}</a> (Admin)
+		{% else %}
+			<a href="/users/{{user.id}}">{{ user.username }}</a>
+		{% endif %}
+		<form class="float-right" action='/api/users/{{user.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user.username}}?');">
 			{% csrf_token %}
 			<input name="redirect_url" value="/users/" type="hidden"/>
 		<input class="btn btn-danger" type="submit" value="DELETE"/>
@@ -15,11 +19,20 @@
 	</li>
 {% endfor %}
 </div>
+
 <h5>Create Users</h5>
 <form id="create_user_form" action="/api/users/" method="post">
-{% csrf_token %}
-{{ user_form.as_p }}
-<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
+	{% csrf_token %}
+	{{ user_form.as_p }}
+	<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
 </form>
+
+<h5>Users having certs expired in 30 days</h5>
+{% if all_certs_expired_in_30days %}
+	{% for cert in all_certs_expired_in_30days %}
+		<span>{{ cert.user.username }}, </span>
+	{% endfor %}
+{% endif %}
+<button >Send Notification</button>
 
 {% endblock %}
