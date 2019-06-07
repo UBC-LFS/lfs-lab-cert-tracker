@@ -190,34 +190,6 @@ def users(request):
         }
     )
 
-"""
-#@login_required
-@require_http_methods(['GET'])
-def cert_status(request):
-    all_pending_certs = api.get_all_pending_certs()
-    all_certs_expired_in_30days = api.all_certs_expired_in_30days()
-    redirect_url = '/cert_status'
-    user = auth_utils.get_user(username=request.user.username)
-    #print(all_certs_expired_in_30days)
-    #print(user.email)
-    #receiver_list = [cert.user.email for cert in all_certs_expired_in_30days]
-
-    return render(request,
-        'lfs_lab_cert_tracker/cert_status.html',
-        {
-            'all_pending_certs': all_pending_certs,
-            'all_certs_expired_in_30days': all_certs_expired_in_30days,
-            'send_email_form_remider_30days': SendEmailForm(initial={
-                'redirect_url': redirect_url,
-                'sender': user,
-                'receiver': all_certs_expired_in_30days,
-                'purpose': SendEmail.REMIDER_BEFORE_30DAYS
-            }),
-            'loggedin_user': { 'username': api.get_user(request.user.id) }
-        }
-    )
-"""
-
 #@login_required
 @require_http_methods(['GET'])
 def lab_details(request, lab_id):

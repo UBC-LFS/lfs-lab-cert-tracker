@@ -60,19 +60,6 @@ class UserForm(forms.ModelForm):
         labels = { 'username': 'CWL' }
         help_texts = { 'username': None }
 
-"""
-class SendEmailForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-    class Meta:
-        model = SendEmail
-        fields = ['sender', 'receiver', 'purpose']
-        widgets = {
-            'sender': forms.HiddenInput(),
-            'receiver': forms.HiddenInput(),
-            'purpose': forms.HiddenInput(),
-        }
-"""
-
 
 class SafetyWebForm(forms.Form):
     POSITION_CHOICES = (

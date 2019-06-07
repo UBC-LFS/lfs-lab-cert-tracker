@@ -44,12 +44,20 @@ table, th, td {
 		<th>Name</th>
 		<th>Uploaded On</th>
 		<th>Completion Date</th>
+		<th>Expiry Date</th>
 	</tr>
 	{% for uc in user_cert_list %}
 	<tr>
 		<td>{{ uc.name }}</td>
 		<td>{{ uc.uploaded_date }}</td>
 		<td>{{ uc.completion_date }}</td>
+		<td>
+			{% ifequal uc.completion_date|date:"Y-m-d" uc.expiry_date|date:"Y-m-d" %}
+			 NO expiry date
+			{% else %}
+				{{ uc.expiry_date }}
+			{% endifequal %}
+		</td>
 	</tr>
 	{% endfor %}
 </table>

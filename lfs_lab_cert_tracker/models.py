@@ -66,13 +66,6 @@ class UserLab(models.Model):
     class Meta:
         unique_together = (('user', 'lab'))
 
-"""
-class SendEmail(models.Model):
-    REMIDER_BEFORE_30DAYS = 'remider before 30 days'
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='receiver')
-    purpose = models.CharField(max_length=256)
-"""
 
 def send_notification(sender, created, **kwargs):
     if created:

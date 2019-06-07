@@ -21,7 +21,13 @@
 		</div>
 		<div class="row">
 			<div class="col"><p>Expiry date</p></div>
-			<div class="col">{{ user_cert.expiry_date }}</div>
+			<div class="col">
+				{% ifequal user_cert.completion_date|date:"Y-m-d" user_cert.expiry_date|date:"Y-m-d" %}
+					NO expiry date
+				{% else %}
+					{{ user_cert.expiry_date }}
+				{% endifequal %}
+			</div>
 		</div>
 	</div>
 
