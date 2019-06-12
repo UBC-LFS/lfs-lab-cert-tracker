@@ -6,7 +6,7 @@
       "expiry_date": "2014-07-10",
       "cert_id": 1,
       "user_id": 13,
-      "cert_file": "users/13/certificates/1/New_Young_Worker_Safety_Orientation_Certificate_Brandon_Ho_Seok__xmCVlOh.pdf",
+      "cert_file": "users/13/certificates/1/New_Young_Worker_Safety_Orientation_Certificate.pdf",
       "uploaded_date": "2019-06-10",
       "completion_date": "2014-07-10"
     }
@@ -18,7 +18,7 @@
       "expiry_date": "2014-07-10",
       "cert_id": 3,
       "user_id": 13,
-      "cert_file": "users/13/certificates/3/Workplace_Violence_Prevention_Training_Completion_Certificate_Br_y2Ei3jy.pdf",
+      "cert_file": "users/13/certificates/3/Workplace_Violence_Prevention_Training_Completion_Certificate.pdf",
       "uploaded_date": "2019-06-10",
       "completion_date": "2014-07-10"
     }
@@ -66,7 +66,7 @@
       "expiry_date": "2014-07-10",
       "cert_id": 1,
       "user_id": 14,
-      "cert_file": "users/14/certificates/1/New_Young_Worker_Safety_Orientation_Certificate_Brandon_Ho_Seok_Oh.pdf",
+      "cert_file": "users/14/certificates/1/New_Young_Worker_Safety_Orientation_Certificate.pdf",
       "uploaded_date": "2019-06-10",
       "completion_date": "2014-07-10"
     }
@@ -78,7 +78,7 @@
       "expiry_date": "2014-07-10",
       "cert_id": 3,
       "user_id": 14,
-      "cert_file": "users/14/certificates/3/Workplace_Violence_Prevention_Training_Completion_Certificate_Br_8W7XL8p.pdf",
+      "cert_file": "users/14/certificates/3/Workplace_Violence_Prevention_Training_Completion_Certificate.pdf",
       "uploaded_date": "2019-06-10",
       "completion_date": "2014-07-10"
     }
@@ -114,7 +114,7 @@
       "expiry_date": "2019-07-10",
       "cert_id": 24,
       "user_id": 14,
-      "cert_file": "users/14/certificates/24/PriSM_Brandon_Ho_Seok_Oh.pdf",
+      "cert_file": "users/14/certificates/24/PriSM.pdf",
       "uploaded_date": "2019-06-10",
       "completion_date": "2016-07-10"
     }
