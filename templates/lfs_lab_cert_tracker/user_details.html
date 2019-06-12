@@ -19,6 +19,7 @@
 {% else %}
 <p>{{ app_user.cwl }} does not have any certificates</p>
 {% endif %}
+
 <h5>Missing Certificates</h5>
 {% if missing_cert_list %}
 	<ul class="list-group">
@@ -29,6 +30,7 @@
 {% else %}
 	<p>{{ app_user.cwl }} is not missing any certificates</p>
 {% endif %}
+
 <h5>Expired Certificates</h5>
 {% if expired_cert_list %}
 	<ul class="list-group">

@@ -156,7 +156,7 @@ def get_users_missing_certs(lab_id):
 
 def is_user_cert_expired(cert):
     now = datetime.now().date()
-    return cert.expiry_date is not None and now > cert.expiry_date
+    return cert.expiry_date is not None and now > cert.expiry_date and cert.expiry_date != cert.completion_date
 
 def get_missing_lab_certs(user_id, lab_id):
     user_certs = UserCert.objects.filter(user=user_id).prefetch_related('cert')

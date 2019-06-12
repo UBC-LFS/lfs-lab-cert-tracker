@@ -56,9 +56,9 @@ class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
     """
-    STUDENT = 0
+    LAB_USER = 0
     PRINCIPAL_INVESTIGATOR = 1
-    ROLE_CHOICES = [ (STUDENT, "Student"), (PRINCIPAL_INVESTIGATOR, "Principal Investigator") ]
+    ROLE_CHOICES = [ (LAB_USER, "Lab User"), (PRINCIPAL_INVESTIGATOR, "Principal Investigator") ]
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField(choices=ROLE_CHOICES)
