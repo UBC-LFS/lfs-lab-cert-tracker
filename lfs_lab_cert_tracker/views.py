@@ -18,34 +18,15 @@ from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
         UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm, LoginForm)
 
 from lfs_lab_cert_tracker.models import UserCert
-
+from django.db.models import Q
 from django.contrib.auth import authenticate, login as DjangoLogin
 from django.contrib.auth.models import User as AuthUser
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+
 """
 HTTP endpoints, responsible for the frontend
 """
-
-def pretty_request(request):
-    headers = ''
-    for header, value in request.META.items():
-        if not header.startswith('HTTP'):
-            continue
-        header = '-'.join([h.capitalize() for h in header[5:].lower().split('_')])
-        headers += '{}: {}\n'.format(header, value)
-
-    return (
-        '{method} HTTP/1.1\n'
-        'Content-Length: {content_length}\n'
-        'Content-Type: {content_type}\n'
-        '{headers}\n\n'
-        '{body}'
-    ).format(
-        method=request.method,
-        content_length=request.META['CONTENT_LENGTH'],
-        content_type=request.META['CONTENT_TYPE'],
-        headers=headers,
-        body=request.body,
-    )
 
 def my_login(request):
     auth_users = AuthUser.objects.all()
@@ -174,17 +155,33 @@ def certs(request):
 @require_http_methods(['GET'])
 def users(request):
     is_admin = auth_utils.is_admin(request.user)
+
     if not is_admin:
         raise PermissionDenied
-    users = api.get_users()
-    all_certs_expired_in_30days = api.all_certs_expired_in_30days()
+
     redirect_url = '/users/'
-    print(all_certs_expired_in_30days)
+
+    user_list = api.get_users()
+    query = request.GET.get('q')
+    print(query)
+    if query:
+        user_list = AuthUser.objects.filter(
+            Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
+        ).distinct()
+    print(user_list)
+    page = request.GET.get('page', 1)
+    paginator = Paginator(user_list, 10)
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+
     return render(request,
         'lfs_lab_cert_tracker/users.html',
         {
-            'user_list': users,
-            'all_certs_expired_in_30days': all_certs_expired_in_30days,
+            'users': users,
             'user_form': UserForm(initial={'redirect_url': redirect_url}),
             'loggedin_user': { 'username': api.get_user(request.user.id) }
         }

@@ -2,23 +2,97 @@
 
 {% block content %}
 
-<h5>View Users</h5>
-<div class="list-group">
-{% for user in user_list %}
-	<li class="list-group-item">
-		{% if user.is_superuser %}
-			<a href="/users/{{user.id}}">{{ user.username }}</a> (Admin)
-		{% else %}
-			<a href="/users/{{user.id}}">{{ user.username }}</a>
-		{% endif %}
-		<form class="float-right" action='/api/users/{{user.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user.username}}?');">
-			{% csrf_token %}
-			<input name="redirect_url" value="/users/" type="hidden"/>
-		<input class="btn btn-danger" type="submit" value="DELETE"/>
-		</form>
-	</li>
-{% endfor %}
+<h5>List of Users</h5>
+
+<div class="users-search-field">
+	<form method="GET" >
+		<div class="input-field">
+			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
+			<button class="btn btn-sm" type="submit" name="action">Search</button>
+		</div>
+	</form>
 </div>
+
+<table class="table table-bordered table-striped table-hover table-sm table-responsive-md">
+  <thead>
+    <tr>
+      <th>CWL</th>
+      <th>First Name</th>
+			<th>Last Name</th>
+			<th>Admin</th>
+			<th>Active User</th>
+			<th>Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+        <td>
+					<a href="/users/{{user.id}}">{{ user.username }}</a>
+				</td>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+				<td>
+					{% if user.is_superuser %}
+						<input type="checkbox" name="is_superuser" value="is_superuser" checked>
+					{% else %}
+						<input type="checkbox" name="is_superuser" value="is_superuser">
+					{% endif %}
+				</td>
+				<td>
+					<input type="checkbox" name="is_active" value="is_active">
+				</td>
+				<td>
+					<form action='/api/users/{{user.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user.username}}?');">
+						{% csrf_token %}
+						<input name="redirect_url" value="/users/" type="hidden"/>
+					<input class="btn btn-danger btn-sm" type="submit" value="DELETE"/>
+					</form>
+				</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if users.has_other_pages %}
+<nav aria-label="Page navigation Search results pages">
+  <ul class="pagination justify-content-center">
+
+		{% if users.has_previous %}
+      <li class="page-item">
+				<a class="page-link" href="?page={{ users.previous_page_number }}">&laquo;</a>
+			</li>
+    {% else %}
+      <li class="page-item disabled">
+				<span class="page-link">&laquo;</span>
+			</li>
+    {% endif %}
+
+		{% for i in users.paginator.page_range %}
+      {% if users.number == i %}
+        <li class="page-item active">
+					<span class="page-link" >{{ i }} <span class="sr-only">(current)</span></span>
+				</li>
+      {% else %}
+        <li class="page-item">
+					<a class="page-link" href="?page={{ i }}">{{ i }}</a>
+				</li>
+      {% endif %}
+    {% endfor %}
+
+    {% if users.has_next %}
+      <li class="page-item">
+				<a class="page-link" href="?page={{ users.next_page_number }}">&raquo;</a>
+			</li>
+    {% else %}
+      <li class="page-item disabled">
+				<span class="page-link">&raquo;</span>
+			</li>
+    {% endif %}
+
+  </ul>
+</nav>
+{% endif %}
 
 <h5>Create Users</h5>
 <form id="create_user_form" action="/api/users/" method="post">

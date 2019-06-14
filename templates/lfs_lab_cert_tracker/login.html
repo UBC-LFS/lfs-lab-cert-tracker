@@ -1,6 +1,8 @@
 {% extends "header.html" %}
-
+{% load static %}
 {% block content %}
+
+
 {% if user.is_authenticated %}
 	<p>Already logged in</p>
 {% else %}
@@ -30,6 +32,8 @@
 	<p>Using an unregistered CWL account will fail</p>
 	<p>Ask the administrator to get added to the application</p>
 
-	<a href="{% url "saml" %}?sso" class="btn btn-primary">Login</a>
+	<a href="{% url "saml" %}?sso">
+		<img src="{% static 'lfs_lab_cert_tracker/images/CWL_login_button.gif' %}" alt="CWL login button"/>
+	</a>
 {% endif %}
 {% endblock %}
