@@ -21,7 +21,7 @@
   },
   {
     "model": "lfs_lab_cert_tracker.lab",
-    "pk": 4,
+    "pk": 5,
     "fields": { "name": "Safety Lab" }
   }
 ]

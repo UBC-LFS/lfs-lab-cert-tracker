@@ -2,36 +2,97 @@
 
 {% block content %}
 
-<h5>Certificates</h5>
+<h5>List of Certificates (Total: {{ total_certs }})</h5>
 
-<div class="list-group">
-	{% for cert in cert_list %}
-	<div class="list-group-item">
-		<p class="d-inline float-left">
-			{{ cert.name }}
-			{% if cert.expiry_in_years == 0 %}
-				(Expiry in years: {{ None }})
-			{% else %}
-				(Expiry in years: {{ cert.expiry_in_years }} years)
-			{% endif %}
-		</p>
-		{% if can_create_cert %}
-		<form class="float-right" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{cert.name}}?');">
-			{% csrf_token %}
-			<input name="redirect_url" value="/certificates/" type="hidden"/>
-		<input class="btn btn-danger" type="submit" value="DELETE"/>
-		</form>
-		{% endif %}
-	</div>
-	{% endfor %}
+<div class="search-field">
+	<form method="GET" >
+		<div class="input-field">
+			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name">
+			<button class="btn btn-sm" type="submit" name="action">Search</button>
+		</div>
+	</form>
 </div>
+
+<table class="table table-bordered table-striped table-hover table-sm table-responsive-md">
+  <thead>
+    <tr>
+      <th>Name</th>
+			<th>Expiry in year</th>
+			<th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+		{% for cert in certs %}
+			<tr>
+				<td>{{ cert.name }}</td>
+				<td>
+					{% if cert.expiry_in_years == 0 %}
+						None
+					{% else %}
+						{{ cert.expiry_in_years }} years
+					{% endif %}
+				</td>
+				<td>
+					{% if can_create_cert %}
+						<form class="list-form" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{cert.name}}?');">
+							{% csrf_token %}
+							<input name="redirect_url" value="/certificates/" type="hidden"/>
+							<input class="btn btn-danger btn-sm" type="submit" value="DELETE"/>
+						</form>
+					{% endif %}
+				</td>
+			</tr>
+
+		{% endfor %}
+	</tbody>
+</table>
+
+{% if certs.has_other_pages %}
+<nav aria-label="Page navigation Search results pages">
+  <ul class="pagination justify-content-center">
+
+		{% if certs.has_previous %}
+      <li class="page-item">
+				<a class="page-link" href="?page={{ posts.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
+			</li>
+    {% else %}
+      <li class="page-item disabled">
+				<span class="page-link">&laquo;</span>
+			</li>
+    {% endif %}
+
+		{% for i in certs.paginator.page_range %}
+      {% if certs.number == i %}
+        <li class="page-item active">
+					<span class="page-link" >{{ i }} <span class="sr-only">(current)</span></span>
+				</li>
+      {% else %}
+        <li class="page-item">
+					<a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
+				</li>
+      {% endif %}
+    {% endfor %}
+
+    {% if certs.has_next %}
+      <li class="page-item">
+				<a class="page-link" href="?page={{ posts.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
+			</li>
+    {% else %}
+      <li class="page-item disabled">
+				<span class="page-link">&raquo;</span>
+			</li>
+    {% endif %}
+
+  </ul>
+</nav>
+{% endif %}
 
 {% if can_create_cert %}
 <h5>Create New Certificate</h5>
 <form id="create_cert_form" action="/api/certificates/" method="POST">
 	{% csrf_token %}
-	{{ cert_form.as_p }}
-<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Create Certificate"/>
+	<table>{{ cert_form.as_table }}</table>
+	<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Create Certificate"/>
 </form>
 {% endif %}
 {% endblock %}

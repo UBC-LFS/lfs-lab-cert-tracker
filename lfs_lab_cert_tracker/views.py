@@ -120,13 +120,30 @@ def user_certs(request, user_id):
 #@login_required
 @require_http_methods(['GET'])
 def labs(request):
-    labs = api.get_labs()
     is_admin = auth_utils.is_admin(request.user)
     redirect_url = '/labs/'
+
+    lab_list = api.get_labs()
+    total_labs = len(lab_list)
+    query = request.GET.get('q')
+
+    if query:
+        lab_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(lab_list, 2)
+    try:
+        labs = paginator.page(page)
+    except PageNotAnInteger:
+        labs = paginator.page(1)
+    except EmptyPage:
+        labs = paginator.page(paginator.num_pages)
+
     return render(request,
         'lfs_lab_cert_tracker/labs.html',
         {
-            'lab_list': labs,
+            'labs': labs,
+            'total_labs': total_labs,
             'can_create_lab': is_admin,
             'lab_form': LabForm(initial={'redirect_url': redirect_url}),
             'loggedin_user': { 'username': api.get_user(request.user.id) }
@@ -136,14 +153,31 @@ def labs(request):
 #@login_required
 @require_http_methods(['GET'])
 def certs(request):
-    certs = api.get_certs()
+
     can_create_cert = auth_utils.is_admin(request.user)
     redirect_url = '/certificates/'
+
+    cert_list = api.get_certs()
+    total_certs = len(cert_list)
+    query = request.GET.get('q')
+
+    if query:
+        cert_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(cert_list, 20)
+    try:
+        certs = paginator.page(page)
+    except PageNotAnInteger:
+        certs = paginator.page(1)
+    except EmptyPage:
+        certs = paginator.page(paginator.num_pages)
 
     return render(request,
         'lfs_lab_cert_tracker/certs.html',
         {
-            'cert_list': certs,
+            'certs': certs,
+            'total_certs': total_certs,
             'can_create_cert': can_create_cert,
             'cert_form': CertForm(initial={'redirect_url': redirect_url}),
             'loggedin_user': { 'username': api.get_user(request.user.id) }
@@ -162,13 +196,14 @@ def users(request):
     redirect_url = '/users/'
 
     user_list = api.get_users()
+    total_users = len(user_list)
     query = request.GET.get('q')
-    print(query)
+
     if query:
         user_list = AuthUser.objects.filter(
             Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
         ).distinct()
-    print(user_list)
+
     page = request.GET.get('page', 1)
     paginator = Paginator(user_list, 10)
     try:
@@ -182,6 +217,7 @@ def users(request):
         'lfs_lab_cert_tracker/users.html',
         {
             'users': users,
+            'total_users': total_users,
             'user_form': UserForm(initial={'redirect_url': redirect_url}),
             'loggedin_user': { 'username': api.get_user(request.user.id) }
         }

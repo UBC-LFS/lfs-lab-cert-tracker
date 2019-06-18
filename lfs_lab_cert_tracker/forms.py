@@ -59,7 +59,7 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = AuthUser
         fields = ['first_name', 'last_name', 'email', 'username', 'redirect_url']
-        labels = { 'username': 'CWL' }
+        labels = { 'email': 'Email', 'username': 'CWL' }
         help_texts = { 'username': None }
 
 

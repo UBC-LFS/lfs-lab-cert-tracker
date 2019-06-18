@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from django.forms.models import model_to_dict
 
 from django.contrib.auth.models import User as AuthUser
-from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab
+from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab, UserInactive
 
 """
 Provides an API to the Django ORM for any queries that are required
@@ -22,11 +22,41 @@ def get_user_by_cwl(cwl):
     return AuthUser.objects.get(username=cwl)
 
 def get_users(n=None):
-    return [model_to_dict(user) for user in AuthUser.objects.all().order_by('id')]
+    user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
+    #print(user_inactives)
+    users = []
+    for user in AuthUser.objects.all().order_by('id'):
+        user_dict = model_to_dict(user)
+        for user_inactive in user_inactives:
+            #print(user_inactive['user'])
+            if user.id == user_inactive['user']:
+                #print(user.id, user_inactive['inactive_date'])
+                user_dict['inactive_date'] = user_inactive['inactive_date']
+        users.append(user_dict)
+
+    print(users)
+    return users
+    #return [model_to_dict(user) for user in AuthUser.objects.all().order_by('id')]
 
 def delete_user(user_id):
     AuthUser.objects.get(id=user_id).delete()
     return {'user_id': user_id}
+
+def switch_admin(user_id):
+    user = AuthUser.objects.get(id=user_id)
+    user.is_superuser = not user.is_superuser
+    user.save(update_fields=['is_superuser'])
+    return {'user_id': user.id}
+
+def switch_inactive(user_id):
+    user = AuthUser.objects.get(id=user_id)
+    if user.is_active:
+        UserInactive.objects.create(user_id=user_id, inactive_date=datetime.now())
+    else:
+        UserInactive.objects.get(user_id=user_id).delete()
+    user.is_active = not user.is_active
+    user.save(update_fields=['is_active'])
+    return {'user_id': user.id}
 
 # Cert CRUD
 def get_certs(n=None):

@@ -1,7 +1,19 @@
-.login-button {
-  color: maroon;
+.container header {
+  margin-bottom: 50px;
 }
 
-.users-search-field {
+.container header .logout-btn {
+  display: inline-block;
+}
+
+.search-field {
   float: right;
+}
+
+.list-form {
+  display: inline-block;
+}
+
+tr.inactive {
+  background-color: rgba(0,0,0,.075);
 }

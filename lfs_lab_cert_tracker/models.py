@@ -86,3 +86,7 @@ class LabCert(models.Model):
 
     class Meta:
         unique_together = (('lab', 'cert'))
+
+class UserInactive(models.Model):
+    user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
+    inactive_date = models.DateField(null=True)

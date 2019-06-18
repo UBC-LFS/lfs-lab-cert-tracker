@@ -2,9 +2,9 @@
 
 {% block content %}
 
-<h5>List of Users</h5>
+<h5>List of Users (Total: {{ total_users }})</h5>
 
-<div class="users-search-field">
+<div class="search-field">
 	<form method="GET" >
 		<div class="input-field">
 			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
@@ -20,8 +20,8 @@
       <th>First Name</th>
 			<th>Last Name</th>
 			<th>Admin</th>
-			<th>Active User</th>
-			<th>Delete</th>
+			<th>Inactive User</th>
+			<th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -33,21 +33,29 @@
         <td>{{ user.first_name }}</td>
         <td>{{ user.last_name }}</td>
 				<td>
-					{% if user.is_superuser %}
-						<input type="checkbox" name="is_superuser" value="is_superuser" checked>
-					{% else %}
-						<input type="checkbox" name="is_superuser" value="is_superuser">
-					{% endif %}
+					{% if user.is_superuser %} Yes {% endif %}
 				</td>
 				<td>
-					<input type="checkbox" name="is_active" value="is_active">
+					{% if not user.is_active and user.inactive_date %} {{ user.inactive_date }} {% endif %}
 				</td>
 				<td>
-					<form action='/api/users/{{user.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user.username}}?');">
+					<form class="list-form" action="/api/users/{{user.id}}/switch_admin" method="post" onsubmit="return confirm('Are you sure to switch to admin for a user: {{user.username}}?');">
+	 					{% csrf_token %}
+	 					<input name="redirect_url" value="/users/" type="hidden"/>
+						<input class="btn btn-default btn-sm" type="submit" value="Admin"/>
+					</form>
+
+					<form class="list-form" action="/api/users/{{user.id}}/switch_inactive" method="post" onsubmit="return confirm('Are you sure to switch to active for a user: {{user.username}}?');">
 						{% csrf_token %}
 						<input name="redirect_url" value="/users/" type="hidden"/>
-					<input class="btn btn-danger btn-sm" type="submit" value="DELETE"/>
+						<input class="btn btn-default btn-sm" type="submit" value="Inactive"/>
 					</form>
+
+					<form class="list-form" action="/api/users/{{user.id}}/delete" method="post" onsubmit="return confirm('Are you sure to delete a user: {{user.username}}?');">
+						{% csrf_token %}
+						<input name="redirect_url" value="/users/" type="hidden"/>
+						<input class="btn btn-default btn-sm" type="submit" value="Delete"/>
+	 				</form>
 				</td>
       </tr>
     {% endfor %}

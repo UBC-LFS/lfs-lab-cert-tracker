@@ -56,6 +56,24 @@ def delete_user(request, user_id=None):
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
+def switch_admin(request, user_id=None):
+     data = request.POST
+     res = api.switch_admin(user_id)
+     return JsonResponse(res)
+
+@login_required
+@admin_only
+@handle_redirect
+@require_http_methods(['POST'])
+def switch_inactive(request, user_id=None):
+    data = request.POST
+    res = api.switch_inactive(user_id)
+    return JsonResponse(res)
+
+@login_required
+@admin_only
+@handle_redirect
+@require_http_methods(['POST'])
 def labs(request, lab_id=None):
     data = request.POST
     res = api.create_lab(data['name'])
@@ -169,22 +187,4 @@ def users(request):
         username=data['username'],
     )
     logger.info("%s: Created user %s" % (request.user, res))
-    return JsonResponse(res)
-
-@login_required
-@admin_only
-@handle_redirect
-@require_http_methods(['POST'])
-def send_email(request):
-    data = request.POST
-    print("send email")
-    sender = data['sender']
-    receiver = data['receiver']
-    purpose = data['purpose']
-    print(sender)
-    print(receiver)
-    print(purpose)
-    res = {}
-    logger.info("Sent an email successfully")
-    print(res)
     return JsonResponse(res)
