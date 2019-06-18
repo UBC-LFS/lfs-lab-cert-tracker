@@ -37,7 +37,7 @@
 						<form class="list-form" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{cert.name}}?');">
 							{% csrf_token %}
 							<input name="redirect_url" value="/certificates/" type="hidden"/>
-							<input class="btn btn-danger btn-sm" type="submit" value="DELETE"/>
+							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
 						</form>
 					{% endif %}
 				</td>

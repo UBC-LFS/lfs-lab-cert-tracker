@@ -91,6 +91,16 @@ def delete_labs(request, lab_id=None):
     return JsonResponse(res)
 
 @login_required
+@admin_only
+@handle_redirect
+@require_http_methods(['POST'])
+def update_labs(request, lab_id=None):
+    data = request.POST
+    res = api.update_lab(lab_id, data['name'])
+    logger.info("%s: Updated lab %s" % (request.user, res))
+    return JsonResponse(res)
+
+@login_required
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])

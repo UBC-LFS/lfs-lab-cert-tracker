@@ -26,14 +26,40 @@
 				</td>
 				<td>
 					{% if can_create_lab %}
-						<form action='/api/labs/{{lab.id}}/delete' method="post">
+						<button type="button" class="btn btn-info btn-sm list-form"" data-toggle="modal" data-target="#lab-edit-modal-{{ lab.id }}">
+						  Edit
+						</button>
+						<form class="list-form" action='/api/labs/{{lab.id}}/delete' method="post">
 							{% csrf_token %}
 							<input name="redirect_url" value="/labs/" type="hidden"/>
-							<input class="btn btn-danger" type="submit" value="Delete"/>
+							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
 						</form>
 					{% endif %}
 				</td>
 			</tr>
+
+			<div class="modal fade" id="lab-edit-modal-{{ lab.id }}" tabindex="-1" role="dialog" aria-labelledby="lab-edit-modal-label-{{ cert.id }}" aria-hidden="true">
+				  <div class="modal-dialog modal-lg" role="document">
+				    <div class="modal-content">
+				      <div class="modal-header">
+				        <h5 class="modal-title" id="lab-edit-modal-label-{{ cert.id }}">Labs: Edit</h5>
+				        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				          <span aria-hidden="true">&times;</span>
+				        </button>
+				      </div>
+				      <div class="modal-body">
+								<form class="list-form" action='/api/labs/{{lab.id}}/update' method="post">
+									{% csrf_token %}
+									<input name="name" value="{{ lab.name }}" type="text" />
+									<input name="redirect_url" value="/labs/" type="hidden"/>
+									<input class="btn btn-info btn-sm" type="submit" value="Update"/>
+								</form>
+				      </div>
+				    </div>
+				  </div>
+				</div>
+
+
 		{% endfor %}
 	</tbody>
 </table>
@@ -82,7 +108,7 @@
 <h5>Create Labs</h5>
 <form id="create_lab_form" action="/api/labs/" method="post">
 	{% csrf_token %}
-	<table>{{ cert_form.as_table }}</table>
+	<table>{{ lab_form.as_table }}</table>
 	<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Create Lab"/>
 </form>
 {% endif %}

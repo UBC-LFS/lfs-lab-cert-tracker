@@ -56,6 +56,7 @@ urlpatterns = [
     path('api/labs/', api_views.labs),
     path('api/labs/<int:lab_id>/', api_views.labs),
     path('api/labs/<int:lab_id>/delete', api_views.delete_labs),
+    path('api/labs/<int:lab_id>/update', api_views.update_labs),
     path('api/labs/<int:lab_id>/certificates/', api_views.lab_certs),
     path('api/labs/<int:lab_id>/users/', api_views.user_labs),
     path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certs),

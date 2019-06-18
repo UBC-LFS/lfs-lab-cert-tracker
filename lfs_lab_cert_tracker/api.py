@@ -89,6 +89,14 @@ def delete_lab(lab_id):
     Lab.objects.get(id=lab_id).delete()
     return {'lab_id': lab_id}
 
+def update_lab(lab_id, name):
+    print(lab_id, name)
+    lab = Lab.objects.get(id=lab_id)
+    lab.name = name
+    lab.save(update_fields=['name'])
+    return {'lab_id': lab_id}
+
+
 # UserCert CRUD
 def get_user_certs(user_id):
     user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')

@@ -131,7 +131,7 @@ def labs(request):
         lab_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
 
     page = request.GET.get('page', 1)
-    paginator = Paginator(lab_list, 2)
+    paginator = Paginator(lab_list, 20)
     try:
         labs = paginator.page(page)
     except PageNotAnInteger:
