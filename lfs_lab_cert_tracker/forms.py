@@ -48,7 +48,7 @@ class UserCertForm(forms.ModelForm):
         model = UserCert
         fields = ['user', 'cert', 'cert_file', 'redirect_url']
         widgets = {
-            'user': forms.HiddenInput(),
+            'user': forms.HiddenInput()
         }
 
 class DeleteUserCertForm(forms.Form):

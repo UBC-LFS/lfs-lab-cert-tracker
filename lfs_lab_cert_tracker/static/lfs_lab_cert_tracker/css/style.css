@@ -1,9 +1,16 @@
 .container header {
-  margin-bottom: 50px;
+  margin-bottom: 10px;
 }
 
 .container header .logout-btn {
   //display: inline-block;
+}
+
+footer { height: 100px; }
+
+.title,
+.card {
+  margin-top: 40px;
 }
 
 .search-field {
@@ -16,4 +23,8 @@
 
 tr.inactive {
   background-color: rgba(0,0,0,.075);
+}
+
+#add_user_cert_form #id_cert {
+  width: 100%;
 }

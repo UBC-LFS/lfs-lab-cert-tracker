@@ -3,70 +3,97 @@
 {% block content %}
 
 <div class="row">
-<!-- Certificates -->
-<div class="col">
-<h5>Viewing {{ app_user.cwl }}</h5>
-<a href="/users/{{app_user.id}}/report/">User Report</a>
-<h5>{{ app_user.cwl }} Certificates</h5>
-{% if user_cert_list %}
-	<div class="list-group">
-		{% for user_cert in user_cert_list %}
-			<li class="list-group-item">
-				<a href="/users/{{user_cert.user}}/certificates/{{user_cert.cert}}">{{ user_cert.name }}</a>
-			</li>
-		{% endfor %}
+	<div class="col-md-8">
+		<h3 class="title">My Account: {{ app_user.first_name }} {{ app_user.last_name }}</h3>
+		<div>CWL: {{ app_user.username }}</div>
+
+		<div class="card border-success">
+			<div class="card-header bg-success text-white">Certificates</div>
+			<div class="card-body">
+				{% if user_cert_list %}
+					<div class="card-text">
+						<ul>
+							{% for user_cert in user_cert_list %}
+								<li>
+									<a href="/users/{{user_cert.user}}/certificates/{{user_cert.cert}}">{{ user_cert.name }}</a>
+								</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% else %}
+					<h5 class="card-title">{{ app_user.username }} does not have any certificates</h5>
+				{% endif %}
+			</div>
+		</div>
+
+		<div class="card card border-danger">
+			<div class="card-header bg-danger text-white">Missing Certificates</div>
+			<div class="card-body">
+				{% if missing_cert_list %}
+					<div class="card-text">
+						<ul>
+							{% for missing_cert in missing_cert_list %}
+								<li>{{ missing_cert.name }}</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% else %}
+					<h5 class="card-title">{{ app_user.username }} is not missing any certificates</h5>
+				{% endif %}
+			</div>
+		</div>
+
+		<div class="card border-secondary">
+			<div class="card-header bg-secondary text-white">Expired Certificates</div>
+			<div class="card-body">
+				{% if expired_cert_list %}
+					<div class="card-text">
+						<ul>
+							{% for expired_cert in expired_cert_list %}
+								<li>{{ expired_cert.name }}</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% else %}
+					<h5 class="card-title">{{ app_user.username }} does not have any expired certificates</h5>
+				{% endif %}
+			</div>
+		</div>
+
 	</div>
-{% else %}
-<p>{{ app_user.cwl }} does not have any certificates</p>
-{% endif %}
+	<div class="col-md-4">
+		<div>
+			<h5 class="title">Report</h5>
+			<a href="/users/{{app_user.id}}/report/">Download as PDF</a>
+		</div>
 
-<h5>Missing Certificates</h5>
-{% if missing_cert_list %}
-	<ul class="list-group">
-		{% for missing_cert in missing_cert_list %}
-			<li class="list-group-item">{{ missing_cert.name }}</li>
-		{% endfor %}
-	</ul>
-{% else %}
-	<p>{{ app_user.cwl }} is not missing any certificates</p>
-{% endif %}
+		<div>
+			<h5 class="title">Labs</h5>
+			{% if user_lab_list %}
+				<ul>
+					{% for user_lab in user_lab_list %}
+						<li>{{ user_lab.name }}</li>
+					{% endfor %}
+				</ul>
+			{% else %}
+				<p>{{ app_user.username }} is not in any labs</p>
+			{% endif %}
+		</div>
 
-<h5>Expired Certificates</h5>
-{% if expired_cert_list %}
-	<ul class="list-group">
-		{% for expired_cert in expired_cert_list %}
-			<li class="list-group-item">{{ expired_cert.name }}</li>
-		{% endfor %}
-	</ul>
-{% else %}
-	<p>{{ app_user.cwl }} does not have any expired certificates</p>
-{% endif %}
-</div> <!--end col-->
+		<div>
+			{% if pi_user_lab_list %}
+			<h5 class="title">PI Labs</h5>
+			<ul>
+				{% for pi_user_lab in pi_user_lab_list %}
+					<li>
+						<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+					</li>
+				{% endfor %}
+			</ul>
+			{% endif %}
+		</div>
 
-<!-- Labs -->
-<div class="col">
-	<h5>Labs</h5>
-	{% if user_lab_list %}
-		{% for user_lab in user_lab_list %}
-		<p>
-			{{ user_lab.name }}
-		</p>
-		{% endfor %}
-	{% else %}
-		<p>{{ app_user.cwl }} is not in any labs</p>
-	{% endif %}
-	<h5>PI Labs</h5>
-	{% if pi_user_lab_list %}
-		<div class="list-group">
-		{% for pi_user_lab in pi_user_lab_list %}
-			<li class="list-group-item">
-				<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
-			</li>
-		{% endfor %}
-	{% else %}
-		<p>{{ app_user.cwl }} is not a Principal Investigator in any labs</p>
-	{% endif %}
-</div> <!--end col-->
-</div> <!--end row-->
+	</div>
+</div>
 
 {% endblock %}

@@ -5,40 +5,45 @@
 {% block content %}
 
 <div class="row">
-	<div class="col">
-		<h5>Certificate Details</h5>
-		<div class="row">
-			<div class="col"><p>Certificate Name</p></div>
-			<div class="col"><a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a></div>
-		</div>
-		<div class="row">
-			<div class="col"><p>Uploaded on</p></div>
-			<div class="col">{{ user_cert.uploaded_date }}</div>
-		</div>
-		<div class="row">
-			<div class="col"><p>Completion date</p></div>
-			<div class="col">{{ user_cert.completion_date }}</div>
-		</div>
-		<div class="row">
-			<div class="col"><p>Expiry date</p></div>
-			<div class="col">
-				{% ifequal user_cert.completion_date|date:"Y-m-d" user_cert.expiry_date|date:"Y-m-d" %}
-					NO expiry date
-				{% else %}
-					{{ user_cert.expiry_date }}
-				{% endifequal %}
-			</div>
-		</div>
-	</div>
+	<div class="col-md-10 offset-md-1">
+		<h3 class="title">Certificate Details</h3>
 
-	<div class="col">
+		<table class="table table-borderless table-sm table-responsive-md">
+			<tbody>
+				<tr>
+					<td>Certificate Name</td>
+					<td>
+						<a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a>
+					</td>
+				</tr>
+				<tr>
+					<td>Uploaded on</td>
+					<td>{{ user_cert.uploaded_date }}</td>
+				</tr>
+				<tr>
+					<td>Completion date</td>
+					<td>{{ user_cert.completion_date }}</td>
+				</tr>
+				<tr>
+					<td>Expiry date</td>
+					<td>
+						{% ifequal user_cert.completion_date|date:"Y-m-d" user_cert.expiry_date|date:"Y-m-d" %}
+							NO expiry date
+						{% else %}
+							{{ user_cert.expiry_date }}
+						{% endifequal %}
+					</td>
+				</tr>
+			</tbody>
+		<table>
+
 		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user_cert.name}}?');">
 			{% csrf_token %}
 			{{ delete_user_cert_form | crispy }}
-			<input class="btn btn-danger" type="submit" value="DELETE"/>
+			<input class="btn btn-danger" type="submit" value="Delete"/>
 		</form>
+
 	</div>
 </div>
-
 
 {% endblock %}
