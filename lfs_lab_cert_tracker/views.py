@@ -30,13 +30,13 @@ HTTP endpoints, responsible for the frontend
 
 def my_login(request):
     auth_users = AuthUser.objects.all()
-    print(auth_users)
+    #print(auth_users)
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
             auth_user = AuthUser.objects.get(username=request.POST['username'])
             #auth_user = authenticate(request, email='michael.jordan@example.com', password='12')
-            print(auth_user)
+            #print(auth_user)
             if auth_user is not None and request.POST['password'] is not None:
                 #print(auth_user.password, request.POST['password'])
                 DjangoLogin(request, auth_user)
@@ -51,7 +51,7 @@ def my_login(request):
 #@login_required
 @require_http_methods(['GET'])
 def show_error(request, error_msg=''):
-    print("show error: ", error_msg)
+    #print("show error: ", error_msg)
     return render(request, 'lfs_lab_cert_tracker/error.html', {'error_msg': error_msg})
 
 def login(request):
@@ -71,7 +71,7 @@ def index(request):
 def download_user_cert(request, user_id=None, cert_id=None, filename=None):
     #path = 'users/%d/certificates/%d' % (user_id, cert_id)
     #ADDED
-    print(filename)
+    #print(filename)
     path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 

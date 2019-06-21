@@ -7,6 +7,7 @@ from django.forms.models import model_to_dict
 from django.contrib.auth.models import User as AuthUser
 from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab, UserInactive
 
+
 """
 Provides an API to the Django ORM for any queries that are required
 """
@@ -34,7 +35,7 @@ def get_users(n=None):
                 user_dict['inactive_date'] = user_inactive['inactive_date']
         users.append(user_dict)
 
-    print(users)
+    #print(users)
     return users
     #return [model_to_dict(user) for user in AuthUser.objects.all().order_by('id')]
 
@@ -90,7 +91,7 @@ def delete_lab(lab_id):
     return {'lab_id': lab_id}
 
 def update_lab(lab_id, name):
-    print(lab_id, name)
+    #print(lab_id, name)
     lab = Lab.objects.get(id=lab_id)
     lab.name = name
     lab.save(update_fields=['name'])
@@ -243,6 +244,6 @@ def create_user(first_name, last_name, email, username):
         last_name=last_name,
         username=username,
         email=email,
-        password=make_password('12'),
+        password=make_password('lfs_lab_cert_tracker'),
     )
     return model_to_dict(auth_user)

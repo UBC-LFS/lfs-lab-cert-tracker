@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
+from lfs_lab_cert_tracker.forms import UserForm
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
@@ -136,7 +137,7 @@ def user_certs(request, user_id=None, cert_id=None):
         year = int(data['completion_date_year']) + int(cert['expiry_in_years'])
         expiry_date = datetime.datetime(year=year, month=int(data['completion_date_month']), day=int(data['completion_date_day']))
 
-    print(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
+    #print(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
     res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
     res = { 'user_id': user_id, 'cert_id': cert_id }
     logger.info("%s: Created user cert %s" % (request.user, res))
@@ -158,7 +159,7 @@ def delete_user_certs(request, user_id=None, cert_id=None):
 @require_http_methods(['POST'])
 def update_user_certs(request, user_id=None, cert_id=None):
     data = request.POST
-    print(data, user_id, cert_id)
+    #print(data, user_id, cert_id)
     #res = api.delete_user_cert(user_id, cert_id)
     #logger.info("%s: Deleted user cert %s" % (request.user, res))
     return JsonResponse(res)
@@ -190,6 +191,7 @@ def delete_user_lab(request, user_id=None, lab_id=None):
 @require_http_methods(['POST'])
 def users(request):
     data = request.POST
+    
     res = api.create_user(
         first_name=data['first_name'],
         last_name=data['last_name'],

@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h5>List of Users (Total: {{ total_users }})</h5>
+<h5 class="title">List of Users (Total: {{ total_users }})</h5>
 
 <div class="search-field">
 	<form method="GET" >
@@ -102,10 +102,10 @@
 </nav>
 {% endif %}
 
-<h5>Create Users</h5>
+<h5 class="title">Create Users</h5>
 <form id="create_user_form" action="/api/users/" method="post">
 	{% csrf_token %}
-	{{ user_form.as_p }}
+	<table>{{ user_form.as_table }}</table>
 	<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
 </form>
 

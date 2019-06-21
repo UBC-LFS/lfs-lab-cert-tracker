@@ -41,12 +41,12 @@
 		{% endif %}
 
 		<h5 class="title">Add Certificates</h5>
+		<small>Valid file type: jpg, jpeg, png, pdf</small>
 		<form id="add_user_cert_form" action='/api/users/{{user_id}}/certificates/' method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 			<table>{{ user_cert_form.as_table }}</table>
 			<input class="btn btn-primary" id="submit_add_user_cert_form" type="submit" value="Add Certificate"/>
 		</form>
-
 	</div>
 </div>
 {% endblock %}

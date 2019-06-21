@@ -6,6 +6,12 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
 
+from io import BytesIO, StringIO
+import sys
+from PIL import Image as PILImage
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import mimetypes
+
 """
 Contains app models
 """
@@ -44,13 +50,41 @@ class UserCert(models.Model):
     class Meta:
         unique_together = (('user', 'cert'))
 
+    def save(self, *args, **kwargs):
+        """ Reduce a size and quality of the image """
+
+        file_split = os.path.splitext(self.cert_file.name)
+        file_name = file_split[0]
+        file_extension = file_split[1]
+        if self.cert_file and file_extension.lower() in ['.jpg', '.jpeg', '.png']:
+            img = PILImage.open( self.cert_file )
+            if img.mode in ['RGBA']:
+                background = PILImage.new( img.mode[:-1], img.size, (255,255,255) )
+                background.paste(img, img.split()[-1])
+                img = background
+
+            width, height = img.size
+            if width > 4000 or height > 3000:
+                width, height = width/3.0, height/3.0
+            elif width > 3000 or height > 2000:
+                width, height = width/2.5, height/2.5
+            elif width > 2000 or height > 1000:
+                width, height = width/2.0, height/2.0
+            elif width > 1000 or height > 500:
+                width, height = width/1.5, height/1.5
+
+            img.thumbnail( (width, height), PILImage.ANTIALIAS )
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=70)
+            output.seek(0)
+            self.cert_file = InMemoryUploadedFile(output,'ImageField', "%s.jpg" % file_name, 'image/jpeg', sys.getsizeof(output), None)
+        super(UserCert, self).save(*args, **kwargs)
+
 @receiver(post_delete, sender=UserCert)
 def cert_file_delete(sender, instance, **kwargs):
     if instance.cert_file:
         if os.path.isfile(instance.cert_file.path):
             os.remove(instance.cert_file.path)
-
-
 
 class UserLab(models.Model):
     """

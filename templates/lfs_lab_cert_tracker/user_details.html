@@ -81,15 +81,17 @@
 		</div>
 
 		<div>
-			{% if pi_user_lab_list %}
 			<h5 class="title">PI Labs</h5>
-			<ul>
-				{% for pi_user_lab in pi_user_lab_list %}
-					<li>
-						<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
-					</li>
-				{% endfor %}
-			</ul>
+			{% if pi_user_lab_list %}
+				<ul>
+					{% for pi_user_lab in pi_user_lab_list %}
+						<li>
+							<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+						</li>
+					{% endfor %}
+				</ul>
+			{% else %}
+				<p>{{ app_user.username }} is not a Principal Investigator in any labs</p>
 			{% endif %}
 		</div>
 
