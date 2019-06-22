@@ -28,3 +28,8 @@ tr.inactive {
 #add_user_cert_form #id_cert {
   width: 100%;
 }
+
+.errorlist {
+  color: maroon;
+  font-weight: bold;
+}

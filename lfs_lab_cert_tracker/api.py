@@ -158,6 +158,7 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
         user_cert.completion_date = completion_date
         user_cert.expiry_date = expiry_date
         user_cert.save()
+    print("created ", created)
     return model_to_dict(user_cert)
 
 def delete_user_cert(user_id, cert_id):

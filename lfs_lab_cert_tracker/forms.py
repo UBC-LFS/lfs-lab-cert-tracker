@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User as AuthUser
 from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
 from datetime import datetime
+import datetime as dt
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -41,12 +42,15 @@ class LabCertForm(forms.ModelForm):
         fields = ['cert', 'redirect_url']
 
 class UserCertForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    #redirect_url = forms.CharField(widget=forms.HiddenInput())
     date = datetime.now()
-    completion_date = forms.DateField(required=False, widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20)))
+    completion_date = forms.DateField(
+        initial=dt.date.today,
+        widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20))
+    )
     class Meta:
         model = UserCert
-        fields = ['user', 'cert', 'cert_file', 'redirect_url']
+        fields = ['user', 'cert', 'cert_file']
         widgets = { 'user': forms.HiddenInput() }
 
 class DeleteUserCertForm(forms.Form):

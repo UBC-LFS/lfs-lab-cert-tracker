@@ -5,12 +5,11 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-
-from io import BytesIO, StringIO
+from io import BytesIO
 import sys
 from PIL import Image as PILImage
 from django.core.files.uploadedfile import InMemoryUploadedFile
-import mimetypes
+
 
 """
 Contains app models
@@ -43,9 +42,9 @@ class UserCert(models.Model):
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
     cert_file = models.FileField(upload_to=create_user_cert_disk_path)
-    uploaded_date = models.DateField(null=True)
-    completion_date = models.DateField(null=True)
-    expiry_date = models.DateField(null=True)
+    uploaded_date = models.DateField()
+    completion_date = models.DateField()
+    expiry_date = models.DateField()
 
     class Meta:
         unique_together = (('user', 'cert'))
