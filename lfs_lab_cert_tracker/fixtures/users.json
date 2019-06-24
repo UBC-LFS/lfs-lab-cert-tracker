@@ -8,7 +8,7 @@
       "username": "admin",
       "first_name": "ad",
       "last_name": "min",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -20,7 +20,7 @@
       "username": "admin2",
       "first_name": "ad2",
       "last_name": "min2",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -32,7 +32,7 @@
       "username": "admin3",
       "first_name": "ad3",
       "last_name": "min3",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -44,7 +44,7 @@
       "username": "test.user1",
       "first_name": "test1",
       "last_name": "user1",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -56,7 +56,7 @@
       "username": "test.user2",
       "first_name": "test2",
       "last_name": "user2",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -68,7 +68,7 @@
       "username": "test.user3",
       "first_name": "test3",
       "last_name": "user3",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -80,7 +80,7 @@
       "username": "test.user4",
       "first_name": "test4",
       "last_name": "user4",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -92,7 +92,7 @@
       "username": "test.user5",
       "first_name": "test5",
       "last_name": "user5",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -104,7 +104,7 @@
       "username": "test.user11",
       "first_name": "test11",
       "last_name": "user11",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -116,7 +116,7 @@
       "username": "test.user22",
       "first_name": "test22",
       "last_name": "user22",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -128,7 +128,7 @@
       "username": "test.user33",
       "first_name": "test33",
       "last_name": "user33",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -140,7 +140,7 @@
       "username": "test.user44",
       "first_name": "test44",
       "last_name": "user44",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -152,7 +152,7 @@
       "username": "test.user55",
       "first_name": "test55",
       "last_name": "user55",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -164,7 +164,7 @@
       "username": "test.user66",
       "first_name": "test66",
       "last_name": "user66",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   },
   {
@@ -176,7 +176,7 @@
       "username": "test.user77",
       "first_name": "test77",
       "last_name": "user77",
-      "email": "brandon.oh@ubc.ca"
+      "email": "<email address>"
     }
   }
 ]
