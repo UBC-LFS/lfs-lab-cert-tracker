@@ -103,11 +103,17 @@ class UserLab(models.Model):
 def send_notification(sender, created, **kwargs):
     if created:
         obj = kwargs['instance']
-        title = 'You are added to the lab'
+        title = 'You are added to a lab'
         message = """
             Hi there,
+            
             You are recently added to a lab in the LFS Lab Cert Tracker. Please visit and check your certificates.
-        """
+            {0}
+
+            Thank you.
+
+            LFS Lab Cert Tracker
+        """.format( os.environ['LFS_LAB_CERT_TRACKER_URL'] )
         send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False)
 
 post_save.connect(send_notification, sender=UserLab)
