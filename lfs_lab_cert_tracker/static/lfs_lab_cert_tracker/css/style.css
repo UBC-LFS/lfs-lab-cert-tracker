@@ -1,9 +1,19 @@
+.lfs-logo {
+  height: 30px;
+  width: auto;
+}
+
 .container header {
   margin-bottom: 10px;
+  font-size: 0.85rem;
 }
 
 .container header .logout-btn {
-  //display: inline-block;
+  display: inline-block;
+}
+
+.container header .logout-btn:hover {
+  text-decoration: underline;
 }
 
 footer { height: 100px; }

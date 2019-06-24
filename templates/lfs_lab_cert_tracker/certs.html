@@ -2,7 +2,18 @@
 
 {% block content %}
 
-<h5 class="title">List of Certificates (Total: {{ total_certs }})</h5>
+{% if messages %}
+	{% for message in messages %}
+		<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+			{{ message }}
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+	{% endfor %}
+{% endif %}
+
+<h3 class="title">All Certificates (Total: {{ total_certs }})</h3>
 
 <div class="search-field">
 	<form method="GET" >

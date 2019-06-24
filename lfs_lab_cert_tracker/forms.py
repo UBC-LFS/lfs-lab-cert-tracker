@@ -42,7 +42,7 @@ class LabCertForm(forms.ModelForm):
         fields = ['cert', 'redirect_url']
 
 class UserCertForm(forms.ModelForm):
-    #redirect_url = forms.CharField(widget=forms.HiddenInput())
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
     date = datetime.now()
     completion_date = forms.DateField(
         initial=dt.date.today,
@@ -50,7 +50,7 @@ class UserCertForm(forms.ModelForm):
     )
     class Meta:
         model = UserCert
-        fields = ['user', 'cert', 'cert_file']
+        fields = ['user', 'cert', 'cert_file', 'redirect_url']
         widgets = { 'user': forms.HiddenInput() }
 
 class DeleteUserCertForm(forms.Form):

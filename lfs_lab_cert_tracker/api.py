@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
-
 from django.contrib.auth.hashers import make_password
-
+from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 
 from django.contrib.auth.models import User as AuthUser
@@ -19,8 +18,14 @@ def get_user(user_id):
     except AuthUser.DoesNotExist as dne:
         return None
 
-def get_user_by_cwl(cwl):
-    return AuthUser.objects.get(username=cwl)
+def get_user_by_username(username):
+    print("get_user_by_username")
+    try:
+        return AuthUser.objects.get(username=username)
+    except AuthUser.DoesNotExist as dne:
+        return None
+
+
 
 def get_users(n=None):
     user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
@@ -47,7 +52,7 @@ def switch_admin(user_id):
     user = AuthUser.objects.get(id=user_id)
     user.is_superuser = not user.is_superuser
     user.save(update_fields=['is_superuser'])
-    return {'user_id': user.id}
+    return model_to_dict(user)
 
 def switch_inactive(user_id):
     user = AuthUser.objects.get(id=user_id)
@@ -57,15 +62,18 @@ def switch_inactive(user_id):
         UserInactive.objects.get(user_id=user_id).delete()
     user.is_active = not user.is_active
     user.save(update_fields=['is_active'])
-    return {'user_id': user.id}
+    return model_to_dict(user)
 
 # Cert CRUD
 def get_certs(n=None):
     return [model_to_dict(cert) for cert in Cert.objects.all().order_by('id')]
 
-def create_cert(name):
-    cert = Cert.objects.create(name=name)
-    return model_to_dict(cert)
+def create_cert(name, expiry_in_years):
+    cert, created = Cert.objects.get_or_create(name=name, expiry_in_years=expiry_in_years)
+    if created:
+        return model_to_dict(cert)
+    else:
+        return None
 
 def delete_cert(cert_id):
     Cert.objects.get(id=cert_id).delete()
@@ -77,7 +85,8 @@ def get_cert(cert_id):
 
 # Lab CRUD
 def get_lab(lab_id):
-    return Lab.objects.get(id=lab_id)
+    lab = Lab.objects.get(id=lab_id)
+    return model_to_dict(lab)
 
 def get_labs(n=None):
     return [model_to_dict(lab) for lab in Lab.objects.all().order_by('id')]
@@ -158,7 +167,7 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
         user_cert.completion_date = completion_date
         user_cert.expiry_date = expiry_date
         user_cert.save()
-    print("created ", created)
+
     return model_to_dict(user_cert)
 
 def delete_user_cert(user_id, cert_id):
@@ -217,8 +226,11 @@ def get_missing_lab_certs(user_id, lab_id):
     return [model_to_dict(m) for m in missing]
 
 def create_user_lab(user_id, lab_id, role):
-    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
-    return model_to_dict(user_lab)
+    user_lab, created  = UserLab.objects.get_or_create(user_id=user_id, lab_id=lab_id, role=role)
+    if created:
+        return model_to_dict(user_lab)
+    else:
+        return None
 
 def delete_user_lab(user_id, lab_id):
     UserLab.objects.get(user=user_id, lab=lab_id).delete()
@@ -230,8 +242,11 @@ def get_lab_certs(lab_id, n=None):
     return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
 
 def create_lab_cert(lab_id, cert_id):
-    lab_cert = LabCert.objects.create(lab_id=lab_id, cert_id=cert_id)
-    return model_to_dict(lab_cert)
+    lab_cert, created = LabCert.objects.get_or_create(lab_id=lab_id, cert_id=cert_id)
+    if created:
+        return model_to_dict(lab_cert)
+    else:
+        return None
 
 def delete_lab_cert(lab_id, cert_id):
     LabCert.objects.get(lab=lab_id, cert=cert_id).delete()

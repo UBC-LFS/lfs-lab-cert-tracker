@@ -22,8 +22,7 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login as DjangoLogin
 from django.contrib.auth.models import User as AuthUser
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime
-from django.contrib import messages
+
 
 
 """
@@ -53,8 +52,14 @@ def my_login(request):
 #@login_required
 @require_http_methods(['GET'])
 def show_error(request, error_msg=''):
-    #print("show error: ", error_msg)
-    return render(request, 'lfs_lab_cert_tracker/error.html', {'error_msg': error_msg})
+    loggedin_user_id = request.user.id
+    return render(request,
+            'lfs_lab_cert_tracker/error.html',
+            {
+                'loggedin_user': { 'username': api.get_user(loggedin_user_id) },
+                'error_msg': error_msg
+            }
+    )
 
 def login(request):
     return render(request, 'lfs_lab_cert_tracker/login.html')
@@ -97,46 +102,21 @@ def user_labs(request, user_id):
 
 #@login_required
 #@auth_utils.user_or_admin
-#@require_http_methods(['GET'])
+@require_http_methods(['GET'])
 def user_certs(request, user_id):
     loggedin_user_id = request.user.id
-    form = None
-    submitted = None
-    if request.method == 'POST':
-        form = UserCertForm(request.POST, request.FILES)
-        if form.is_valid():
-            data = request.POST
-            files = request.FILES
-            cert = api.get_cert(data['cert'])
-            year = int(data['completion_date_year'])
-            month = int(data['completion_date_month'])
-            day = int(data['completion_date_day'])
-            completion_date = datetime.datetime(year=year, month=month, day=day)
-            expiry_year = year + int(cert['expiry_in_years'])
-            expiry_date = datetime.datetime(year=expiry_year, month=month, day=day)
-            result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
-            if result:
-                submitted = { 'message': 'Added {0} successfully.'.format(cert['name']) }
-                form = UserCertForm(initial={'user': loggedin_user_id})
-            else:
-                messages.error(request, "Failed to add a certificate.")
-        else:
-            messages.error(request, "Failed to add a certificate. Please check error messages below.")
-    else:
-        form = UserCertForm(initial={'user': loggedin_user_id})
-
+    redirect_url = '/users/%d/certificates/' % loggedin_user_id
     return render(request,
-            'lfs_lab_cert_tracker/user_certs.html',
-            {
-                'loggedin_user': { 'username': api.get_user(request.user.id) },
-                'user_id': loggedin_user_id,
-                'user_cert_list': api.get_user_certs(loggedin_user_id),
-                'missing_cert_list': api.get_missing_certs(loggedin_user_id),
-                'expired_cert_list': api.get_expired_certs(loggedin_user_id),
-                'form': form,
-                'submitted': submitted
-            }
-    )
+             'lfs_lab_cert_tracker/user_certs.html',
+             {
+                'loggedin_user': { 'username': api.get_user(loggedin_user_id) },
+                 'user_id': loggedin_user_id,
+                 'user_cert_list': api.get_user_certs(loggedin_user_id),
+                 'missing_cert_list': api.get_missing_certs(loggedin_user_id),
+                 'expired_cert_list': api.get_expired_certs(loggedin_user_id),
+                 'user_cert_form': UserCertForm(initial={'user': loggedin_user_id, 'redirect_url': redirect_url})
+             }
+     )
 
 
 #@login_required
@@ -175,7 +155,6 @@ def labs(request):
 #@login_required
 @require_http_methods(['GET'])
 def certs(request):
-
     can_create_cert = auth_utils.is_admin(request.user)
     redirect_url = '/certificates/'
 

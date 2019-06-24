@@ -1,32 +1,50 @@
 {% extends "header.html" %}
 
 {% block content %}
+
+{% if messages %}
+	{% for message in messages %}
+		<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+			{{ message }}
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+	{% endfor %}
+{% endif %}
+
 <h3 class="title">Lab: {{lab.name}}</h3>
 
-<h5 class="title">Required Certificates</h5>
-{% if required_certs %}
-	<table class="table table-borderless table-striped table-hover table-responsive-md table-sm">
-		<tbody>
-			{% for required_cert in required_certs %}
-	    <tr>
-				<td>{{ forloop.counter }}.</td>
-				<td>{{ required_cert.name }}</td>
-				<td>
-					{% if can_edit_lab_cert %}
-					<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post" onsubmit="return confirm('Remove: {{required_cert.name}}?');">
-						{% csrf_token %}
-						<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-						<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
-					</form>
-					{% endif %}
-				</td>
-	    </tr>
-			{% endfor %}
-		</tbody>
-	</table>
-{% else %}
-	<div>There are no required certificates in this lab.</div>
-{% endif %}
+<div class="card border-primary">
+	<div class="card-header bg-primary text-white">Required Certificates</div>
+	<div class="card-body">
+		{% if required_certs %}
+		<div class="card-text">
+			<table class="table table-borderless table-striped table-hover table-responsive-md table-sm">
+				<tbody>
+					{% for required_cert in required_certs %}
+			    <tr>
+						<td>{{ forloop.counter }}.</td>
+						<td>{{ required_cert.name }}</td>
+						<td>
+							{% if can_edit_lab_cert %}
+							<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post" onsubmit="return confirm('Remove: {{required_cert.name}}?');">
+								{% csrf_token %}
+								<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+								<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
+							</form>
+							{% endif %}
+						</td>
+			    </tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+			<h5 class="card-title">There are no required certificates in this lab.</h5>
+		{% endif %}
+	</div>
+</div>
 
 <h5 class="title">Users in Lab</h5>
 {% if users_in_lab %}
@@ -47,7 +65,7 @@
 							{{ user_in_lab.username }}
 						</a>
 						{% if user_in_lab.isPI %}
-							(PI)
+							<span class="badge badge-info">PI</span>
 						{% endif %}
 					</td>
 					<td>
@@ -99,8 +117,6 @@
 {% else %}
 	<div>There are no users missing certificates in this lab.</div>
 {% endif %}
-
-
 
 {% if can_edit_user_lab %}
 <h5 class="title">Add User to Lab</h5>

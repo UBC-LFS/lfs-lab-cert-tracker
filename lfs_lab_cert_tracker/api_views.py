@@ -14,6 +14,8 @@ from lfs_lab_cert_tracker.redirect_utils import handle_redirect
 
 from http import HTTPStatus
 import json
+from django.contrib import messages
+from django.forms.models import model_to_dict
 
 """
 Provides HTTP endpoints to access the api
@@ -25,22 +27,31 @@ logger = logging.getLogger(__name__)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
-def certs(request, cert_id=None):
+def certs(request):
     data = request.POST
-    res = api.create_cert(data['name'])
-    logger.info("%s: Created cert %s" % (request.user, res))
-    #print("certs: ", res)
-    return JsonResponse(res)
-    #return HttpResponse( json.dumps(res), content_type="application/json" )
+    res = api.create_cert(data['name'], data['expiry_in_years'])
+    print("res ", res)
+    if res:
+        messages.success(request, 'Success! Created {0} successfully.'.format(data['name']))
+        logger.info("%s: Created cert %s" % (request.user, res))
+        return JsonResponse(res)
+    else:
+        messages.error(request, 'Error! Failed to create {0}. This cert has already existed.'.format(data['name']))
+
 
 @login_required
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_certs(request, cert_id=None):
-    data = request.POST
+    cert = api.get_cert(cert_id)
     res = api.delete_cert(cert_id)
-    logger.info("%s: Deleted cert %s" % (request.user, res))
+    if res:
+        messages.success(request, 'Success! Deleted {0} successfully.'.format(cert['name']))
+        logger.info("%s: Deleted cert %s" % (request.user, res))
+    else:
+        messages.error(request, 'Error! Failed to delete {0}.'.format(cert['name']))
+
     return JsonResponse(res)
 
 @login_required
@@ -48,9 +59,14 @@ def delete_certs(request, cert_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_user(request, user_id=None):
-    data = request.POST
+    user = model_to_dict( api.get_user(user_id) )
     res = api.delete_user(user_id)
-    logger.info("%s: Deleted user %s" % (request.user, res))
+    if res:
+        messages.success(request, 'Success! Deleted {0} successfully.'.format(user['username']))
+        logger.info("%s: Deleted user %s" % (request.user, res))
+    else:
+        messages.error(request, 'Error! Failed to delete {0}.'.format(user['username']))
+
     return JsonResponse(res)
 
 @login_required
@@ -58,18 +74,36 @@ def delete_user(request, user_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def switch_admin(request, user_id=None):
-     data = request.POST
-     res = api.switch_admin(user_id)
-     return JsonResponse(res)
+    res = api.switch_admin(user_id)
+    if res:
+        if res['is_superuser']:
+            messages.success(request, 'Success! Switched to Admin for {0} successfully.'.format(res['username']))
+            logger.info("%s: Switched to Admin for %s" % (request.user, res['id']))
+        else:
+            messages.success(request, 'Success! Admin is canceled for {0} successfully.'.format(res['username']))
+            logger.info("%s: Admin is canceled %s" % (request.user, res['id']))
+    else:
+        messages.error(request, 'Error! Failed to switch {0}.'.format(res['username']))
+
+    return JsonResponse({'user_id': res['id']})
 
 @login_required
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
 def switch_inactive(request, user_id=None):
-    data = request.POST
     res = api.switch_inactive(user_id)
-    return JsonResponse(res)
+    if res:
+        if res['is_active']:
+            messages.success(request, 'Success! Became active for {0} successfully.'.format(res['username']))
+            logger.info("%s: Became active %s" % (request.user, res['id']))
+        else:
+            messages.success(request, 'Success! Became inactive for {0} successfully.'.format(res['username']))
+            logger.info("%s: Became inactive  %s" % (request.user, res['id']))
+    else:
+        messages.error(request, 'Error! Failed to switch {0}.'.format(res['username']))
+
+    return JsonResponse({'user_id': res['id']})
 
 @login_required
 @admin_only
@@ -78,7 +112,11 @@ def switch_inactive(request, user_id=None):
 def labs(request, lab_id=None):
     data = request.POST
     res = api.create_lab(data['name'])
-    logger.info("%s: Created lab %s" % (request.user, res))
+    if res:
+        messages.success(request, 'Success! Created {0} successfully.'.format(data['name']))
+        logger.info("%s: Created lab %s" % (request.user, res))
+    else:
+        messages.error(request, 'Error! Failed to create {0}.'.format(data['name']))
     return JsonResponse(res)
 
 @login_required
@@ -86,9 +124,14 @@ def labs(request, lab_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_labs(request, lab_id=None):
-    data = request.POST
+    lab = api.get_lab(lab_id)
     res = api.delete_lab(lab_id)
-    logger.info("%s: Deleted lab %s" % (request.user, res))
+    if res:
+        messages.success(request, 'Success! Deleted {0} successfully.'.format(lab['name']))
+        logger.info("%s: Deleted lab %s" % (request.user, res))
+    else:
+        messages.error(request, 'Error! Failed to delete {0}.'.format(lab['name']))
+
     return JsonResponse(res)
 
 @login_required
@@ -98,53 +141,81 @@ def delete_labs(request, lab_id=None):
 def update_labs(request, lab_id=None):
     data = request.POST
     res = api.update_lab(lab_id, data['name'])
-    logger.info("%s: Updated lab %s" % (request.user, res))
+    if res:
+        messages.success(request, 'Success! Updated {0} successfully.'.format(data['name']))
+        logger.info("%s: Updated lab %s" % (request.user, res))
+    else:
+        messages.error(request, 'Error! Failed to update {0}.'.format(data['name']))
+
     return JsonResponse(res)
 
 @login_required
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
-def lab_certs(request, lab_id=None, cert_id=None):
+def lab_certs(request, lab_id=None):
     data = request.POST
     res = api.create_lab_cert(lab_id, data['cert'])
-    logger.info("%s: Created lab cert %s" % (request.user, res))
-    return JsonResponse(res)
+    cert = api.get_cert(data['cert'])
+    if res:
+        messages.success(request, 'Success! Added {0} successfully.'.format(cert['name']))
+        logger.info("%s: Created lab cert %s" % (request.user, res))
+        return JsonResponse(res)
+    else:
+        messages.error(request, 'Error! Failed to add {0}. This cert has already existed.'.format(cert['name']))
+
 
 @login_required
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_lab_certs(request, lab_id=None, cert_id=None):
-    data = request.POST
+    cert = api.get_cert(cert_id)
     res = api.delete_lab_cert(lab_id, cert_id)
-    logger.info("%s: Deleted lab cert %s" % (request.user, res))
-    return JsonResponse(res)
+    if res:
+        messages.success(request, 'Success! Delete {0} successfully.'.format(cert['name']))
+        logger.info("%s: Deleted lab cert %s" % (request.user, res))
+        return JsonResponse(res)
+    else:
+        messages.error(request, 'Error! Failed to delete {0}.'.format(cert['name']))
 
 
-"""
+
 @login_required
 @user_or_admin
 @handle_redirect
 @require_http_methods(['POST'])
-def user_certs(request, user_id=None, cert_id=None):
-    data = request.POST
-    files = request.FILES
-    completion_date = None
-    expiry_date = None
-    cert = api.get_cert(data['cert'])
+def user_certs(request, user_id=None):
+    form = UserCertForm(request.POST, request.FILES)
 
-    if all([data['completion_date_year'], data['completion_date_month'], data['completion_date_day']]):
-        completion_date = datetime.datetime(year=int(data['completion_date_year']), month=int(data['completion_date_month']), day=int(data['completion_date_day']))
-        year = int(data['completion_date_year']) + int(cert['expiry_in_years'])
-        expiry_date = datetime.datetime(year=year, month=int(data['completion_date_month']), day=int(data['completion_date_day']))
+    # Whether form is valid or not
+    if form.is_valid():
+        data = request.POST
+        files = request.FILES
+        cert = api.get_cert(data['cert'])
 
-    #print(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
-    res = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
-    res = { 'user_id': user_id, 'cert_id': cert_id }
-    logger.info("%s: Created user cert %s" % (request.user, res))
-    return JsonResponse(res)
-"""
+        year = int(data['completion_date_year'])
+        month = int(data['completion_date_month'])
+        day = int(data['completion_date_day'])
+
+        completion_date = datetime.datetime(year=year, month=month, day=day)
+
+        # Calculate a expiry year
+        expiry_year = year + int(cert['expiry_in_years'])
+        expiry_date = datetime.datetime(year=expiry_year, month=month, day=day)
+
+        result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
+
+        # Whether user's certficiate is created successfully or not
+        if result:
+            messages.success(request, 'Success! Added {0} successfully.'.format(cert['name']))
+            res = { 'user_id': user_id, 'cert_id': result['cert'] }
+            logger.info("%s: Created user cert %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, "Error! Failed to add a certificate.")
+    else:
+        messages.error(request, "Error! Failed to add a certificate. Please check error messages below.")
 
 
 @login_required
@@ -152,9 +223,11 @@ def user_certs(request, user_id=None, cert_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_user_certs(request, user_id=None, cert_id=None):
-    data = request.POST
     res = api.delete_user_cert(user_id, cert_id)
-    logger.info("%s: Deleted user cert %s" % (request.user, res))
+    if res['result']:
+        cert = api.get_cert(cert_id)
+        messages.success(request, 'Success! Deleted {0} successfully.'.format(cert['name']))
+
     return JsonResponse(res)
 
 @login_required
@@ -172,22 +245,34 @@ def update_user_certs(request, user_id=None, cert_id=None):
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
-def user_labs(request, user_id=None, lab_id=None):
+def user_labs(request, lab_id=None):
     data = request.POST
-    user = api.get_user_by_cwl(data['user'])
-    res = api.create_user_lab(user.id, lab_id, data['role'])
-    logger.info("%s: Created user lab %s" % (request.user, res))
-    return JsonResponse(res)
+    user = api.get_user_by_username(data['user'])
+    if user:
+        res = api.create_user_lab(user.id, lab_id, data['role'])
+        if res:
+            messages.success(request, 'Success! Added {0} successfully.'.format(data['user']))
+            logger.info("%s: Created user lab %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, 'Error! Failed to add {0}. CWL has already existed in this lab.'.format(data['user']))
+    else:
+        messages.error(request, 'Error! Failed to add {0}. CWL does not exist.'.format(data['user']))
 
 @login_required
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
 def delete_user_lab(request, user_id=None, lab_id=None):
-    data = request.POST
+    user = model_to_dict( api.get_user(user_id) )
     res = api.delete_user_lab(user_id, lab_id)
-    logger.info("%s: Deleted user lab %s" % (request.user, res))
-    return JsonResponse(res)
+    if res:
+        messages.success(request, 'Success! Delete {0} successfully.'.format(user['username']))
+        logger.info("%s: Deleted user lab %s" % (request.user, res))
+        return JsonResponse(res)
+    else:
+        messages.error(request, 'Error! Failed to delete {0}.'.format(user['username']))
+
 
 @login_required
 @admin_only
@@ -195,12 +280,16 @@ def delete_user_lab(request, user_id=None, lab_id=None):
 @require_http_methods(['POST'])
 def users(request):
     data = request.POST
-
     res = api.create_user(
         first_name=data['first_name'],
         last_name=data['last_name'],
         email=data['email'],
         username=data['username'],
     )
-    logger.info("%s: Created user %s" % (request.user, res))
+    if res:
+        messages.success(request, 'Success! Created {0} successfully.'.format(data['username']))
+        logger.info("%s: Created user %s" % (request.user, res))
+    else:
+        messages.error(request, 'Error! Failed to create {0}.'.format(data['username']))
+
     return JsonResponse(res)
