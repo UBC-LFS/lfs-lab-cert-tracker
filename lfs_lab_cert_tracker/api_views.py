@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from lfs_lab_cert_tracker.forms import UserForm, UserCertForm
+from lfs_lab_cert_tracker.forms import UserForm, UserCertForm, CertForm, LabForm
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
@@ -28,15 +28,21 @@ logger = logging.getLogger(__name__)
 @handle_redirect
 @require_http_methods(['POST'])
 def certs(request):
-    data = request.POST
-    res = api.create_cert(data['name'], data['expiry_in_years'])
-    print("res ", res)
-    if res:
-        messages.success(request, 'Success! Created {0} successfully.'.format(data['name']))
-        logger.info("%s: Created cert %s" % (request.user, res))
-        return JsonResponse(res)
+    form = CertForm(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        res = api.create_cert(data['name'], data['expiry_in_years'])
+        if res:
+            messages.success(request, 'Success! Created {0} successfully.'.format(data['name']))
+            logger.info("%s: Created cert %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, 'Error! Failed to create {0}. This cert has already existed.'.format(data['name']))
     else:
-        messages.error(request, 'Error! Failed to create {0}. This cert has already existed.'.format(data['name']))
+        errors = form.errors.get_json_data()
+        messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(errors)))
+
+    return None
 
 
 @login_required
@@ -110,14 +116,21 @@ def switch_inactive(request, user_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def labs(request, lab_id=None):
-    data = request.POST
-    res = api.create_lab(data['name'])
-    if res:
-        messages.success(request, 'Success! Created {0} successfully.'.format(data['name']))
-        logger.info("%s: Created lab %s" % (request.user, res))
+    form = LabForm(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        res = api.create_lab(data['name'])
+        if res:
+            messages.success(request, 'Success! Created {0} successfully.'.format(data['name']))
+            logger.info("%s: Created lab %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, 'Error! Failed to create {0}.'.format(data['name']))
     else:
-        messages.error(request, 'Error! Failed to create {0}.'.format(data['name']))
-    return JsonResponse(res)
+        errors = form.errors.get_json_data()
+        messages.error(request, 'Error! Form is invalid. {0}.'.format(get_error_messages(errors)))
+    return None
+
 
 @login_required
 @admin_only
@@ -139,15 +152,24 @@ def delete_labs(request, lab_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def update_labs(request, lab_id=None):
-    data = request.POST
-    res = api.update_lab(lab_id, data['name'])
-    if res:
-        messages.success(request, 'Success! Updated {0} successfully.'.format(data['name']))
-        logger.info("%s: Updated lab %s" % (request.user, res))
+    form = LabForm(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        res = api.update_lab(lab_id, data['name'])
+        if res:
+            messages.success(request, 'Success! Updated {0} successfully.'.format(data['name']))
+            logger.info("%s: Updated lab %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, 'Error! Failed to update {0}.'.format(data['name']))
     else:
-        messages.error(request, 'Error! Failed to update {0}.'.format(data['name']))
+        errors = form.errors.get_json_data()
+        messages.error(request, 'Error! Form is invalid. {0}.'.format(get_error_messages(errors)))
 
-    return JsonResponse(res)
+    return None
+
+
+
 
 @login_required
 @admin_or_pi_only
@@ -273,23 +295,36 @@ def delete_user_lab(request, user_id=None, lab_id=None):
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(user['username']))
 
-
 @login_required
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
 def users(request):
-    data = request.POST
-    res = api.create_user(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        email=data['email'],
-        username=data['username'],
-    )
-    if res:
-        messages.success(request, 'Success! Created {0} successfully.'.format(data['username']))
-        logger.info("%s: Created user %s" % (request.user, res))
+    form = UserForm(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        res = api.create_user(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            username=data['username']
+        )
+        if res:
+            messages.success(request, 'Success! Created {0} successfully.'.format(data['username']))
+            logger.info("%s: Created user %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(data['username']))
     else:
-        messages.error(request, 'Error! Failed to create {0}.'.format(data['username']))
+        errors = form.errors.get_json_data()
+        messages.error(request, 'Error! Form is invalid. {0}'.format( get_error_messages(errors) ) )
 
-    return JsonResponse(res)
+    return None
+
+
+def get_error_messages(errors):
+    messages = ''
+    for key in errors.keys():
+        value = errors[key]
+        messages += value[0]['message'] + ' '
+    return messages.strip()

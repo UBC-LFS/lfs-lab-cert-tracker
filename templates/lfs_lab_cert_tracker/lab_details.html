@@ -67,6 +67,9 @@
 						{% if user_in_lab.isPI %}
 							<span class="badge badge-info">PI</span>
 						{% endif %}
+						{% if not user_in_lab.is_active %}
+							<span class="badge badge-secondary">Inactive</span>
+						{% endif %}
 					</td>
 					<td>
 						<form action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Remove: {{user_in_lab.username}}?');">
