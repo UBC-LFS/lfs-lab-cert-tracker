@@ -28,7 +28,7 @@ class LabForm(forms.ModelForm):
         if len(data) == 0:
             raise forms.ValidationError('Enter a valid name.')
         return data
-        
+
 class CertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:

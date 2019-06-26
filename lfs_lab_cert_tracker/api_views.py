@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from lfs_lab_cert_tracker.forms import UserForm, UserCertForm, CertForm, LabForm
+from lfs_lab_cert_tracker.forms import UserForm, UserCertForm, CertForm, LabForm, UserLabForm
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
@@ -101,15 +101,17 @@ def switch_inactive(request, user_id=None):
     res = api.switch_inactive(user_id)
     if res:
         if res['is_active']:
-            messages.success(request, 'Success! Became active for {0} successfully.'.format(res['username']))
+            messages.success(request, 'Success! {0} became ACTIVE successfully.'.format(res['username']))
             logger.info("%s: Became active %s" % (request.user, res['id']))
         else:
-            messages.success(request, 'Success! Became inactive for {0} successfully.'.format(res['username']))
+            messages.success(request, 'Success! {0} became INACTIVE successfully.'.format(res['username']))
             logger.info("%s: Became inactive  %s" % (request.user, res['id']))
+        return JsonResponse({'user_id': res['id']})
     else:
         messages.error(request, 'Error! Failed to switch {0}.'.format(res['username']))
 
-    return JsonResponse({'user_id': res['id']})
+    return None
+
 
 @login_required
 @admin_only
@@ -269,8 +271,15 @@ def update_user_certs(request, user_id=None, cert_id=None):
 @require_http_methods(['POST'])
 def user_labs(request, lab_id=None):
     data = request.POST
-    user = api.get_user_by_username(data['user'])
+    user = api.get_user_by_username(data['user'].strip())
+
+    form = UserLabForm(data)
+    print("is valid()", form.is_valid())
+    print("errors ", form.errors.get_json_data())
+
+    # Check whether a user exists or not
     if user:
+        print("user ", user)
         res = api.create_user_lab(user.id, lab_id, data['role'])
         if res:
             messages.success(request, 'Success! Added {0} successfully.'.format(data['user']))
@@ -280,6 +289,9 @@ def user_labs(request, lab_id=None):
             messages.error(request, 'Error! Failed to add {0}. CWL has already existed in this lab.'.format(data['user']))
     else:
         messages.error(request, 'Error! Failed to add {0}. CWL does not exist.'.format(data['user']))
+
+    return None
+
 
 @login_required
 @admin_or_pi_only

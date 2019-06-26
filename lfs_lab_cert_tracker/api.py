@@ -223,11 +223,18 @@ def get_missing_lab_certs(user_id, lab_id):
     return [model_to_dict(m) for m in missing]
 
 def create_user_lab(user_id, lab_id, role):
-    user_lab, created  = UserLab.objects.get_or_create(user_id=user_id, lab_id=lab_id, role=role)
-    if created:
-        return model_to_dict(user_lab)
-    else:
+    print("create_user_lab", user_id, lab_id, role)
+    try:
+        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
+        print(has_existed)
+    except UserLab.DoesNotExist:
+        has_existed = None
+
+    if has_existed:
         return None
+
+    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
+    return model_to_dict(user_lab)
 
 def delete_user_lab(user_id, lab_id):
     UserLab.objects.get(user=user_id, lab=lab_id).delete()
@@ -252,7 +259,6 @@ def delete_lab_cert(lab_id, cert_id):
 # User CRUD
 def create_user(first_name, last_name, email, username):
     user = get_user_by_username(username)
-    print('user ', user)
     if user:
         return None
     # TODO: Replace the need to create an AuthUser with a password
@@ -263,5 +269,4 @@ def create_user(first_name, last_name, email, username):
         email=email,
         password=make_password(''),
     )
-    print( "user_created ", user_created )
     return model_to_dict(user_created)

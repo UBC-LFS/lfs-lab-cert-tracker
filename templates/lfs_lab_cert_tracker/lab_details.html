@@ -28,7 +28,7 @@
 						<td>{{ required_cert.name }}</td>
 						<td>
 							{% if can_edit_lab_cert %}
-							<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post" onsubmit="return confirm('Remove: {{required_cert.name}}?');">
+							<form class="d-inline float-right" action='/api/labs/{{lab.id}}/certificates/{{required_cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to remove {{required_cert.name}}?');">
 								{% csrf_token %}
 								<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
 								<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
@@ -72,7 +72,7 @@
 						{% endif %}
 					</td>
 					<td>
-						<form action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Remove: {{user_in_lab.username}}?');">
+						<form action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Are you sure to remove {{user_in_lab.username}}?');">
 							{% csrf_token %}
 							<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
 							<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
