@@ -244,6 +244,7 @@ def lab_details(request, lab_id):
     users_missing_certs = api.get_users_missing_certs(lab_id)
     required_certs = api.get_lab_certs(lab_id)
     redirect_url = '/labs/%d' % lab_id
+    
     return render(request,
             'lfs_lab_cert_tracker/lab_details.html',
             {

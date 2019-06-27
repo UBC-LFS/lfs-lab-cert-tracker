@@ -28,7 +28,7 @@
   <thead>
     <tr>
       <th>Name</th>
-			<th>Delete</th>
+			<th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -42,7 +42,7 @@
 						<button type="button" class="btn btn-info btn-sm list-form" data-toggle="modal" data-target="#lab-edit-modal-{{ lab.id }}">
 						  Edit
 						</button>
-						<form class="list-form" action='/api/labs/{{lab.id}}/delete' method="post">
+						<form class="list-form" action='/api/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{lab.name}}?');">
 							{% csrf_token %}
 							<input name="redirect_url" value="/labs/" type="hidden"/>
 							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>

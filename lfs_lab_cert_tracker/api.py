@@ -19,13 +19,10 @@ def get_user(user_id):
         return None
 
 def get_user_by_username(username):
-    print("get_user_by_username")
     try:
         return AuthUser.objects.get(username=username)
     except AuthUser.DoesNotExist as dne:
         return None
-
-
 
 def get_users(n=None):
     user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
@@ -226,11 +223,18 @@ def get_missing_lab_certs(user_id, lab_id):
     return [model_to_dict(m) for m in missing]
 
 def create_user_lab(user_id, lab_id, role):
-    user_lab, created  = UserLab.objects.get_or_create(user_id=user_id, lab_id=lab_id, role=role)
-    if created:
-        return model_to_dict(user_lab)
-    else:
+    print("create_user_lab", user_id, lab_id, role)
+    try:
+        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
+        print(has_existed)
+    except UserLab.DoesNotExist:
+        has_existed = None
+
+    if has_existed:
         return None
+
+    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
+    return model_to_dict(user_lab)
 
 def delete_user_lab(user_id, lab_id):
     UserLab.objects.get(user=user_id, lab=lab_id).delete()
@@ -254,12 +258,15 @@ def delete_lab_cert(lab_id, cert_id):
 
 # User CRUD
 def create_user(first_name, last_name, email, username):
+    user = get_user_by_username(username)
+    if user:
+        return None
     # TODO: Replace the need to create an AuthUser with a password
-    auth_user = AuthUser.objects.create(
+    user_created = AuthUser.objects.create(
         first_name=first_name,
         last_name=last_name,
         username=username,
         email=email,
-        password=make_password('lfs_lab_cert_tracker'),
+        password=make_password(''),
     )
-    return model_to_dict(auth_user)
+    return model_to_dict(user_created)
