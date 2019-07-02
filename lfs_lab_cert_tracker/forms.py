@@ -19,6 +19,15 @@ class LabForm(forms.ModelForm):
     class Meta:
         model = Lab
         fields = ['name', 'redirect_url']
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
+
+    def clean_name(self):
+        data = self.cleaned_data['name'].strip()
+        if len(data) == 0:
+            raise forms.ValidationError('Enter a valid name.')
+        return data
 
 class CertForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
@@ -26,6 +35,15 @@ class CertForm(forms.ModelForm):
         model = Cert
         fields = ['name', 'expiry_in_years', 'redirect_url']
         help_texts = { 'expiry_in_years': '(0 means "NO Expiry Date")' }
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
+
+    def clean_name(self):
+        data = self.cleaned_data['name'].strip()
+        if len(data) == 0:
+            raise forms.ValidationError('Enter a valid name.')
+        return data
 
 class UserLabForm(forms.ModelForm):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
@@ -63,6 +81,40 @@ class UserForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'email', 'username', 'redirect_url']
         labels = { 'email': 'Email', 'username': 'CWL' }
         help_texts = { 'username': None }
+        error_messages = {
+            'username': { 'required': 'Enter a valid username.' },
+        }
+        widgets = {
+            'first_name': forms.TextInput(attrs={'required': True}),
+            'last_name': forms.TextInput(attrs={'required': True}),
+            'email': forms.EmailInput(attrs={'required': True}),
+            'username': forms.TextInput(attrs={'required': True}),
+        }
+
+    def clean_first_name(self):
+        data = self.cleaned_data['first_name'].strip()
+        if len(data) == 0:
+            raise forms.ValidationError('Enter a valid first name.')
+        return data
+
+    def clean_last_name(self):
+        data = self.cleaned_data['last_name'].strip()
+        if len(data) == 0:
+            raise forms.ValidationError('Enter a valid last name.')
+        return data
+
+    def clean_email(self):
+        data = self.cleaned_data['email'].strip()
+        if len(data) == 0:
+            raise forms.ValidationError('Enter a valid email address.')
+        return data
+
+    def clean_username(self):
+        data = self.cleaned_data['username'].strip()
+        if len(data) == 0:
+            raise forms.ValidationError('Enter a valid username.')
+        return data
+
 
 
 class SafetyWebForm(forms.Form):
