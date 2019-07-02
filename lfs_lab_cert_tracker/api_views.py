@@ -41,7 +41,6 @@ def certs(request):
     else:
         errors = form.errors.get_json_data()
         messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(errors)))
-
     return None
 
 
@@ -118,6 +117,7 @@ def switch_inactive(request, user_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def labs(request, lab_id=None):
+    print(request.POST)
     form = LabForm(request.POST)
     if form.is_valid():
         data = form.cleaned_data

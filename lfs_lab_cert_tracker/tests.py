@@ -1,5 +1,8 @@
 from django.test import TestCase
 from lfs_lab_cert_tracker import api
+from lfs_lab_cert_tracker.forms import CertForm
+from lfs_lab_cert_tracker.models import Cert
+from urllib.parse import urlencode
 
 def setUpAdminLogin(self):
         user = api.create_user(first_name="Test", last_name="test", email="test@example.com", username="admin")
@@ -23,8 +26,8 @@ class CertModelTest(TestCase):
 
     def setUp(self):
         setUpAdminLogin(self)
-        cert = {"name": "testing", "expiry_in_years": 0}
-        self.client.post('/api/certificates/', data=cert)
+        data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
+        response = self.client.post('/api/certificates/',content_type="application/x-www-form-urlencoded",data=data)
 
     def testAddCert(self):
         cert = api.get_certs()[0]
@@ -42,16 +45,14 @@ class LabsModelTest(TestCase):
     
     def setUp(self):
         setUpAdminLogin(self)
-        lab = {'name': 'test'}
-        self.client.post('/api/labs/', data=lab)
+        lab = urlencode({'name': 'test', 'redirect_url': '/labs/'})
+        self.client.post('/api/labs/',content_type="application/x-www-form-urlencoded", data=lab)
 
     def testAddLabs(self):
         lab = api.get_labs()[0]
         self.assertEqual(lab['name'], 'test')
-
-    # The url /api/labs/2/update/ can't be found for some reason
-    # def testEditLabs(self):
-    #     lab = api.get_labs()[0]
-    #     newName = {'name': 'new test name'}
-    #     response = self.client.post('/api/labs/' + str(lab['id']) + '/update/', data=newName)
-    #     print(api.get_labs())
+    def testEditLabs(self):
+        lab = api.get_labs()[0]
+        newName = urlencode({'name': 'new test name','redirect_url': '/labs/'})
+        response = self.client.post('/api/labs/' + str(lab['id']) + '/update', data=newName,content_type="application/x-www-form-urlencoded")
+        print(api.get_labs())
