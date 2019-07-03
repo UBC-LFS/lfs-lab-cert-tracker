@@ -45,7 +45,6 @@ urlpatterns = [
     path('users/<int:user_id>/', views.user_details),
 
     #path('media/users/<int:user_id>/certificates/<int:cert_id>', views.download_user_cert),
-    # ADDED
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>', views.download_user_cert),
     path('api/certificates/', api_views.certs),
     #path('api/certificates/<int:cert_id>/', api_views.certs),

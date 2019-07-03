@@ -1,21 +1,22 @@
 import datetime
-
 import logging
+import json
+from http import HTTPStatus
 
+from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_control
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
+from django.contrib import messages
+from django.forms.models import model_to_dict
 
 from lfs_lab_cert_tracker.forms import UserForm, UserCertForm, CertForm, LabForm, UserLabForm
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
 
-from http import HTTPStatus
-import json
-from django.contrib import messages
-from django.forms.models import model_to_dict
 
 """
 Provides HTTP endpoints to access the api
@@ -23,7 +24,8 @@ Provides HTTP endpoints to access the api
 
 logger = logging.getLogger(__name__)
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -45,7 +47,8 @@ def certs(request):
     return None
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -60,7 +63,8 @@ def delete_certs(request, cert_id=None):
 
     return JsonResponse(res)
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -75,7 +79,8 @@ def delete_user(request, user_id=None):
 
     return JsonResponse(res)
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -93,7 +98,8 @@ def switch_admin(request, user_id=None):
 
     return JsonResponse({'user_id': res['id']})
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -113,7 +119,8 @@ def switch_inactive(request, user_id=None):
     return None
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -134,7 +141,8 @@ def labs(request, lab_id=None):
     return None
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -149,7 +157,8 @@ def delete_labs(request, lab_id=None):
 
     return JsonResponse(res)
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -170,10 +179,8 @@ def update_labs(request, lab_id=None):
 
     return None
 
-
-
-
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -189,7 +196,8 @@ def lab_certs(request, lab_id=None):
         messages.error(request, 'Error! Failed to add {0}. This cert has already existed.'.format(cert['name']))
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -205,7 +213,8 @@ def delete_lab_certs(request, lab_id=None, cert_id=None):
 
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_or_admin
 @handle_redirect
 @require_http_methods(['POST'])
@@ -242,7 +251,8 @@ def user_certs(request, user_id=None):
         messages.error(request, "Error! Failed to add a certificate. Please check error messages below.")
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_or_admin
 @handle_redirect
 @require_http_methods(['POST'])
@@ -254,7 +264,8 @@ def delete_user_certs(request, user_id=None, cert_id=None):
 
     return JsonResponse(res)
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_or_admin
 @handle_redirect
 @require_http_methods(['POST'])
@@ -265,7 +276,8 @@ def update_user_certs(request, user_id=None, cert_id=None):
     #logger.info("%s: Deleted user cert %s" % (request.user, res))
     return JsonResponse(res)
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -274,9 +286,6 @@ def user_labs(request, lab_id=None):
     user = api.get_user_by_username(data['user'].strip())
 
     form = UserLabForm(data)
-    print("is valid()", form.is_valid())
-    print("errors ", form.errors.get_json_data())
-
     # Check whether a user exists or not
     if user:
         print("user ", user)
@@ -293,7 +302,8 @@ def user_labs(request, lab_id=None):
     return None
 
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
@@ -307,7 +317,8 @@ def delete_user_lab(request, user_id=None, lab_id=None):
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(user['username']))
 
-@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_only
 @handle_redirect
 @require_http_methods(['POST'])

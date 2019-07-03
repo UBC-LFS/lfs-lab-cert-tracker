@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_control
 from django.shortcuts import render, redirect
 from django.views.static import serve
 from django.template.loader import get_template
@@ -49,7 +50,14 @@ def my_login(request):
     return render(request, 'lfs_lab_cert_tracker/my_login.html', context)
 
 
-#@login_required
+def login(request):
+    return render(request, 'lfs_lab_cert_tracker/login.html')
+
+def admin_login(request):
+    return render(request, 'lfs_lab_cert_tracker/admin_login.html')
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def show_error(request, error_msg=''):
     loggedin_user_id = request.user.id
@@ -61,19 +69,15 @@ def show_error(request, error_msg=''):
             }
     )
 
-def login(request):
-    return render(request, 'lfs_lab_cert_tracker/login.html')
-
-def admin_login(request):
-    return render(request, 'lfs_lab_cert_tracker/admin_login.html')
-
-#@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def index(request):
     return redirect('/users/%d' % (request.user.id))
 
-#@login_required
-#@auth_utils.user_or_admin
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def download_user_cert(request, user_id=None, cert_id=None, filename=None):
     #path = 'users/%d/certificates/%d' % (user_id, cert_id)
@@ -82,8 +86,9 @@ def download_user_cert(request, user_id=None, cert_id=None, filename=None):
     path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
-#@login_required
-#@auth_utils.user_or_admin
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_labs(request, user_id):
     loggedin_user_id = request.user.id
@@ -100,8 +105,9 @@ def user_labs(request, user_id):
             }
     )
 
-#@login_required
-#@auth_utils.user_or_admin
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_certs(request, user_id):
     loggedin_user_id = request.user.id
@@ -119,7 +125,8 @@ def user_certs(request, user_id):
      )
 
 
-#@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def labs(request):
     is_admin = auth_utils.is_admin(request.user)
@@ -152,7 +159,8 @@ def labs(request):
         }
     )
 
-#@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def certs(request):
     can_create_cert = auth_utils.is_admin(request.user)
@@ -186,7 +194,8 @@ def certs(request):
     )
 
 
-#@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def users(request):
     is_admin = auth_utils.is_admin(request.user)
@@ -224,7 +233,8 @@ def users(request):
         }
     )
 
-#@login_required
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def lab_details(request, lab_id):
     request_user_id = request.user.id
@@ -244,7 +254,7 @@ def lab_details(request, lab_id):
     users_missing_certs = api.get_users_missing_certs(lab_id)
     required_certs = api.get_lab_certs(lab_id)
     redirect_url = '/labs/%d' % lab_id
-    
+
     return render(request,
             'lfs_lab_cert_tracker/lab_details.html',
             {
@@ -260,8 +270,9 @@ def lab_details(request, lab_id):
             }
     )
 
-#@login_required
-#@auth_utils.user_or_admin
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_cert_details(request, user_id=None, cert_id=None):
     loggedin_user_id = request.user.id
@@ -280,8 +291,9 @@ def user_cert_details(request, user_id=None, cert_id=None):
             }
     )
 
-#@login_required
-#@auth_utils.user_or_admin
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_details(request, user_id=None):
     app_user = api.get_user(user_id)
@@ -307,8 +319,9 @@ def user_details(request, user_id=None):
             }
     )
 
-#@login_required
-#@auth_utils.user_or_admin
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_report(request, user_id=None):
     app_user = api.get_user(user_id)
