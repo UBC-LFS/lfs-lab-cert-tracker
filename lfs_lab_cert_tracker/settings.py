@@ -199,12 +199,13 @@ LOGGING = {
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
+# https://devcenter.heroku.com/articles/django-assets
+# > python manage.py collectstatic --noinput
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-print( os.path.join(BASE_DIR, 'static') )
-print( os.path.join(BASE_DIR, 'templates') )
+
 
 MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
 MEDIA_URL = '/media/'
