@@ -19,6 +19,7 @@ def setUpUser(self):
         'redirect_url': '/users/',
     })
     self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+    return api.get_user_by_username('bobjones2019')
 
 class UserModelTests(TestCase):
 
@@ -58,7 +59,7 @@ class CertModelTest(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
-        response = self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+        self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
 
     def testAddCert(self):
         cert = api.get_certs()[0]
@@ -71,6 +72,14 @@ class CertModelTest(TestCase):
         self.assertEqual(response.status_code, 200)
         certs = api.get_certs()
         self.assertEqual(certs, [])
+
+    def testAddCertToUser(self):
+        cert = api.get_certs()[0]
+        user = api.get_user_by_username('admin')
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf',completion_date="2019-07-03",expiry_date="2019-07-03")
+        print('JHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+        print(api.get_user_certs(user.id))
+
 
 class LabsModelTest(TestCase):
     
@@ -98,3 +107,32 @@ class LabsModelTest(TestCase):
         self.assertEqual(response.status_code, 302)
         labs = api.get_labs()
         self.assertEqual(len(labs), 0)
+
+    def testAddUserToLab(self):
+        user = setUpUser(self)
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
+        response = self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        userLabs = api.get_user_labs(user.id)
+        self.assertEqual(userLabs[0]['name'], 'test')
+    
+    def testAddPIToLab(self):
+        user = setUpUser(self)
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
+        response = self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        userLabs = api.get_user_labs(user.id,is_principal_investigator=True)
+        self.assertEqual(userLabs[0]['name'], 'test')
+
+    def testRemoveUserFromLab(self):
+        user = setUpUser(self)
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': ''})
+        response =self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        userLabs = api.get_user_labs(user.id)
+        self.assertEqual(len(userLabs), 0)
