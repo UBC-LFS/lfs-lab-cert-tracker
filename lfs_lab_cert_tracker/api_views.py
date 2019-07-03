@@ -117,7 +117,6 @@ def switch_inactive(request, user_id=None):
 @handle_redirect
 @require_http_methods(['POST'])
 def labs(request, lab_id=None):
-    print(request.POST)
     form = LabForm(request.POST)
     if form.is_valid():
         data = form.cleaned_data

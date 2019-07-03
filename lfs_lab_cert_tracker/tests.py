@@ -5,15 +5,26 @@ from lfs_lab_cert_tracker.models import Cert
 from urllib.parse import urlencode
 
 def setUpAdminLogin(self):
-        user = api.create_user(first_name="Test", last_name="test", email="test@example.com", username="admin")
-        user = api.switch_admin(user['id'])
-        data = {"username": user['username'], "password": user['password']}
-        self.client.post('/my_login/', data=data)
+    user = api.create_user(first_name="Test", last_name="test", email="test@example.com", username="admin")
+    user = api.switch_admin(user['id'])
+    data = {"username": user['username'], "password": user['password']}
+    self.client.post('/my_login/', data=data)
+
+def setUpUser(self):
+    newUser = urlencode({
+        'first_name': 'Bob',
+        'last_name': 'Jones',
+        'email': 'bobjones@example.com',
+        'username': 'bobjones2019',
+        'redirect_url': '/users/',
+    })
+    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
 
 class UserModelTests(TestCase):
 
     def setUp(self):
         setUpAdminLogin(self)
+        setUpUser(self)
     
     def testLoginAdmin(self):
         user = api.get_user_by_username("admin")
@@ -22,12 +33,32 @@ class UserModelTests(TestCase):
         self.assertEqual(user.email, 'test@example.com')
         self.assertEqual(user.username, 'admin')
 
+    def testAddUser(self):
+        user = api.get_user_by_username('bobjones2019')
+        self.assertEqual(user.first_name, 'Bob')
+        self.assertEqual(user.last_name, 'Jones')
+        self.assertEqual(user.email, 'bobjones@example.com')
+        self.assertEqual(user.username, 'bobjones2019')
+
+    def testRegUserPermission(self):
+        user = api.get_user_by_username('bobjones2019')
+        data = {"username": user.username, "password": user.password}
+        self.client.post('/my_login/', data=data)
+        response = self.client.get('/users/')
+        self.assertEqual(response.status_code, 403)
+        data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
+        response = self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+        self.assertEqual(response.status_code, 403)
+        lab = urlencode({'name': 'test', 'redirect_url': '/labs/'})
+        response = self.client.post('/api/labs/',content_type="application/x-www-form-urlencoded", data=lab)
+        self.assertEqual(response.status_code, 403)
+
 class CertModelTest(TestCase):
 
     def setUp(self):
         setUpAdminLogin(self)
         data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
-        response = self.client.post('/api/certificates/',content_type="application/x-www-form-urlencoded",data=data)
+        response = self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
 
     def testAddCert(self):
         cert = api.get_certs()[0]
@@ -51,8 +82,19 @@ class LabsModelTest(TestCase):
     def testAddLabs(self):
         lab = api.get_labs()[0]
         self.assertEqual(lab['name'], 'test')
+
     def testEditLabs(self):
         lab = api.get_labs()[0]
         newName = urlencode({'name': 'new test name','redirect_url': '/labs/'})
-        response = self.client.post('/api/labs/' + str(lab['id']) + '/update', data=newName,content_type="application/x-www-form-urlencoded")
-        print(api.get_labs())
+        response = self.client.post('/api/labs/' + str(lab['id']) + '/update', data=newName, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        lab = api.get_labs()[0]
+        self.assertEqual(lab['name'], 'new test name')
+    
+    def testDeleteLabs(self):
+        lab = api.get_labs()[0]
+        deleteForm = urlencode({'redirect_url': '/labs/'})
+        response = self.client.post('/api/labs/' + str(lab['id']) + '/delete', data=deleteForm, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        labs = api.get_labs()
+        self.assertEqual(len(labs), 0)
