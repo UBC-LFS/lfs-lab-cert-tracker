@@ -15,15 +15,26 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 Contains app models
 """
 
-class Cert(models.Model):
+
+class Lab(models.Model):
+    """ Lab Model """
+
     name = models.CharField(max_length=256, unique=True)
-    expiry_in_years = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
-class Lab(models.Model):
+class Cert(models.Model):
+    """ Certificate Model """
+
     name = models.CharField(max_length=256, unique=True)
+    expiry_in_years = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -62,6 +73,7 @@ class UserCert(models.Model):
                 background.paste(img, img.split()[-1])
                 img = background
 
+            # Check image's width and height
             width, height = img.size
             if width > 4000 or height > 3000:
                 width, height = width/3.0, height/3.0
@@ -74,7 +86,7 @@ class UserCert(models.Model):
 
             img.thumbnail( (width, height), PILImage.ANTIALIAS )
             output = BytesIO()
-            img.save(output, format='JPEG', quality=70)
+            img.save(output, format='JPEG', quality=70) # Reduce a quality by 70%
             output.seek(0)
             self.cert_file = InMemoryUploadedFile(output,'ImageField', "%s.jpg" % file_name, 'image/jpeg', sys.getsizeof(output), None)
         super(UserCert, self).save(*args, **kwargs)
@@ -98,8 +110,9 @@ class UserLab(models.Model):
 
     class Meta:
         unique_together = (('user', 'lab'))
+        ordering = ['user']
 
-
+# Send an email when adding a user to a lab
 def send_notification(sender, created, **kwargs):
     if created:
         obj = kwargs['instance']
@@ -135,7 +148,13 @@ class LabCert(models.Model):
 
     class Meta:
         unique_together = (('lab', 'cert'))
+        #ordering = ['cert']
+
+    def __str__(self):
+        return self.cert.name
 
 class UserInactive(models.Model):
+    """ Update date when a user become inactive """
+    
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     inactive_date = models.DateField(null=True)

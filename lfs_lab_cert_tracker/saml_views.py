@@ -1,21 +1,17 @@
 from django.conf import settings
-from django.urls import reverse
-from django.http import (HttpResponse, HttpResponseRedirect,
-                         HttpResponseServerError)
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.shortcuts import render
 from django.contrib.auth import login, logout
+from django.contrib.auth.models import User as AuthUser
 
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
-from lfs_lab_cert_tracker import auth_utils
-
 
 def init_saml_auth(req):
     auth = OneLogin_Saml2_Auth(req, custom_base_path=settings.SAML_FOLDER)
     return auth
-
 
 def prepare_django_request(request):
     # If server is behind proxys or balancers use the HTTP_X_FORWARDED fields
@@ -23,7 +19,8 @@ def prepare_django_request(request):
         'https': 'on' if request.is_secure() else 'off',
         'http_host': request.META['HTTP_HOST'],
         'script_name': request.META['PATH_INFO'],
-        'server_port': request.META['SERVER_PORT'],
+        #'server_port': request.META['SERVER_PORT'],
+        'server_port': request.META['HTTP_X_FORWARDED_PORT'],
         'get_data': request.GET.copy(),
         # Uncomment if using ADFS as IdP, https://github.com/onelogin/python-saml/pull/144
         # 'lowercase_urlencoding': True,
@@ -31,6 +28,36 @@ def prepare_django_request(request):
     }
     return result
 
+def authenticate(saml_authentication=None):
+    """ Create a new user if the user does not exist; otherwise, return a user """
+
+    if not saml_authentication:
+        return None
+
+    if saml_authentication.is_authenticated():
+        user_data = {}
+        for key, value in saml_authentication.get_attributes().items():
+            if '100.1.1' in key:
+                user_data['username'] = value[0]
+            elif '100.1.3' in key:
+                user_data['email'] = value[0]
+            elif '2.5.4.3' in key:
+                full_name_list = value[0].split(' ')
+                user_data['first_name'] = ' '.join(full_name_list[:-1])
+                user_data['last_name'] = full_name_list[-1]
+
+        try:
+            user = AuthUser.objects.get(username=user_data['username'])
+        except AuthUser.DoesNotExist:
+            user = AuthUser(username=user_data['username'])
+            user.set_unusable_password()
+            user.email = user_data['email']
+            user.first_name = user_data['first_name']
+            user.last_name = user_data['last_name']
+            user.save()
+
+        return user
+    return None
 
 def saml(request, action=None):
     req = prepare_django_request(request)
@@ -42,52 +69,70 @@ def saml(request, action=None):
     attributes = False
     paint_logout = False
 
+    if 'SAMLResponse' in req['get_data']:
+        req['get_data']['sls'] = ''
+
     # Redirect to idp
     if 'sso' in req['get_data']:
-        return_to = OneLogin_Saml2_Utils.get_self_url(req)
         return HttpResponseRedirect(auth.login())
 
     if 'slo' in req['get_data']:
         name_id = None
         session_index = None
+        name_id_format = None
+
         if 'samlNameId' in request.session:
             name_id = request.session['samlNameId']
         if 'samlSessionIndex' in request.session:
             session_index = request.session['samlSessionIndex']
+        if 'samlNameIdFormat' in request.session:
+            name_id_format = request.session['samlNameIdFormat']
 
         # Login was not done through saml
         if not name_id and not session_index:
-            return HttpResponseRedirect('/accounts/admin/logout')
+            return HttpResponseRedirect(settings.LOGIN_URL)
+
         # Redirect to the saml logout
-        return HttpResponseRedirect(auth.logout(name_id=name_id, session_index=session_index))
+        #return HttpResponseRedirect(auth.logout(name_id=name_id, session_index=session_index))
+        return HttpResponseRedirect( auth.logout(name_id=name_id, session_index=session_index, name_id_format=name_id_format) )
 
     # Paths from idp
     if 'acs' in req['get_data']:
         auth.process_response()
         errors = auth.get_errors()
-        not_auth_warn = not auth.is_authenticated()
 
         if not errors:
-            request.session['samlUserdata'] = auth.get_attributes()
-            request.session['samlNameId'] = auth.get_nameid()
-            request.session['samlSessionIndex'] = auth.get_session_index()
-            # TODO: Fetch user based on what we get back from idp
-            user = auth_utils.get_user('admin')
-            if not user:
-                error_reason = "User not found"
-            else:
+            if auth.is_authenticated():
+                request.session['samlUserdata'] = auth.get_attributes()
+                request.session['samlNameId'] = auth.get_nameid()
+                request.session['samlSessionIndex'] = auth.get_session_index()
+                request.session['samlNameIdFormat'] = auth.get_nameid_format()
+
+                user = authenticate(saml_authentication=auth)
                 login(request, user)
-                return HttpResponseRedirect('/')
+
+                if 'RelayState' in req['post_data'] and OneLogin_Saml2_Utils.get_self_url(req) != req['post_data']['RelayState']:
+                    #return HttpResponseRedirect(auth.redirect_to(req['post_data']['RelayState']))
+                    return HttpResponseRedirect( '/users/{0}'.format(user.id) )
+                else:
+                    for attr_name in request.session['samlUserdata'].keys():
+                        print('%s ==> %s' % (attr_name, '|| '.join(request.session['samlUserdata'][attr_name])))
+            else:
+             print('Not authenticated')
         else:
-            if auth.get_settings().is_debug_active():
-                error_reason = auth.get_last_error_reason()
+            print("Error when processing SAML Response: %s" % (', '.join(errors)))
+
     elif 'sls' in req['get_data']:
-        dscb = lambda: request.session.flush()
-        url = auth.process_slo(delete_session_cb=dscb)
+        #dscb = lambda: request.session.flush()
+        #url = auth.process_slo(delete_session_cb=dscb)
         errors = auth.get_errors()
+
+        request.session.flush()
         logout(request)
         if not errors:
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect(settings.SAML_LOGOUT_URL)
+        else:
+            return HttpResponseRedirect(settings.LOGIN_URL)
 
     return render(request, 'lfs_lab_cert_tracker/login.html', {'errors': errors, 'error_reason': error_reason, 'not_auth_warn': not_auth_warn, 'success_slo': success_slo,
                                           'attributes': attributes, 'paint_logout': paint_logout})
@@ -106,10 +151,10 @@ def attrs(request):
 
 
 def metadata(request):
-    # req = prepare_django_request(request)
-    # auth = init_saml_auth(req)
-    # saml_settings = auth.get_settings()
-    saml_settings = OneLogin_Saml2_Settings(settings=None, custom_base_path=settings.SAML_FOLDER, sp_validation_only=True)
+    req = prepare_django_request(request)
+    auth = init_saml_auth(req)
+    saml_settings = auth.get_settings()
+    #saml_settings = OneLogin_Saml2_Settings(settings=None, custom_base_path=settings.SAML_FOLDER, sp_validation_only=True)
     metadata = saml_settings.get_sp_metadata()
     errors = saml_settings.validate_metadata(metadata)
 
