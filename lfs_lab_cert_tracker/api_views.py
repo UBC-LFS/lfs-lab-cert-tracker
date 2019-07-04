@@ -65,6 +65,7 @@ def delete_user(request, user_id):
         return JsonResponse(res)
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(user.username))
+        
     return None
 
 
