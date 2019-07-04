@@ -12,96 +12,124 @@ Provides an API to the Django ORM for any queries that are required
 """
 
 # User CRUD
+
+def get_users():
+    """ Get all users """
+
+    user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
+    users = []
+    for user in AuthUser.objects.all().order_by('id'):
+        user_dict = model_to_dict(user)
+        for user_inactive in user_inactives:
+            if user.id == user_inactive['user']:
+                user_dict['inactive_date'] = user_inactive['inactive_date']
+        users.append(user_dict)
+
+    return users
+
 def get_user(user_id):
+    """ Find a user by id"""
+
     try:
         return AuthUser.objects.get(id=user_id)
     except AuthUser.DoesNotExist as dne:
         return None
 
 def get_user_by_username(username):
+    """ Find a user by username """
+
     try:
         return AuthUser.objects.get(username=username)
     except AuthUser.DoesNotExist as dne:
         return None
 
-def get_users(n=None):
-    user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
-    #print(user_inactives)
-    users = []
-    for user in AuthUser.objects.all().order_by('id'):
-        user_dict = model_to_dict(user)
-        for user_inactive in user_inactives:
-            #print(user_inactive['user'])
-            if user.id == user_inactive['user']:
-                #print(user.id, user_inactive['inactive_date'])
-                user_dict['inactive_date'] = user_inactive['inactive_date']
-        users.append(user_dict)
-
-    #print(users)
-    return users
-    #return [model_to_dict(user) for user in AuthUser.objects.all().order_by('id')]
-
 def delete_user(user_id):
-    AuthUser.objects.get(id=user_id).delete()
-    return {'user_id': user_id}
+    """ Delete a user """
+
+    try:
+        user = AuthUser.objects.get(id=user_id)
+        user.delete()
+        return {'user_id': user_id}
+    except AuthUser.DoesNotExist:
+        return None
 
 def switch_admin(user_id):
-    user = AuthUser.objects.get(id=user_id)
-    user.is_superuser = not user.is_superuser
-    user.save(update_fields=['is_superuser'])
-    return model_to_dict(user)
+    """ Switch a user to Admin or not Admin """
+
+    try:
+        user = AuthUser.objects.get(id=user_id)
+        user.is_superuser = not user.is_superuser
+        user.save(update_fields=['is_superuser'])
+        return model_to_dict(user)
+    except AuthUser.DoesNotExist:
+        return None
+
 
 def switch_inactive(user_id):
-    user = AuthUser.objects.get(id=user_id)
-    if user.is_active:
-        UserInactive.objects.create(user_id=user_id, inactive_date=datetime.now())
-    else:
-        UserInactive.objects.get(user_id=user_id).delete()
-    user.is_active = not user.is_active
-    user.save(update_fields=['is_active'])
-    return model_to_dict(user)
+    """ Switch a user to Active or Inactive """
+
+    try:
+        user = AuthUser.objects.get(id=user_id)
+        if user.is_active:
+            UserInactive.objects.create(user_id=user_id, inactive_date=datetime.now())
+        else:
+            UserInactive.objects.get(user_id=user_id).delete()
+        user.is_active = not user.is_active
+        user.save(update_fields=['is_active'])
+        return model_to_dict(user)
+    except AuthUser.DoesNotExist:
+        return None
+
+
+# Lab CRUD
+def get_labs():
+    """ Get all labs """
+
+    return [model_to_dict(lab) for lab in Lab.objects.all()]
+
+def get_lab(lab_id):
+    """ Find a lab by id """
+
+    try:
+        lab = Lab.objects.get(id=lab_id)
+        return lab
+    except Lab.DoesNotExist:
+        return None
+
+def delete_lab(lab_id):
+    """ Delete a lab """
+
+    try:
+        Lab.objects.get(id=lab_id).delete()
+        return {'lab_id': lab_id}
+    except Lab.DoesNotExist:
+        return None
+
+
 
 # Cert CRUD
-def get_certs(n=None):
-    return [model_to_dict(cert) for cert in Cert.objects.all().order_by('id')]
+def get_certs():
+    """ Get all certificates """
 
-def create_cert(name, expiry_in_years):
-    cert, created = Cert.objects.get_or_create(name=name, expiry_in_years=expiry_in_years)
-    if created:
+    return [model_to_dict(cert) for cert in Cert.objects.all()]
+
+def get_cert(cert_id):
+    """ Find a certificate by id """
+
+    try:
+        cert = Cert.objects.get(id=cert_id)
         return model_to_dict(cert)
-    else:
+    except Cert.DoesNotExist:
         return None
 
 def delete_cert(cert_id):
-    Cert.objects.get(id=cert_id).delete()
-    return {'cert_id': cert_id}
+    """ Delete a certificate """
 
-def get_cert(cert_id):
-    cert = Cert.objects.get(id=cert_id)
-    return model_to_dict(cert)
-
-# Lab CRUD
-def get_lab(lab_id):
-    lab = Lab.objects.get(id=lab_id)
-    return model_to_dict(lab)
-
-def get_labs(n=None):
-    return [model_to_dict(lab) for lab in Lab.objects.all().order_by('id')]
-
-def create_lab(name):
-    lab = Lab.objects.create(name=name)
-    return model_to_dict(lab)
-
-def delete_lab(lab_id):
-    Lab.objects.get(id=lab_id).delete()
-    return {'lab_id': lab_id}
-
-def update_lab(lab_id, name):
-    #print(lab_id, name)
-    lab = Lab.objects.get(id=lab_id)
-    lab.name = name
-    lab.save(update_fields=['name'])
-    return {'lab_id': lab_id}
+    try:
+        Cert.objects.get(id=cert_id).delete()
+        return {'cert_id': cert_id}
+    except:
+        return None
 
 
 # UserCert CRUD
@@ -132,11 +160,24 @@ def get_missing_certs(user_id):
     # Get the labs that the user is signed up for
     user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
     lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
+
     # From these labs determine which certs are missing or expired
     user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
     missing_user_certs = lab_certs.exclude(cert_id__in=user_cert_ids)
 
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
+
+def get_missing_certs2(user_id):
+    # Get the labs that the user is signed up for
+    user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
+    lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
+
+    # From these labs determine which certs are missing or expired
+    user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
+    missing_user_certs = lab_certs.exclude(cert_id__in=user_cert_ids)
+
+    return [missing_user_cert.cert for missing_user_cert in missing_user_certs]
+
 
 def get_expired_certs(user_id):
     user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
@@ -223,7 +264,8 @@ def get_missing_lab_certs(user_id, lab_id):
     return [model_to_dict(m) for m in missing]
 
 def create_user_lab(user_id, lab_id, role):
-    print("create_user_lab", user_id, lab_id, role)
+    """ Add a user to a lab """
+
     try:
         has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
         print(has_existed)
@@ -237,15 +279,22 @@ def create_user_lab(user_id, lab_id, role):
     return model_to_dict(user_lab)
 
 def delete_user_lab(user_id, lab_id):
+    """ Delete a user in a lab """
+
     UserLab.objects.get(user=user_id, lab=lab_id).delete()
     return {'user_id': user_id, 'lab_id': lab_id}
 
+
 # LabCert CRUD
 def get_lab_certs(lab_id, n=None):
+    """ Get all certificates in a lab """
+
     lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
     return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
 
 def create_lab_cert(lab_id, cert_id):
+    """ Add a certificate to a lab """
+
     lab_cert, created = LabCert.objects.get_or_create(lab_id=lab_id, cert_id=cert_id)
     if created:
         return model_to_dict(lab_cert)
@@ -253,10 +302,14 @@ def create_lab_cert(lab_id, cert_id):
         return None
 
 def delete_lab_cert(lab_id, cert_id):
+    """ Delete a certificate in a lab """
+
     LabCert.objects.get(lab=lab_id, cert=cert_id).delete()
     return {'lab_id': lab_id, 'cert_id': cert_id}
 
-# User CRUD
+
+
+"""
 def create_user(first_name, last_name, email, username):
     user = get_user_by_username(username)
     if user:
@@ -270,3 +323,32 @@ def create_user(first_name, last_name, email, username):
         password=make_password(''),
     )
     return model_to_dict(user_created)
+"""
+
+
+"""
+def create_lab(name):
+    lab = Lab.objects.create(name=name)
+    return model_to_dict(lab)
+"""
+
+
+"""
+def create_cert(name, expiry_in_years):
+    cert, created = Cert.objects.get_or_create(name=name, expiry_in_years=expiry_in_years)
+    if created:
+        return model_to_dict(cert)
+    else:
+        return None
+"""
+
+"""
+def update_lab(lab_id, name):
+    try:
+        lab = Lab.objects.get(id=lab_id)
+        lab.name = name
+        lab.save(update_fields=['name'])
+        return {'lab_id': lab_id}
+    except:
+        return None
+"""

@@ -4,77 +4,9 @@ from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
 from datetime import datetime
 import datetime as dt
 
-class LoginForm(forms.Form):
-    username = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={ 'placeholder': 'Enter your username' })
-    )
-    password = forms.CharField(
-        max_length=200,
-        widget=forms.PasswordInput(attrs={ 'placeholder': 'Enter your password' })
-    )
-
-class LabForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-    class Meta:
-        model = Lab
-        fields = ['name', 'redirect_url']
-        error_messages = {
-            'name': { 'required': 'Enter a valid name.' },
-        }
-
-    def clean_name(self):
-        data = self.cleaned_data['name'].strip()
-        if len(data) == 0:
-            raise forms.ValidationError('Enter a valid name.')
-        return data
-
-class CertForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-    class Meta:
-        model = Cert
-        fields = ['name', 'expiry_in_years', 'redirect_url']
-        help_texts = { 'expiry_in_years': '(0 means "NO Expiry Date")' }
-        error_messages = {
-            'name': { 'required': 'Enter a valid name.' },
-        }
-
-    def clean_name(self):
-        data = self.cleaned_data['name'].strip()
-        if len(data) == 0:
-            raise forms.ValidationError('Enter a valid name.')
-        return data
-
-class UserLabForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-    class Meta:
-        model = UserLab
-        fields = ['user', 'role', 'redirect_url']
-        labels = { 'user': 'CWL' }
-        widgets = { 'user': forms.TextInput() }
-
-class LabCertForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-    class Meta:
-        model = LabCert
-        fields = ['cert', 'redirect_url']
-
-class UserCertForm(forms.ModelForm):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-    date = datetime.now()
-    completion_date = forms.DateField(
-        initial=dt.date.today,
-        widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20))
-    )
-    class Meta:
-        model = UserCert
-        fields = ['user', 'cert', 'cert_file', 'redirect_url']
-        widgets = { 'user': forms.HiddenInput() }
-
-class DeleteUserCertForm(forms.Form):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-
 class UserForm(forms.ModelForm):
+    """ Create a new user """
+
     redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = AuthUser
@@ -91,31 +23,96 @@ class UserForm(forms.ModelForm):
             'username': forms.TextInput(attrs={'required': True}),
         }
 
-    def clean_first_name(self):
-        data = self.cleaned_data['first_name'].strip()
-        if len(data) == 0:
-            raise forms.ValidationError('Enter a valid first name.')
-        return data
+class LabForm(forms.ModelForm):
+    """ Create a new lab """
 
-    def clean_last_name(self):
-        data = self.cleaned_data['last_name'].strip()
-        if len(data) == 0:
-            raise forms.ValidationError('Enter a valid last name.')
-        return data
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = Lab
+        fields = ['name', 'redirect_url']
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
 
-    def clean_email(self):
-        data = self.cleaned_data['email'].strip()
-        if len(data) == 0:
-            raise forms.ValidationError('Enter a valid email address.')
-        return data
+class CertForm(forms.ModelForm):
+    """ Create a certificate """
 
-    def clean_username(self):
-        data = self.cleaned_data['username'].strip()
-        if len(data) == 0:
-            raise forms.ValidationError('Enter a valid username.')
-        return data
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = Cert
+        fields = ['name', 'expiry_in_years', 'redirect_url']
+        help_texts = { 'expiry_in_years': '(0 means "NO Expiry Date")' }
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
 
 
+class UserLabForm(forms.ModelForm):
+    """ Add a user to a lab """
+
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = UserLab
+        fields = ['user', 'role', 'redirect_url']
+        labels = { 'user': 'CWL' }
+        widgets = { 'user': forms.TextInput() }
+
+class LabCertForm(forms.ModelForm):
+    """ Add a certificate to a lab """
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = LabCert
+        fields = ['cert', 'redirect_url']
+
+class UserCertForm(forms.ModelForm):
+    """ Add user's certificate """
+
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    date = datetime.now()
+    completion_date = forms.DateField(
+        initial=dt.date.today,
+        widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20))
+    )
+    class Meta:
+        model = UserCert
+        fields = ['user', 'cert', 'cert_file', 'redirect_url']
+        widgets = { 'user': forms.HiddenInput() }
+
+    """
+    def __init__(self, user_cert, *args, **kwargs):
+        super(UserCertForm, self).__init__(*args, **kwargs)
+        print('UserCertForm')
+        print(user_cert)
+        print(args)
+        print(kwargs)
+        if args:
+            print("here")
+        if kwargs:
+            missing_certs = [ (cert.id, cert.name) for cert in self.initial['cert'] ]
+            self.fields['cert'] = forms.ChoiceField(choices=missing_certs)
+
+    def save(self, *args, **kwargs):
+        print("save")
+        print(self.instance)
+        #self.instance.user = self.user
+        #super(UserCertForm, self).save(*args, **kwargs)
+    """
+
+
+class DeleteUserCertForm(forms.Form):
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={ 'placeholder': 'Enter your username' })
+    )
+    password = forms.CharField(
+        max_length=200,
+        widget=forms.PasswordInput(attrs={ 'placeholder': 'Enter your password' })
+    )
 
 class SafetyWebForm(forms.Form):
     POSITION_CHOICES = (

@@ -14,9 +14,46 @@ from django.contrib.messages import constants as messages
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
+
+
+### Deployment checklist
+# > python manage.py check --deploy
+
+# DEBUG = False
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# SECURE_SSL_REDIRECT = True
+# X_FRAME_OPTIONS = 'DENY'
+
+## Environment variables
+# SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
+# DATABASE_ENGINE = os.environ['LFS_LAB_CERT_TRACKER_DB_ENGINE']
+# DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
+# USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
+# PASSWORD = os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD']
+# HOST = os.environ['LFS_LAB_CERT_TRACKER_DB_HOST']
+# PORT = os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
+# EMAIL_HOST = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
+# EMAIL_FROM = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
+
+## Environment variables for sending reminder emails
+# LFS_LAB_CERT_TRACKER_URL = os.environ['LFS_LAB_CERT_TRACKER_URL']
+# DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
+# USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
+# PASSWORD = os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD']
+# HOST = os.environ['LFS_LAB_CERT_TRACKER_DB_HOST']
+# PORT = os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
+# SMTP_SERVER = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
+# SENDER = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
+
+## Change media root
+# MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
+
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
@@ -25,6 +62,22 @@ SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
 DEBUG = os.environ['CERT_TRACKER_ENV'] != 'prod'
 
 ALLOWED_HOSTS = []
+
+# URLs
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
+SAML_LOGOUT_URL = 'https://authentication.stg.id.ubc.ca/idp/profile/Logout'
+
+# Saml configs
+SAML_FOLDER = os.path.join(BASE_DIR, 'saml')
+
+# Send email
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_FROM = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
 
 
 # Application definition
@@ -45,7 +98,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -145,26 +198,17 @@ LOGGING = {
 }
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.11/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# https://docs.djangoproject.com/en/2.2/howto/static-files/
+# https://devcenter.heroku.com/articles/django-assets
+# > python manage.py collectstatic --noinput
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-LOGIN_REDIRECT_URL = '/'
+
 
 MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
 MEDIA_URL = '/media/'
-
-# saml configs
-SAML_FOLDER = os.path.join(BASE_DIR, 'saml')
-
-# Send email
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_FROM = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
-
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-info',
