@@ -77,9 +77,8 @@ class CertModelTest(TestCase):
         cert = api.get_certs()[0]
         user = api.get_user_by_username('admin')
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf',completion_date="2019-07-03",expiry_date="2019-07-03")
-        print('JHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
-        print(api.get_user_certs(user.id))
-
+        userCert = api.get_user_certs(user.id)
+        self.assertEqual(userCert[0]['cert'], cert['id'])
 
 class LabsModelTest(TestCase):
     
