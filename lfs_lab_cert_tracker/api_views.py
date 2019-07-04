@@ -206,12 +206,11 @@ def user_certs(request, user_id=None):
 @require_http_methods(['POST'])
 def delete_user_certs(request, user_id=None, cert_id=None):
     res = api.delete_user_cert(user_id, cert_id)
-    if res['result']:
+    if res:
         cert = api.get_cert(cert_id)
         messages.success(request, 'Success! Deleted {0} successfully.'.format(cert['name']))
-
-    return JsonResponse(res)
-
+        return JsonResponse(res)
+    return None
 
 
 # Labs

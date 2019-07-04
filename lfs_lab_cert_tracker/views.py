@@ -83,8 +83,6 @@ def users(request):
 def user_details(request, user_id):
     """ Display user's details """
 
-    print("user_details")
-
     app_user = api.get_user(user_id)
     if app_user is None:
         raise PermissionDenied
@@ -123,13 +121,18 @@ def user_certs(request, user_id):
 
     loggedin_user_id = request.user.id
     redirect_url = '/users/%d/certificates/' % loggedin_user_id
+
     return render(request, 'lfs_lab_cert_tracker/user_certs.html', {
         'loggedin_user': request.user,
          'user_id': loggedin_user_id,
          'user_cert_list': api.get_user_certs(loggedin_user_id),
          'missing_cert_list': api.get_missing_certs(loggedin_user_id),
          'expired_cert_list': api.get_expired_certs(loggedin_user_id),
-         'user_cert_form': UserCertForm(initial={'user': loggedin_user_id, 'redirect_url': redirect_url})
+         'user_cert_form': UserCertForm(None, initial={
+            'user': loggedin_user_id,
+            'cert': api.get_missing_certs(loggedin_user_id),
+            'redirect_url': redirect_url
+        })
     })
 
 @login_required(login_url=settings.LOGIN_URL)
