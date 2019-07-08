@@ -39,51 +39,30 @@ def setUpUser(self):
     return api.get_user_by_username('bobjones2019')
 
 def setUpUser5(self):
-    newUser = urlencode({
-        'first_name': 'User1',
-        'last_name': 'Test1',
-        'email': 'test.user1@example.com',
-        'username': 'test.user1',
-        'redirect_url': '/users/',
-    })
-    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
-    newUser = urlencode({
-        'first_name': 'User2',
-        'last_name': 'Test2',
-        'email': 'test.user2@example.com',
-        'username': 'test.user2',
-        'redirect_url': '/users/',
-    })
-    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
-    newUser = urlencode({
-        'first_name': 'User3',
-        'last_name': 'Test3',
-        'email': 'test.user3@example.com',
-        'username': 'test.user3',
-        'redirect_url': '/users/',
-    })
-    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
-    newUser = urlencode({
-        'first_name': 'User4',
-        'last_name': 'Test4',
-        'email': 'test.user4@example.com',
-        'username': 'test.user4',
-        'redirect_url': '/users/',
-    })
-    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
-    newUser = urlencode({
-        'first_name': 'User5',
-        'last_name': 'Test5',
-        'email': 'test.user5@example.com',
-        'username': 'test.user5',
-        'redirect_url': '/users/',
-    })
-    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
-
+    for i in range(5):
+        firstname = 'test' + str(i)
+        lastname = 'user' + str(i)
+        username = firstname + '.' + lastname
+        email = username + '@example.com'
+        newUser = urlencode({
+            'first_name': firstname,
+            'last_name': lastname,
+            'email': email,
+            'username': username,
+            'redirect_url': '/users/',
+        })
+        self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+    
 
 def setUpCert(self):
     data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
     self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+
+def setUpCert5(self):
+    for i in range(5):
+        name = 'testing' + str(i)
+        data = urlencode({'name': name, 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
+        self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
 
 def setUpLab(self):
     lab = urlencode({'name': 'test', 'redirect_url': '/labs/'})
@@ -115,27 +94,27 @@ class UserModelTests(TestCase):
         self.assertGreater(len(users), 2)
 
     def testCreateNewAdmin(self):
-        user = api.get_user_by_username('test.user5')
+        user = api.get_user_by_username('test4.user4')
         response = self.client.post('/api/users/' + str(user.id) + '/switch_admin')
         self.assertEqual(response.status_code, 200)
-        user = api.get_user_by_username('test.user5')
+        user = api.get_user_by_username('test4.user4')
         self.assertEqual(user.is_superuser, True)
         
     def testDeleteUser(self):
-        user = api.get_user_by_username('test.user4')
+        user = api.get_user_by_username('test4.user4')
         data = urlencode({'redirect_url': '/users/'})
         response = self.client.post('/api/users/' + str(user.id) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
         self.assertEqual(response.status_code, 302)
-        user = api.get_user_by_username('test.user4')
+        user = api.get_user_by_username('test4.user4')
         self.assertIsNone(user)
 
     def testInactiveUser(self):
-        user = api.get_user_by_username('test.user5')
+        user = api.get_user_by_username('test4.user4')
         data = urlencode({'redirect_url': '/users/'})
         response = self.client.post('/api/users/' + str(user.id) + '/switch_inactive')
         self.assertEqual(response.status_code, 200)
-        user = api.get_user_by_username('test.user5')
-        self.assertEqual(user.is_active, True)
+        user = api.get_user_by_username('test4.user4')
+        self.assertEqual(user.is_active, False)
 
 
     # def testRegUserPermission(self):
@@ -156,6 +135,7 @@ class CertModelTest(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         setUpCert(self)
+        setUpCert5(self)
         setUpUser5(self)
 
     def testAddCert(self):
@@ -164,11 +144,13 @@ class CertModelTest(TestCase):
         self.assertEqual(cert['expiry_in_years'], 0)
 
     def testDeleteCert(self):
-        cert = api.get_certs()[0]
+        certs = api.get_certs()
+        cert = certs[0]
+        certNumber = len(certs)
         response = self.client.post('/api/certificates/' + str(cert['id']) + '/delete')
         self.assertEqual(response.status_code, 200)
         certs = api.get_certs()
-        self.assertEqual(certs, [])
+        self.assertEqual(len(certs), certNumber - 1)
 
     def testAddCertToUser(self):
         cert = api.get_certs()[0]
@@ -176,6 +158,15 @@ class CertModelTest(TestCase):
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
         userCert = api.get_user_certs(user.id)
         self.assertEqual(userCert[0]['cert'], cert['id'])
+
+    def testAdd2CertToUser(self):
+        cert1 = api.get_certs()[0]
+        cert2 = api.get_certs()[1]
+        user = api.get_user_by_username('admin')
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert1['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert2['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
+        userCert = api.get_user_certs(user.id)
+        self.assertEqual(len(userCert),2)
 
     def testAddCertToLab(self):
         setUpLab(self)
@@ -195,6 +186,19 @@ class CertModelTest(TestCase):
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2017-07-03",expiry_date="2018-07-03")
         expiredCerts = api.get_expired_certs(user.id)
         self.assertEqual(expiredCerts[0]['name'], 'testexpire')
+
+    def test2Certs1Expired(self):
+        data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
+        self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+        certexpired = list(filter(lambda x: x['name'] == 'testexpire', api.get_certs()))[0]
+        cert = list(filter(lambda x: x['name'] != 'testexpire', api.get_certs()))[0]
+        user = api.get_user_by_username('admin')
+        api.update_or_create_user_cert(user_id=user.id,cert_id=certexpired['id'],cert_file='testCert.pdf', completion_date="2017-07-03",expiry_date="2018-07-03")
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2018-07-03",expiry_date="2018-07-03")
+        expiredCerts = api.get_expired_certs(user.id)
+        certsAll = api.get_user_certs(user.id)
+        self.assertEqual(expiredCerts[0]['name'], 'testexpire')
+        self.assertEqual(len(certsAll), 2)
 
 class LabsModelTest(TestCase):
     
@@ -241,6 +245,20 @@ class LabsModelTest(TestCase):
         userLabs = api.get_user_labs(user.id,is_principal_investigator=True)
         self.assertEqual(userLabs[0]['name'], 'test')
 
+    def testAddPIandUserToLab(self):
+        userPI = setUpUser(self)
+        lab = api.get_labs()[0]
+        data = urlencode({'user': userPI.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        user = setUpUser(self)
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        userLabsPI = api.get_user_labs(userPI.id,is_principal_investigator=True)
+        self.assertEqual(userLabsPI[0]['name'], 'test')
+        userLabs = api.get_user_labs(user.id)
+        self.assertEqual(userLabs[0]['name'], 'test')
+
     def testRemoveUserFromLab(self):
         user = setUpUser(self)
         lab = api.get_labs()[0]
@@ -259,6 +277,7 @@ class UserLabCertModelTest(TestCase):
         setUpUser(self)
         setUpUser5(self)
         setUpCert(self)
+        setUpCert5(self)
         setUpLab(self)
 
     def testUserMissingCerts(self):
@@ -284,3 +303,18 @@ class UserLabCertModelTest(TestCase):
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
         missingCerts = api.get_missing_lab_certs(user.id, lab['id'])
         self.assertEqual(len(missingCerts), 0)
+
+    def testUserMissingOneCert(self):
+        user = api.get_user_by_username('bobjones2019')
+        cert1 = api.get_certs()[0]
+        cert2 = api.get_certs()[1]
+        lab = api.get_labs()[0]
+        data = urlencode({'cert': cert1['id'], 'redirect_url': '/labs/'})
+        self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'cert': cert2['id'], 'redirect_url': '/labs/'})
+        self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '/users'})
+        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert1['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
+        missingCerts = api.get_missing_lab_certs(user.id, lab['id'])
+        self.assertEqual(missingCerts[0]['name'], cert2['name'])
