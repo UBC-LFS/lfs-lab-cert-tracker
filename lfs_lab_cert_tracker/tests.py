@@ -38,6 +38,49 @@ def setUpUser(self):
     self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
     return api.get_user_by_username('bobjones2019')
 
+def setUpUser5(self):
+    newUser = urlencode({
+        'first_name': 'User1',
+        'last_name': 'Test1',
+        'email': 'test.user1@example.com',
+        'username': 'test.user1',
+        'redirect_url': '/users/',
+    })
+    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+    newUser = urlencode({
+        'first_name': 'User2',
+        'last_name': 'Test2',
+        'email': 'test.user2@example.com',
+        'username': 'test.user2',
+        'redirect_url': '/users/',
+    })
+    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+    newUser = urlencode({
+        'first_name': 'User3',
+        'last_name': 'Test3',
+        'email': 'test.user3@example.com',
+        'username': 'test.user3',
+        'redirect_url': '/users/',
+    })
+    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+    newUser = urlencode({
+        'first_name': 'User4',
+        'last_name': 'Test4',
+        'email': 'test.user4@example.com',
+        'username': 'test.user4',
+        'redirect_url': '/users/',
+    })
+    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+    newUser = urlencode({
+        'first_name': 'User5',
+        'last_name': 'Test5',
+        'email': 'test.user5@example.com',
+        'username': 'test.user5',
+        'redirect_url': '/users/',
+    })
+    self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
+
+
 def setUpCert(self):
     data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
     self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
@@ -51,6 +94,7 @@ class UserModelTests(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         setUpUser(self)
+        setUpUser5(self)
     
     def testLoginAdmin(self):
         user = api.get_user_by_username("admin")
@@ -65,6 +109,34 @@ class UserModelTests(TestCase):
         self.assertEqual(user.last_name, 'Jones')
         self.assertEqual(user.email, 'bobjones@example.com')
         self.assertEqual(user.username, 'bobjones2019')
+
+    def testAdd5MoreUsers(self):
+        users = api.get_users()
+        self.assertGreater(len(users), 2)
+
+    def testCreateNewAdmin(self):
+        user = api.get_user_by_username('test.user5')
+        response = self.client.post('/api/users/' + str(user.id) + '/switch_admin')
+        self.assertEqual(response.status_code, 200)
+        user = api.get_user_by_username('test.user5')
+        self.assertEqual(user.is_superuser, True)
+        
+    def testDeleteUser(self):
+        user = api.get_user_by_username('test.user4')
+        data = urlencode({'redirect_url': '/users/'})
+        response = self.client.post('/api/users/' + str(user.id) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(response.status_code, 302)
+        user = api.get_user_by_username('test.user4')
+        self.assertIsNone(user)
+
+    def testInactiveUser(self):
+        user = api.get_user_by_username('test.user5')
+        data = urlencode({'redirect_url': '/users/'})
+        response = self.client.post('/api/users/' + str(user.id) + '/switch_inactive')
+        self.assertEqual(response.status_code, 200)
+        user = api.get_user_by_username('test.user5')
+        self.assertEqual(user.is_active, True)
+
 
     # def testRegUserPermission(self):
     #     user = api.get_user_by_username('bobjones2019')
@@ -84,6 +156,7 @@ class CertModelTest(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         setUpCert(self)
+        setUpUser5(self)
 
     def testAddCert(self):
         cert = api.get_certs()[0]
@@ -128,6 +201,7 @@ class LabsModelTest(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         setUpLab(self)
+        setUpUser5(self)
 
     def testAddLabs(self):
         lab = api.get_labs()[0]
@@ -183,6 +257,7 @@ class UserLabCertModelTest(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         setUpUser(self)
+        setUpUser5(self)
         setUpCert(self)
         setUpLab(self)
 
@@ -190,7 +265,7 @@ class UserLabCertModelTest(TestCase):
         user = api.get_user_by_username('bobjones2019')
         cert = api.get_certs()[0]
         lab = api.get_labs()[0]
-        data = urlencode({'cert': cert['id'], 'redirect_url': ['']})
+        data = urlencode({'cert': cert['id'], 'redirect_url': '/labs/'})
         self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
         data = urlencode({'redirect_url': ''})
         response = self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
@@ -202,7 +277,7 @@ class UserLabCertModelTest(TestCase):
         user = api.get_user_by_username('bobjones2019')
         cert = api.get_certs()[0]
         lab = api.get_labs()[0]
-        data = urlencode({'cert': cert['id'], 'redirect_url': ['']})
+        data = urlencode({'cert': cert['id'], 'redirect_url': '/labs/'})
         self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
         data = urlencode({'redirect_url': ''})
         self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
