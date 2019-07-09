@@ -68,6 +68,12 @@ def setUpLab(self):
     lab = urlencode({'name': 'test', 'redirect_url': '/labs/'})
     self.client.post('/api/labs/',content_type="application/x-www-form-urlencoded", data=lab)
 
+def setUpLab5(self):
+    for i in range(5):
+        name = 'testLab' + str(i)
+        lab = urlencode({'name': name, 'redirect_url': '/labs/'})
+        self.client.post('/api/labs/',content_type="application/x-www-form-urlencoded", data=lab)
+
 class UserModelTests(TestCase):
 
     def setUp(self):
@@ -205,6 +211,7 @@ class LabsModelTest(TestCase):
     def setUp(self):
         setUpAdminLogin(self)
         setUpLab(self)
+        setUpLab5(self)
         setUpUser5(self)
 
     def testAddLabs(self):
@@ -220,12 +227,13 @@ class LabsModelTest(TestCase):
         self.assertEqual(lab['name'], 'new test name')
     
     def testDeleteLabs(self):
+        ogLabNum = len(api.get_labs())
         lab = api.get_labs()[0]
         deleteForm = urlencode({'redirect_url': '/labs/'})
         response = self.client.post('/api/labs/' + str(lab['id']) + '/delete', data=deleteForm, content_type="application/x-www-form-urlencoded")
         self.assertEqual(response.status_code, 302)
         labs = api.get_labs()
-        self.assertEqual(len(labs), 0)
+        self.assertEqual(len(labs), ogLabNum-1)
 
     def testAddUserToLab(self):
         user = setUpUser(self)
@@ -235,6 +243,16 @@ class LabsModelTest(TestCase):
         self.assertEqual(response.status_code, 302)
         userLabs = api.get_user_labs(user.id)
         self.assertEqual(userLabs[0]['name'], 'test')
+
+    def testAddUserTo2Labs(self):
+        user = setUpUser(self)
+        lab1 = api.get_labs()[0]
+        lab2 = api.get_labs()[1]
+        data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab1['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        self.client.post('/api/labs/' + str(lab2['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        userLabs = api.get_user_labs(user.id)
+        self.assertEqual(len(userLabs), 2)
     
     def testAddPIToLab(self):
         user = setUpUser(self)
@@ -279,6 +297,7 @@ class UserLabCertModelTest(TestCase):
         setUpCert(self)
         setUpCert5(self)
         setUpLab(self)
+        setUpLab5(self)
 
     def testUserMissingCerts(self):
         user = api.get_user_by_username('bobjones2019')
@@ -286,8 +305,8 @@ class UserLabCertModelTest(TestCase):
         lab = api.get_labs()[0]
         data = urlencode({'cert': cert['id'], 'redirect_url': '/labs/'})
         self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
-        data = urlencode({'redirect_url': ''})
-        response = self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '', 'user': user.username, 'role': 0})
+        response = self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         self.assertEqual(response.status_code, 302)
         missingCerts = api.get_missing_lab_certs(user.id, lab['id'])
         self.assertEqual(missingCerts[0]['name'], 'testing')
@@ -298,8 +317,8 @@ class UserLabCertModelTest(TestCase):
         lab = api.get_labs()[0]
         data = urlencode({'cert': cert['id'], 'redirect_url': '/labs/'})
         self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
-        data = urlencode({'redirect_url': ''})
-        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '', 'user': user.username, 'role': 0})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
         missingCerts = api.get_missing_lab_certs(user.id, lab['id'])
         self.assertEqual(len(missingCerts), 0)
@@ -313,8 +332,25 @@ class UserLabCertModelTest(TestCase):
         self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
         data = urlencode({'cert': cert2['id'], 'redirect_url': '/labs/'})
         self.client.post('/api/labs/' + str(lab['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
-        data = urlencode({'redirect_url': '/users'})
-        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '/users', 'user': user.username, 'role': 0})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert1['id'],cert_file='testCert.pdf', completion_date="2019-07-03",expiry_date="2019-07-03")
         missingCerts = api.get_missing_lab_certs(user.id, lab['id'])
         self.assertEqual(missingCerts[0]['name'], cert2['name'])
+
+    def testUserMissing2CertsFrom2Labs(self):
+        user = api.get_user_by_username('bobjones2019')
+        cert1 = api.get_certs()[0]
+        cert2 = api.get_certs()[1]
+        lab1 = api.get_labs()[0]
+        lab2 = api.get_labs()[1]
+        data = urlencode({'cert': cert1['id'], 'redirect_url': '/labs/'})
+        self.client.post('/api/labs/' + str(lab1['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'cert': cert2['id'], 'redirect_url': '/labs/'})
+        self.client.post('/api/labs/' + str(lab2['id']) + '/certificates/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '/users', 'user': user.username, 'role': 0})
+        self.client.post('/api/labs/' + str(lab1['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '/users', 'user': user.username, 'role': 0})
+        self.client.post('/api/labs/' + str(lab2['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        missingCerts = api.get_missing_certs(user.id)
+        self.assertEqual(len(missingCerts), 2)
