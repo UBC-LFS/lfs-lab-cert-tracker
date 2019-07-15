@@ -6,6 +6,8 @@ from urllib.parse import urlencode
 from django.contrib.auth.models import User as AuthUser
 from django.contrib.auth.hashers import make_password
 from django.forms.models import model_to_dict
+from django.core import mail
+import datetime
 
 def create_user(first_name, last_name, email, username):
     user = api.get_user_by_username(username)
@@ -206,6 +208,17 @@ class CertModelTest(TestCase):
         self.assertEqual(expiredCerts[0]['name'], 'testexpire')
         self.assertEqual(len(certsAll), 2)
 
+    # def testEmailCertAboutToExpire(self):
+    #     data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
+    #     self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+    #     cert = list(filter(lambda x: x['name'] == 'testexpire', api.get_certs()))[0]
+    #     user = api.get_user_by_username('admin')
+    #     expiresoon = datetime.date.today() - datetime.timedelta(days=31)
+    #     api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2017-07-03",expiry_date=expiresoon)
+    #     send_email_30days_before(user, cert, user, 'before')
+    #     print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+    #     print(mail.outbox)
+
 class LabsModelTest(TestCase):
     
     def setUp(self):
@@ -307,9 +320,13 @@ class LabsModelTest(TestCase):
         data = urlencode({'user': user2.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
         self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         usersLab = api.get_users_in_lab(lab['id'])
-        print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHh')
-        print(usersLab)
 
+    def testEmailFromLab(self):
+        user = api.get_user_by_username('admin')
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        self.assertEqual(len(mail.outbox), 1)
 
 class UserLabCertModelTest(TestCase):
     
