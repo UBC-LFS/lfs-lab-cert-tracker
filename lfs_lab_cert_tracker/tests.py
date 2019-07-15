@@ -288,6 +288,29 @@ class LabsModelTest(TestCase):
         userLabs = api.get_user_labs(user.id)
         self.assertEqual(len(userLabs), 0)
 
+    def testRemovePIFromLab(self):
+        user = setUpUser(self)
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': ''})
+        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        userLabs = api.get_user_labs(user.id)
+        self.assertEqual(len(userLabs), 0)
+
+    def testAdd2PIToLab(self):
+        user1 = setUpUser(self)
+        user2 = api.get_user_by_username('admin')
+        lab = api.get_labs()[0]
+        data = urlencode({'user': user1.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'user': user2.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
+        self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
+        usersLab = api.get_users_in_lab(lab['id'])
+        print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHh')
+        print(usersLab)
+
+
 class UserLabCertModelTest(TestCase):
     
     def setUp(self):
