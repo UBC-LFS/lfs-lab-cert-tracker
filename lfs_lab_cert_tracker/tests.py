@@ -8,6 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.forms.models import model_to_dict
 from django.core import mail
 import datetime
+import subprocess
 
 def create_user(first_name, last_name, email, username):
     user = api.get_user_by_username(username)
@@ -208,16 +209,17 @@ class CertModelTest(TestCase):
         self.assertEqual(expiredCerts[0]['name'], 'testexpire')
         self.assertEqual(len(certsAll), 2)
 
-    # def testEmailCertAboutToExpire(self):
-    #     data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
-    #     self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
-    #     cert = list(filter(lambda x: x['name'] == 'testexpire', api.get_certs()))[0]
-    #     user = api.get_user_by_username('admin')
-    #     expiresoon = datetime.date.today() - datetime.timedelta(days=31)
-    #     api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2017-07-03",expiry_date=expiresoon)
-    #     send_email_30days_before(user, cert, user, 'before')
-    #     print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
-    #     print(mail.outbox)
+    def testEmailCertAboutToExpire(self):
+        data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
+        self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+        cert = list(filter(lambda x: x['name'] == 'testexpire', api.get_certs()))[0]
+        user = api.get_user_by_username('admin')
+        expiresoon = datetime.date.today() - datetime.timedelta(days=25)
+        expiresoonstart = expiresoon - datetime.timedelta(days=365)
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date=str(expiresoonstart),expiry_date=str(expiresoon))
+        subprocess.call('python email_notification/send_email_before_expiry_date.py', shell=True)
+        print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+        print(mail.outbox)
 
 class LabsModelTest(TestCase):
     
