@@ -380,18 +380,3 @@ def get_error_messages(errors):
         value = errors[key]
         messages += value[0]['message'] + ' '
     return messages.strip()
-
-
-# to be removed
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@user_or_admin
-@handle_redirect
-@require_http_methods(['POST'])
-def update_user_certs(request, user_id=None, cert_id=None):
-    data = request.POST
-    #print(data, user_id, cert_id)
-    #res = api.delete_user_cert(user_id, cert_id)
-    #logger.info("%s: Deleted user cert %s" % (request.user, res))
-    return JsonResponse(res)

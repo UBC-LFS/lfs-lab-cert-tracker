@@ -15,6 +15,7 @@ def find_users_by_days(users, target_day):
 
     lab_users = []
     pis = {}
+
     for id, user in users.items():
         if user['has_expiry_cert'] == True:
             lab_user = { 'id': user['id'], 'certs': set() }

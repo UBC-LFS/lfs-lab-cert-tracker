@@ -78,27 +78,6 @@ class UserCertForm(forms.ModelForm):
         fields = ['user', 'cert', 'cert_file', 'redirect_url']
         widgets = { 'user': forms.HiddenInput() }
 
-    """
-    def __init__(self, user_cert, *args, **kwargs):
-        super(UserCertForm, self).__init__(*args, **kwargs)
-        print('UserCertForm')
-        print(user_cert)
-        print(args)
-        print(kwargs)
-        if args:
-            print("here")
-        if kwargs:
-            missing_certs = [ (cert.id, cert.name) for cert in self.initial['cert'] ]
-            self.fields['cert'] = forms.ChoiceField(choices=missing_certs)
-
-    def save(self, *args, **kwargs):
-        print("save")
-        print(self.instance)
-        #self.instance.user = self.user
-        #super(UserCertForm, self).save(*args, **kwargs)
-    """
-
-
 class DeleteUserCertForm(forms.Form):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
 
