@@ -3,12 +3,12 @@
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 1,
     "fields": {
-      "expiry_date": "2014-07-10",
+      "expiry_date": "2014-08-15",
       "cert_id": 1,
       "user_id": 13,
       "cert_file": "users/13/certificates/1/New_Young_Worker_Safety_Orientation_Certificate.pdf",
       "uploaded_date": "2018-06-10",
-      "completion_date": "2014-07-10"
+      "completion_date": "2014-08-15"
     }
   },
   {
@@ -87,24 +87,24 @@
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 8,
     "fields": {
-      "expiry_date": "2019-06-27",
+      "expiry_date": "2019-08-15",
       "cert_id": 20,
       "user_id": 14,
       "cert_file": "users/14/certificates/20/certificate_3.jpg",
       "uploaded_date": "2018-06-10",
-      "completion_date": "2014-06-27"
+      "completion_date": "2014-08-15"
     }
   },
   {
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 9,
     "fields": {
-      "expiry_date": "2019-06-12",
+      "expiry_date": "2019-08-15",
       "cert_id": 23,
       "user_id": 14,
       "cert_file": "users/14/certificates/23/certificate_2.jpg",
       "uploaded_date": "2018-06-10",
-      "completion_date": "2017-06-12"
+      "completion_date": "2017-08-15"
     }
   },
   {

@@ -102,7 +102,7 @@
 			<tr>
 				<td>{{ forloop.counter }}</td>
 				<td>
-					<a href="/users/{{ user_missing_certs.0.id}}">
+					<a href="/users/{{ user_missing_certs.0.id }}">
 						{{ user_missing_certs.0.username }}
 					</a>
 				</td>
@@ -120,6 +120,43 @@
 {% else %}
 	<div>There are no users missing certificates in this lab.</div>
 {% endif %}
+
+
+<h5 class="title">Users Expired Certs</h5>
+{% if users_expired_certs %}
+	<table class="table table-striped table-hover table-responsive-md table-sm">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>CWL</th>
+				<th>Missing</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for user_expired_certs in users_expired_certs %}
+			<tr>
+				<td>{{ forloop.counter }}</td>
+				<td>
+					<a href="/users/{{ user_expired_certs.user.id }}">
+						{{ user_expired_certs.user.username }}
+					</a>
+				</td>
+				<td>
+					<ul>
+						{% for expired_cert in user_expired_certs.expired_certs %}
+							<li>{{ expired_cert.name }}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+{% else %}
+	<div>There are no users expired certificates in this lab.</div>
+{% endif %}
+
+
 
 {% if can_edit_user_lab %}
 <h5 class="title">Add User to Lab</h5>
