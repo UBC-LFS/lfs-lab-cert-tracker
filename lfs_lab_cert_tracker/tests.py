@@ -231,18 +231,6 @@ class CertModelTest(TestCase):
         self.assertEqual(expiredCerts[0]['name'], 'testexpire')
         self.assertEqual(len(certsAll), 2)
 
-    # def testEmailCertAboutToExpire(self):
-    #     data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
-    #     self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
-    #     cert = list(filter(lambda x: x['name'] == 'testexpire', api.get_certs()))[0]
-    #     user = api.get_user_by_username('admin')
-    #     expiresoon = datetime.date.today() - datetime.timedelta(days=25)
-    #     expiresoonstart = expiresoon - datetime.timedelta(days=365)
-    #     api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date=str(expiresoonstart),expiry_date=str(expiresoon))
-    #     subprocess.call('python email_notification/send_email_before_expiry_date.py', shell=True)
-    #     print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
-    #     print(mail.outbox)
-
 class LabsModelTest(TestCase):
     
     def setUp(self):
@@ -418,3 +406,16 @@ class UserLabCertModelTest(TestCase):
         self.client.post('/api/labs/' + str(lab2['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         missingCerts = api.get_missing_certs(user.id)
         self.assertEqual(len(missingCerts), 2)
+
+    def testEmailCertAboutToExpire(self):
+        data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
+        self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
+        cert = list(filter(lambda x: x['name'] == 'testexpire', api.get_certs()))[0]
+        user = api.get_user_by_username('admin')
+        expiresoon = datetime.date.today() + datetime.timedelta(days=30)
+        expiresoonstart = expiresoon - datetime.timedelta(days=365)
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date=str(expiresoonstart),expiry_date=str(expiresoon))
+        subprocess.call('python email_notification/send_email_before_expiry_date.py', shell=True)
+        print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+        print(api.get_user_certs(user.id))
+        print(mail.outbox)
