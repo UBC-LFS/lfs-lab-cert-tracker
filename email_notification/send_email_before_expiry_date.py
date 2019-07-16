@@ -15,6 +15,7 @@ def find_users_by_days(users, target_day):
 
     lab_users = []
     pis = {}
+
     for id, user in users.items():
         if user['has_expiry_cert'] == True:
             lab_user = { 'id': user['id'], 'certs': set() }
@@ -53,6 +54,7 @@ def find_users_by_type(users, type):
 def send_email_30days_before(users, certs, type):
     """ Send an email to lab users and PIs 1 month before the expiry date """
 
+    print("send_email_30days_before")
     lab_users, pis = find_users_by_type(users, 1)
     if len(lab_users) > 0:
         send_email_to_lab_users(users, certs, lab_users, DAYS30, type)
@@ -64,6 +66,7 @@ def send_email_30days_before(users, certs, type):
 def send_email_14days_before(users, certs, admin, type):
     """ Send an email to administrators 2 weeks before the expiry date """
 
+    print("send_email_14days_before")
     lab_users, pis, = find_users_by_type(users, 2)
     if len(lab_users) > 0 and len(admin) > 0:
         send_email_to_admin(users, certs, admin, lab_users, DAYS14, type)

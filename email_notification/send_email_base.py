@@ -140,6 +140,7 @@ def send_email_to_lab_users(users, certs, lab_users, days, type):
         if len(user['certs']) > 0:
             receiver, message = get_email_info(users, certs, days, 'lab_user', user, type)
             send_email(receiver, message)
+            print( "Lab User: Sent it to {0}".format(receiver) )
 
 
 def send_email_to_pis(users, certs, pis, days, type):
@@ -150,6 +151,7 @@ def send_email_to_pis(users, certs, pis, days, type):
             info = { 'id': id, 'lab_users': lab_users  }
             receiver, message = get_email_info(users, certs, days, 'pi', info, type)
             send_email(receiver, message)
+            print( "PI: Sent it to {0}".format(receiver) )
 
 
 def send_email_to_admin(users, certs, admin, lab_users, days, type):
@@ -159,3 +161,4 @@ def send_email_to_admin(users, certs, admin, lab_users, days, type):
         info = { 'id': admin_id, 'lab_users': lab_users }
         receiver, message = get_email_info(users, certs, days, 'admin', info, type)
         send_email(receiver, message)
+        print( "Admin: Sent it to {0}".format(receiver) )
