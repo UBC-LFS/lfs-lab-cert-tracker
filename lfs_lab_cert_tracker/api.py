@@ -284,7 +284,6 @@ def create_user_lab(user_id, lab_id, role):
 
     try:
         has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
-        print(has_existed)
     except UserLab.DoesNotExist:
         has_existed = None
 

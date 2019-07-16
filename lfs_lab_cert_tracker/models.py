@@ -9,6 +9,8 @@ from io import BytesIO
 import sys
 from PIL import Image as PILImage
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 
 """
@@ -134,7 +136,17 @@ LFS Cert Tracker
             obj.lab.name,
             os.environ['LFS_LAB_CERT_TRACKER_URL']
         )
-        send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False)
+
+        valid_email = False
+        try:
+            validate_email(obj.user.email)
+            valid_email = True
+        except ValidationError as e:
+            print(e)
+
+        if valid_email:
+            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False)
+
 
 post_save.connect(send_notification, sender=UserLab)
 
@@ -155,6 +167,6 @@ class LabCert(models.Model):
 
 class UserInactive(models.Model):
     """ Update date when a user become inactive """
-    
+
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     inactive_date = models.DateField(null=True)
