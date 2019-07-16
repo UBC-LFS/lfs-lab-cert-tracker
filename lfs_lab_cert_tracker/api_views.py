@@ -11,6 +11,8 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.forms.models import model_to_dict
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from lfs_lab_cert_tracker.forms import UserForm, UserCertForm, CertForm, LabForm, UserLabForm, LabCertForm
 from lfs_lab_cert_tracker import api
@@ -132,7 +134,19 @@ def user_labs(request, lab_id=None):
     if user:
         res = api.create_user_lab(user.id, lab_id, data['role'])
         if res:
-            messages.success(request, 'Success! Added {0} successfully.'.format(data['user']))
+            valid_email = False
+            valid_email_errors = []
+            try:
+                validate_email(user.email)
+                valid_email = True
+            except ValidationError as e:
+                 valid_email_errors = e
+
+            if valid_email:
+                messages.success(request, 'Success! Added {0} successfully.'.format(data['user']))
+            else:
+                messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
+
             logger.info("%s: Created user lab %s" % (request.user, res))
             return JsonResponse(res)
         else:
