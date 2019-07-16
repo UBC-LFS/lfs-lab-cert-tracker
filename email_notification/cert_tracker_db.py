@@ -44,6 +44,7 @@ class CertTrackerDatabase:
                 first_name = row[5]
                 last_name = row[6]
                 email = row[7]
+                is_active = row[9]
                 user = {
                     'id': id,
                     'is_superuser': is_superuser,
@@ -130,7 +131,7 @@ class CertTrackerDatabase:
         userlabs = self.get_all_userlabs()
         usercerts = self.get_all_usercerts()
         all_certs = copy.deepcopy(certs)
-        
+
         # Add cert info to each lab
         for labcert in labcerts:
             lab = labs[ labcert['lab_id'] ]
@@ -139,14 +140,14 @@ class CertTrackerDatabase:
 
         # Add lab info to each user
         for userlab in userlabs:
-            role = userlab['role']
-            lab = labs[ userlab['lab_id'] ]
-            user = users[ userlab['user_id'] ]
+            if userlab['user_id'] in users.keys():
+                role = userlab['role']
+                lab = labs[ userlab['lab_id'] ]
+                user = users[ userlab['user_id'] ]
 
-            if role == 1:
-                lab['pis'].add(userlab['user_id'])
-
-            user['labs'].append(lab)
+                if role == 1:
+                    lab['pis'].add(userlab['user_id'])
+                user['labs'].append(lab)
 
         # Add cert info to each user's lab
         for usercert in usercerts:
@@ -155,20 +156,21 @@ class CertTrackerDatabase:
             expiry_date = usercert['expiry_date']
             completion_date = usercert['completion_date']
 
-            # Important!
-            # Each lab should be updated by user_id for certificates
-            labs = copy.deepcopy(users[user_id]['labs'])
+            if user_id in users.keys():
+                # Important!
+                # Each lab should be updated by user_id for certificates
+                labs = copy.deepcopy(users[user_id]['labs'])
 
-            for lab in labs:
-                certs = lab['certs']
-                for cert in certs:
-                    if cert_id == cert['id']:
-                        cert['expiry_date'] = expiry_date
-                        cert['completion_date'] = completion_date
-                        if users[user_id]['has_expiry_cert'] == False:
-                            users[user_id]['has_expiry_cert'] = expiry_date != completion_date
+                for lab in labs:
+                    certs = lab['certs']
+                    for cert in certs:
+                        if cert_id == cert['id']:
+                            cert['expiry_date'] = expiry_date
+                            cert['completion_date'] = completion_date
+                            if users[user_id]['has_expiry_cert'] == False:
+                                users[user_id]['has_expiry_cert'] = expiry_date != completion_date
 
-            users[user_id]['labs'] = labs
+                users[user_id]['labs'] = labs
 
         return users, all_certs
 

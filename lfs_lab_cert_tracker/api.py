@@ -223,12 +223,39 @@ def get_users_missing_certs(lab_id):
     Given a lab returns users that are missing certs and the certs they are missing
     """
     lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
+
     users_missing_certs = []
     for lab_user in lab_users:
         missing_lab_certs = get_missing_lab_certs(lab_user.user_id, lab_id)
         if missing_lab_certs:
             users_missing_certs.append((lab_user, missing_lab_certs))
+
     return [(model_to_dict(user_missing_certs.user), missing_lab_cert) for user_missing_certs, missing_lab_cert in users_missing_certs]
+
+def get_users_expired_certs(lab_id):
+    lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
+
+    users_expired_certs = []
+    for lab_user in lab_users:
+        user_certs = UserCert.objects.filter(user=lab_user.user_id).prefetch_related('cert')
+        required_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
+
+        user_cert_ids = set(user_certs.values_list('cert_id', flat=True))
+        required_cert_ids = set(required_certs.values_list('cert_id', flat=True))
+
+        expired_certs = []
+        for uc in user_certs:
+            if uc.cert.id in required_cert_ids and is_user_cert_expired(uc):
+                expired_certs.append(uc.cert)
+
+        if len(expired_certs) > 0:
+            users_expired_certs.append({
+                'user': lab_user.user,
+                'expired_certs': expired_certs
+            })
+
+    return users_expired_certs
+
 
 def is_user_cert_expired(cert):
     now = datetime.now().date()
@@ -246,9 +273,9 @@ def get_missing_lab_certs(user_id, lab_id):
         if rc.cert.id not in user_cert_ids:
             missing.append(rc.cert)
 
-    for uc in user_certs:
-        if uc.cert.id in required_cert_ids and is_user_cert_expired(uc):
-            missing.append(uc.cert)
+    #for uc in user_certs:
+    #    if uc.cert.id in required_cert_ids and is_user_cert_expired(uc):
+    #        expiried.append(uc.cert)
 
     return [model_to_dict(m) for m in missing]
 

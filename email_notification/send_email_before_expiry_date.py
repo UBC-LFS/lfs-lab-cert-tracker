@@ -42,11 +42,13 @@ def find_users_by_type(users, type):
 
     if type == 1:
         target_day = datetime.now() + timedelta(days=DAYS30)
+        print("target_day: ", target_day)
         lab_users, pis = find_users_by_days( users, target_day.date() )
         return lab_users, pis
 
     elif type == 2:
         target_day = datetime.now() + timedelta(days=DAYS14)
+        print("target_day: ", target_day)
         lab_users, pis = find_users_by_days( users, target_day.date() )
         return lab_users, None
 

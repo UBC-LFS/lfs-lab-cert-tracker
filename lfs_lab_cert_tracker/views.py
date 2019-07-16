@@ -242,6 +242,9 @@ def lab_details(request, lab_id):
         raise PermissionDenied
 
     users_in_lab = api.get_users_in_lab(lab_id)
+    #print( users_in_lab )
+
+    #print( api.get_users_missing_certs(lab_id) )
     for user in users_in_lab:
         if auth_utils.is_principal_investigator(user['id'], lab_id):
             user['isPI'] = True
@@ -255,6 +258,7 @@ def lab_details(request, lab_id):
         'lab': api.get_lab(lab_id),
         'users_in_lab': users_in_lab,
         'users_missing_certs': api.get_users_missing_certs(lab_id),
+        'users_expired_certs': api.get_users_expired_certs(lab_id),
         'required_certs': api.get_lab_certs(lab_id),
         'can_edit_user_lab': is_admin or is_pi,
         'can_edit_lab_cert': is_admin or is_pi,

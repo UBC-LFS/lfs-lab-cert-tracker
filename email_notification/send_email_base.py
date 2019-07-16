@@ -86,7 +86,7 @@ def get_message(days, lab_users_list, type):
 
     if type == 'before':
         message = '''\
-            <p>Certificate expiration date in lab users will be expired in {0} days.</p>
+            <p>Certificates of lab users in your lab will be expired in {0} days.</p>
             <ul>{1}</ul>
         '''.format(days, lab_users_list)
     else:
