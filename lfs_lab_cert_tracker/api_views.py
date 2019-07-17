@@ -210,7 +210,7 @@ def user_certs(request, user_id=None):
         else:
             messages.error(request, "Error! Failed to add a certificate.")
     else:
-        messages.error(request, "Error! Failed to add a certificate. Please check error messages below.")
+        messages.error(request, "Error! Failed to add a certificate. If you try to update a new certificate, please delete your old certificate first.")
 
 
 @login_required(login_url=settings.LOGIN_URL)
