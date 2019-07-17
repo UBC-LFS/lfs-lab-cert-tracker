@@ -53,6 +53,22 @@
 		</div>
 		{% endif %}
 
+		{% if expired_cert_list %}
+		<div class="card card border-secondary">
+			<div class="card-header bg-secondary text-white">Expired Certificates</div>
+			<div class="card-body">
+				<div class="card-text">
+					<ul>
+						{% for expired_cert in expired_cert_list %}
+							<li>{{ expired_cert.name }}</li>
+						{% endfor %}
+					</ul>
+				</div>
+			</div>
+		</div>
+		{% endif %}
+
+
 		<h5 class="title">Add Certificates</h5>
 		<small>Valid file types: jpg, jpeg, png, pdf</small>
 		<form id="add_user_cert_form" action="/api/users/{{user_id}}/certificates/" method="post" enctype="multipart/form-data">
