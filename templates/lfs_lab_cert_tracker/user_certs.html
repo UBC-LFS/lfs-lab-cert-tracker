@@ -70,7 +70,7 @@
 
 
 		<h5 class="title">Add Certificates</h5>
-		<small>Valid file types: jpg, jpeg, png, pdf</small>
+		<small>Valid file types: jpg, jpeg, png, pdf, doc, docx</small>
 		<form id="add_user_cert_form" action="/api/users/{{user_id}}/certificates/" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 			<table>{{ user_cert_form.as_table }}</table>

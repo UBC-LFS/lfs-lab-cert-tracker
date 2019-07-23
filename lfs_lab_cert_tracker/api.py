@@ -143,10 +143,15 @@ def get_user_certs(user_id):
     return res
 
 def get_user_cert(user_id, cert_id):
-    user_cert = UserCert.objects.filter(user=user_id, cert=cert_id).prefetch_related('cert')[0]
-    res = model_to_dict(user_cert)
-    res.update(model_to_dict(user_cert.cert))
-    return res
+    user_cert_query_set = UserCert.objects.filter(user=user_id, cert=cert_id).prefetch_related('cert')
+    if user_cert_query_set.count() > 0:
+        user_cert = user_cert_query_set[0]
+        res = model_to_dict(user_cert)
+        res.update(model_to_dict(user_cert.cert))
+        return res
+    else:
+        return None
+
 
 def all_certs_expired_in_30days():
     min_date = datetime.now()
