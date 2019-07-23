@@ -29,7 +29,7 @@ urlpatterns = [
     path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
 
-    path('labs/', views.labs),
+    path('labs/', views.labs, name='labs'),
     path('labs/<int:lab_id>/', views.lab_details),
 
     path('certificates/', views.certs),

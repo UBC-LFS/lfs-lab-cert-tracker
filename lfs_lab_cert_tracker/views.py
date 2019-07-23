@@ -148,7 +148,7 @@ def user_cert_details(request, user_id, cert_id):
 
     user_cert = api.get_user_cert(user_id, cert_id)
     if not user_cert:
-        messages.warning(request, 'Warning: The certificate could not find in your list.')
+        messages.warning(request, 'Warning: The certificate could not be found in your list.')
         return HttpResponseRedirect( reverse('user_certs', args=[user_id]) )
 
     return render(request, 'lfs_lab_cert_tracker/user_cert_details.html', {
@@ -250,7 +250,13 @@ def lab_details(request, lab_id):
     if not is_admin and not is_pi:
         raise PermissionDenied
 
+    lab = api.get_lab(lab_id)
+    if not lab:
+        messages.warning(request, 'Warning! The lab could not be found in a list.')
+        return redirect('labs')
+
     users_in_lab = api.get_users_in_lab(lab_id)
+
     for user in users_in_lab:
         if auth_utils.is_principal_investigator(user['id'], lab_id):
             user['isPI'] = True
