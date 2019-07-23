@@ -37,6 +37,9 @@
 			</tbody>
 		<table>
 
+		<a href="/users/{{ user_id }}/certificates" class="btn btn-secondary">My Certificates</a>
+
+
 		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user_cert.name}}?');">
 			{% csrf_token %}
 			{{ delete_user_cert_form | crispy }}

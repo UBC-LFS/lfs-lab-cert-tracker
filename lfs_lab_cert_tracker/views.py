@@ -16,6 +16,9 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login as DjangoLogin
 from django.contrib.auth.models import User as AuthUser
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from django.contrib import messages
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
@@ -142,6 +145,12 @@ def user_certs(request, user_id):
 def user_cert_details(request, user_id, cert_id):
     loggedin_user_id = request.user.id
     redirect_url = '/users/%d/certificates/' % loggedin_user_id
+
+    user_cert = api.get_user_cert(user_id, cert_id)
+    if not user_cert:
+        messages.warning(request, 'Warning: The certificate could not find in your list.')
+        return HttpResponseRedirect( reverse('user_certs', args=[user_id]) )
+
     return render(request, 'lfs_lab_cert_tracker/user_cert_details.html', {
         'loggedin_user': request.user,
         'user_id': user_id,
@@ -242,9 +251,6 @@ def lab_details(request, lab_id):
         raise PermissionDenied
 
     users_in_lab = api.get_users_in_lab(lab_id)
-    #print( users_in_lab )
-
-    #print( api.get_users_missing_certs(lab_id) )
     for user in users_in_lab:
         if auth_utils.is_principal_investigator(user['id'], lab_id):
             user['isPI'] = True

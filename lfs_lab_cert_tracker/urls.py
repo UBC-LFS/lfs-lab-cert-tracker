@@ -25,8 +25,8 @@ urlpatterns = [
     path('users/', views.users),
     path('users/<int:user_id>/', views.user_details),
     path('users/<int:user_id>/labs/', views.user_labs),
-    path('users/<int:user_id>/certificates/', views.user_certs),
-    path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
+    path('users/<int:user_id>/certificates/', views.user_certs, name='user_certs'),
+    path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
 
     path('labs/', views.labs),
