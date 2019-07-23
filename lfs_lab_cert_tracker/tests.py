@@ -231,6 +231,12 @@ class CertModelTest(TestCase):
         self.assertEqual(expiredCerts[0]['name'], 'testexpire')
         self.assertEqual(len(certsAll), 2)
 
+    def testNonExistantCert(self):
+        user = api.get_user_by_username('test1.user1')
+        response = self.client.get('/users/' + str(user.id) + '/certificates/4')
+        print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+        print(response)
+
 class LabsModelTest(TestCase):
     
     def setUp(self):
