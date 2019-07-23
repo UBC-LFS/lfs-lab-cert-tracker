@@ -61,7 +61,7 @@ SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ['CERT_TRACKER_ENV'] != 'prod'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 # URLs
 LOGIN_REDIRECT_URL = '/'
@@ -204,8 +204,6 @@ LOGGING = {
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-
 
 MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
 MEDIA_URL = '/media/'
