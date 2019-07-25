@@ -82,15 +82,15 @@ def switch_admin(request, user_id):
     res = api.switch_admin(user_id)
     if res:
         if res['is_superuser']:
-            messages.success(request, 'Success! Switched to Admin for {0} successfully.'.format(res['username']))
-            logger.info("%s: Switched to Admin for %s" % (request.user, res['id']))
+            messages.success(request, 'Success! Granted administrator privileges to {0} successfully.'.format(res['username']))
+            logger.info("%s: Granted administrator privileges for %s" % (request.user, res['id']))
         else:
-            messages.success(request, 'Success! Admin is canceled for {0} successfully.'.format(res['username']))
-            logger.info("%s: Admin is canceled %s" % (request.user, res['id']))
+            messages.success(request, 'Success! Revoked administrator privileges of {0} successfully.'.format(res['username']))
+            logger.info("%s: Revoked administrator privileges %s" % (request.user, res['id']))
         return JsonResponse({'user_id': res['id']})
 
     else:
-        messages.error(request, 'Error! Failed to switch {0}.'.format(res['username']))
+        messages.error(request, 'Error! Failed to switch an admin role for {0}.'.format(res['username']))
     return None
 
 
