@@ -18,7 +18,7 @@
 <div class="search-field">
 	<form method="GET" >
 		<div class="input-field">
-			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
+			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
 			<button class="btn btn-sm" type="submit" name="action">Search</button>
 		</div>
 	</form>
@@ -64,7 +64,12 @@
 					<form class="list-form" action="/api/users/{{ user.id }}/switch_inactive" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
 						{% csrf_token %}
 						<input name="redirect_url" value="/users/" type="hidden"/>
-						<input class="btn btn-success btn-sm" type="submit" value="{% if not user.is_active and user.inactive_date %} Active {% else %} Inactive {% endif %}"/>
+						{% if not user.is_active and user.inactive_date %}
+							<input class="btn btn-sm btn-inactive" type="submit" value=" Inactive" />
+						{% else %}
+							<input class="btn btn-success btn-sm" type="submit" value=" Active"/>
+						{% endif %}
+
 					</form>
 				</td>
 				<td>

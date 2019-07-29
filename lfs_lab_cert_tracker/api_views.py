@@ -106,10 +106,10 @@ def switch_inactive(request, user_id=None):
     res = api.switch_inactive(user_id)
     if res:
         if res['is_active']:
-            messages.success(request, 'Success! {0} became ACTIVE successfully.'.format(res['username']))
+            messages.success(request, 'Success! {0} is now ACTIVE.'.format(res['username']))
             logger.info("%s: Became active %s" % (request.user, res['id']))
         else:
-            messages.success(request, 'Success! {0} became INACTIVE successfully.'.format(res['username']))
+            messages.success(request, 'Success! {0} is now INACTIVE.'.format(res['username']))
             logger.info("%s: Became inactive  %s" % (request.user, res['id']))
         return JsonResponse({'user_id': res['id']})
     else:
