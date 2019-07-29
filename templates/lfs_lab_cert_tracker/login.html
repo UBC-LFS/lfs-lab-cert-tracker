@@ -28,12 +28,47 @@
 		<div class="alert alert-success" role="alert">Successfully logged out</div>
 	{% endif %}
 
-	<p>CWL Login</p>
-	<p>Using an unregistered CWL account will fail</p>
-	<p>Ask the administrator to get added to the application</p>
+	<div class="row">
+		{% if messages %}
+			{% for message in messages %}
+				<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
+					{{ message }}
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+			{% endfor %}
+		{% endif %}
+		
+		<div class="col-md-6">
+			<div class="accounts-login">
+				<h5>Welcome to LFS Lab Cert Tracker</h5>
 
-	<a href="{% url "saml" %}?sso">
-		<img src="{% static 'lfs_lab_cert_tracker/images/CWL_login_button.gif' %}" alt="CWL login button"/>
-	</a>
+				<p class="text-secondary">Please click the button below to login</p>
+				<a href="{% url "saml" %}?sso">
+					<img src="{% static 'lfs_lab_cert_tracker/images/CWL_login_button.gif' %}" alt="CWL login button"/>
+				</a>
+			</div>
+		</div>
+
+		<div class="col-md-6">
+			<div class="card text-white bg-info">
+			  <div class="card-header">Description</div>
+		  	<div class="card-body">
+			    <blockquote class="blockquote mb-0">
+			      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante</p>
+			      <p class="blockquote-footer text-white">Faculty of Land and Food System @ UBC</p>
+			    </blockquote>
+			  </div>
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
+
 {% endif %}
 {% endblock %}

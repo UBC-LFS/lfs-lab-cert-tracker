@@ -1,0 +1,14 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "12",
+      "is_superuser": true,
+      "username": "testadmin",
+      "first_name": "test",
+      "last_name": "admin",
+      "email": "<email address>"
+    }
+  }
+]

@@ -11,11 +11,12 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include
+from django.conf.urls import url, include, handler403, handler403
 from django.urls import path
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from lfs_lab_cert_tracker import views, api_views, saml_views
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,11 +26,11 @@ urlpatterns = [
     path('users/', views.users),
     path('users/<int:user_id>/', views.user_details),
     path('users/<int:user_id>/labs/', views.user_labs),
-    path('users/<int:user_id>/certificates/', views.user_certs),
-    path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details),
+    path('users/<int:user_id>/certificates/', views.user_certs, name='user_certs'),
+    path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
 
-    path('labs/', views.labs),
+    path('labs/', views.labs, name='labs'),
     path('labs/<int:lab_id>/', views.lab_details),
 
     path('certificates/', views.certs),
@@ -71,6 +72,10 @@ urlpatterns = [
     #path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certs),
     #path('api/certificates/<int:cert_id>/', api_views.certs),
 ]
+
+
+handler403 = views.permission_denied
+handler404 = views.page_not_found
 
 urlpatterns += [
     path('accounts/admin/', include('django.contrib.auth.urls')),

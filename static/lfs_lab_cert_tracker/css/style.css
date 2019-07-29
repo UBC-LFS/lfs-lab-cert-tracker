@@ -3,6 +3,15 @@
   width: auto;
 }
 
+.accounts-login {
+  text-align: center;
+  margin-top: 55px;
+}
+
+.accounts-login > h5 {
+  margin-bottom: 80px;
+}
+
 .container header {
   margin-bottom: 10px;
   font-size: 0.85rem;
@@ -42,4 +51,11 @@ tr.inactive {
 .errorlist {
   color: maroon;
   font-weight: bold;
+}
+
+.search-field-text::placeholder {
+  font-size: 17px;
+}
+.btn-inactive {
+  background-color: #ccc;
 }

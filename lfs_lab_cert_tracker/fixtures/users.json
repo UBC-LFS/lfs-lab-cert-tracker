@@ -5,9 +5,9 @@
     "fields": {
       "password": "12",
       "is_superuser": true,
-      "username": "admin",
-      "first_name": "ad",
-      "last_name": "min",
+      "username": "testadmin",
+      "first_name": "test",
+      "last_name": "admin",
       "email": "<email address>"
     }
   },
@@ -17,9 +17,9 @@
     "fields": {
       "password": "12",
       "is_superuser": true,
-      "username": "admin2",
-      "first_name": "ad2",
-      "last_name": "min2",
+      "username": "testadmin2",
+      "first_name": "test",
+      "last_name": "admin2",
       "email": "<email address>"
     }
   },
@@ -29,9 +29,9 @@
     "fields": {
       "password": "12",
       "is_superuser": true,
-      "username": "admin3",
-      "first_name": "ad3",
-      "last_name": "min3",
+      "username": "testadmin3",
+      "first_name": "test",
+      "last_name": "admin3",
       "email": "<email address>"
     }
   },
@@ -41,9 +41,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user1",
-      "first_name": "test1",
-      "last_name": "user1",
+      "username": "testpi1",
+      "first_name": "test",
+      "last_name": "pi1",
       "email": "<email address>"
     }
   },
@@ -53,9 +53,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user2",
-      "first_name": "test2",
-      "last_name": "user2",
+      "username": "testpi2",
+      "first_name": "test",
+      "last_name": "pi2",
       "email": "<email address>"
     }
   },
@@ -65,9 +65,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user3",
-      "first_name": "test3",
-      "last_name": "user3",
+      "username": "testpi3",
+      "first_name": "test",
+      "last_name": "pi3",
       "email": "<email address>"
     }
   },
@@ -77,9 +77,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user4",
-      "first_name": "test4",
-      "last_name": "user4",
+      "username": "testpi4",
+      "first_name": "test",
+      "last_name": "pi4",
       "email": "<email address>"
     }
   },
@@ -89,9 +89,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user5",
-      "first_name": "test5",
-      "last_name": "user5",
+      "username": "testpi5",
+      "first_name": "test",
+      "last_name": "pi5",
       "email": "<email address>"
     }
   },
@@ -101,9 +101,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user11",
-      "first_name": "test11",
-      "last_name": "user11",
+      "username": "testpi6",
+      "first_name": "test",
+      "last_name": "pi6",
       "email": "<email address>"
     }
   },
@@ -113,9 +113,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user22",
-      "first_name": "test22",
-      "last_name": "user22",
+      "username": "testpi7",
+      "first_name": "test",
+      "last_name": "pi7",
       "email": "<email address>"
     }
   },
@@ -125,9 +125,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user33",
-      "first_name": "test33",
-      "last_name": "user33",
+      "username": "testuser1",
+      "first_name": "test",
+      "last_name": "user1",
       "email": "<email address>"
     }
   },
@@ -137,9 +137,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user44",
-      "first_name": "test44",
-      "last_name": "user44",
+      "username": "testuser2",
+      "first_name": "test",
+      "last_name": "user2",
       "email": "<email address>"
     }
   },
@@ -149,9 +149,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user55",
-      "first_name": "test55",
-      "last_name": "user55",
+      "username": "testuser3",
+      "first_name": "test",
+      "last_name": "user3",
       "email": "<email address>"
     }
   },
@@ -161,9 +161,9 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user66",
-      "first_name": "test66",
-      "last_name": "user66",
+      "username": "testuser4",
+      "first_name": "test",
+      "last_name": "user4",
       "email": "<email address>"
     }
   },
@@ -173,9 +173,201 @@
     "fields": {
       "password": "12",
       "is_superuser": false,
-      "username": "test.user77",
-      "first_name": "test77",
-      "last_name": "user77",
+      "username": "testuser5",
+      "first_name": "test",
+      "last_name": "user5",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 16,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser6",
+      "first_name": "test",
+      "last_name": "user6",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 17,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser7",
+      "first_name": "test",
+      "last_name": "user7",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 18,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser8",
+      "first_name": "test",
+      "last_name": "user8",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 19,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser9",
+      "first_name": "test",
+      "last_name": "user9",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 20,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser10",
+      "first_name": "test",
+      "last_name": "user10",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 21,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser11",
+      "first_name": "test",
+      "last_name": "user11",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 22,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser12",
+      "first_name": "test",
+      "last_name": "user12",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 23,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser13",
+      "first_name": "test",
+      "last_name": "user13",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 24,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser14",
+      "first_name": "test",
+      "last_name": "user14",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 25,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser15",
+      "first_name": "test",
+      "last_name": "user15",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 26,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser16",
+      "first_name": "test",
+      "last_name": "user16",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 27,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser17",
+      "first_name": "test",
+      "last_name": "user17",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 28,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser18",
+      "first_name": "test",
+      "last_name": "user18",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 29,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser19",
+      "first_name": "test",
+      "last_name": "user19",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 30,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser20",
+      "first_name": "test",
+      "last_name": "user20",
+      "email": "<email address>"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 31,
+    "fields": {
+      "password": "12",
+      "is_superuser": false,
+      "username": "testuser21",
+      "first_name": "test",
+      "last_name": "user21",
       "email": "<email address>"
     }
   }

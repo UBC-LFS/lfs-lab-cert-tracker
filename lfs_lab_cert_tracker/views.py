@@ -16,6 +16,8 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login as DjangoLogin
 from django.contrib.auth.models import User as AuthUser
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import Http404
+from django.contrib import messages
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
@@ -29,6 +31,7 @@ HTTP endpoints, responsible for the frontend
 """
 
 def login(request):
+    messages.error(request, 'Error! Login failed as CWL Account is not Registered. Ask the administrator to get added to the application.')
     return render(request, 'lfs_lab_cert_tracker/login.html')
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -142,6 +145,11 @@ def user_certs(request, user_id):
 def user_cert_details(request, user_id, cert_id):
     loggedin_user_id = request.user.id
     redirect_url = '/users/%d/certificates/' % loggedin_user_id
+
+    user_cert = api.get_user_cert(user_id, cert_id)
+    if not user_cert:
+        raise Http404
+
     return render(request, 'lfs_lab_cert_tracker/user_cert_details.html', {
         'loggedin_user': request.user,
         'user_id': user_id,
@@ -241,10 +249,12 @@ def lab_details(request, lab_id):
     if not is_admin and not is_pi:
         raise PermissionDenied
 
-    users_in_lab = api.get_users_in_lab(lab_id)
-    #print( users_in_lab )
+    # Check whether a lab exists or not
+    lab = api.get_lab(lab_id)
+    if not lab:
+        raise Http404
 
-    #print( api.get_users_missing_certs(lab_id) )
+    users_in_lab = api.get_users_in_lab(lab_id)
     for user in users_in_lab:
         if auth_utils.is_principal_investigator(user['id'], lab_id):
             user['isPI'] = True
@@ -319,6 +329,20 @@ def show_error(request, error_msg=''):
     return render(request, 'lfs_lab_cert_tracker/error.html', {
         'loggedin_user': request.user,
         'error_msg': error_msg
+    })
+
+# Exception handlers
+
+def permission_denied(request, exception, template_name="403.html"):
+    """ Exception handlder for permission denied """
+    return render(request, '403.html', {
+        'loggedin_user': request.user
+    })
+
+def page_not_found(request, exception, template_name="404.html"):
+    """ Exception handlder for page not found """
+    return render(request, '404.html', {
+        'loggedin_user': request.user
     })
 
 # -------- to be removed
