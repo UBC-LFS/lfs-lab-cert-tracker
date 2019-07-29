@@ -42,13 +42,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ## Environment variables for sending reminder emails
 # LFS_LAB_CERT_TRACKER_URL = os.environ['LFS_LAB_CERT_TRACKER_URL']
-# DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
-# USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
-# PASSWORD = os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD']
-# HOST = os.environ['LFS_LAB_CERT_TRACKER_DB_HOST']
-# PORT = os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
-# SMTP_SERVER = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
-# SENDER = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
 
 ## Change media root
 # MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'

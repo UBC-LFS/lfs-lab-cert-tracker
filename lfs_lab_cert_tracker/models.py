@@ -129,7 +129,7 @@ Thank you for your consideration.
 
 Best regards,
 
-LFS Cert Tracker
+LFS Lab Cert Tracker
         """.format(
             obj.user.first_name,
             obj.user.last_name,
