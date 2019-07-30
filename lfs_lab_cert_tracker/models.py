@@ -11,7 +11,7 @@ from PIL import Image as PILImage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-
+from django.core.validators import FileExtensionValidator
 
 """
 Contains app models
@@ -54,7 +54,10 @@ class UserCert(models.Model):
 
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
-    cert_file = models.FileField(upload_to=create_user_cert_disk_path)
+    cert_file = models.FileField(
+        upload_to=create_user_cert_disk_path,
+        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'])]
+    )
     uploaded_date = models.DateField()
     completion_date = models.DateField()
     expiry_date = models.DateField()
@@ -68,6 +71,7 @@ class UserCert(models.Model):
         file_split = os.path.splitext(self.cert_file.name)
         file_name = file_split[0]
         file_extension = file_split[1]
+
         if self.cert_file and file_extension.lower() in ['.jpg', '.jpeg', '.png']:
             img = PILImage.open( self.cert_file )
             if img.mode in ['RGBA']:
@@ -129,7 +133,7 @@ Thank you for your consideration.
 
 Best regards,
 
-LFS Cert Tracker
+LFS Lab Cert Tracker
         """.format(
             obj.user.first_name,
             obj.user.last_name,
