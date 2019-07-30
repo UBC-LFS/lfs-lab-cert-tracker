@@ -40,7 +40,7 @@ def users(request):
     if form.is_valid():
         user = form.save()
         if user:
-            messages.success(request, 'Success! Created {0} successfully.'.format(user.username))
+            messages.success(request, 'Success! Created {0}.'.format(user.username))
             logger.info("%s: Created user %s" % (request.user, user.username))
             return JsonResponse( model_to_dict(user) )
         else:
@@ -62,7 +62,7 @@ def delete_user(request, user_id):
     user = api.get_user(user_id)
     res = api.delete_user(user_id)
     if res:
-        messages.success(request, 'Success! Deleted {0} successfully.'.format(user.username))
+        messages.success(request, 'Success! Deleted {0}.'.format(user.username))
         logger.info("%s: Deleted user %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -82,10 +82,10 @@ def switch_admin(request, user_id):
     res = api.switch_admin(user_id)
     if res:
         if res['is_superuser']:
-            messages.success(request, 'Success! Granted administrator privileges to {0} successfully.'.format(res['username']))
+            messages.success(request, 'Success! Granted administrator privileges to {0}.'.format(res['username']))
             logger.info("%s: Granted administrator privileges for %s" % (request.user, res['id']))
         else:
-            messages.success(request, 'Success! Revoked administrator privileges of {0} successfully.'.format(res['username']))
+            messages.success(request, 'Success! Revoked administrator privileges of {0}.'.format(res['username']))
             logger.info("%s: Revoked administrator privileges %s" % (request.user, res['id']))
         return JsonResponse({'user_id': res['id']})
 
@@ -143,7 +143,7 @@ def user_labs(request, lab_id=None):
                  valid_email_errors = e
 
             if valid_email:
-                messages.success(request, 'Success! Added {0} successfully.'.format(data['user']))
+                messages.success(request, 'Success! Added {0}.'.format(data['user']))
             else:
                 messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
 
@@ -166,7 +166,7 @@ def delete_user_lab(request, user_id=None, lab_id=None):
     user = model_to_dict( api.get_user(user_id) )
     res = api.delete_user_lab(user_id, lab_id)
     if res:
-        messages.success(request, 'Success! Delete {0} successfully.'.format(user['username']))
+        messages.success(request, 'Success! Delete {0}.'.format(user['username']))
         logger.info("%s: Deleted user lab %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -203,14 +203,14 @@ def user_certs(request, user_id=None):
 
         # Whether user's certficiate is created successfully or not
         if result:
-            messages.success(request, 'Success! Added {0} successfully.'.format(cert['name']))
+            messages.success(request, 'Success! Added {0}.'.format(cert['name']))
             res = { 'user_id': user_id, 'cert_id': result['cert'] }
             logger.info("%s: Created user cert %s" % (request.user, res))
             return JsonResponse(res)
         else:
             messages.error(request, "Error! Failed to add a certificate.")
     else:
-        messages.error(request, "Error! Failed to add a certificate. If you try to update a new certificate, please delete your old certificate first.")
+        messages.error(request, "Error! Failed to add a certificate. 1) If you try to update a new certificate, please delete your old certificate first. Or 2) Please check your file type.")
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -222,7 +222,7 @@ def delete_user_certs(request, user_id=None, cert_id=None):
     res = api.delete_user_cert(user_id, cert_id)
     if res:
         cert = api.get_cert(cert_id)
-        messages.success(request, 'Success! Deleted {0} successfully.'.format(cert['name']))
+        messages.success(request, 'Success! Deleted {0}.'.format(cert['name']))
         return JsonResponse(res)
     return None
 
@@ -242,7 +242,7 @@ def labs(request, lab_id=None):
         data = form.cleaned_data
         lab = form.save()
         if lab:
-            messages.success(request, 'Success! Created {0} successfully.'.format(lab.name))
+            messages.success(request, 'Success! Created {0}.'.format(lab.name))
             logger.info("%s: Created lab %s" % (request.user, lab.name))
             return JsonResponse( model_to_dict(lab) )
         else:
@@ -264,7 +264,7 @@ def delete_labs(request, lab_id=None):
     lab = api.get_lab(lab_id)
     res = api.delete_lab(lab_id)
     if res:
-        messages.success(request, 'Success! Deleted {0} successfully.'.format(lab.name))
+        messages.success(request, 'Success! Deleted {0}.'.format(lab.name))
         logger.info("%s: Deleted lab %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -285,7 +285,7 @@ def update_labs(request, lab_id):
     if form.is_valid():
         lab = form.save()
         if lab:
-            messages.success(request, 'Success! Updated {0} successfully.'.format(lab.name))
+            messages.success(request, 'Success! Updated {0}.'.format(lab.name))
             logger.info("%s: Updated lab %s" % (request.user, lab.name))
             return JsonResponse( model_to_dict(lab) )
         else:
@@ -310,7 +310,7 @@ def certs(request):
     if form.is_valid():
         cert = form.save()
         if cert:
-            messages.success(request, 'Success! Created {0} successfully.'.format(cert.name))
+            messages.success(request, 'Success! Created {0}.'.format(cert.name))
             logger.info("%s: Created cert %s" % (request.user, cert.name))
             return JsonResponse( model_to_dict(cert) )
         else:
@@ -333,7 +333,7 @@ def delete_certs(request, cert_id):
     cert = api.get_cert(cert_id)
     res = api.delete_cert(cert_id)
     if res:
-        messages.success(request, 'Success! Deleted {0} successfully.'.format(cert['name']))
+        messages.success(request, 'Success! Deleted {0}.'.format(cert['name']))
         logger.info("%s: Deleted cert %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -358,7 +358,7 @@ def lab_certs(request, lab_id):
     res = api.create_lab_cert(lab_id, data['cert'])
     cert = api.get_cert(data['cert'])
     if res:
-        messages.success(request, 'Success! Added {0} successfully.'.format(cert['name']))
+        messages.success(request, 'Success! Added {0}.'.format(cert['name']))
         logger.info("%s: Created lab cert %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -378,7 +378,7 @@ def delete_lab_certs(request, lab_id, cert_id):
     cert = api.get_cert(cert_id)
     res = api.delete_lab_cert(lab_id, cert_id)
     if res:
-        messages.success(request, 'Success! Delete {0} successfully.'.format(cert['name']))
+        messages.success(request, 'Success! Delete {0}.'.format(cert['name']))
         logger.info("%s: Deleted lab cert %s" % (request.user, res))
         return JsonResponse(res)
     else:
