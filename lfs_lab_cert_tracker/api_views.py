@@ -210,7 +210,16 @@ def user_certs(request, user_id=None):
         else:
             messages.error(request, "Error! Failed to add a certificate.")
     else:
-        messages.error(request, "Error! Failed to add a certificate. 1) If you try to update a new certificate, please delete your old certificate first. Or 2) Please check your file type.")
+        errors_data = form.errors.get_json_data()
+        error_message = None
+        for key in errors_data.keys():
+            error_code = errors_data[key][0]['code']
+            if error_code == 'unique_together':
+                error_message = "The certificate already exists. If you try to update a new certificate, please delete your old certificate first."
+            elif error_code == 'invalid_extension':
+                error_message = errors_data[key][0]['message']
+
+        messages.error(request, "Error! Failed to add your certificate. {0}".format(error_message))
 
 
 @login_required(login_url=settings.LOGIN_URL)
