@@ -7,8 +7,11 @@ from django.contrib.auth.models import User as AuthUser
 from django.contrib.auth.hashers import make_password
 from django.forms.models import model_to_dict
 from django.core import mail
+# from email_notification import send_email_after_expiry_date
+import email_notification.test
 import datetime
 import subprocess
+
 
 def create_user(first_name, last_name, email, username):
     user = api.get_user_by_username(username)
@@ -238,6 +241,14 @@ class CertModelTest(TestCase):
         api.update_or_create_user_cert(user_id=user.id,cert_id=cert['id'],cert_file='testCert.pdf', completion_date="2017-07-03",expiry_date="2018-07-03")
         self.assertEqual(len(api.get_user_certs(user.id)),1)
 
+    def testAddCertBadFormat(self):
+        user = api.get_user_by_username('admin')
+        cert1 = api.get_certs()[0]
+        cert2 = api.get_certs()[1]
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert1['id'],cert_file='testCert.mp3', completion_date="2017-07-03",expiry_date="2018-07-03")
+        api.update_or_create_user_cert(user_id=user.id,cert_id=cert2['id'],cert_file='testCert.csv', completion_date="2017-07-03",expiry_date="2018-07-03")
+        self.assertEqual(len(api.get_user_certs(user.id)),0)
+
 class LabsModelTest(TestCase):
     
     def setUp(self):
@@ -347,6 +358,13 @@ class LabsModelTest(TestCase):
         self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         self.assertEqual(len(mail.outbox), 1)
 
+    # def testNonExistantCert(self):
+    #     user = api.get_user_by_username('admin')
+    #     response = self.client.get('/users/' + str(user.id) + '/certificates/60')
+    #     response2 = self.client.get(response.url)
+    #     print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
+    #     print(response2)
+
 class UserLabCertModelTest(TestCase):
     
     def setUp(self):
@@ -417,9 +435,4 @@ class UserLabCertModelTest(TestCase):
 class CertEmailTest(TestCase):
 
     def testEmailCertExpire(self):
-        response = subprocess.call('python email_notification/send_email_after_expiry_date.py', shell=True)
-        self.assertEqual(response, 0)
-
-    def testEmailCertBeforeExpire(self):
-        response = subprocess.call('python email_notification/send_email_before_expiry_date.py', shell=True)
-        self.assertEqual(response, 0)
+        subprocess.call("python email_notification/test.py", shell=True)
