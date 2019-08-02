@@ -172,8 +172,6 @@ def delete_user_lab(request, user_id, lab_id):
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(user['username']))
 
-
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @admin_or_pi_only
@@ -181,20 +179,14 @@ def delete_user_lab(request, user_id, lab_id):
 @require_http_methods(['POST'])
 def switch_lab_role(request, user_id, lab_id):
     """ Switch lab roles """
-    print(user_id, lab_id)
     user = model_to_dict( api.get_user(user_id) )
-    print(user)
     res = api.switch_lab_role(user_id, lab_id)
-    print(res)
     if res:
         messages.success(request, 'Success! The role of {0} is switched.'.format(user['username']))
         logger.info("%s: Switched user lab %s" % (request.user, res))
         return JsonResponse(res)
     else:
         messages.error(request, 'Error! Failed to switch {0}.'.format(user['username']))
-
-
-
 
 # Users and Certificates
 
