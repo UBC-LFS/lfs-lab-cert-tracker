@@ -62,7 +62,7 @@ def delete_user(request, user_id):
     user = api.get_user(user_id)
     res = api.delete_user(user_id)
     if res:
-        messages.success(request, 'Success! Deleted {0}.'.format(user.username))
+        messages.success(request, 'Success! {0} deleted.'.format(user.username))
         logger.info("%s: Deleted user %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -162,15 +162,38 @@ def user_labs(request, lab_id=None):
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
-def delete_user_lab(request, user_id=None, lab_id=None):
+def delete_user_lab(request, user_id, lab_id):
     user = model_to_dict( api.get_user(user_id) )
     res = api.delete_user_lab(user_id, lab_id)
     if res:
-        messages.success(request, 'Success! Delete {0}.'.format(user['username']))
+        messages.success(request, 'Success! {0} deleted.'.format(user['username']))
         logger.info("%s: Deleted user lab %s" % (request.user, res))
         return JsonResponse(res)
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(user['username']))
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@admin_or_pi_only
+@handle_redirect
+@require_http_methods(['POST'])
+def switch_lab_role(request, user_id, lab_id):
+    """ Switch lab roles """
+    print(user_id, lab_id)
+    user = model_to_dict( api.get_user(user_id) )
+    print(user)
+    res = api.switch_lab_role(user_id, lab_id)
+    print(res)
+    if res:
+        messages.success(request, 'Success! The role of {0} is switched.'.format(user['username']))
+        logger.info("%s: Switched user lab %s" % (request.user, res))
+        return JsonResponse(res)
+    else:
+        messages.error(request, 'Error! Failed to switch {0}.'.format(user['username']))
+
+
 
 
 # Users and Certificates
@@ -231,7 +254,7 @@ def delete_user_certs(request, user_id=None, cert_id=None):
     res = api.delete_user_cert(user_id, cert_id)
     if res:
         cert = api.get_cert(cert_id)
-        messages.success(request, 'Success! Deleted {0}.'.format(cert['name']))
+        messages.success(request, 'Success! {0} deleted.'.format(cert['name']))
         return JsonResponse(res)
     return None
 
@@ -273,7 +296,7 @@ def delete_labs(request, lab_id=None):
     lab = api.get_lab(lab_id)
     res = api.delete_lab(lab_id)
     if res:
-        messages.success(request, 'Success! Deleted {0}.'.format(lab.name))
+        messages.success(request, 'Success! {0} deleted.'.format(lab.name))
         logger.info("%s: Deleted lab %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -342,7 +365,7 @@ def delete_certs(request, cert_id):
     cert = api.get_cert(cert_id)
     res = api.delete_cert(cert_id)
     if res:
-        messages.success(request, 'Success! Deleted {0}.'.format(cert['name']))
+        messages.success(request, 'Success! {0} deleted.'.format(cert['name']))
         logger.info("%s: Deleted cert %s" % (request.user, res))
         return JsonResponse(res)
     else:
@@ -387,7 +410,7 @@ def delete_lab_certs(request, lab_id, cert_id):
     cert = api.get_cert(cert_id)
     res = api.delete_lab_cert(lab_id, cert_id)
     if res:
-        messages.success(request, 'Success! Delete {0}.'.format(cert['name']))
+        messages.success(request, 'Success! {0} deleted.'.format(cert['name']))
         logger.info("%s: Deleted lab cert %s" % (request.user, res))
         return JsonResponse(res)
     else:

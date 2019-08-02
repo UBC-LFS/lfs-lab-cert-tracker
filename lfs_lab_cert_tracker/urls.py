@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/users/<int:user_id>/delete', api_views.delete_user),
     path('api/users/<int:user_id>/switch_admin', api_views.switch_admin),
     path('api/users/<int:user_id>/switch_inactive', api_views.switch_inactive),
+    path('api/users/<int:user_id>/labs/<int:lab_id>/switch_lab_role', api_views.switch_lab_role),
     path('api/users/<int:user_id>/labs/<int:lab_id>/delete', api_views.delete_user_lab),
     path('api/users/<int:user_id>/certificates/', api_views.user_certs),
     path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certs),

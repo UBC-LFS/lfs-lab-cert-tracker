@@ -53,7 +53,7 @@
 	    <tr>
 				<th>#</th>
 	      <th>CWL</th>
-				<th>Action</th>
+				<th>Actions</th>
 	    </tr>
 	  </thead>
 		<tbody>
@@ -72,7 +72,17 @@
 						{% endif %}
 					</td>
 					<td>
-						<form action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Are you sure to remove {{user_in_lab.username}}?');">
+						<form class="list-form" action="/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/switch_lab_role" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if user_in_lab.isPI %} from PI to Lab User {% else %} from Lab User to PI {% endif %} ?');">
+							{% csrf_token %}
+							<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
+							{% if user_in_lab.isPI %}
+								<input class="btn btn-sm btn-info" type="submit" value="PI" />
+							{% else %}
+								<input class="btn btn-sm btn-info" type="submit" value="Lab User"/>
+							{% endif %}
+						</form>
+
+						<form class="list-form" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Are you sure to remove {{user_in_lab.username}}?');">
 							{% csrf_token %}
 							<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
 							<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
