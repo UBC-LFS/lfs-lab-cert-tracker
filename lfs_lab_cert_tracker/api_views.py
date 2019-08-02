@@ -143,14 +143,14 @@ def user_labs(request, lab_id=None):
                  valid_email_errors = e
 
             if valid_email:
-                messages.success(request, 'Success! Added {0}.'.format(data['user']))
+                messages.success(request, 'Success! {0} added.'.format(data['user']))
             else:
                 messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
 
             logger.info("%s: Created user lab %s" % (request.user, res))
             return JsonResponse(res)
         else:
-            messages.error(request, 'Error! Failed to add {0}. CWL has already existed in this lab.'.format(data['user']))
+            messages.error(request, 'Error! Failed to add {0}. CWL already exists in this lab.'.format(data['user']))
     else:
         messages.error(request, 'Error! Failed to add {0}. CWL does not exist.'.format(data['user']))
 
@@ -203,7 +203,7 @@ def user_certs(request, user_id=None):
 
         # Whether user's certficiate is created successfully or not
         if result:
-            messages.success(request, 'Success! Added {0}.'.format(cert['name']))
+            messages.success(request, 'Success! {0} added.'.format(cert['name']))
             res = { 'user_id': user_id, 'cert_id': result['cert'] }
             logger.info("%s: Created user cert %s" % (request.user, res))
             return JsonResponse(res)
@@ -211,11 +211,11 @@ def user_certs(request, user_id=None):
             messages.error(request, "Error! Failed to add a certificate.")
     else:
         errors_data = form.errors.get_json_data()
-        error_message = None
+        error_message = 'Please check your inputs.'
         for key in errors_data.keys():
             error_code = errors_data[key][0]['code']
             if error_code == 'unique_together':
-                error_message = "The certificate already exists. If you try to update a new certificate, please delete your old certificate first."
+                error_message = "The certificate already exists. If you wish to update a new certificate, please delete your old certificate first."
             elif error_code == 'invalid_extension':
                 error_message = errors_data[key][0]['message']
 
@@ -367,7 +367,7 @@ def lab_certs(request, lab_id):
     res = api.create_lab_cert(lab_id, data['cert'])
     cert = api.get_cert(data['cert'])
     if res:
-        messages.success(request, 'Success! Added {0}.'.format(cert['name']))
+        messages.success(request, 'Success! {0} added.'.format(cert['name']))
         logger.info("%s: Created lab cert %s" % (request.user, res))
         return JsonResponse(res)
     else:
