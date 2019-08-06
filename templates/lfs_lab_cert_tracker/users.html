@@ -65,11 +65,10 @@
 						{% csrf_token %}
 						<input name="redirect_url" value="/users/" type="hidden"/>
 						{% if not user.is_active and user.inactive_date %}
-							<input class="btn btn-sm btn-inactive" type="submit" value=" Inactive" />
+							<input class="btn btn-sm btn-inactive" type="submit" value="Inactive" />
 						{% else %}
-							<input class="btn btn-success btn-sm" type="submit" value=" Active"/>
+							<input class="btn btn-success btn-sm" type="submit" value="Active"/>
 						{% endif %}
-
 					</form>
 				</td>
 				<td>
