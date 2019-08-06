@@ -76,7 +76,7 @@
 							<form class="list-form" action="/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/switch_lab_role" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user_in_lab.username}} {% if user_in_lab.isPI %} from PI to Lab User {% else %} from Lab User to PI {% endif %} ?');">
 								{% csrf_token %}
 								<input name="redirect_url" value="/labs/{{lab.id}}" type="hidden"/>
-								<input class="btn btn-sm btn-info" type="submit" value="Change Role" />
+								<input class="btn btn-sm btn-info" type="submit" value="Switch Role" />
 							</form>
 
 							<form class="list-form" action='/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Are you sure to remove {{user_in_lab.username}}?');">

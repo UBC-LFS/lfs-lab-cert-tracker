@@ -305,14 +305,17 @@ def delete_user_lab(user_id, lab_id):
     return {'user_id': user_id, 'lab_id': lab_id}
 
 def switch_lab_role(user_id, lab_id):
+    role = None
     try:
         user_lab = UserLab.objects.get(user=user_id, lab=lab_id)
         if user_lab.role == UserLab.LAB_USER:
             user_lab.role = UserLab.PRINCIPAL_INVESTIGATOR
+            role = 'Principal Investigator (PI)'
         else:
             user_lab.role = UserLab.LAB_USER
+            role = 'Lab User'
         user_lab.save(update_fields=['role'])
-        return {'user_id': user_id, 'lab_id': lab_id}
+        return {'user_id': user_id, 'lab_id': lab_id, 'role': role}
     except UserLab.DoesNotExist:
         return None
 

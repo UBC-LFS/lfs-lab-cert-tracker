@@ -182,7 +182,7 @@ def switch_lab_role(request, user_id, lab_id):
     user = model_to_dict( api.get_user(user_id) )
     res = api.switch_lab_role(user_id, lab_id)
     if res:
-        messages.success(request, 'Success! The role of {0} is switched.'.format(user['username']))
+        messages.success(request, 'Success! {0} is now a {1}.'.format(user['username'], res['role']))
         logger.info("%s: Switched user lab %s" % (request.user, res))
         return JsonResponse(res)
     else:
