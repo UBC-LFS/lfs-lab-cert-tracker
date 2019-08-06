@@ -31,7 +31,8 @@ HTTP endpoints, responsible for the frontend
 """
 
 def login(request):
-    messages.error(request, 'Error! Login failed as CWL Account is not Registered. Ask the administrator to get added to the application.')
+    #print(request.errors)
+    #messages.error(request, 'Error! Login failed as CWL Account is not Registered. Ask the administrator to get added to the application.')
     return render(request, 'lfs_lab_cert_tracker/login.html')
 
 @login_required(login_url=settings.LOGIN_URL)

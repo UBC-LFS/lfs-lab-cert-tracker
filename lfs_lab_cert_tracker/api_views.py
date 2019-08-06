@@ -40,7 +40,7 @@ def users(request):
     if form.is_valid():
         user = form.save()
         if user:
-            messages.success(request, 'Success! Created {0}.'.format(user.username))
+            messages.success(request, 'Success! {0} created.'.format(user.username))
             logger.info("%s: Created user %s" % (request.user, user.username))
             return JsonResponse( model_to_dict(user) )
         else:
@@ -266,7 +266,7 @@ def labs(request, lab_id=None):
         data = form.cleaned_data
         lab = form.save()
         if lab:
-            messages.success(request, 'Success! Created {0}.'.format(lab.name))
+            messages.success(request, 'Success! {0} created.'.format(lab.name))
             logger.info("%s: Created lab %s" % (request.user, lab.name))
             return JsonResponse( model_to_dict(lab) )
         else:
@@ -309,7 +309,7 @@ def update_labs(request, lab_id):
     if form.is_valid():
         lab = form.save()
         if lab:
-            messages.success(request, 'Success! Updated {0}.'.format(lab.name))
+            messages.success(request, 'Success! {0} updated.'.format(lab.name))
             logger.info("%s: Updated lab %s" % (request.user, lab.name))
             return JsonResponse( model_to_dict(lab) )
         else:
@@ -334,7 +334,7 @@ def certs(request):
     if form.is_valid():
         cert = form.save()
         if cert:
-            messages.success(request, 'Success! Created {0}.'.format(cert.name))
+            messages.success(request, 'Success! {0} created.'.format(cert.name))
             logger.info("%s: Created cert %s" % (request.user, cert.name))
             return JsonResponse( model_to_dict(cert) )
         else:

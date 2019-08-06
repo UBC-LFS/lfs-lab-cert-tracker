@@ -37,7 +37,7 @@ def html_template(first_name, last_name, message):
         <p>Hi {0} {1},</p>
         <div>{2}</div>
         <p>Best regards,</p>
-        <p>LFS Cert Tracker</p>
+        <p>LFS Lab Cert Tracker</p>
       </body>
     </html>
     '''.format(first_name, last_name, message)
@@ -67,7 +67,7 @@ def get_message_lab_users(certificates, info, days, type):
 
     if type == 'before':
         message = '''\
-            <p>Your certificate(s) will be expired in {0} days.</p>
+            <p>Your certificate(s) will expire in {0} days.</p>
             <ul>{1}</ul>
             <p>See <a href="{2}/users/{3}/report">User report</a></p>
             '''.format(days, "".join(certificates), LFS_LAB_CERT_TRACKER_URL, info['id'])
@@ -86,12 +86,12 @@ def get_message(days, lab_users_list, type):
 
     if type == 'before':
         message = '''\
-            <p>Certificates of lab users in your lab will be expired in {0} days.</p>
+            <p>Certificates of the following lab users in your lab will expire in {0} days.</p>
             <ul>{1}</ul>
         '''.format(days, lab_users_list)
     else:
         message = '''\
-            <p>Certificate expiration date in lab users has already passed.</p>
+            <p>The following lab users have expired certificates.</p>
             <ul>{0}</ul>
         '''.format(lab_users_list)
 
