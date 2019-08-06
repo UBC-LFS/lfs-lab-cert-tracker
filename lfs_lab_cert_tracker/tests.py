@@ -460,7 +460,7 @@ class UserLabCertModelTest(TestCase):
         missingCerts = api.get_missing_certs(user.id)
         self.assertEqual(len(missingCerts), 2)
 
-class CertEmailTest(TestCase):
+# class CertEmailTest(TestCase):
 
-    def testEmailCertExpire(self):
-        subprocess.call("python email_notification/test.py", shell=True)
+#     def testEmailCertExpire(self):
+#         subprocess.call("python email_notification/test.py", shell=True)
