@@ -89,3 +89,70 @@ SystemError: null argument to internal routine
 ```
 Solution
 If running inside alpine and not running verison 3.9 update to 3.9
+
+
+
+## Summary of Deployment
+
+1. Clone this Github repository
+```
+$ git clone https://github.com/UBC-LFS/lfs-lab-cert-tracker.git
+```
+
+2. Install requirement dependencies
+```
+$ pip install -r requirements.txt
+```
+
+3. Set Environment Variables in your machine:
+```
+SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
+DATABASE_ENGINE = os.environ['LFS_LAB_CERT_TRACKER_DB_ENGINE']
+DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
+USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
+PASSWORD = os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD']
+HOST = os.environ['LFS_LAB_CERT_TRACKER_DB_HOST']
+PORT = os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
+EMAIL_HOST = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
+EMAIL_FROM = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
+
+# Environment variables for sending reminder emails
+LFS_LAB_CERT_TRACKER_URL = os.environ['LFS_LAB_CERT_TRACKER_URL']
+```
+
+4. Switch *DEBUG* to **False** in a *settings.py* file
+```
+DEBUG = False
+```
+
+5. Add a Media root directory to store certificate files
+```
+MEDIA_ROOT = 'your_media_root'
+```
+
+6. Create staticfiles in your directory
+```
+$ python manage.py collectstatic --noinput
+```
+
+7. Create a database in Postgresql
+
+8. Create database tables, and migrate
+```
+$ python manage.py makemigrations
+$ python manage.py migrate
+```
+
+9. Add valid certificate information
+```
+$ python manage.py loaddata certs
+```
+
+10. Update *settings.json* and *advanced_settings.json* files in the **saml** folder
+
+11. Now, it's good to go. Run this web application in your production!
+```
+$ python manage.py runserver
+```
+
+Happy coding!
