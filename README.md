@@ -133,6 +133,11 @@ MEDIA_ROOT = 'your_media_root'
 6. Create staticfiles in your directory
 ```
 $ python manage.py collectstatic --noinput
+
+# References
+# https://docs.djangoproject.com/en/2.2/howto/static-files/
+# https://devcenter.heroku.com/articles/django-assets
+# https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Deployment
 ```
 
 7. Create a database in Postgresql
@@ -150,7 +155,21 @@ $ python manage.py loaddata certs
 
 10. Update *settings.json* and *advanced_settings.json* files in the **saml** folder
 
-11. Now, it's good to go. Run this web application in your production!
+11. See a deployment checklist and change your settings
+```
+$ python manage.py check --deploy
+
+
+# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# SECURE_SSL_REDIRECT = True
+# X_FRAME_OPTIONS = 'DENY'
+```
+
+12. Now, it's good to go. Run this web application in your production!
 ```
 $ python manage.py runserver
 ```
