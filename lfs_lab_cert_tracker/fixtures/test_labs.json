@@ -1,0 +1,37 @@
+[
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 1,
+        "fields": {
+            "name": "Learning Centre"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 2,
+        "fields": {
+            "name": "Bio Lab"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 3,
+        "fields": {
+            "name": "Chemistry Lab"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 4,
+        "fields": {
+            "name": "Food Lab"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 5,
+        "fields": {
+            "name": "Safety Lab"
+        }
+    }
+]

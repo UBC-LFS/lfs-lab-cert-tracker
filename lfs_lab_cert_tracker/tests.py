@@ -463,4 +463,4 @@ class UserLabCertModelTest(TestCase):
 # class CertEmailTest(TestCase):
 
 #     def testEmailCertExpire(self):
-#         subprocess.call("python email_notification/test.py", shell=True)
+#         exec(open("email_notification/test.py").read())
