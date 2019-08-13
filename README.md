@@ -130,7 +130,12 @@ DEBUG = False
 MEDIA_ROOT = 'your_media_root'
 ```
 
-6. Create staticfiles in your directory
+6. Add your allowed_hosts in *settings.py*
+```
+ALLOWED_HOSTS = ['YOUR_HOST']
+```
+
+7. Create staticfiles in your directory
 ```
 $ python manage.py collectstatic --noinput
 
@@ -140,22 +145,22 @@ $ python manage.py collectstatic --noinput
 # https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Deployment
 ```
 
-7. Create a database in Postgresql
+8. Create a database in Postgresql
 
-8. Create database tables, and migrate
+9. Create database tables, and migrate
 ```
 $ python manage.py makemigrations
 $ python manage.py migrate
 ```
 
-9. Add valid certificate information
+10. Add valid certificate information
 ```
 $ python manage.py loaddata certs
 ```
 
-10. Update *settings.json* and *advanced_settings.json* files in the **saml** folder
+11. Update *settings.json* and *advanced_settings.json* files in the **saml** folder
 
-11. See a deployment checklist and change your settings
+12. See a deployment checklist and change your settings
 ```
 $ python manage.py check --deploy
 
@@ -169,7 +174,7 @@ $ python manage.py check --deploy
 # X_FRAME_OPTIONS = 'DENY'
 ```
 
-12. Now, it's good to go. Run this web application in your production!
+13. Now, it's good to go. Run this web application in your production!
 ```
 $ python manage.py runserver
 ```

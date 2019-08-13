@@ -4,7 +4,8 @@ from send_email_settings import *
 from send_email_base import send_email_to_lab_users, send_email_to_pis, send_email_to_admin
 
 
-# It will keep sending an email to users after the expiry date every twice a month
+# It will keep sending an email to users (Admins, PIs, Lab Users)
+# after the expiry date every twice a month
 # Note: PI means Principal Investigator
 
 def find_users_by_days(users, target_day):
