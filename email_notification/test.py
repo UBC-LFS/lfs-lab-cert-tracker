@@ -29,6 +29,7 @@ class CertExpiryTests(unittest.TestCase):
         lab_users, pis = find_users_by_days(users,date.date())
         self.assertEqual(len(lab_users), 1)
         self.assertEqual(len(pis[4]), 1)
+        self.assertEqual(list(pis.keys())[0],4)
 
     def test_find_users_by_days_multiple_users(self):
         '''Testing 2 users with expired certification and 1 pi in lab'''
@@ -49,6 +50,34 @@ class CertExpiryTests(unittest.TestCase):
         self.assertEqual(len(lab_users), 3)
         self.assertEqual(len(pis[4]), 3)
         self.assertEqual(len(pis[5]), 1)
+        self.assertEqual(list(pis.keys())[0],4)
+        self.assertEqual(list(pis.keys())[1],5)
+
+    def test_find_users_by_days_user_in_multiple_labs(self):
+        '''Testing 1 user with expired certification involved in 2 labs'''
+        db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+        users = db.get_users()
+        date = datetime(2019,6,2)
+        lab_users, pis = find_users_by_days(users,date.date())
+        self.assertEqual(len(lab_users), 4)
+        self.assertEqual(len(pis[4]), 4)
+        self.assertEqual(len(pis[5]), 2)
+
+    def test_find_users_by_days_user_with_multiple_certs_1_lab(self):
+        '''Testing 1 user with 2 expired certifications in 1 lab'''
+        db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+        users = db.get_users()
+        date = datetime(2019,6,3)
+        lab_users, pis = find_users_by_days(users,date.date())
+        self.assertEqual(len(lab_users), 5)
+        self.assertEqual(len(pis[6]),1)
+
+    def test_find_users_by_type_30_days_no_users(self):
+        '''Testing where no users have certifications expiring in 30 days'''
+        db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+        users = db.get_users()
+        lab_users, pis = find_users_by_type(users,1)
+        self.assertEqual(len(lab_users),0)
 
     def test_find_users_by_type_30_days_1_user(self):
         '''Testing 1 user with certification expiring in 30 days'''
@@ -77,6 +106,7 @@ class CertExpiryTests(unittest.TestCase):
             users = db.get_users()
             lab_users, pis = find_users_by_type(users,1)
             self.assertEqual(len(lab_users),1)
+            self.assertEqual(len(pis[4]),1)
             dateExpire = datetime.now() + timedelta(days=365)
             dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
             data = {
@@ -138,6 +168,8 @@ class CertExpiryTests(unittest.TestCase):
             users = db.get_users()
             lab_users, pis = find_users_by_type(users,1)
             self.assertEqual(len(lab_users),2)
+            self.assertEqual(len(pis[4]),2)
+            self.assertEqual(len(pis[5]),1)
             dateExpire = datetime.now() + timedelta(days=365)
             dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
             data1 = {
@@ -171,9 +203,228 @@ class CertExpiryTests(unittest.TestCase):
                 json.dump(d,g)
             subprocess.run('python manage.py loaddata test_user_certs2')
 
+    def test_find_users_by_type_30_days_multiple_pis(self):
+        '''Testing user with certification expiring in 30 days with 2 pis in lab'''
+        with open('lfs_lab_cert_tracker/fixtures/test_user_certs.json') as f:
+            d = json.load(f)
+            dateExpire = datetime.now() + timedelta(days=30)
+            dateCompletion = datetime.now() + timedelta(days=30) - timedelta(days=1825)
+            data1 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 22,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 21,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            data2 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 23,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 21,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            d.append(data1)
+            d.append(data2)
+            json_data = json.dumps(d)
+            with open('lfs_lab_cert_tracker/fixtures/test_user_certs2.json', 'w') as g:
+                json.dump(d,g)
+            subprocess.run('python manage.py loaddata test_user_certs2')
+            db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+            users = db.get_users()
+            lab_users, pis = find_users_by_type(users,1)
+            self.assertEqual(len(lab_users),1)
+            self.assertEqual(len(pis[4]),1)
+            self.assertEqual(len(pis[5]),1)
+            dateExpire = datetime.now() + timedelta(days=365)
+            dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
+            data1 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 22,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 21,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            data2 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 23,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 21,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            d.append(data1)
+            d.append(data2)
+            json_data = json.dumps(d)
+            with open('lfs_lab_cert_tracker/fixtures/test_user_certs2.json', 'w') as g:
+                json.dump(d,g)
+            subprocess.run('python manage.py loaddata test_user_certs2')
+
+    # def test_find_users_by_day_multiple_labs_and_certs(self):
+        
+
+    def test_find_users_by_type_14_days_no_users(self):
+        '''Testing where no users have certifications expiring in 14 days'''
+        db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+        users = db.get_users()
+        lab_users, pis = find_users_by_type(users,2)
+        self.assertEqual(len(lab_users),0)
+        self.assertEqual(pis,None)
+
+    def test_find_users_by_type_14_days_1_user(self):
+        '''Testing 1 user with certification expiring in 14 days'''
+        with open('lfs_lab_cert_tracker/fixtures/test_user_certs.json') as f:
+            d = json.load(f)
+            dateExpire = datetime.now() + timedelta(days=14)
+            dateCompletion = datetime.now() + timedelta(days=14) - timedelta(days=1825)
+            data = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 20,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 17,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            d.append(data)
+            json_data = json.dumps(d)
+            with open('lfs_lab_cert_tracker/fixtures/test_user_certs2.json', 'w') as g:
+                json.dump(d,g)
+            subprocess.run('python manage.py loaddata test_user_certs2')
+            db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+            users = db.get_users()
+            lab_users, pis = find_users_by_type(users,2)
+            self.assertEqual(len(lab_users),1)
+            self.assertEqual(pis,None)
+            dateExpire = datetime.now() + timedelta(days=365)
+            dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
+            data = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 20,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 17,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            d.append(data)
+            json_data = json.dumps(d)
+            with open('lfs_lab_cert_tracker/fixtures/test_user_certs2.json', 'w') as g:
+                json.dump(d,g)
+            subprocess.run('python manage.py loaddata test_user_certs2')
+
+    def test_find_users_by_type_14_days_multiple_users(self):
+        '''Testing multiple users with certifications expiring in 14 days'''
+        with open('lfs_lab_cert_tracker/fixtures/test_user_certs.json') as f:
+            d = json.load(f)
+            dateExpire = datetime.now() + timedelta(days=14)
+            dateCompletion = datetime.now() + timedelta(days=14) - timedelta(days=1825)
+            data1 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 20,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 17,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            data2 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 21,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 18,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            d.append(data1)
+            d.append(data2)
+            json_data = json.dumps(d)
+            with open('lfs_lab_cert_tracker/fixtures/test_user_certs2.json', 'w') as g:
+                json.dump(d,g)
+            subprocess.run('python manage.py loaddata test_user_certs2')
+            db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+            users = db.get_users()
+            lab_users, pis = find_users_by_type(users,2)
+            self.assertEqual(len(lab_users),2)
+            self.assertEqual(pis,None)
+            dateExpire = datetime.now() + timedelta(days=365)
+            dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
+            data1 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 20,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 17,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            data2 = {
+                "model": "lfs_lab_cert_tracker.usercert",
+                "pk": 21,
+                "fields": {
+                    "expiry_date": dateExpire.strftime('%Y-%m-%d'),
+                    "cert_id": 14,
+                    "user_id": 18,
+                    "cert_file": "users/5/certificates/23/certificate_1.jpg",
+                    "uploaded_date": "2018-06-11",
+                    "completion_date": dateCompletion.strftime('%Y-%m-%d')
+                }
+            }
+            d.append(data1)
+            d.append(data2)
+            json_data = json.dumps(d)
+            with open('lfs_lab_cert_tracker/fixtures/test_user_certs2.json', 'w') as g:
+                json.dump(d,g)
+            subprocess.run('python manage.py loaddata test_user_certs2')
+
 if __name__ == '__main__':
-    '''Lab 1: users:11,12,14 pi:4'''
-    '''Lab 2: users:13,15    pi:4,5'''
+    '''Lab 1: users:11,12,14,16 pi:4   certs:14'''
+    '''Lab 2: users:13,15,16    pi:4,5 certs:14'''
+    '''Lab 3: users:20          pi:    certs:14,15'''
+    '''Admin:1,2,3'''
+    '''User 4:              labs:1,2'''
+    '''User 5:              labs:2'''
+    '''User 11: certs:14    labs:1'''
+    '''User 12: certs:14    labs:1'''
+    '''User 13: certs:14    labs:2'''
+    '''User 14:             labs:1'''
+    '''User 15:             labs:2'''
+    '''User 16:             labs:1,2'''
+    '''User 20: certs:14,15 labs:3'''
     subprocess.run('python manage.py loaddata test_users')
     subprocess.run('python manage.py loaddata test_certs')
     subprocess.run('python manage.py loaddata test_labs')

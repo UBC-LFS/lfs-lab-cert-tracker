@@ -190,5 +190,65 @@
             "uploaded_date": "2018-06-11",
             "completion_date": "2014-05-31"
         }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.usercert",
+        "pk": 19,
+        "fields": {
+            "expiry_date": "2019-06-01",
+            "cert_id": 14,
+            "user_id": 16,
+            "cert_file": "users/5/certificates/23/certificate_1.jpg",
+            "uploaded_date": "2018-06-11",
+            "completion_date": "2014-06-01"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.usercert",
+        "pk": 20,
+        "fields": {
+            "expiry_date": "2019-06-02",
+            "cert_id": 14,
+            "user_id": 20,
+            "cert_file": "users/5/certificates/23/certificate_1.jpg",
+            "uploaded_date": "2018-06-11",
+            "completion_date": "2014-06-02"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.usercert",
+        "pk": 24,
+        "fields": {
+            "expiry_date": "2019-06-02",
+            "cert_id": 15,
+            "user_id": 20,
+            "cert_file": "users/5/certificates/23/certificate_1.jpg",
+            "uploaded_date": "2018-06-11",
+            "completion_date": "2014-06-02"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.usercert",
+        "pk": 25,
+        "fields": {
+            "expiry_date": "2019-06-02",
+            "cert_id": 14,
+            "user_id": 22,
+            "cert_file": "users/5/certificates/23/certificate_1.jpg",
+            "uploaded_date": "2018-06-11",
+            "completion_date": "2014-06-02"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.usercert",
+        "pk": 25,
+        "fields": {
+            "expiry_date": "2019-06-02",
+            "cert_id": 15,
+            "user_id": 22,
+            "cert_file": "users/5/certificates/23/certificate_1.jpg",
+            "uploaded_date": "2018-06-11",
+            "completion_date": "2014-06-02"
+        }
     }
 ]

@@ -41,7 +41,23 @@
     },
     {
         "model": "lfs_lab_cert_tracker.labcert",
-        "pk": 3,
+        "pk": 6,
+        "fields": {
+            "cert_id": 14,
+            "lab_id": 3
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.labcert",
+        "pk": 7,
+        "fields": {
+            "cert_id": 15,
+            "lab_id": 3
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.labcert",
+        "pk": 8,
         "fields": {
             "cert_id": 14,
             "lab_id": 2
