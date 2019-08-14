@@ -248,7 +248,19 @@
             "user_id": 22,
             "cert_file": "users/5/certificates/23/certificate_1.jpg",
             "uploaded_date": "2018-06-11",
-            "completion_date": "2014-06-02"
+            "completion_date": "2014-06-03"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.usercert",
+        "pk": 27,
+        "fields": {
+            "expiry_date": "2019-06-04",
+            "cert_id": 14,
+            "user_id": 23,
+            "cert_file": "users/5/certificates/23/certificate_1.jpg",
+            "uploaded_date": "2018-06-11",
+            "completion_date": "2014-06-04"
         }
     }
 ]
