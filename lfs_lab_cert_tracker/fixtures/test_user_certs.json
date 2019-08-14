@@ -231,7 +231,7 @@
         "model": "lfs_lab_cert_tracker.usercert",
         "pk": 25,
         "fields": {
-            "expiry_date": "2019-06-02",
+            "expiry_date": "2019-06-03",
             "cert_id": 14,
             "user_id": 22,
             "cert_file": "users/5/certificates/23/certificate_1.jpg",
@@ -241,9 +241,9 @@
     },
     {
         "model": "lfs_lab_cert_tracker.usercert",
-        "pk": 25,
+        "pk": 26,
         "fields": {
-            "expiry_date": "2019-06-02",
+            "expiry_date": "2019-06-03",
             "cert_id": 15,
             "user_id": 22,
             "cert_file": "users/5/certificates/23/certificate_1.jpg",

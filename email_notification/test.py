@@ -50,8 +50,6 @@ class CertExpiryTests(unittest.TestCase):
         self.assertEqual(len(lab_users), 3)
         self.assertEqual(len(pis[4]), 3)
         self.assertEqual(len(pis[5]), 1)
-        self.assertEqual(list(pis.keys())[0],4)
-        self.assertEqual(list(pis.keys())[1],5)
 
     def test_find_users_by_days_user_in_multiple_labs(self):
         '''Testing 1 user with expired certification involved in 2 labs'''
@@ -71,6 +69,14 @@ class CertExpiryTests(unittest.TestCase):
         lab_users, pis = find_users_by_days(users,date.date())
         self.assertEqual(len(lab_users), 5)
         self.assertEqual(len(pis[6]),1)
+
+    def test_find_users_by_day_multiple_labs_and_certs(self):
+        '''testing users with expired certs in 2 seperate labs'''
+        db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+        users = db.get_users()
+        date = datetime(2019,6,4)
+        lab_users, pis = find_users_by_days(users,date.date())
+        self.assertEqual(len(lab_users), 6)
 
     def test_find_users_by_type_30_days_no_users(self):
         '''Testing where no users have certifications expiring in 30 days'''
@@ -278,9 +284,6 @@ class CertExpiryTests(unittest.TestCase):
                 json.dump(d,g)
             subprocess.run('python manage.py loaddata test_user_certs2')
 
-    # def test_find_users_by_day_multiple_labs_and_certs(self):
-        
-
     def test_find_users_by_type_14_days_no_users(self):
         '''Testing where no users have certifications expiring in 14 days'''
         db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
@@ -412,9 +415,14 @@ class CertExpiryTests(unittest.TestCase):
             subprocess.run('python manage.py loaddata test_user_certs2')
 
 if __name__ == '__main__':
+    '''How to run tests:'''
+    '''1) On Command Prompt go to lfs-lab-cert-tracker directory'''
+    '''2) run python email_notification/test.py'''
+
     '''Lab 1: users:11,12,14,16 pi:4   certs:14'''
-    '''Lab 2: users:13,15,16    pi:4,5 certs:14'''
+    '''Lab 2: users:13,15,16,22 pi:4,5 certs:14'''
     '''Lab 3: users:20          pi:    certs:14,15'''
+    '''Lab 4: users:22          pi:    certs:15'''
     '''Admin:1,2,3'''
     '''User 4:              labs:1,2'''
     '''User 5:              labs:2'''
@@ -425,6 +433,7 @@ if __name__ == '__main__':
     '''User 15:             labs:2'''
     '''User 16:             labs:1,2'''
     '''User 20: certs:14,15 labs:3'''
+    '''User 22: certs:14,15 labs:2,4'''
     subprocess.run('python manage.py loaddata test_users')
     subprocess.run('python manage.py loaddata test_certs')
     subprocess.run('python manage.py loaddata test_labs')
