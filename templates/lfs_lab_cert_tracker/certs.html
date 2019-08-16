@@ -64,7 +64,7 @@
 
 		{% if certs.has_previous %}
       <li class="page-item">
-				<a class="page-link" href="?page={{ posts.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
+				<a class="page-link" href="?page={{ certs.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
 			</li>
     {% else %}
       <li class="page-item disabled">
@@ -86,7 +86,7 @@
 
     {% if certs.has_next %}
       <li class="page-item">
-				<a class="page-link" href="?page={{ posts.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
+				<a class="page-link" href="?page={{ certs.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
 			</li>
     {% else %}
       <li class="page-item disabled">
