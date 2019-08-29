@@ -113,10 +113,10 @@ class CertTrackerDatabase:
         rows = self.cursor.fetchall()
         return [ {
             'id': row[0],
-            'expiry_date': row[1],
-            'cert_id': row[2],
-            'user_id': row[3],
-            'completion_date': row[6]
+            'expiry_date': row[4],
+            'cert_id': row[5],
+            'user_id': row[6],
+            'completion_date': row[3]
         } for row in rows ]
 
 
