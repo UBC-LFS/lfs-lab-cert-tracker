@@ -31,8 +31,6 @@ HTTP endpoints, responsible for the frontend
 """
 
 def login(request):
-    #print(request.errors)
-    #messages.error(request, 'Error! Login failed as CWL Account is not Registered. Ask the administrator to get added to the application.')
     return render(request, 'lfs_lab_cert_tracker/login.html')
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -346,13 +344,8 @@ def page_not_found(request, exception, template_name="404.html"):
         'loggedin_user': request.user
     })
 
-# -------- to be removed
 
-
-#def admin_login(request):
-#    return render(request, 'lfs_lab_cert_tracker/admin_login.html')
-
-
+# -------- to be removed --------- #
 def my_login(request):
     auth_users = AuthUser.objects.all()
     if request.method == 'POST':

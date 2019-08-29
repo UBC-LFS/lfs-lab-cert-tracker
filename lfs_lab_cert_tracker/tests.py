@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.forms.models import model_to_dict
 from django.core import mail
 # from email_notification import send_email_after_expiry_date
-import email_notification.test
+#import email_notification.test
 import datetime
 import subprocess
 
@@ -58,7 +58,7 @@ def setUpUser5(self):
             'redirect_url': '/users/',
         })
         self.client.post('/api/users/', data=newUser, content_type="application/x-www-form-urlencoded")
-    
+
 
 def setUpCert(self):
     data = urlencode({'name': 'testing', 'expiry_in_years': 0, 'redirect_url': '/certificates/'})
@@ -86,7 +86,7 @@ class UserModelTests(TestCase):
         setUpAdminLogin(self)
         setUpUser(self)
         setUpUser5(self)
-    
+
     def testLoginAdmin(self):
         user = api.get_user_by_username("admin")
         self.assertEqual(user.first_name, 'Test')
@@ -111,7 +111,7 @@ class UserModelTests(TestCase):
         self.assertEqual(response.status_code, 200)
         user = api.get_user_by_username('test4.user4')
         self.assertEqual(user.is_superuser, True)
-        
+
     def testDeleteUser(self):
         user = api.get_user_by_username('test4.user4')
         data = urlencode({'redirect_url': '/users/'})
@@ -211,7 +211,7 @@ class CertModelTest(TestCase):
         self.assertEqual(response.status_code, 302)
         labCerts = api.get_lab_certs(lab['id'])
         self.assertEqual(labCerts[0]['name'], 'testing')
-    
+
     def testExpiredCert(self):
         data = urlencode({'name': 'testexpire', 'expiry_in_years': 1, 'redirect_url': '/certificates/'})
         self.client.post('/api/certificates/', content_type="application/x-www-form-urlencoded", data=data)
@@ -250,7 +250,7 @@ class CertModelTest(TestCase):
     #     self.assertEqual(len(api.get_user_certs(user.id)),0)
 
 class LabsModelTest(TestCase):
-    
+
     def setUp(self):
         setUpAdminLogin(self)
         setUpLab(self)
@@ -268,7 +268,7 @@ class LabsModelTest(TestCase):
         self.assertEqual(response.status_code, 302)
         lab = api.get_labs()[0]
         self.assertEqual(lab['name'], 'new test name')
-    
+
     def testDeleteLabs(self):
         ogLabNum = len(api.get_labs())
         lab = api.get_labs()[0]
@@ -296,7 +296,7 @@ class LabsModelTest(TestCase):
         self.client.post('/api/labs/' + str(lab2['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         userLabs = api.get_user_labs(user.id)
         self.assertEqual(len(userLabs), 2)
-    
+
     def testAddPIToLab(self):
         user = setUpUser(self)
         lab = api.get_labs()[0]
@@ -366,7 +366,7 @@ class LabsModelTest(TestCase):
         data = urlencode({'redirect_url': '/labs/3'})
         self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/switch_lab_role', data=data, content_type="application/x-www-form-urlencoded")
         self.assertEqual(len(api.get_user_labs(user.id, is_principal_investigator=True)),1)
-    
+
     def testSwitchToLabUser(self):
         user = api.get_user_by_username('admin')
         lab = api.get_labs()[0]
@@ -394,7 +394,7 @@ class LabsModelTest(TestCase):
     #     print(response2)
 
 class UserLabCertModelTest(TestCase):
-    
+
     def setUp(self):
         setUpAdminLogin(self)
         setUpUser(self)

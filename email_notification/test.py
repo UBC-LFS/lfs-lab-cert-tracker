@@ -40,7 +40,7 @@ class CertExpiryTests(unittest.TestCase):
         self.assertEqual(len(lab_users), 2)
         self.assertEqual(len(pis[4]), 2)
         self.assertEqual(list(pis.keys())[0],4) # pi is 4
-    
+
     def test_find_users_by_days_multiple_pis(self):
         '''Testing 1 user with expired certification and 2 pis in lab'''
         db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
@@ -141,7 +141,7 @@ class CertExpiryTests(unittest.TestCase):
                 json.dump(d,g)
             subprocess.run('python manage.py loaddata test_user_certs2')
 
-        
+
     def test_find_users_by_type_30_days_multiple_users(self):
         '''Testing multiple users with certifications expiring in 30 days'''
         with open('lfs_lab_cert_tracker/fixtures/test_user_certs.json') as f:

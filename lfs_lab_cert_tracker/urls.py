@@ -19,7 +19,6 @@ from django.conf.urls.static import static
 from lfs_lab_cert_tracker import views, api_views, saml_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('accounts/login/', views.login),
     path('', views.index, name='index'),
 
@@ -63,21 +62,10 @@ urlpatterns = [
     path('error/<str:error_msg>', views.show_error),
 
 
-
-
+    # -------- to be removed --------- #
     path('my_login/', views.my_login, name='my_login'),
-    #path('media/users/<int:user_id>/certificates/<int:cert_id>', views.download_user_cert),
-    #path('api/send_email', api_views.send_email),
-    #path('api/users/<int:user_id>/certificates/<int:cert_id>', api_views.user_certs),
-    #path('api/labs/<int:lab_id>/', api_views.labs),
-    #path('api/labs/<int:lab_id>/certificates/<int:cert_id>', api_views.lab_certs),
-    #path('api/certificates/<int:cert_id>/', api_views.certs),
+    #path('admin/', admin.site.urls)
 ]
-
 
 handler403 = views.permission_denied
 handler404 = views.page_not_found
-
-urlpatterns += [
-    path('accounts/admin/', include('django.contrib.auth.urls')),
-]

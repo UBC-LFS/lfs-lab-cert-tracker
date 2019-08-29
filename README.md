@@ -58,7 +58,9 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 7. The "principal\_investigator" group should be allowed limited permissions TODO: Define these permissions
 
 ### SAML
-To login without using SAML head to `http://<app url>/accounts/admin/login/`
+- To login with SAML `http://<url>/accounts/login`
+
+- To login without using SAML head to `http://localhost:8000/my_login/` for Development
 
 ### Media Files
 Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions
@@ -174,7 +176,45 @@ $ python manage.py check --deploy
 # X_FRAME_OPTIONS = 'DENY'
 ```
 
-13. Now, it's good to go. Run this web application in your production!
+13. Remove those lines and a my_login.html for local login.
+
+```
+# urls.py
+path('my_login/', views.my_login, name='my_login'),
+
+
+# views.py
+def my_login(request):
+    auth_users = AuthUser.objects.all()
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            auth_user = AuthUser.objects.get(username=request.POST['username'])
+            if auth_user is not None and request.POST['password'] is not None:
+                DjangoLogin(request, auth_user)
+                return redirect('index')
+
+    context = {
+        'form': LoginForm()
+    }
+    return render(request, 'lfs_lab_cert_tracker/my_login.html', context)
+
+
+# templates/lfs_lab_cert_tracker/my_login.html
+
+```
+
+14. Test this Django application and an email notification system
+```
+# Django app
+$ python manage.py test lfs_lab_cert_tracker
+
+# email notification
+$ python email_notification/test.py
+$
+```
+
+15. Now, it's good to go. Run this web application in your production!
 ```
 $ python manage.py runserver
 ```
