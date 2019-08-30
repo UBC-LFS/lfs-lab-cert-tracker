@@ -48,6 +48,13 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 	--noinput
 ```
 
+or
+
+```
+# Reference: https://docs.djangoproject.com/en/2.2/topics/auth/default/
+$ python manage.py createsuperuser --username=joe --email=joe@example.com
+```
+
 ### Authentication
 1. Use `python manage.py createsuperuser` to create a super user, just use something simple for development
 2. Follow the prompts
