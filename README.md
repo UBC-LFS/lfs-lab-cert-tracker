@@ -50,10 +50,14 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 
 or
 
+1. Run
+
 ```
 # Reference: https://docs.djangoproject.com/en/2.2/topics/auth/default/
 $ python manage.py createsuperuser --username=joe --email=joe@example.com
 ```
+
+2. Login with this URL: `http://localhost:8000/accounts/admin/login/`
 
 ### Authentication
 1. Use `python manage.py createsuperuser` to create a super user, just use something simple for development
@@ -64,10 +68,14 @@ $ python manage.py createsuperuser --username=joe --email=joe@example.com
 6. The "student" group should be allowed limited permissions TODO: Define these permissions
 7. The "principal\_investigator" group should be allowed limited permissions TODO: Define these permissions
 
+
 ### SAML
 - To login with SAML `http://<url>/accounts/login`
 
-- To login without using SAML head to `http://localhost:8000/my_login/` for Development
+### Without SAML
+
+- To login without using SAML head to `http://localhost:8000/my_login/` for local login and testing
+
 
 ### Media Files
 Create the directory `/srv/www/lfs-lab-cert-tracker` and ensure the Django process has read and write permissions
@@ -183,7 +191,19 @@ $ python manage.py check --deploy
 # X_FRAME_OPTIONS = 'DENY'
 ```
 
-13. Remove those lines and a my_login.html for local login.
+
+
+13. Test this Django application and an email notification system
+```
+# Django app
+$ python manage.py test lfs_lab_cert_tracker
+
+# email notification
+$ python email_notification/test.py
+$
+```
+
+14. Remove those lines and a my_login.html for local login and testing.
 
 ```
 # urls.py
@@ -209,16 +229,6 @@ def my_login(request):
 
 # templates/lfs_lab_cert_tracker/my_login.html
 
-```
-
-14. Test this Django application and an email notification system
-```
-# Django app
-$ python manage.py test lfs_lab_cert_tracker
-
-# email notification
-$ python email_notification/test.py
-$
 ```
 
 15. Now, it's good to go. Run this web application in your production!
