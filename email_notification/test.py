@@ -121,8 +121,6 @@ class CertExpiryTests(unittest.TestCase):
             db.fetch_data()
             users = db.get_users()
             lab_users, pis = find_users_by_type(users,1)
-            print('HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH')
-            print(lab_users)
             self.assertEqual(len(lab_users),1)
             self.assertEqual(len(pis[4]),1)
             dateExpire = datetime.now() + timedelta(days=365)
@@ -278,7 +276,7 @@ class CertExpiryTests(unittest.TestCase):
             dateCompletion = datetime.now() + timedelta(days=30) - timedelta(days=1825)
             data1 = {
                 "model": "lfs_lab_cert_tracker.usercert",
-                "pk": 24,
+                "pk": 27,
                 "fields": {
                     "expiry_date": dateExpire.strftime('%Y-%m-%d'),
                     "cert_id": 14,
@@ -301,7 +299,7 @@ class CertExpiryTests(unittest.TestCase):
             dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
             data1 = {
                 "model": "lfs_lab_cert_tracker.usercert",
-                "pk": 24,
+                "pk": 27,
                 "fields": {
                     "expiry_date": dateExpire.strftime('%Y-%m-%d'),
                     "cert_id": 14,
@@ -325,7 +323,7 @@ class CertExpiryTests(unittest.TestCase):
             dateCompletion = datetime.now() + timedelta(days=30) - timedelta(days=1825)
             data1 = {
                 "model": "lfs_lab_cert_tracker.usercert",
-                "pk": 24,
+                "pk": 27,
                 "fields": {
                     "expiry_date": dateExpire.strftime('%Y-%m-%d'),
                     "cert_id": 14,
@@ -348,7 +346,7 @@ class CertExpiryTests(unittest.TestCase):
             dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
             data1 = {
                 "model": "lfs_lab_cert_tracker.usercert",
-                "pk": 24,
+                "pk": 27,
                 "fields": {
                     "expiry_date": dateExpire.strftime('%Y-%m-%d'),
                     "cert_id": 14,
@@ -502,7 +500,7 @@ class CertExpiryTests(unittest.TestCase):
             dateCompletion = datetime.now() + timedelta(days=14) - timedelta(days=1825)
             data1 = {
                 "model": "lfs_lab_cert_tracker.usercert",
-                "pk": 25,
+                "pk": 28,
                 "fields": {
                     "expiry_date": dateExpire.strftime('%Y-%m-%d'),
                     "cert_id": 15,
@@ -525,7 +523,7 @@ class CertExpiryTests(unittest.TestCase):
             dateCompletion = datetime.now() + timedelta(days=365) - timedelta(days=1825)
             data1 = {
                 "model": "lfs_lab_cert_tracker.usercert",
-                "pk": 24,
+                "pk": 28,
                 "fields": {
                     "expiry_date": dateExpire.strftime('%Y-%m-%d'),
                     "cert_id": 15,
