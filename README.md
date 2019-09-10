@@ -200,7 +200,6 @@ $ python manage.py test lfs_lab_cert_tracker
 
 # email notification
 $ python email_notification/test.py
-$
 ```
 
 14. Remove those lines and a my_login.html for local login and testing.
