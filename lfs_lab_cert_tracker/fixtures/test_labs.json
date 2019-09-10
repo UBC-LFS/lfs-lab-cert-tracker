@@ -33,5 +33,19 @@
         "fields": {
             "name": "Safety Lab"
         }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 6,
+        "fields": {
+            "name": "Test Lab"
+        }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.lab",
+        "pk": 7,
+        "fields": {
+            "name": "Test2 Lab"
+        }
     }
 ]

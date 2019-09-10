@@ -206,5 +206,13 @@
             "name": "Transportation of Dangerous Goods by ground",
             "expiry_in_years": 3
         }
+    },
+    {
+        "model": "lfs_lab_cert_tracker.cert",
+        "pk": 29,
+        "fields": {
+            "name": "Testing Cert",
+            "expiry_in_years": 0
+        }
     }
 ]
