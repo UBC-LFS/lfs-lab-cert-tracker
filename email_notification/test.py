@@ -540,7 +540,7 @@ class CertExpiryTests(unittest.TestCase):
 if __name__ == '__main__':
     '''How to run tests:'''
     '''1) On Command Prompt go to lfs-lab-cert-tracker directory'''
-    '''2) run python email_notification/test.py'''
+    '''2) run python email_notification/email_test.py'''
 
     '''Lab 1: users:11,12,14,16 pi:4   certs:14'''
     '''Lab 2: users:13,15,16,22 pi:4,5 certs:14'''

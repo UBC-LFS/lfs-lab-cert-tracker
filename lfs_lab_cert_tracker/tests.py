@@ -8,7 +8,6 @@ from django.contrib.auth.hashers import make_password
 from django.forms.models import model_to_dict
 from django.core import mail
 # from email_notification import send_email_after_expiry_date
-import email_notification.test
 import datetime
 import subprocess
 
