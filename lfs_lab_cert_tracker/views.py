@@ -63,13 +63,18 @@ def users(request):
         ).distinct()
 
     page = request.GET.get('page', 1)
-    paginator = Paginator(user_list, 30) # Set 30 users in a page
+    paginator = Paginator(user_list, 50) # Set 50 users in a page
     try:
         users = paginator.page(page)
     except PageNotAnInteger:
         users = paginator.page(1)
     except EmptyPage:
         users = paginator.page(paginator.num_pages)
+
+    for user in users:
+        missing_certs = api.get_missing_certs(user['id'])
+        if len(missing_certs) == 0: user['has_missing_certs'] = 'No'
+        else: user['has_missing_certs'] = 'Yes'
 
     return render(request, 'lfs_lab_cert_tracker/users.html', {
         'loggedin_user': request.user,
@@ -220,7 +225,7 @@ def labs(request):
         lab_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
 
     page = request.GET.get('page', 1)
-    paginator = Paginator(lab_list, 20) # Set 20 labs in a page
+    paginator = Paginator(lab_list, 50) # Set 50 labs in a page
     try:
         labs = paginator.page(page)
     except PageNotAnInteger:
@@ -296,7 +301,7 @@ def certs(request):
         cert_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
 
     page = request.GET.get('page', 1)
-    paginator = Paginator(cert_list, 20) # Set 20 certificates in a page
+    paginator = Paginator(cert_list, 50) # Set 50 certificates in a page
     try:
         certs = paginator.page(page)
     except PageNotAnInteger:
