@@ -6,12 +6,12 @@
 
 <div class="row">
 	<div class="col-md-10 offset-md-1">
-		<h3 class="title">Certificate Details</h3>
+		<h3 class="title">Training Details</h3>
 
 		<table class="table table-borderless table-sm table-responsive-md">
 			<tbody>
 				<tr>
-					<td>Certificate Name</td>
+					<td>Training Name</td>
 					<td>
 						<a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a>
 					</td>
@@ -37,10 +37,7 @@
 			</tbody>
 		<table>
 
-		<a href="/users/{{ user_id }}/certificates" class="btn btn-secondary">My Certificates</a>
-
-
-		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{user_cert.name}}?');">
+		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete/' method="post" onsubmit="return confirm('Are you sure to delete {{user_cert.name}}?');">
 			{% csrf_token %}
 			{{ delete_user_cert_form | crispy }}
 			<input class="btn btn-danger" type="submit" value="Delete"/>

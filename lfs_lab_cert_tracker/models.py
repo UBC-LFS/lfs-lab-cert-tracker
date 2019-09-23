@@ -126,14 +126,14 @@ def send_notification(sender, created, **kwargs):
         message = """\
 Hi {0} {1},
 
-We just wanted you let you know that you were recently added to {2} in the LFS Lab Cert Tracker system. Please visit and check your certificates.
+We just wanted you let you know that you were recently added to {2} in the LFS Training Record Management System. Please visit and check your Training Records.
 {3}
 
 Thank you for your consideration.
 
 Best regards,
 
-LFS Lab Cert Tracker
+LFS Training Record Management System
         """.format(
             obj.user.first_name,
             obj.user.last_name,

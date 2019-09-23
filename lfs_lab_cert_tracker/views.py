@@ -50,7 +50,7 @@ def users(request):
     if not is_admin:
         raise PermissionDenied
 
-    redirect_url = '/users/'
+    redirect_url = '/all-users/'
 
     user_list = api.get_users()
     total_users = len(user_list)
@@ -127,7 +127,7 @@ def user_certs(request, user_id):
     """ Display user's certificates """
 
     loggedin_user_id = request.user.id
-    redirect_url = '/users/%d/certificates/' % loggedin_user_id
+    redirect_url = '/users/%d/training-record/' % loggedin_user_id
 
     return render(request, 'lfs_lab_cert_tracker/user_certs.html', {
         'loggedin_user': request.user,
@@ -148,7 +148,7 @@ def user_certs(request, user_id):
 @require_http_methods(['GET'])
 def user_cert_details(request, user_id, cert_id):
     loggedin_user_id = request.user.id
-    redirect_url = '/users/%d/certificates/' % loggedin_user_id
+    redirect_url = '/users/%d/training-record/' % loggedin_user_id
 
     user_cert = api.get_user_cert(user_id, cert_id)
     if not user_cert:
@@ -214,7 +214,7 @@ def labs(request):
     """ Display all labs """
 
     is_admin = auth_utils.is_admin(request.user)
-    redirect_url = '/labs/'
+    redirect_url = '/all-areas/'
 
     lab_list = api.get_labs()
     total_labs = len(lab_list)
@@ -265,7 +265,7 @@ def lab_details(request, lab_id):
         else:
             user['isPI'] = False
 
-    redirect_url = '/labs/%d' % lab_id
+    redirect_url = '/areas/%d' % lab_id
 
     return render(request, 'lfs_lab_cert_tracker/lab_details.html', {
         'loggedin_user': request.user,
@@ -290,7 +290,7 @@ def certs(request):
     """ Display all certificates """
 
     can_create_cert = auth_utils.is_admin(request.user)
-    redirect_url = '/certificates/'
+    redirect_url = '/all-trainings/'
 
     cert_list = api.get_certs()
     total_certs = len(cert_list)
@@ -323,7 +323,9 @@ def certs(request):
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def download_user_cert(request, user_id=None, cert_id=None, filename=None):
+    print(user_id, cert_id, filename)
     path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
+    print(path)
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
 @login_required(login_url=settings.LOGIN_URL)

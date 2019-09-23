@@ -54,7 +54,7 @@ tr.inactive {
 }
 
 .search-field-text::placeholder {
-  font-size: 17px;
+  font-size: 15px;
 }
 .btn-inactive {
   background-color: #ccc;

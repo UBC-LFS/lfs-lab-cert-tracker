@@ -7,26 +7,26 @@
 		<h3 class="title">{{ app_user.first_name }} {{ app_user.last_name }}</h3>
 
 		<div class="card border-success">
-			<div class="card-header bg-success text-white">Certificates</div>
+			<div class="card-header bg-success text-white">Training Records</div>
 			<div class="card-body">
 				{% if user_cert_list %}
 					<div class="card-text">
 						<ul>
 							{% for user_cert in user_cert_list %}
 								<li>
-									<a href="/users/{{user_cert.user}}/certificates/{{user_cert.cert}}">{{ user_cert.name }}</a>
+									<a href="/users/{{user_cert.user}}/training-record/{{user_cert.cert}}">{{ user_cert.name }}</a>
 								</li>
 							{% endfor %}
 						</ul>
 					</div>
 				{% else %}
-					<h5 class="card-title">{{ app_user.username }} does not have any certificates</h5>
+					<h5 class="card-title">{{ app_user.username }} does not have any training records</h5>
 				{% endif %}
 			</div>
 		</div>
 
 		<div class="card card border-danger">
-			<div class="card-header bg-danger text-white">Missing Certificates</div>
+			<div class="card-header bg-danger text-white">Missing Training Records</div>
 			<div class="card-body">
 				{% if missing_cert_list %}
 					<div class="card-text">
@@ -37,13 +37,13 @@
 						</ul>
 					</div>
 				{% else %}
-					<h5 class="card-title">{{ app_user.username }} is not missing any certificates</h5>
+					<h5 class="card-title">{{ app_user.username }} is not missing any training records</h5>
 				{% endif %}
 			</div>
 		</div>
 
 		<div class="card border-secondary">
-			<div class="card-header bg-secondary text-white">Expired Certificates</div>
+			<div class="card-header bg-secondary text-white">Expired Training Records</div>
 			<div class="card-body">
 				{% if expired_cert_list %}
 					<div class="card-text">
@@ -54,7 +54,7 @@
 						</ul>
 					</div>
 				{% else %}
-					<h5 class="card-title">{{ app_user.username }} does not have any expired certificates</h5>
+					<h5 class="card-title">{{ app_user.username }} does not have any expired training records</h5>
 				{% endif %}
 			</div>
 		</div>
@@ -67,7 +67,7 @@
 		</div>
 
 		<div>
-			<h5 class="title">Labs</h5>
+			<h5 class="title">Other Work Area(s)</h5>
 			{% if user_lab_list %}
 				<ul>
 					{% for user_lab in user_lab_list %}
@@ -80,12 +80,12 @@
 		</div>
 
 		<div>
-			<h5 class="title">PI Labs</h5>
+			<h5 class="title">Main Work Area(s)</h5>
 			{% if pi_user_lab_list %}
 				<ul>
 					{% for pi_user_lab in pi_user_lab_list %}
 						<li>
-							<a href="/labs/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+							<a href="/areas/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
 						</li>
 					{% endfor %}
 				</ul>

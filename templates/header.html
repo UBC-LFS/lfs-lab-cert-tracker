@@ -15,9 +15,7 @@
 	<div class="container">
 		<header>
 			<nav class="navbar navbar-expand-lg navbar-light bg-light">
-				<span class="navbar-brand" href="#">
-					<img class="lfs-logo rounded" src="{% static 'lfs_lab_cert_tracker/images/ubc-lfs-logo.gif' %}" alt="UBC LFS Logo"/>Lab Cert Tracker
-				</span>
+				<span class="navbar-brand" href="#">Training Record Management System</span>
 				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
 				</button>
@@ -28,20 +26,20 @@
 							<a class="nav-link" href="/">My Account</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="/users/{{ user.id }}/labs">My Labs</a>
+							<a class="nav-link" href="/users/{{ user.id }}/work-area">My Work Area</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="/users/{{ user.id }}/certificates">My Certificates</a>
+							<a class="nav-link" href="/users/{{ user.id }}/training-record">My Training Record</a>
 						</li>
 						{% if user.is_superuser %}
 					  <li class="nav-item">
-							<a class="nav-link" href="/labs">All Labs</a>
+							<a class="nav-link" href="/all-areas">All Areas</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="/certificates">All Certificates</a>
+							<a class="nav-link" href="/all-trainings">All Trainings</a>
 						</li>
 						<li class="nav-item">
-							<a class="nav-link" href="/users">All Users</a>
+							<a class="nav-link" href="/all-users">All Users</a>
 					  </li>
 						{% endif %}
 			    </ul>

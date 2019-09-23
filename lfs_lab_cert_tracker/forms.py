@@ -63,6 +63,7 @@ class LabCertForm(forms.ModelForm):
     class Meta:
         model = LabCert
         fields = ['cert', 'redirect_url']
+        labels = { 'cert': 'Training' }
 
 class UserCertForm(forms.ModelForm):
     """ Add user's certificate """
@@ -76,6 +77,10 @@ class UserCertForm(forms.ModelForm):
     class Meta:
         model = UserCert
         fields = ['user', 'cert', 'cert_file', 'redirect_url']
+        labels = {
+            'cert': 'Training',
+            'cert_file': ''
+        }
         widgets = { 'user': forms.HiddenInput() }
 
 class DeleteUserCertForm(forms.Form):

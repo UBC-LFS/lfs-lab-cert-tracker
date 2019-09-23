@@ -13,7 +13,7 @@
 	{% endfor %}
 {% endif %}
 
-<h3 class="title">All Certificates (Total: {{ total_certs }})</h3>
+<h3 class="title">All Trainings (Total: {{ total_certs }})</h3>
 
 <div class="search-field">
 	<form method="GET" >
@@ -45,9 +45,9 @@
 				</td>
 				<td>
 					{% if can_create_cert %}
-						<form class="list-form" action='/api/certificates/{{cert.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete this certificate - {{cert.name}}?');">
+						<form class="list-form" action='/api/certificates/{{cert.id}}/delete/' method="post" onsubmit="return confirm('Are you sure to delete this certificate - {{cert.name}}?');">
 							{% csrf_token %}
-							<input name="redirect_url" value="/certificates/" type="hidden"/>
+							<input name="redirect_url" value="/all-trainings/" type="hidden"/>
 							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
 						</form>
 					{% endif %}
@@ -99,11 +99,11 @@
 {% endif %}
 
 {% if can_create_cert %}
-<h5>Create New Certificate</h5>
+<h5>Create Training</h5>
 <form id="create_cert_form" action="/api/certificates/" method="POST">
 	{% csrf_token %}
 	<table>{{ cert_form.as_table }}</table>
-	<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Create Certificate"/>
+	<input class="btn btn-primary" id="submit_create_cert_form" type="submit" value="Create New Training"/>
 </form>
 {% endif %}
 {% endblock %}

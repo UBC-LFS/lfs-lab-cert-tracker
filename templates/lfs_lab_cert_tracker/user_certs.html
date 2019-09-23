@@ -17,30 +17,30 @@
 			{% endfor %}
 		{% endif %}
 
-		<h3 class="title">My Certificates</h3>
+		<h3 class="title">My Training Record</h3>
 
 		<div class="card border-success">
-			<div class="card-header bg-success text-white">Certificates</div>
+			<div class="card-header bg-success text-white">Training Record</div>
 			<div class="card-body">
 				{% if user_cert_list %}
 				<div class="card-text">
 					<ul>
 						{% for user_cert in user_cert_list %}
 							<li>
-								<a href="/users/{{user_id}}/certificates/{{user_cert.id}}">{{ user_cert.name }}</a>
+								<a href="/users/{{user_id}}/training-record/{{user_cert.id}}/">{{ user_cert.name }}</a>
 							</li>
 						{% endfor %}
 					</ul>
 				</div>
 				{% else %}
-					<h5 class="card-title">You do not have any certificates</h5>
+					<h5 class="card-title">You do not have any training records</h5>
 				{% endif %}
 			</div>
 		</div>
 
 		{% if missing_cert_list %}
 		<div class="card card border-danger">
-			<div class="card-header bg-danger text-white">Missing Certificates</div>
+			<div class="card-header bg-danger text-white">Missing Training Record</div>
 			<div class="card-body">
 				<div class="card-text">
 					<ul>
@@ -55,7 +55,7 @@
 
 		{% if expired_cert_list %}
 		<div class="card card border-secondary">
-			<div class="card-header bg-secondary text-white">Expired Certificates</div>
+			<div class="card-header bg-secondary text-white">Expired Training Record</div>
 			<div class="card-body">
 				<div class="card-text">
 					<ul>
@@ -69,12 +69,12 @@
 		{% endif %}
 
 
-		<h5 class="title">Add Certificates</h5>
+		<h5 class="title">Add Training Record</h5>
 		<small>Valid file types: jpg, jpeg, png, pdf, doc, docx</small>
 		<form id="add_user_cert_form" action="/api/users/{{user_id}}/certificates/" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 			<table>{{ user_cert_form.as_table }}</table>
-			<input class="btn btn-primary" id="submit_add_user_cert_form" type="submit" value="Add Certificate"/>
+			<input class="btn btn-primary" id="submit_add_user_cert_form" type="submit" value="Add Training Record"/>
 		</form>
 	</div>
 </div>

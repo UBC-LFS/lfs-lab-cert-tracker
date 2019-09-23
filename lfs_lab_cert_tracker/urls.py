@@ -22,44 +22,44 @@ urlpatterns = [
     path('accounts/login/', views.login),
     path('', views.index, name='index'),
 
-    path('users/', views.users),
+    path('all-users/', views.users),
     path('users/<int:user_id>/', views.user_details),
-    path('users/<int:user_id>/labs/', views.user_labs),
-    path('users/<int:user_id>/certificates/', views.user_certs, name='user_certs'),
-    path('users/<int:user_id>/certificates/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
+    path('users/<int:user_id>/work-area/', views.user_labs),
+    path('users/<int:user_id>/training-record/', views.user_certs, name='user_certs'),
+    path('users/<int:user_id>/training-record/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
 
-    path('labs/', views.labs, name='labs'),
-    path('labs/<int:lab_id>/', views.lab_details),
+    path('all-areas/', views.labs, name='labs'),
+    path('areas/<int:lab_id>/', views.lab_details),
 
-    path('certificates/', views.certs),
-    path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>', views.download_user_cert),
+    path('all-trainings/', views.certs),
+    path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
     path('api/users/', api_views.users),
-    path('api/users/<int:user_id>/delete', api_views.delete_user),
-    path('api/users/<int:user_id>/switch_admin', api_views.switch_admin),
-    path('api/users/<int:user_id>/switch_inactive', api_views.switch_inactive),
-    path('api/users/<int:user_id>/labs/<int:lab_id>/switch_lab_role', api_views.switch_lab_role),
-    path('api/users/<int:user_id>/labs/<int:lab_id>/delete', api_views.delete_user_lab),
+    path('api/users/<int:user_id>/delete/', api_views.delete_user),
+    path('api/users/<int:user_id>/switch_admin/', api_views.switch_admin),
+    path('api/users/<int:user_id>/switch_inactive/', api_views.switch_inactive),
+    path('api/users/<int:user_id>/labs/<int:lab_id>/switch_lab_role/', api_views.switch_lab_role),
+    path('api/users/<int:user_id>/labs/<int:lab_id>/delete/', api_views.delete_user_lab),
     path('api/users/<int:user_id>/certificates/', api_views.user_certs),
-    path('api/users/<int:user_id>/certificates/<int:cert_id>/delete', api_views.delete_user_certs),
+    path('api/users/<int:user_id>/certificates/<int:cert_id>/delete/', api_views.delete_user_certs),
 
     path('api/labs/', api_views.labs),
     path('api/labs/<int:lab_id>/users/', api_views.user_labs),
-    path('api/labs/<int:lab_id>/delete', api_views.delete_labs),
-    path('api/labs/<int:lab_id>/update', api_views.update_labs),
+    path('api/labs/<int:lab_id>/delete/', api_views.delete_labs),
+    path('api/labs/<int:lab_id>/update/', api_views.update_labs),
 
     path('api/certificates/', api_views.certs),
-    path('api/certificates/<int:cert_id>/delete', api_views.delete_certs),
+    path('api/certificates/<int:cert_id>/delete/', api_views.delete_certs),
 
     path('api/labs/<int:lab_id>/certificates/', api_views.lab_certs),
-    path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete', api_views.delete_lab_certs),
+    path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete/', api_views.delete_lab_certs),
 
     path('saml/', saml_views.saml, name='saml'),
     path('attrs/', saml_views.attrs, name='attrs'),
     path('metadata/', saml_views.metadata, name='metadata'),
 
-    path('error/<str:error_msg>', views.show_error),
+    path('error/<str:error_msg>/', views.show_error),
 
 
     # -------- to be removed --------- #

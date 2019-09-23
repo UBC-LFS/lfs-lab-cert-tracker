@@ -223,18 +223,18 @@ def user_certs(request, user_id=None):
             logger.info("%s: Created user cert %s" % (request.user, res))
             return JsonResponse(res)
         else:
-            messages.error(request, "Error! Failed to add a certificate.")
+            messages.error(request, "Error! Failed to add a training.")
     else:
         errors_data = form.errors.get_json_data()
         error_message = 'Please check your inputs.'
         for key in errors_data.keys():
             error_code = errors_data[key][0]['code']
             if error_code == 'unique_together':
-                error_message = "The certificate already exists. If you wish to update a new certificate, please delete your old certificate first."
+                error_message = "The certificate already exists. If you wish to update a new training, please delete your old training first."
             elif error_code == 'invalid_extension':
                 error_message = errors_data[key][0]['message']
 
-        messages.error(request, "Error! Failed to add your certificate. {0}".format(error_message))
+        messages.error(request, "Error! Failed to add your training. {0}".format(error_message))
 
 
 @login_required(login_url=settings.LOGIN_URL)

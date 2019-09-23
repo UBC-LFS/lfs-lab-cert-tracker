@@ -13,7 +13,7 @@
 	{% endfor %}
 {% endif %}
 
-<h3 class="title">All Labs (Total: {{ total_labs }})</h3>
+<h3 class="title">All Areas (Total: {{ total_labs }})</h3>
 
 <div class="search-field">
 	<form method="GET" >
@@ -35,16 +35,16 @@
 		{% for lab in labs %}
 			<tr>
 				<td>
-					<a href="/labs/{{lab.id}}/">{{ lab.name }}</a>
+					<a href="/areas/{{lab.id}}/">{{ lab.name }}</a>
 				</td>
 				<td>
 					{% if can_create_lab %}
 						<button type="button" class="btn btn-info btn-sm list-form" data-toggle="modal" data-target="#lab-edit-modal-{{ lab.id }}">
 						  Edit
 						</button>
-						<form class="list-form" action='/api/labs/{{lab.id}}/delete' method="post" onsubmit="return confirm('Are you sure to delete {{lab.name}}?');">
+						<form class="list-form" action='/api/labs/{{lab.id}}/delete/' method="post" onsubmit="return confirm('Are you sure to delete {{lab.name}}?');">
 							{% csrf_token %}
-							<input name="redirect_url" value="/labs/" type="hidden"/>
+							<input name="redirect_url" value="/all-areas/" type="hidden"/>
 							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
 						</form>
 					{% endif %}
@@ -61,10 +61,10 @@
 			        </button>
 			      </div>
 			      <div class="modal-body">
-							<form class="list-form" action='/api/labs/{{lab.id}}/update' method="post">
+							<form class="list-form" action='/api/labs/{{lab.id}}/update/' method="post">
 								{% csrf_token %}
 								<input name="name" value="{{ lab.name }}" type="text" />
-								<input name="redirect_url" value="/labs/" type="hidden"/>
+								<input name="redirect_url" value="/all-areas/" type="hidden"/>
 								<input class="btn btn-info btn-sm" type="submit" value="Update"/>
 							</form>
 			      </div>
@@ -117,11 +117,11 @@
 {% endif %}
 
 {% if can_create_lab %}
-<h5>Create Labs</h5>
+<h5>New Area</h5>
 <form id="create_lab_form" action="/api/labs/" method="post">
 	{% csrf_token %}
 	<table>{{ lab_form.as_table }}</table>
-	<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Create Lab"/>
+	<input class="btn btn-primary" id="submit_create_lab_form" type="submit" value="Create Area"/>
 </form>
 {% endif %}
 
