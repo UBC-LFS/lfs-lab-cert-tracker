@@ -107,7 +107,7 @@ class UserModelTests(TestCase):
 
     def testCreateNewAdmin(self):
         user = api.get_user_by_username('test4.user4')
-        response = self.client.post('/api/users/' + str(user.id) + '/switch_admin')
+        response = self.client.post('/api/users/' + str(user.id) + '/switch_admin/')
         self.assertEqual(response.status_code, 200)
         user = api.get_user_by_username('test4.user4')
         self.assertEqual(user.is_superuser, True)
@@ -115,16 +115,14 @@ class UserModelTests(TestCase):
     def testDeleteUser(self):
         user = api.get_user_by_username('test4.user4')
         data = urlencode({'redirect_url': '/users/'})
-        response = self.client.post('/api/users/' + str(user.id) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
-        self.assertEqual(response.status_code, 302)
+        self.client.post('/api/users/' + str(user.id) + '/delete/', data=data, content_type="application/x-www-form-urlencoded")
         user = api.get_user_by_username('test4.user4')
         self.assertIsNone(user)
 
     def testInactiveUser(self):
         user = api.get_user_by_username('test4.user4')
         data = urlencode({'redirect_url': '/users/'})
-        response = self.client.post('/api/users/' + str(user.id) + '/switch_inactive')
-        self.assertEqual(response.status_code, 200)
+        self.client.post('/api/users/' + str(user.id) + '/switch_inactive/')
         user = api.get_user_by_username('test4.user4')
         self.assertEqual(user.is_active, False)
 
@@ -180,8 +178,7 @@ class CertModelTest(TestCase):
         certs = api.get_certs()
         cert = certs[0]
         certNumber = len(certs)
-        response = self.client.post('/api/certificates/' + str(cert['id']) + '/delete')
-        self.assertEqual(response.status_code, 200)
+        self.client.post('/api/certificates/' + str(cert['id']) + '/delete/')
         certs = api.get_certs()
         self.assertEqual(len(certs), certNumber - 1)
 
@@ -263,8 +260,7 @@ class LabsModelTest(TestCase):
     def testEditLabs(self):
         lab = api.get_labs()[0]
         newName = urlencode({'name': 'new test name','redirect_url': '/labs/'})
-        response = self.client.post('/api/labs/' + str(lab['id']) + '/update', data=newName, content_type="application/x-www-form-urlencoded")
-        self.assertEqual(response.status_code, 302)
+        self.client.post('/api/labs/' + str(lab['id']) + '/update/', data=newName, content_type="application/x-www-form-urlencoded")
         lab = api.get_labs()[0]
         self.assertEqual(lab['name'], 'new test name')
 
@@ -272,8 +268,7 @@ class LabsModelTest(TestCase):
         ogLabNum = len(api.get_labs())
         lab = api.get_labs()[0]
         deleteForm = urlencode({'redirect_url': '/labs/'})
-        response = self.client.post('/api/labs/' + str(lab['id']) + '/delete', data=deleteForm, content_type="application/x-www-form-urlencoded")
-        self.assertEqual(response.status_code, 302)
+        self.client.post('/api/labs/' + str(lab['id']) + '/delete/', data=deleteForm, content_type="application/x-www-form-urlencoded")
         labs = api.get_labs()
         self.assertEqual(len(labs), ogLabNum-1)
 
@@ -325,8 +320,7 @@ class LabsModelTest(TestCase):
         data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
         self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         data = urlencode({'redirect_url': ''})
-        response = self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
-        self.assertEqual(response.status_code, 302)
+        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete/', data=data, content_type="application/x-www-form-urlencoded")
         userLabs = api.get_user_labs(user.id)
         self.assertEqual(len(userLabs), 0)
 
@@ -336,7 +330,7 @@ class LabsModelTest(TestCase):
         data = urlencode({'user': user.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
         self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         data = urlencode({'redirect_url': ''})
-        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete', data=data, content_type="application/x-www-form-urlencoded")
+        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/delete/', data=data, content_type="application/x-www-form-urlencoded")
         userLabs = api.get_user_labs(user.id)
         self.assertEqual(len(userLabs), 0)
 
@@ -363,7 +357,7 @@ class LabsModelTest(TestCase):
         data = urlencode({'user': user.username, 'role': 0, 'redirect_url': ['/labs/5', '/labs/5']})
         self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
         data = urlencode({'redirect_url': '/labs/3'})
-        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/switch_lab_role', data=data, content_type="application/x-www-form-urlencoded")
+        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/switch_lab_role/', data=data, content_type="application/x-www-form-urlencoded")
         self.assertEqual(len(api.get_user_labs(user.id, is_principal_investigator=True)),1)
 
     def testSwitchToLabUser(self):
@@ -371,8 +365,8 @@ class LabsModelTest(TestCase):
         lab = api.get_labs()[0]
         data = urlencode({'user': user.username, 'role': 1, 'redirect_url': ['/labs/5', '/labs/5']})
         self.client.post('/api/labs/' + str(lab['id']) + '/users/', data=data, content_type="application/x-www-form-urlencoded")
-        data = urlencode({'redirect_url': '/labs/3'})
-        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/switch_lab_role', data=data, content_type="application/x-www-form-urlencoded")
+        data = urlencode({'redirect_url': '/labs/3/'})
+        self.client.post('/api/users/' + str(user.id) + '/labs/' + str(lab['id']) + '/switch_lab_role/', data=data, content_type="application/x-www-form-urlencoded")
         self.assertEqual(len(api.get_user_labs(user.id, is_principal_investigator=True)),0)
 
     def testSwitchTwice(self):
