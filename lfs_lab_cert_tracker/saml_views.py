@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User as AuthUser
@@ -59,6 +60,7 @@ def authenticate(saml_authentication=None):
         return user
     return None
 
+@csrf_exempt
 def saml(request, action=None):
     req = prepare_django_request(request)
     auth = init_saml_auth(req)
