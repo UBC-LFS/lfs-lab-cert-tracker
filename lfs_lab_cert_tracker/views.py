@@ -266,7 +266,7 @@ def lab_details(request, lab_id):
             user['isPI'] = False
 
     redirect_url = '/areas/%d' % lab_id
-
+    
     return render(request, 'lfs_lab_cert_tracker/lab_details.html', {
         'loggedin_user': request.user,
         'lab': api.get_lab(lab_id),
@@ -275,7 +275,7 @@ def lab_details(request, lab_id):
         'users_expired_certs': api.get_users_expired_certs(lab_id),
         'required_certs': api.get_lab_certs(lab_id),
         'can_edit_user_lab': is_admin or is_pi,
-        'can_edit_lab_cert': is_admin or is_pi,
+        'can_edit_lab_cert': is_admin,
         'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
         'lab_user_form': UserLabForm(initial={'redirect_url': redirect_url})
     })
@@ -323,9 +323,7 @@ def certs(request):
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def download_user_cert(request, user_id=None, cert_id=None, filename=None):
-    print(user_id, cert_id, filename)
     path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
-    print(path)
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -359,7 +357,7 @@ def my_login(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             auth_user = AuthUser.objects.get(username=request.POST['username'])
-            if auth_user is not None and request.POST['password'] is not None:
+            if auth_user is not None and auth_user.password == request.POST['password']:
                 DjangoLogin(request, auth_user)
                 return redirect('index')
 
