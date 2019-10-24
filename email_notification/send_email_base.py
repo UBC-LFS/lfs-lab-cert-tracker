@@ -11,7 +11,7 @@ def send_email(receiver, message):
 
     sender = SENDER
     msg = MIMEText(message, 'html')
-    msg['Subject'] = 'Certificate Notification'
+    msg['Subject'] = 'Training Record Notification'
     msg['From'] = sender
     msg['To'] = receiver
 
@@ -86,12 +86,12 @@ def get_message(days, lab_users_list, type):
 
     if type == 'before':
         message = '''\
-            <p>Trainings of the following area users in your area will expire in {0} days.</p>
+            <p>Trainings of the following users in your area will expire in {0} days.</p>
             <ul>{1}</ul>
         '''.format(days, lab_users_list)
     else:
         message = '''\
-            <p>The following area users have expired training(s).</p>
+            <p>The following users have expired training(s).</p>
             <ul>{0}</ul>
         '''.format(lab_users_list)
 
@@ -128,7 +128,7 @@ def get_email_info(users, certs, days, role, info, type):
     else:
         lab_users_list = get_lab_users_list(users, info)
         message = get_message(days, lab_users_list, type)
-        template = html_template('Administrators', 'for LFS Cert Tracker', message)
+        template = html_template('Administrators', 'in LFS Training Record Management System', message)
 
     return receiver, template
 
@@ -140,7 +140,7 @@ def send_email_to_lab_users(users, certs, lab_users, days, type):
         if len(user['certs']) > 0:
             receiver, message = get_email_info(users, certs, days, 'lab_user', user, type)
             send_email(receiver, message)
-            print( "Lab User: Sent it to {0}".format(receiver) )
+            print( "User: Sent it to {0}".format(receiver) )
 
 
 def send_email_to_pis(users, certs, pis, days, type):
@@ -151,7 +151,7 @@ def send_email_to_pis(users, certs, pis, days, type):
             info = { 'id': id, 'lab_users': lab_users  }
             receiver, message = get_email_info(users, certs, days, 'pi', info, type)
             send_email(receiver, message)
-            print( "PI: Sent it to {0}".format(receiver) )
+            print( "Supervisor: Sent it to {0}".format(receiver) )
 
 
 def send_email_to_admin(users, certs, admin, lab_users, days, type):

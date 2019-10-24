@@ -310,10 +310,10 @@ def switch_lab_role(user_id, lab_id):
         user_lab = UserLab.objects.get(user=user_id, lab=lab_id)
         if user_lab.role == UserLab.LAB_USER:
             user_lab.role = UserLab.PRINCIPAL_INVESTIGATOR
-            role = 'Principal Investigator (PI)'
+            role = 'Supervisor'
         else:
             user_lab.role = UserLab.LAB_USER
-            role = 'Lab User'
+            role = 'User'
         user_lab.save(update_fields=['role'])
         return {'user_id': user_id, 'lab_id': lab_id, 'role': role}
     except UserLab.DoesNotExist:

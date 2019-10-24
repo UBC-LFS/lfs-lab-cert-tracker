@@ -65,7 +65,7 @@
 							{{ user_in_lab.username }}
 						</a>
 						{% if user_in_lab.isPI %}
-							<span class="badge badge-info">PI</span>
+							<span class="badge badge-info">Supervisor</span>
 						{% endif %}
 						{% if not user_in_lab.is_active %}
 							<span class="badge badge-secondary">Inactive</span>
@@ -73,7 +73,7 @@
 					</td>
 					<td>
 						{% if can_edit_user_lab %}
-							<form class="list-form" action="/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/switch_lab_role/" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user_in_lab.username}} {% if user_in_lab.isPI %} from PI to Lab User {% else %} from Lab User to PI {% endif %} ?');">
+							<form class="list-form" action="/api/users/{{user_in_lab.id}}/labs/{{lab.id}}/switch_lab_role/" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user_in_lab.username}} {% if user_in_lab.isPI %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
 								{% csrf_token %}
 								<input name="redirect_url" value="/areas/{{lab.id}}" type="hidden"/>
 								<input class="btn btn-sm btn-info" type="submit" value="Switch Role" />

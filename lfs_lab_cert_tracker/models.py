@@ -109,7 +109,7 @@ class UserLab(models.Model):
     """
     LAB_USER = 0
     PRINCIPAL_INVESTIGATOR = 1
-    ROLE_CHOICES = [ (LAB_USER, "Lab User"), (PRINCIPAL_INVESTIGATOR, "Principal Investigator") ]
+    ROLE_CHOICES = [ (LAB_USER, "User"), (PRINCIPAL_INVESTIGATOR, "Supervisor") ]
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField(choices=ROLE_CHOICES)
@@ -126,10 +126,7 @@ def send_notification(sender, created, **kwargs):
         message = """\
 Hi {0} {1},
 
-We just wanted you let you know that you were recently added to {2} in the LFS Training Record Management System. Please visit and check your Training Records.
-{3}
-
-Thank you for your consideration.
+You have recently been added to {2} in the LFS Training Record Management System. Please visit {3} to upload your training records. Thank you.
 
 Best regards,
 
