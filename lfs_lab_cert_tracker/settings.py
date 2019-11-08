@@ -215,3 +215,6 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
+
+
+MAX_UPLOAD_SIZE = '2097152'

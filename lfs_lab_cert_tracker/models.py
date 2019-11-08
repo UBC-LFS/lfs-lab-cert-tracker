@@ -12,6 +12,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
+from django.utils.translation import gettext_lazy as _
+
 
 """
 Contains app models
@@ -44,6 +46,23 @@ class Cert(models.Model):
 def create_user_cert_disk_path(instance, filename):
     return os.path.join('users', str(instance.user.id), 'certificates', str(instance.cert.id), filename)
 
+def format_bytes(size):
+    power = 2**10
+    n = 0
+    power_labels = {0 : '', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
+    while size > power:
+        size /= power
+        n += 1
+    return str( round(size, 2) ) + ' ' + power_labels[n]
+
+def FileSizeValidator(file):
+    print('check_file_size ', file.name)
+    print('check_file_size ', file.size)
+    if int(file.size) > int(settings.MAX_UPLOAD_SIZE):
+        raise ValidationError(
+            _('The maximum file size that can be uploaded is 1.5 MB. The size of this file (%(name)s) is %(size)s '), params={'name': file.name, 'size': format_bytes(int(file.size)) }, code='file_size_limit'
+        )
+
 class UserCert(models.Model):
     """
     Keeps track of which certs a user has or will need to complete
@@ -56,7 +75,10 @@ class UserCert(models.Model):
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
     cert_file = models.FileField(
         upload_to=create_user_cert_disk_path,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'])]
+        validators=[
+            FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx']),
+            FileSizeValidator
+        ]
     )
     uploaded_date = models.DateField()
     completion_date = models.DateField()
