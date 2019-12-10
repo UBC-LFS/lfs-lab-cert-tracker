@@ -10,3 +10,4 @@ vagrant
 staticfiles
 saml/
 lfs_lab_cert_tracker/settings.py
+run
