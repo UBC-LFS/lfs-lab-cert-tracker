@@ -52,18 +52,18 @@ def users(request):
 
     redirect_url = '/all-users/'
 
-    user_list = api.get_users()
-    total_users = len(user_list)
+    user_list = AuthUser.objects.all().order_by('id')
 
     # Pagination enables
     query = request.GET.get('q')
     if query:
         user_list = AuthUser.objects.filter(
             Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
-        ).distinct()
+        ).order_by('id').distinct()
 
     page = request.GET.get('page', 1)
     paginator = Paginator(user_list, 50) # Set 50 users in a page
+
     try:
         users = paginator.page(page)
     except PageNotAnInteger:
@@ -71,15 +71,11 @@ def users(request):
     except EmptyPage:
         users = paginator.page(paginator.num_pages)
 
-    for user in users:
-        missing_certs = api.get_missing_certs(user['id'])
-        if len(missing_certs) == 0: user['has_missing_certs'] = 'No'
-        else: user['has_missing_certs'] = 'Yes'
-
+    users = api.add_inactive_users(users)
     return render(request, 'lfs_lab_cert_tracker/users.html', {
         'loggedin_user': request.user,
-        'users': users,
-        'total_users': total_users,
+        'users': api.add_missing_certs(users),
+        'total_users': len(user_list),
         'user_form': UserForm(initial={'redirect_url': redirect_url})
     })
 
@@ -110,13 +106,13 @@ def user_details(request, user_id):
 @require_http_methods(['GET'])
 def user_labs(request, user_id):
     """ Display user's labs """
+    if api.get_user(user_id) is None: raise Http404
 
-    loggedin_user_id = request.user.id
     return render(request, 'lfs_lab_cert_tracker/user_labs.html', {
         'loggedin_user': request.user,
-        'user_id': loggedin_user_id,
-        'user_lab_list': api.get_user_labs(loggedin_user_id),
-        'pi_user_lab_list': api.get_user_labs(loggedin_user_id, is_principal_investigator=True)
+        'user_id': request.user.id,
+        'user_lab_list': api.get_user_labs(request.user.id),
+        'pi_user_lab_list': api.get_user_labs(request.user.id, is_principal_investigator=True)
     })
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -125,20 +121,22 @@ def user_labs(request, user_id):
 @require_http_methods(['GET'])
 def user_certs(request, user_id):
     """ Display user's certificates """
+    if api.get_user(user_id) is None: raise Http404
 
-    loggedin_user_id = request.user.id
-    redirect_url = '/users/%d/training-record/' % loggedin_user_id
+    if request.user.id != user_id:
+        if not auth_utils.is_admin(request.user): raise PermissionDenied
 
     return render(request, 'lfs_lab_cert_tracker/user_certs.html', {
         'loggedin_user': request.user,
-         'user_id': loggedin_user_id,
-         'user_cert_list': api.get_user_certs(loggedin_user_id),
-         'missing_cert_list': api.get_missing_certs(loggedin_user_id),
-         'expired_cert_list': api.get_expired_certs(loggedin_user_id),
-         'user_cert_form': UserCertForm(None, initial={
-            'user': loggedin_user_id,
-            'cert': api.get_missing_certs(loggedin_user_id),
-            'redirect_url': redirect_url
+        'user_id': user_id,
+        'user': api.get_user(user_id),
+        'user_cert_list': api.get_user_certs(user_id),
+        'missing_cert_list': api.get_missing_certs(user_id),
+        'expired_cert_list': api.get_expired_certs(user_id),
+        'user_cert_form': UserCertForm(None, initial={
+            'user': user_id,
+            'cert': api.get_missing_certs(user_id),
+            'redirect_url': '/users/%d/training-record/' % user_id
         })
     })
 
@@ -217,7 +215,6 @@ def labs(request):
     redirect_url = '/all-areas/'
 
     lab_list = api.get_labs()
-    total_labs = len(lab_list)
 
     # Pagination enables
     query = request.GET.get('q')
@@ -236,7 +233,7 @@ def labs(request):
     return render(request, 'lfs_lab_cert_tracker/labs.html', {
         'loggedin_user': request.user,
         'labs': labs,
-        'total_labs': total_labs,
+        'total_labs': len(lab_list),
         'can_create_lab': is_admin,
         'lab_form': LabForm(initial={'redirect_url': redirect_url})
     })
@@ -266,7 +263,7 @@ def lab_details(request, lab_id):
             user['isPI'] = False
 
     redirect_url = '/areas/%d' % lab_id
-    
+
     return render(request, 'lfs_lab_cert_tracker/lab_details.html', {
         'loggedin_user': request.user,
         'lab': api.get_lab(lab_id),
@@ -293,7 +290,6 @@ def certs(request):
     redirect_url = '/all-trainings/'
 
     cert_list = api.get_certs()
-    total_certs = len(cert_list)
 
     # Pagination enables
     query = request.GET.get('q')
@@ -312,7 +308,7 @@ def certs(request):
     return render(request, 'lfs_lab_cert_tracker/certs.html', {
         'loggedin_user': request.user,
         'certs': certs,
-        'total_certs': total_certs,
+        'total_certs': len(cert_list),
         'can_create_cert': can_create_cert,
         'cert_form': CertForm(initial={'redirect_url': redirect_url})
     })

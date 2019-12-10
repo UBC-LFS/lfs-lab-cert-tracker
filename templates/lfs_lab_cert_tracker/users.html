@@ -24,7 +24,7 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-sm table-responsive-md">
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center">
   <thead>
     <tr>
       <th>CWL</th>
@@ -46,13 +46,19 @@
         <td>{{ user.first_name }}</td>
         <td>{{ user.last_name }}</td>
 				<td>{{ user.email }}</td>
-				<td>{{ user.has_missing_certs }}</td>
+				<td>
+					{% if user.missing_certs|length == 0 %}
+						No
+					{% else %}
+						Yes ({{ user.missing_certs|length }})
+					{% endif %}
+				</td>
 				<td>
 					{% if user.is_superuser %} Yes {% endif %}
 				</td>
 				<td>
-					{% if not user.is_active and user.inactive_date %}
-						{{ user.inactive_date }}
+					{% if not user.is_active and user.inactive %}
+						{{ user.inactive.inactive_date }}
 					{% endif %}
 				</td>
 				<td>
@@ -66,7 +72,7 @@
 					<form class="list-form" action="/api/users/{{ user.id }}/switch_inactive/" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
 						{% csrf_token %}
 						<input name="redirect_url" value="/all-users/" type="hidden"/>
-						{% if not user.is_active and user.inactive_date %}
+						{% if not user.is_active and user.inactive %}
 							<input class="btn btn-sm btn-inactive" type="submit" value="Inactive" />
 						{% else %}
 							<input class="btn btn-success btn-sm" type="submit" value="Active"/>
@@ -90,10 +96,16 @@
   <ul class="pagination justify-content-center">
 
 		{% if users.has_previous %}
+			<li class="page-item">
+				<a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">First</a>
+			</li>
       <li class="page-item">
 				<a class="page-link" href="?page={{ users.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
 			</li>
     {% else %}
+			<li class="page-item disabled">
+				<span class="page-link">First</span>
+			</li>
       <li class="page-item disabled">
 				<span class="page-link">&laquo;</span>
 			</li>
@@ -115,10 +127,16 @@
       <li class="page-item">
 				<a class="page-link" href="?page={{ users.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
 			</li>
+			<li class="page-item">
+        <a class="page-link" href="?page={{ users.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Last</a>
+      </li>
     {% else %}
       <li class="page-item disabled">
 				<span class="page-link">&raquo;</span>
 			</li>
+			<li class="page-item disabled">
+        <span class="page-link">Last</span>
+      </li>
     {% endif %}
 
   </ul>

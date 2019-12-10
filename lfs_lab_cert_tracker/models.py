@@ -56,8 +56,6 @@ def format_bytes(size):
     return str( round(size, 2) ) + ' ' + power_labels[n]
 
 def FileSizeValidator(file):
-    print('check_file_size ', file.name)
-    print('check_file_size ', file.size)
     if int(file.size) > int(settings.MAX_UPLOAD_SIZE):
         raise ValidationError(
             _('The maximum file size that can be uploaded is 1.5 MB. The size of this file (%(name)s) is %(size)s '), params={'name': file.name, 'size': format_bytes(int(file.size)) }, code='file_size_limit'
@@ -96,6 +94,10 @@ class UserCert(models.Model):
 
         if self.cert_file and file_extension.lower() in ['.jpg', '.jpeg', '.png']:
             img = PILImage.open( self.cert_file )
+            
+            if img.mode == 'P':
+                img = img.convert('RGB')
+
             if img.mode in ['RGBA']:
                 background = PILImage.new( img.mode[:-1], img.size, (255,255,255) )
                 background.paste(img, img.split()[-1])

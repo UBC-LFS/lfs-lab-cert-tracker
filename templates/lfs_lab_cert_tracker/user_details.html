@@ -4,7 +4,7 @@
 
 <div class="row">
 	<div class="col-md-8">
-		<h3 class="title">{{ app_user.first_name }} {{ app_user.last_name }}</h3>
+		<h3 class="title">{{ app_user.get_full_name }}</h3>
 
 		<div class="card border-success">
 			<div class="card-header bg-success text-white">Training Records</div>
@@ -92,6 +92,11 @@
 			{% else %}
 				<p>{{ app_user.username }} is not a Supervisor in any areas</p>
 			{% endif %}
+		</div>
+
+		<div class="card mt-5 p-3">
+			<h5>Note</h5>
+			Please go to <a href="/users/{{ app_user.id }}/training-record/">My Training Record</a> if you would like to add your training records (upload your certificates).
 		</div>
 
 	</div>

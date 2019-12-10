@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from datetime import datetime, timedelta
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
@@ -26,6 +28,24 @@ def get_users():
         users.append(user_dict)
 
     return users
+
+def add_inactive_users(users):
+    ''' Add inactive status into users '''
+    for user in users:
+        user_inactive = UserInactive.objects.filter(user_id=user.id)
+        if user_inactive.exists():
+            print(user_inactive.first().inactive_date)
+            user.inactive = user_inactive.first()
+        else:
+            user.inactive = None
+    return users
+
+def add_missing_certs(users):
+    ''' Add missing certs into users '''
+    for user in users:
+        user.missing_certs = get_missing_certs(user.id)
+    return users
+
 
 def get_user(user_id):
     """ Find a user by id"""
@@ -204,6 +224,7 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
 
 def delete_user_cert(user_id, cert_id):
     UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
+    os.rmdir( os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) ) )
     return {'user_id': user_id, 'cert_id': cert_id}
 
 def update_user_cert(user_id, cert_id):
