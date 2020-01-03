@@ -4,85 +4,89 @@
 
 <div class="row">
 	<div class="col-md-8">
-		<h3 class="title">{{ app_user.get_full_name }}</h3>
+		<h3>{{ app_user.get_full_name }}</h3>
 
-		<div class="card border-success">
-			<div class="card-header bg-success text-white">Training Records</div>
-			<div class="card-body">
+		<div class="box border-green mt-3">
+			<h5 class="text-success">
+				<i class="material-icons">verified_user</i> Training Records
+			</h5>
+			<div class="text-secondary">
 				{% if user_cert_list %}
-					<div class="card-text">
-						<ul>
-							{% for user_cert in user_cert_list %}
-								<li>
-									<a href="/users/{{user_cert.user}}/training-record/{{user_cert.cert}}">{{ user_cert.name }}</a>
-								</li>
-							{% endfor %}
-						</ul>
-					</div>
+					<ul>
+						{% for user_cert in user_cert_list %}
+							<li>
+								<a href="/users/{{user_cert.user}}/training-record/{{user_cert.cert}}">{{ user_cert.name }}</a>
+							</li>
+						{% endfor %}
+					</ul>
 				{% else %}
-					<h5 class="card-title">{{ app_user.username }} does not have any training records</h5>
+					{{ app_user.first_name }} does not have any training records
 				{% endif %}
 			</div>
 		</div>
 
-		<div class="card card border-danger">
-			<div class="card-header bg-danger text-white">Missing Training Records</div>
-			<div class="card-body">
+		<div class="box border-red mt-5">
+			<h5 class="text-danger">
+				<i class="material-icons">notification_important</i> Missing Training Records
+			</h5>
+			<div class="text-secondary">
 				{% if missing_cert_list %}
-					<div class="card-text">
-						<ul>
-							{% for missing_cert in missing_cert_list %}
-								<li>{{ missing_cert.name }}</li>
-							{% endfor %}
-						</ul>
-					</div>
+					<ul>
+						{% for missing_cert in missing_cert_list %}
+							<li>{{ missing_cert.name }}</li>
+						{% endfor %}
+					</ul>
 				{% else %}
-					<h5 class="card-title">{{ app_user.username }} is not missing any training records</h5>
+					{{ app_user.first_name }} is not missing any training records
 				{% endif %}
 			</div>
 		</div>
 
-		<div class="card border-secondary">
-			<div class="card-header bg-secondary text-white">Expired Training Records</div>
-			<div class="card-body">
+		<div class="box border-gray my-5">
+			<h5 class="text-secondary">
+				<i class="material-icons">warning</i> Expired Training Records
+			</h5>
+			<div class="text-secondary">
 				{% if expired_cert_list %}
-					<div class="card-text">
-						<ul>
-							{% for expired_cert in expired_cert_list %}
-								<li>{{ expired_cert.name }}</li>
-							{% endfor %}
-						</ul>
-					</div>
+					<ul>
+						{% for expired_cert in expired_cert_list %}
+							<li>{{ expired_cert.name }}</li>
+						{% endfor %}
+					</ul>
 				{% else %}
-					<h5 class="card-title">{{ app_user.username }} does not have any expired training records</h5>
+					{{ app_user.first_name }} does not have any expired training records
 				{% endif %}
 			</div>
 		</div>
 
 	</div>
+
 	<div class="col-md-4">
 		<div>
-			<h5 class="title">Report</h5>
+			<h5 class="text-primary">
+				<i class="material-icons">cloud_download</i>
+				Report
+			</h5>
 			<a href="/users/{{app_user.id}}/report/">Download as PDF</a>
 		</div>
 
-		<div>
-			<h5 class="title">Other Work Area(s)</h5>
+		<div class="mt-5">
+			<h6>Other Work Area(s)</h6>
 			{% if user_lab_list %}
-				<ul>
+				<ul class="text-secondary">
 					{% for user_lab in user_lab_list %}
 						<li>{{ user_lab.name }}</li>
 					{% endfor %}
 				</ul>
 			{% else %}
-				<p>{{ app_user.username }} is not in any areas</p>
+				<p class="text-secondary">{{ app_user.first_name }} is not in any areas</p>
 			{% endif %}
 		</div>
 
-		<div>
-			<h5 class="title">Main Work Area(s)</h5>
+		<div class="mt-4">
+			<h6>Main Work Area(s)</h6>
 			{% if pi_user_lab_list %}
-				<ul>
+				<ul class="text-secondary">
 					{% for pi_user_lab in pi_user_lab_list %}
 						<li>
 							<a href="/areas/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
@@ -90,13 +94,25 @@
 					{% endfor %}
 				</ul>
 			{% else %}
-				<p>{{ app_user.username }} is not a Supervisor in any areas</p>
+				<p class="text-secondary">{{ app_user.first_name }} is not a Supervisor in any areas</p>
 			{% endif %}
 		</div>
 
-		<div class="card mt-5 p-3">
-			<h5>Note</h5>
-			Please go to <a href="/users/{{ app_user.id }}/training-record/">My Training Record</a> if you would like to add your training records (upload your certificates).
+		<div class="card bg-light-gray mt-5 p-3">
+			<h5>
+				<i class="material-icons">info</i> Note
+			</h5>
+			<p class="text-secondary">
+				Please go to
+				<a href="/users/{{ app_user.id }}/training-record/">
+					{% if loggedin_user.id == app_user.id %}
+						My
+					{% else %}
+						{{ app_user.get_full_name }}'s
+					{% endif %}
+					Training Record</a>
+				if you would like to add your training records (upload your certificates).
+			</p>
 		</div>
 
 	</div>

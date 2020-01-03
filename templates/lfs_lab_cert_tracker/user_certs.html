@@ -26,11 +26,12 @@
 			Training Record
 		</h3>
 
-		<div class="card border-success">
-			<div class="card-header bg-success text-white">Training Record</div>
-			<div class="card-body">
+		<div class="box border-green mt-3">
+			<h5 class="text-success">
+				<i class="material-icons">verified_user</i> Training Record
+			</h5>
+			<div class="text-secondary">
 				{% if user_cert_list %}
-				<div class="card-text">
 					<ul>
 						{% for user_cert in user_cert_list %}
 							<li>
@@ -38,18 +39,19 @@
 							</li>
 						{% endfor %}
 					</ul>
-				</div>
 				{% else %}
-					<h5 class="card-title">You do not have any training records</h5>
+					You do not have any training records
 				{% endif %}
 			</div>
 		</div>
 
 		{% if missing_cert_list %}
-		<div class="card card border-danger">
-			<div class="card-header bg-danger text-white">Missing Training Record</div>
-			<div class="card-body">
-				<div class="card-text">
+
+			<div class="box border-red mt-5">
+				<h5 class="text-danger">
+					<i class="material-icons">notification_important</i> Missing Training Record
+				</h5>
+				<div class="text-secondary">
 					<ul>
 						{% for missing_cert in missing_cert_list %}
 							<li>{{ missing_cert.name }}</li>
@@ -57,14 +59,15 @@
 					</ul>
 				</div>
 			</div>
-		</div>
 		{% endif %}
 
 		{% if expired_cert_list %}
-		<div class="card card border-secondary">
-			<div class="card-header bg-secondary text-white">Expired Training Record</div>
-			<div class="card-body">
-				<div class="card-text">
+
+			<div class="box border-gray mt-5">
+				<h5 class="text-secondary">
+					<i class="material-icons">warning</i> Expired Training Record
+				</h5>
+				<div class="text-secondary">
 					<ul>
 						{% for expired_cert in expired_cert_list %}
 							<li>{{ expired_cert.name }}</li>
@@ -72,12 +75,15 @@
 					</ul>
 				</div>
 			</div>
-		</div>
 		{% endif %}
 
 		<h5 class="title">Add Training Record</h5>
-		<small>Valid file types: jpg, jpeg, png, pdf, doc, docx</small><br />
-		<small>The maximum file size that can be uploaded is 1.5 MB</small>
+
+		<div class="text-info">
+			<small>Valid file types: jpg, jpeg, png, pdf, doc, docx</small><br />
+			<small>The maximum file size that can be uploaded is 1.5 MB</small>
+		</div>
+
 		<form id="add_user_cert_form" action="/api/users/{{user_id}}/certificates/" method="post" enctype="multipart/form-data">
 			{% csrf_token %}
 			<table>{{ user_cert_form.as_table }}</table>
