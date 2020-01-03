@@ -5,6 +5,7 @@ import smtplib
 from send_email_after_expiry_date import *
 from send_email_settings import *
 from send_email_before_expiry_date import find_users_by_type
+from send_email_missing_certs import find_missing_cert_users
 import subprocess
 from cert_tracker_db import CertTrackerDatabase
 from datetime import datetime, timedelta
@@ -539,26 +540,52 @@ class CertExpiryTests(unittest.TestCase):
                 json.dump(d,g)
             subprocess.run('python manage.py loaddata test_user_certs2')
 
-if __name__ == '__main__':
-    '''How to run tests:'''
-    '''1) On Command Prompt go to lfs-lab-cert-tracker directory'''
-    '''2) run python email_notification/test.py'''
+    def test_find_lab_users_and_pis_having_missing_certs(self):
+        ''' Test: find lab users and pis who are having missing certs '''
+        db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
+        users = db.get_users()
+        certs = db.get_certs()
 
-    '''Lab 1: users:11,12,14,16 pi:4   certs:14'''
-    '''Lab 2: users:13,15,16,22 pi:4,5 certs:14'''
-    '''Lab 3: users:20          pi:    certs:14,15'''
-    '''Lab 4: users:22          pi:    certs:15'''
-    '''Admin:1,2,3'''
-    '''User 4:              labs:1,2'''
-    '''User 5:              labs:2'''
-    '''User 11: certs:14    labs:1'''
-    '''User 12: certs:14    labs:1'''
-    '''User 13: certs:14    labs:2'''
-    '''User 14:             labs:1'''
-    '''User 15:             labs:2'''
-    '''User 16:             labs:1,2'''
-    '''User 20: certs:14,15 labs:3'''
-    '''User 22: certs:14,15 labs:2,4'''
+        lab_users, pis = find_missing_cert_users(users, certs)
+
+        # sort by ascending order
+        lab_users = sorted(lab_users, key = lambda i: i['id'])
+        pis = dict( sorted(pis.items()) )
+
+        self.assertEqual(len(lab_users), 10)
+        self.assertEqual(lab_users[0]['id'], 1)
+        self.assertEqual(lab_users[0]['missing_certs'], [29])
+        self.assertEqual(lab_users[1]['id'], 4)
+        self.assertEqual(lab_users[1]['missing_certs'], [16, 14, 15])
+
+        self.assertEqual(len(pis), 3)
+        self.assertEqual(pis[4], {17, 4, 5})
+        self.assertEqual(pis[5], {4, 5})
+        self.assertEqual(pis[6], {6, 7, 8, 9, 20})
+
+if __name__ == '__main__':
+    '''
+    How to run tests:
+    1) On Command Prompt go to lfs-lab-cert-tracker directory
+    2) run python email_notification/test.py
+
+    Lab 1: users:11,12,14,16 pi:4   certs:14
+    Lab 2: users:13,15,16,22 pi:4,5 certs:14
+    Lab 3: users:20          pi:    certs:14,15
+    Lab 4: users:22          pi:    certs:15
+    Admin:1,2,3
+    User 4:              labs:1,2
+    User 5:              labs:2
+    User 11: certs:14    labs:1
+    User 12: certs:14    labs:1
+    User 13: certs:14    labs:2
+    User 14:             labs:1
+    User 15:             labs:2
+    User 16:             labs:1,2
+    User 20: certs:14,15 labs:3
+    User 22: certs:14,15 labs:2,4
+    '''
+
     subprocess.run('python manage.py loaddata test_users')
     subprocess.run('python manage.py loaddata test_certs')
     subprocess.run('python manage.py loaddata test_labs')
