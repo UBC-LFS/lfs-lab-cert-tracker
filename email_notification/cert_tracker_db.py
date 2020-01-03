@@ -1,12 +1,6 @@
 import psycopg2
 import copy
 from datetime import datetime
-#USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
-#PASSWORD = os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD']
-#HOST = os.environ['LFS_LAB_CERT_TRACKER_DB_HOST']
-#PORT = os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
-#DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
-
 
 class CertTrackerDatabase:
 
@@ -39,25 +33,18 @@ class CertTrackerDatabase:
             is_active = row[9]
             if is_active:
                 id = row[0]
-                is_superuser = row[3]
-                username = row[4]
-                first_name = row[5]
-                last_name = row[6]
-                email = row[7]
-                is_active = row[9]
-                user = {
+                users[id] = {
                     'id': id,
-                    'is_superuser': is_superuser,
-                    'username': username,
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'email': email,
+                    'is_superuser': row[3],
+                    'username': row[4],
+                    'first_name': row[5],
+                    'last_name': row[6],
+                    'email': row[7],
                     'is_active': is_active,
                     'has_expiry_cert': False,
+                    'uploaded_certs': set(),
                     'labs': []
                 }
-                users[id] = user
-
         return users
 
 
@@ -157,6 +144,8 @@ class CertTrackerDatabase:
             completion_date = usercert['completion_date']
 
             if user_id in users.keys():
+                users[user_id]['uploaded_certs'].add(cert_id)
+
                 # Important!
                 # Each lab should be updated by user_id for certificates
                 labs = copy.deepcopy(users[user_id]['labs'])

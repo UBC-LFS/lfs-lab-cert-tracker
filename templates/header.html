@@ -12,9 +12,9 @@
 	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 </head>
 <body>
-	<div class="container">
-		<header>
-			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+	<header>
+		<div class="container">
+			<nav class="navbar navbar-expand-lg navbar-light">
 				<span class="navbar-brand" href="#">Training Record Management System</span>
 				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
@@ -50,13 +50,30 @@
 			  </div>
 				{% endif %}
 			</nav>
-		</header>
-		<main>
-			{% block content %}{% endblock %}
-		</main>
+		</div>
+	</header>
 
-		<footer></footer>
-	</div>
+	<main>
+		<div class="container">
+			{% block content %}{% endblock %}
+		</div>
+	</main>
+
+	<footer>
+		<div class="container footer-content">
+
+			<div class="column">
+				The University of British Columbia <br />
+				Faculty of Land and Food Systems
+			</div>
+
+			<div class="column text-right">
+				Training Record Management System <br />
+				Email: <a href="mailto:LFS-MCM-OPS@LISTS.UBC.CA">LFS-MCM-OPS@LISTS.UBC.CA</a>
+			</div>
+
+		</div>
+	</footer>
 
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

@@ -135,7 +135,7 @@ def user_certs(request, user_id):
         'expired_cert_list': api.get_expired_certs(user_id),
         'user_cert_form': UserCertForm(None, initial={
             'user': user_id,
-            'cert': api.get_missing_certs(user_id),
+            #'cert': api.get_missing_certs(user_id),
             'redirect_url': '/users/%d/training-record/' % user_id
         })
     })

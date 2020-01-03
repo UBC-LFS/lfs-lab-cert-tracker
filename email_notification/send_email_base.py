@@ -45,7 +45,7 @@ def html_template(first_name, last_name, message):
     return template
 
 
-def get_lab_users_list(users, info):
+def get_lab_users_list(users, info, role):
     """ Get a list of lab users """
 
     lab_users = []
@@ -55,9 +55,12 @@ def get_lab_users_list(users, info):
         else:
             user = users[ lab_user['id'] ]
 
-        lab_users.append("<li>" + user['first_name'] + " " + user['last_name']
-            + " (<a href='" + LFS_LAB_CERT_TRACKER_URL
-            + "/users/" + str(user['id']) + "/report'>User report</a>)</li>")
+        if role == 'pi':
+            lab_users.append("<li>" + user['first_name'] + " " + user['last_name'] + "</li>")
+        else:
+            lab_users.append("<li>" + user['first_name'] + " " + user['last_name']
+                + " (<a href='" + LFS_LAB_CERT_TRACKER_URL
+                + "/users/" + str(user['id']) + "/report'>User report</a>)</li>")
 
     return "".join(lab_users)
 
@@ -121,12 +124,12 @@ def get_email_info(users, certs, days, role, info, type):
         template = html_template(user_info['first_name'], user_info['last_name'], message)
 
     elif role == 'pi':
-        lab_users_list = get_lab_users_list(users, info)
+        lab_users_list = get_lab_users_list(users, info, 'pi')
         message = get_message(days, lab_users_list, type)
         template = html_template(user_info['first_name'], user_info['last_name'], message)
 
     else:
-        lab_users_list = get_lab_users_list(users, info)
+        lab_users_list = get_lab_users_list(users, info, 'admin')
         message = get_message(days, lab_users_list, type)
         template = html_template('Administrators', 'in LFS Training Record Management System', message)
 

@@ -1,3 +1,48 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  width: 100%;
+}
+
+main {
+  flex: 1 0 auto;
+  padding-bottom: 100px;
+}
+
+footer {
+  flex-shrink: 0;
+  color: #fff;
+  background-color: #002145;
+  height: 120px;
+
+}
+
+footer .footer-content {
+  height: 120px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+footer .column {
+  flex: 50%;
+}
+
+footer .footer-content a {
+  color: #fff;
+}
+
+
 .lfs-logo {
   height: 30px;
   width: auto;
@@ -24,8 +69,6 @@
 .container header .logout-btn:hover {
   text-decoration: underline;
 }
-
-footer { height: 100px; }
 
 .title,
 .card {
@@ -56,6 +99,29 @@ tr.inactive {
 .search-field-text::placeholder {
   font-size: 15px;
 }
+
 .btn-inactive {
   background-color: #ccc;
+}
+
+.btn-xs {
+  padding: .1em .3em;
+  font-size: 0.75rem;
+}
+
+.font-size-sm {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 575.98px) {
+  .navbar-brand {
+    font-size: 0.9rem;
+  }
+
+  footer .footer-content {
+    flex-direction: column;
+  }
+  footer .column:first-child {
+    margin-top: 25px;
+  }
 }

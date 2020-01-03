@@ -26,6 +26,6 @@ $ crontab -e
 # Add jobs
 00 09 * * * /usr/bin/python3 /home/username/lfs-lab-cert-tracker/email_notification/send_email_before_expiry_date.py
 00 09 */15 * * /usr/bin/python3 /home/username/lfs-lab-cert-tracker/email_notification/send_email_after_expiry_date.py
-
+00 09 */15 * * /usr/bin/python3 /home/username/lfs-lab-cert-tracker/email_notification/send_email_missing_certs.py
 
 """

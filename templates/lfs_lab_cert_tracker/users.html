@@ -19,22 +19,22 @@
 	<form method="GET" >
 		<div class="input-field">
 			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
-			<button class="btn btn-sm" type="submit" name="action">Search</button>
+			<button class="btn btn-light btn-sm" type="submit" name="action">Search</button>
 		</div>
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-md text-center">
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm">
   <thead>
     <tr>
       <th>CWL</th>
-      <th>First Name</th>
-			<th>Last Name</th>
+      <th>First <br />Name</th>
+			<th>Last <br />Name</th>
 			<th>E-mail</th>
-			<th>Missing Training Record</th>
+			<th>Missing <br />Training <br />Record</th>
 			<th>Admin</th>
-			<th>Inactivated Date</th>
-			<th colspan=3>Actions</th>
+			<th>Inactivated <br />Date</th>
+			<th>Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -48,13 +48,15 @@
 				<td>{{ user.email }}</td>
 				<td>
 					{% if user.missing_certs|length == 0 %}
-						No
+						<span class="badge badge-light">NO</span>
 					{% else %}
-						Yes ({{ user.missing_certs|length }})
+						<span class="badge badge-warning">YES ({{ user.missing_certs|length }})</span>
 					{% endif %}
 				</td>
 				<td>
-					{% if user.is_superuser %} Yes {% endif %}
+					{% if user.is_superuser %}
+						<span class="badge badge-secondary">YES</span>
+					{% endif %}
 				</td>
 				<td>
 					{% if not user.is_active and user.inactive %}
@@ -62,29 +64,29 @@
 					{% endif %}
 				</td>
 				<td>
-					<form class="list-form" action="/api/users/{{ user.id }}/switch_admin/" method="post" onsubmit="return confirm('Are you sure to {% if user.is_superuser %} REVOKE administrator privileges of {% else %} GRANT administrator privileges to {% endif %} this user - {{user.username}} ?');">
-	 					{% csrf_token %}
-	 					<input name="redirect_url" value="/all-users/" type="hidden"/>
-						<input class="btn btn-info btn-sm" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
-					</form>
-				</td>
-				<td>
-					<form class="list-form" action="/api/users/{{ user.id }}/switch_inactive/" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
-						{% csrf_token %}
-						<input name="redirect_url" value="/all-users/" type="hidden"/>
-						{% if not user.is_active and user.inactive %}
-							<input class="btn btn-sm btn-inactive" type="submit" value="Inactive" />
-						{% else %}
-							<input class="btn btn-success btn-sm" type="submit" value="Active"/>
-						{% endif %}
-					</form>
-				</td>
-				<td>
-					<form class="list-form" action="/api/users/{{ user.id }}/delete/" method="post" onsubmit="return confirm('Are you sure to delete this user - {{user.username}}?');">
-						{% csrf_token %}
-						<input name="redirect_url" value="/all-users/" type="hidden"/>
-						<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
-	 				</form>
+					<div class="btn-toolbar">
+						<form class="list-form" action="/api/users/{{ user.id }}/switch_admin/" method="post" onsubmit="return confirm('Are you sure to {% if user.is_superuser %} REVOKE administrator privileges of {% else %} GRANT administrator privileges to {% endif %} this user - {{user.username}} ?');">
+		 					{% csrf_token %}
+		 					<input name="redirect_url" value="/all-users/" type="hidden"/>
+							<input class="btn btn-info btn-xs" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
+						</form>
+
+						<form class="list-form" action="/api/users/{{ user.id }}/switch_inactive/" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
+							{% csrf_token %}
+							<input name="redirect_url" value="/all-users/" type="hidden"/>
+							{% if not user.is_active and user.inactive %}
+								<input class="btn btn-sm btn-inactive" type="submit" value="Inactive" />
+							{% else %}
+								<input class="btn btn-success btn-xs mx-2" type="submit" value="Active"/>
+							{% endif %}
+						</form>
+
+						<form class="list-form" action="/api/users/{{ user.id }}/delete/" method="post" onsubmit="return confirm('Are you sure to delete this user - {{user.username}}?');">
+							{% csrf_token %}
+							<input name="redirect_url" value="/all-users/" type="hidden"/>
+							<input class="btn btn-danger btn-xs" type="submit" value="Delete"/>
+		 				</form>
+					</div>
 				</td>
       </tr>
     {% endfor %}
