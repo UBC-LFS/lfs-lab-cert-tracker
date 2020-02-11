@@ -79,9 +79,12 @@
 
 		<h5 class="title">Add Training Record</h5>
 
-		<div class="text-info">
-			<small>Valid file types: jpg, jpeg, png, pdf, doc, docx</small><br />
-			<small>The maximum file size that can be uploaded is 1.5 MB</small>
+		<div class="text-info mb-2">
+			<small>
+				- Valid file types: jpg, jpeg, png, pdf, doc, docx <br />
+				- The maximum file size that can be uploaded is 1.5 MB. <br />
+				- A filename has at most 256 characters.
+			</small>
 		</div>
 
 		<form id="add_user_cert_form" action="/api/users/{{user_id}}/certificates/" method="post" enctype="multipart/form-data">

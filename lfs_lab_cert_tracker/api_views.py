@@ -227,14 +227,20 @@ def user_certs(request, user_id=None):
     else:
         errors_data = form.errors.get_json_data()
         error_message = 'Please check your inputs.'
-        
+
         for key in errors_data.keys():
             error_code = errors_data[key][0]['code']
+
             if error_code == 'unique_together':
                 error_message = "The certificate already exists. If you wish to update a new training, please delete your old training first."
+
             elif error_code == 'invalid_extension':
                 error_message = errors_data[key][0]['message']
+
             elif error_code == 'file_size_limit':
+                error_message = errors_data[key][0]['message']
+
+            elif error_code == 'max_length':
                 error_message = errors_data[key][0]['message']
 
         messages.error(request, "Error! Failed to add your training. {0}".format(error_message))

@@ -72,6 +72,7 @@ class UserCert(models.Model):
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
     cert_file = models.FileField(
+        max_length=256,
         upload_to=create_user_cert_disk_path,
         validators=[
             FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx']),
@@ -94,7 +95,7 @@ class UserCert(models.Model):
 
         if self.cert_file and file_extension.lower() in ['.jpg', '.jpeg', '.png']:
             img = PILImage.open( self.cert_file )
-            
+
             if img.mode == 'P':
                 img = img.convert('RGB')
 
