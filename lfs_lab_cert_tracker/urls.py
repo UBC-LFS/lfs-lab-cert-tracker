@@ -32,7 +32,8 @@ urlpatterns = [
     path('all-areas/', views.labs, name='labs'),
     path('areas/<int:lab_id>/', views.lab_details),
 
-    path('all-trainings/', views.certs),
+    path('all-trainings/', views.certs, name='certs'),
+    path('all-trainings/<int:cert_id>/edit/', views.edit_cert, name='edit_cert'),
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
     path('api/users/', api_views.users),

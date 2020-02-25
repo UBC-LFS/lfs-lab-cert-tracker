@@ -128,7 +128,7 @@
       "username": "testuser1",
       "first_name": "test",
       "last_name": "user1",
-      "email": "test1@landfood.ubc.ca"
+      "email": "email address"
     }
   },
   {
@@ -140,7 +140,7 @@
       "username": "testuser2",
       "first_name": "test",
       "last_name": "user2",
-      "email": "test2@landfood.ubc.ca"
+      "email": "email address"
     }
   },
   {
@@ -152,7 +152,7 @@
       "username": "testuser3",
       "first_name": "test",
       "last_name": "user3",
-      "email": "test3@landfood.ubc.ca"
+      "email": "email address"
     }
   },
   {

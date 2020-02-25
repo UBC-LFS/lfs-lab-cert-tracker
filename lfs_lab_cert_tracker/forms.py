@@ -46,6 +46,15 @@ class CertForm(forms.ModelForm):
             'name': { 'required': 'Enter a valid name.' },
         }
 
+class CertNameForm(forms.ModelForm):
+    class Meta:
+        model = Cert
+        fields = ['name']
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
+
+
 
 class UserLabForm(forms.ModelForm):
     """ Add a user to a lab """

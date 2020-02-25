@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 
 from django.contrib.auth.models import User as AuthUser
-from lfs_lab_cert_tracker.models import Lab, Cert, LabCert, UserCert, UserLab, UserInactive
+from lfs_lab_cert_tracker.models import *
 
 
 """
@@ -141,6 +141,11 @@ def get_cert(cert_id):
         return model_to_dict(cert)
     except Cert.DoesNotExist:
         return None
+
+def get_cert_object(cert_id):
+    ''' Get a cert '''
+    return get_object_or_404(Cert, id=cert_id)
+
 
 def delete_cert(cert_id):
     """ Delete a certificate """
@@ -364,3 +369,13 @@ def delete_lab_cert(lab_id, cert_id):
 
     LabCert.objects.get(lab=lab_id, cert=cert_id).delete()
     return {'lab_id': lab_id, 'cert_id': cert_id}
+
+
+# Helper methods
+
+def get_error_messages(errors):
+    messages = ''
+    for key in errors.keys():
+        value = errors[key]
+        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
+    return messages.strip()

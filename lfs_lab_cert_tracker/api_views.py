@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import logging
 import json
 from http import HTTPStatus
@@ -14,7 +14,7 @@ from django.forms.models import model_to_dict
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
-from lfs_lab_cert_tracker.forms import UserForm, UserCertForm, CertForm, LabForm, UserLabForm, LabCertForm
+from lfs_lab_cert_tracker.forms import *
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker.auth_utils import user_or_admin, admin_only, admin_or_pi_only
 from lfs_lab_cert_tracker.redirect_utils import handle_redirect
@@ -207,12 +207,15 @@ def user_certs(request, user_id=None):
         year = int(data['completion_date_year'])
         month = int(data['completion_date_month'])
         day = int(data['completion_date_day'])
+        print('user_certs', year, month, day)
 
-        completion_date = datetime.datetime(year=year, month=month, day=day)
+        completion_date = dt.datetime(year=year, month=month, day=day)
+        print(completion_date)
 
         # Calculate a expiry year
         expiry_year = year + int(cert['expiry_in_years'])
-        expiry_date = datetime.datetime(year=expiry_year, month=month, day=day)
+        expiry_date = dt.datetime(year=expiry_year, month=month, day=day)
+        print(expiry_date)
 
         result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
 

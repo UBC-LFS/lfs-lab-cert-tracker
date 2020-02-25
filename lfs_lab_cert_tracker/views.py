@@ -21,8 +21,7 @@ from django.contrib import messages
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
-from lfs_lab_cert_tracker.forms import (LabForm, CertForm, UserForm,
-        UserLabForm, LabCertForm, UserCertForm, SafetyWebForm, DeleteUserCertForm, LoginForm)
+from lfs_lab_cert_tracker.forms import *
 
 from lfs_lab_cert_tracker.models import Lab, Cert, UserCert
 
@@ -312,6 +311,26 @@ def certs(request):
         'can_create_cert': can_create_cert,
         'cert_form': CertForm(initial={'redirect_url': redirect_url})
     })
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@require_http_methods(['POST'])
+def edit_cert(request, cert_id):
+    """ Edit a cert """
+
+    if request.method == 'POST':
+        cert = api.get_cert_object(cert_id)
+        form = CertNameForm(request.POST, instance=cert)
+        if form.is_valid():
+            updated_cert = form.save()
+            messages.success(request, 'Success! Training - {0} updated'.format(updated_cert.name))
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( api.get_error_messages(errors) ))
+
+    return redirect('certs')
+
+
 
 
 @login_required(login_url=settings.LOGIN_URL)

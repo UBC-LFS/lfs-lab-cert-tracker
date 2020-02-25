@@ -45,11 +45,42 @@
 				</td>
 				<td>
 					{% if can_create_cert %}
+					<div class="btn-toolbar">
+						<button class="btn btn-info btn-xs mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
+
+						<div class="modal fade" id="cert-name-edit-modal-{{ cert.id }}" tabindex="-1" role="dialog" aria-labelledby="cert-name-edit-modal-label-{{ cert.id }}" aria-hidden="true">
+							<div class="modal-dialog modal-lg" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title text-info" id="cert-name-edit-modal-label-{{ cert.id }}">Edit Training</h5>
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+									</div>
+									<div class="modal-body text-left">
+										<div class="modal-item">
+											<form action="{% url 'edit_cert' cert_id=cert.id %}" method="post">
+												{% csrf_token %}
+
+												<div class="mb-3">
+													<label for="id_name_{{ cert.id }}" class="font-weight-bold">Name:</label>
+													<small class="text-muted">(Maximum characters: 256)</small>
+													<input id="id_name_{{ cert.id }}" type="text" name="name" value="{{ cert.name }}" class="form-control" />
+												</div>
+
+												<input type="hidden" name="cert" value="{{ cert.id }}" />
+												<input class="btn btn-primary btn-sm" type="submit" value="Update" />
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
 						<form class="list-form" action='/api/certificates/{{cert.id}}/delete/' method="post" onsubmit="return confirm('Are you sure to delete this certificate - {{cert.name}}?');">
 							{% csrf_token %}
 							<input name="redirect_url" value="/all-trainings/" type="hidden"/>
-							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
+							<input class="btn btn-danger btn-xs" type="submit" value="Delete"/>
 						</form>
+					</div>
 					{% endif %}
 				</td>
 			</tr>

@@ -75,7 +75,7 @@
 							{% csrf_token %}
 							<input name="redirect_url" value="/all-users/" type="hidden"/>
 							{% if not user.is_active and user.inactive %}
-								<input class="btn btn-sm btn-inactive" type="submit" value="Inactive" />
+								<input class="btn btn-inactive btn-xs mx-2" type="submit" value="Inactive" />
 							{% else %}
 								<input class="btn btn-success btn-xs mx-2" type="submit" value="Active"/>
 							{% endif %}
