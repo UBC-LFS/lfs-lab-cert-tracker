@@ -207,15 +207,12 @@ def user_certs(request, user_id=None):
         year = int(data['completion_date_year'])
         month = int(data['completion_date_month'])
         day = int(data['completion_date_day'])
-        print('user_certs', year, month, day)
 
         completion_date = dt.datetime(year=year, month=month, day=day)
-        print(completion_date)
 
         # Calculate a expiry year
         expiry_year = year + int(cert['expiry_in_years'])
         expiry_date = dt.datetime(year=expiry_year, month=month, day=day)
-        print(expiry_date)
 
         result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
 
