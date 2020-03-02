@@ -366,16 +366,12 @@ def page_not_found(request, exception, template_name="404.html"):
 
 
 def my_login(request):
-    auth_users = AuthUser.objects.all()
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            auth_user = AuthUser.objects.get(username=request.POST['username'])
-            if auth_user is not None and auth_user.password == request.POST['password']:
+            auth_user = authenticate(username=request.POST['username'], password=request.POST['password'])
+            if auth_user is not None:
                 DjangoLogin(request, auth_user)
                 return redirect('index')
 
-    context = {
-        'form': LoginForm()
-    }
-    return render(request, 'lfs_lab_cert_tracker/my_login.html', context)
+    return render(request, 'lfs_lab_cert_tracker/my_login.html', { 'form': LoginForm() })
