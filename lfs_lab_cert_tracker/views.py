@@ -365,7 +365,6 @@ def page_not_found(request, exception, template_name="404.html"):
     })
 
 
-# -------- to be removed --------- #
 def my_login(request):
     auth_users = AuthUser.objects.all()
     if request.method == 'POST':

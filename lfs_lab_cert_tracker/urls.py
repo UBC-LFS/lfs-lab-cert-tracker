@@ -62,10 +62,8 @@ urlpatterns = [
 
     path('error/<str:error_msg>/', views.show_error),
 
-
-    # -------- to be removed --------- #
-    path('my_login/', views.my_login, name='my_login'),
-    path('accounts/admin/', include('django.contrib.auth.urls')),
+    #path('my_login/', views.my_login, name='my_login')
+    #path('accounts/admin/', include('django.contrib.auth.urls')),
     #path('admin/', admin.site.urls)
 ]
 
