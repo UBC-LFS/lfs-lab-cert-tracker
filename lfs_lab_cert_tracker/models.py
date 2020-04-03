@@ -148,15 +148,21 @@ def send_notification(sender, created, **kwargs):
     if created:
         obj = kwargs['instance']
         title = 'You are added to {0}'.format(obj.lab.name)
-        message = """\
-Hi {0} {1},
-
-You have recently been added to {2} in the LFS Training Record Management System. Please visit {3} to upload your training records. Thank you.
-
-Best regards,
-
-LFS Training Record Management System
-        """.format(
+        message = '''\
+        <div>
+            <p>Hi {0} {1},</p>
+            <div>You have recently been added to {2} in the LFS Training Record Management System. Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</div>
+            <br />
+            <div>
+                <b>Please note that if you try to access the LFS Training Record Management System off campus,
+                you must be connected via
+                <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
+            </div>
+            <br />
+            <p>Best regards,</p>
+            <p>LFS Training Record Management System</p>
+        </div>
+        '''.format(
             obj.user.first_name,
             obj.user.last_name,
             obj.lab.name,
@@ -171,7 +177,7 @@ LFS Training Record Management System
             print(e)
 
         if valid_email:
-            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False)
+            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
 
 
 post_save.connect(send_notification, sender=UserLab)
