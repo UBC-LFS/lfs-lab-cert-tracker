@@ -365,12 +365,14 @@ def page_not_found(request, exception, template_name="404.html"):
     })
 
 
+# for local testing
+
 def my_login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            auth_user = authenticate(username=request.POST['username'], password=request.POST['password'])
-            if auth_user is not None:
+            auth_user = AuthUser.objects.get(username=request.POST['username'])
+            if auth_user is not None and auth_user.password == request.POST['password']:
                 DjangoLogin(request, auth_user)
                 return redirect('index')
 
