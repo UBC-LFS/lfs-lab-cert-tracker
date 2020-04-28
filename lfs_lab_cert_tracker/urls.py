@@ -62,9 +62,9 @@ urlpatterns = [
 
     path('error/<str:error_msg>/', views.show_error),
 
-    path('my_login/', views.my_login, name='my_login')
+    #path('my_login/', views.my_login, name='my_login'),
+    #path('admin/', admin.site.urls),
     #path('accounts/admin/', include('django.contrib.auth.urls')),
-    #path('admin/', admin.site.urls)
 ]
 
 handler403 = views.permission_denied

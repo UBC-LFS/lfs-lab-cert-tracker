@@ -473,9 +473,15 @@ def my_login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            auth_user = AuthUser.objects.get(username=request.POST['username'])
-            if auth_user is not None and auth_user.password == request.POST['password']:
-                DjangoLogin(request, auth_user)
-                return redirect('index')
+            if settings.DEBUG == True:
+                user = AuthUser.objects.get(username=request.POST['username'])
+                if user is not None and user.password == request.POST['password']:
+                    DjangoLogin(request, user)
+                    return redirect('index')
+            else:
+                user = authenticate(username=request.POST['username'], password=request.POST['password'])
+                if user is not None:
+                    DjangoLogin(request, user)
+                    return redirect('index')
 
     return render(request, 'lfs_lab_cert_tracker/my_login.html', { 'form': LoginForm() })
