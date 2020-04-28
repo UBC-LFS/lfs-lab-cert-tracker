@@ -7,10 +7,9 @@ import datetime as dt
 class UserForm(forms.ModelForm):
     """ Create a new user """
 
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = AuthUser
-        fields = ['first_name', 'last_name', 'email', 'username', 'redirect_url']
+        fields = ['first_name', 'last_name', 'email', 'username']
         labels = { 'email': 'Email', 'username': 'CWL' }
         help_texts = { 'username': None }
         error_messages = {

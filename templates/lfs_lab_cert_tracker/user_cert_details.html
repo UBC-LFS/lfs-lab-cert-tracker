@@ -37,11 +37,17 @@
 			</tbody>
 		</table>
 
-		<form action='/api/users/{{user_id}}/certificates/{{user_cert.id}}/delete/' method="post" onsubmit="return confirm('Are you sure to delete {{user_cert.name}}?');">
-			{% csrf_token %}
-			{{ delete_user_cert_form | crispy }}
-			<input class="btn btn-danger" type="submit" value="Delete"/>
-		</form>
+		{% if app_user.id == loggedin_user.id %}
+			<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' loggedin_user.id %}">Back to My Account</a>
+
+			<form class="d-inline" action='/api/users/{{ app_user.id }}/certificates/{{ user_cert.id }}/delete/' method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.name }}?');">
+				{% csrf_token %}
+				{{ delete_user_cert_form | crispy }}
+				<input class="btn btn-danger" type="submit" value="Delete" />
+			</form>
+		{% else %}
+			<a class="btn btn-outline-primary" href="{% url 'user_details' app_user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
+		{% endif %}
 
 	</div>
 </div>

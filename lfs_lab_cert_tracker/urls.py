@@ -22,12 +22,16 @@ urlpatterns = [
     path('accounts/login/', views.login),
     path('', views.index, name='index'),
 
-    path('all-users/', views.users),
-    path('users/<int:user_id>/', views.user_details),
+    path('users/', views.users, name='users'),
+    path('users/<int:user_id>/', views.user_details, name='user_details'),
     path('users/<int:user_id>/work-area/', views.user_labs),
     path('users/<int:user_id>/training-record/', views.user_certs, name='user_certs'),
     path('users/<int:user_id>/training-record/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
+    path('users/report/missing-training/', views.users_in_missing_training_report, name='users_in_missing_training_report'),
+    path('users/delete/', views.delete_user, name='delete_user'),
+    path('users/switch-admin/', views.switch_admin, name='switch_admin'),
+    path('users/switch-inactive/', views.switch_inactive, name='switch_inactive'),
 
     path('all-areas/', views.labs, name='labs'),
     path('areas/<int:lab_id>/', views.lab_details),
@@ -36,10 +40,6 @@ urlpatterns = [
     path('all-trainings/<int:cert_id>/edit/', views.edit_cert, name='edit_cert'),
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
-    path('api/users/', api_views.users),
-    path('api/users/<int:user_id>/delete/', api_views.delete_user),
-    path('api/users/<int:user_id>/switch_admin/', api_views.switch_admin),
-    path('api/users/<int:user_id>/switch_inactive/', api_views.switch_inactive),
     path('api/users/<int:user_id>/labs/<int:lab_id>/switch_lab_role/', api_views.switch_lab_role),
     path('api/users/<int:user_id>/labs/<int:lab_id>/delete/', api_views.delete_user_lab),
     path('api/users/<int:user_id>/certificates/', api_views.user_certs),
@@ -62,7 +62,7 @@ urlpatterns = [
 
     path('error/<str:error_msg>/', views.show_error),
 
-    #path('my_login/', views.my_login, name='my_login')
+    path('my_login/', views.my_login, name='my_login')
     #path('accounts/admin/', include('django.contrib.auth.urls')),
     #path('admin/', admin.site.urls)
 ]

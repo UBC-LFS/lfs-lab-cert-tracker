@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
+from django.http import Http404
 
 from django.contrib.auth.models import User as AuthUser
 from lfs_lab_cert_tracker.models import *
@@ -34,7 +35,6 @@ def add_inactive_users(users):
     for user in users:
         user_inactive = UserInactive.objects.filter(user_id=user.id)
         if user_inactive.exists():
-            print(user_inactive.first().inactive_date)
             user.inactive = user_inactive.first()
         else:
             user.inactive = None
@@ -43,13 +43,15 @@ def add_inactive_users(users):
 def add_missing_certs(users):
     ''' Add missing certs into users '''
     for user in users:
-        user.missing_certs = get_missing_certs(user.id)
+        certs = get_missing_certs_query_object(user.id)
+        if len(certs) > 0:
+            user.missing_certs = certs
+        else:
+            user.missing_certs = None
     return users
-
 
 def get_user(user_id):
     """ Find a user by id"""
-
     try:
         return AuthUser.objects.get(id=user_id)
     except AuthUser.DoesNotExist as dne:
@@ -198,6 +200,15 @@ def get_missing_certs(user_id):
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
 
 
+def get_missing_certs_query_object(user_id):
+    user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
+    lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
+
+    # From these labs determine which certs are missing or expired
+    user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
+
+    return lab_certs.exclude(cert_id__in=user_cert_ids)
+
 def get_expired_certs(user_id):
     user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
     expired_user_certs = []
@@ -244,6 +255,7 @@ def get_user_labs(user_id, is_principal_investigator=None):
     else:
         user_labs = UserLab.objects.filter(user=user_id)
     return [model_to_dict(user_lab.lab) for user_lab in user_labs]
+
 
 def get_users_in_lab(lab_id):
     users_in_lab = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
@@ -379,3 +391,19 @@ def get_error_messages(errors):
         value = errors[key]
         messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
     return messages.strip()
+
+def validate_parameters(request, params):
+    ''' Validate request parameters '''
+    for param in params:
+        if request.GET.get(param) == None: raise Http404
+    return True
+
+def validate_url_tab(request, path):
+    ''' Validate a tab name in url '''
+    if request.GET.get('t') not in path:
+        raise Http404
+
+def can_req_parameters_access(request, params):
+    ''' Check whether request parameters are valid or not '''
+    if validate_parameters(request, params):
+        validate_url_tab(request, ['all', 'report', 'create'])

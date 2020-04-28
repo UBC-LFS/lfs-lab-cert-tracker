@@ -21,12 +21,13 @@
 			<ul>
 				{% for pi_user_lab in pi_user_lab_list %}
 				<li>
-					<a href="/areas/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+					<a href="/areas/{{ pi_user_lab.id }}/">{{ pi_user_lab.name }}</a>
 				</li>
 				{% endfor %}
 			</ul>
 		{% endif %}
 
+		<a class="btn btn-outline-primary" href="{% url 'user_details' loggedin_user.id %}">Back to My Account</a>
 	</div>
 </div>
 

@@ -13,143 +13,165 @@
 	{% endfor %}
 {% endif %}
 
-<h3 class="title">All Users (Total: {{ total_users }})</h3>
 
-<div class="search-field">
-	<form method="GET" >
-		<div class="input-field">
-			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
-			<button class="btn btn-light btn-sm" type="submit" name="action">Search</button>
-		</div>
-	</form>
-</div>
-
-<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm">
-  <thead>
-    <tr>
-      <th>CWL</th>
-      <th>First <br />Name</th>
-			<th>Last <br />Name</th>
-			<th>E-mail</th>
-			<th>Missing <br />Training <br />Record</th>
-			<th>Admin</th>
-			<th>Inactivated <br />Date</th>
-			<th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for user in users %}
-      <tr>
-        <td>
-					<a href="/users/{{user.id}}">{{ user.username }}</a>
-				</td>
-        <td>{{ user.first_name }}</td>
-        <td>{{ user.last_name }}</td>
-				<td>{{ user.email }}</td>
-				<td>
-					{% if user.missing_certs|length == 0 %}
-						<span class="badge badge-light">NO</span>
-					{% else %}
-						<span class="badge badge-warning">YES ({{ user.missing_certs|length }})</span>
-					{% endif %}
-				</td>
-				<td>
-					{% if user.is_superuser %}
-						<i class="material-icons text-primary">done</i>
-					{% endif %}
-				</td>
-				<td>
-					{% if not user.is_active and user.inactive %}
-						{{ user.inactive.inactive_date }}
-					{% endif %}
-				</td>
-				<td>
-					<div class="btn-toolbar">
-						<form class="list-form" action="/api/users/{{ user.id }}/switch_admin/" method="post" onsubmit="return confirm('Are you sure to {% if user.is_superuser %} REVOKE administrator privileges of {% else %} GRANT administrator privileges to {% endif %} this user - {{user.username}} ?');">
-		 					{% csrf_token %}
-		 					<input name="redirect_url" value="/all-users/" type="hidden"/>
-							<input class="btn btn-info btn-xs" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
-						</form>
-
-						<form class="list-form" action="/api/users/{{ user.id }}/switch_inactive/" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
-							{% csrf_token %}
-							<input name="redirect_url" value="/all-users/" type="hidden"/>
-							{% if not user.is_active and user.inactive %}
-								<input class="btn btn-inactive btn-xs mx-2" type="submit" value="Inactive" />
-							{% else %}
-								<input class="btn btn-success btn-xs mx-2" type="submit" value="Active"/>
-							{% endif %}
-						</form>
-
-						<form class="list-form" action="/api/users/{{ user.id }}/delete/" method="post" onsubmit="return confirm('Are you sure to delete this user - {{user.username}}?');">
-							{% csrf_token %}
-							<input name="redirect_url" value="/all-users/" type="hidden"/>
-							<input class="btn btn-danger btn-xs" type="submit" value="Delete"/>
-		 				</form>
-					</div>
-				</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-{% if users.has_other_pages %}
-<nav aria-label="Page navigation Search results pages">
-  <ul class="pagination justify-content-center">
-
-		{% if users.has_previous %}
-			<li class="page-item">
-				<a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">First</a>
-			</li>
-      <li class="page-item">
-				<a class="page-link" href="?page={{ users.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
-			</li>
-    {% else %}
-			<li class="page-item disabled">
-				<span class="page-link">First</span>
-			</li>
-      <li class="page-item disabled">
-				<span class="page-link">&laquo;</span>
-			</li>
-    {% endif %}
-
-		{% for i in users.paginator.page_range %}
-      {% if users.number == i %}
-        <li class="page-item active">
-					<span class="page-link" >{{ i }} <span class="sr-only">(current)</span></span>
-				</li>
-      {% else %}
-        <li class="page-item">
-					<a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
-				</li>
-      {% endif %}
-    {% endfor %}
-
-    {% if users.has_next %}
-      <li class="page-item">
-				<a class="page-link" href="?page={{ users.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
-			</li>
-			<li class="page-item">
-        <a class="page-link" href="?page={{ users.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Last</a>
-      </li>
-    {% else %}
-      <li class="page-item disabled">
-				<span class="page-link">&raquo;</span>
-			</li>
-			<li class="page-item disabled">
-        <span class="page-link">Last</span>
-      </li>
-    {% endif %}
-
-  </ul>
+<nav class="mb-4">
+  <div class="nav nav-tabs">
+    <a class="nav-item nav-link {% if current_tab == 'all' %} active {% endif %}" href="{% url 'users' %}?t=all">
+      All Users
+    </a>
+    <a class="nav-item nav-link {% if current_tab == 'report' %} active {% endif %}" href="{% url 'users' %}?t=report">
+      User Report
+    </a>
+    <a class="nav-item nav-link {% if current_tab == 'create' %} active {% endif %}" href="{% url 'users' %}?t=create">
+      Create User
+    </a>
+  </div>
 </nav>
+
+{% if current_tab == 'report' %}
+
+	<h3 class="my-5">
+		User Report <small class="text-secondary">Total: {{ users_in_missing_training|length }}</small>
+	</h3>
+
+	<div class="text-primary float-right">
+		<i class="material-icons">cloud_download</i>
+		<a href="{% url 'users_in_missing_training_report' %}" target="_blank">Download as PDF</a>
+	</div>
+
+	<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Full Name</th>
+				<th>CWL</th>
+				<th>Number of <br />Missing Trainings</th>
+				<th>Missing Training Records</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for user in users %}
+				<tr>
+					<td>{{ user.id }}</td>
+					<td>{{ user.get_full_name }}</td>
+					<td>{{ user.username }}</td>
+					<td>{{ user.missing_certs.count }}</td>
+					<td class="text-left">
+						<ul>
+							{% for training in user.missing_certs %}
+								<li>{{ training.cert }}</li>
+							{% endfor %}
+						</ul>
+					</td>
+				</tr>
+			{% empty %}
+				No users found
+			{% endfor %}
+		</tbody>
+	</table>
+
+	{% include 'lfs_lab_cert_tracker/_pagination.html' with data=users %}
+
+{% elif current_tab == 'create' %}
+
+	<h3 class="my-5">New Users</h3>
+
+	<form action="" method="post">
+		{% csrf_token %}
+
+		<table>{{ user_form.as_table }}</table>
+		<input class="btn btn-primary mt-3" type="submit" value="Create User" />
+	</form>
+
+{% else %}
+
+	<h3 class="my-5">All Users <small class="text-secondary">Total: {{ total_users }}</small></h3>
+
+	<div class="search-field">
+		<form method="GET">
+			<div class="input-field">
+				<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
+				<button class="btn btn-light btn-sm" type="submit" name="action">Search</button>
+			</div>
+		</form>
+	</div>
+
+	<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm">
+	  <thead>
+	    <tr>
+	      <th>CWL</th>
+	      <th>First <br />Name</th>
+				<th>Last <br />Name</th>
+				<th>E-mail</th>
+				<th>Missing <br />Training <br />Record</th>
+				<th>Admin</th>
+				<th>Inactivated <br />Date</th>
+				<th>Actions</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    {% for user in users %}
+	      <tr>
+	        <td>
+						<a href="/users/{{user.id}}">{{ user.username }}</a>
+					</td>
+	        <td>{{ user.first_name }}</td>
+	        <td>{{ user.last_name }}</td>
+					<td>{{ user.email }}</td>
+					<td>
+						{% if user.missing_certs|length == 0 %}
+							<span class="badge badge-light">NO</span>
+						{% else %}
+							<span class="badge badge-warning">YES ({{ user.missing_certs|length }})</span>
+						{% endif %}
+					</td>
+					<td>
+						{% if user.is_superuser %}
+							<i class="material-icons text-primary">done</i>
+						{% endif %}
+					</td>
+					<td>
+						{% if not user.is_active and user.inactive %}
+							{{ user.inactive.inactive_date }}
+						{% endif %}
+					</td>
+					<td>
+						<div class="btn-toolbar">
+							<form class="list-form" action="{% url 'switch_admin' %}" method="post" onsubmit="return confirm('Are you sure to {% if user.is_superuser %} REVOKE administrator privileges of {% else %} GRANT administrator privileges to {% endif %} this user - {{user.username}} ?');">
+			 					{% csrf_token %}
+
+			 					<input type="hidden" name="user" value="{{ user.id }}" />
+								<input class="btn btn-info btn-xs" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
+							</form>
+
+							<form class="list-form" action="{% url 'switch_inactive' %}" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
+								{% csrf_token %}
+
+								<input type="hidden" name="user" value="{{ user.id }}" />
+
+								{% if not user.is_active and user.inactive %}
+									<input class="btn btn-inactive btn-xs mx-2" type="submit" value="Inactive" />
+								{% else %}
+									<input class="btn btn-success btn-xs mx-2" type="submit" value="Active" />
+								{% endif %}
+							</form>
+
+							<form class="list-form" action="{% url 'delete_user' %}" method="post" onsubmit="return confirm('Are you sure to delete this user - {{user.username}}?');">
+								{% csrf_token %}
+
+								<input type="hidden" name="user" value="{{ user.id }}" />
+								<input class="btn btn-danger btn-xs" type="submit" value="Delete" />
+			 				</form>
+						</div>
+					</td>
+	      </tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
+
+	{% include 'lfs_lab_cert_tracker/_pagination.html' with data=users %}
+
 {% endif %}
 
-<h5 class="title">New Users</h5>
-<form id="create_user_form" action="/api/users/" method="post">
-	{% csrf_token %}
-	<table>{{ user_form.as_table }}</table>
-	<input class="btn btn-primary" id="submit_create_user_form" type="submit" value="Create User"/>
-</form>
 
 {% endblock %}

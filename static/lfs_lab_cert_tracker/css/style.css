@@ -57,16 +57,16 @@ footer .footer-content a {
   margin-bottom: 80px;
 }
 
-.container header {
+header .container  {
   margin-bottom: 10px;
   font-size: 0.85rem;
 }
 
-.container header .logout-btn {
+header .container .logout-btn {
   display: inline-block;
 }
 
-.container header .logout-btn:hover {
+header .container .logout-btn:hover {
   text-decoration: underline;
 }
 
@@ -141,6 +141,31 @@ i.material-icons {
 
 .border-gray {
   border: 1px solid #6c757d;
+}
+
+.nav-item {
+  color: #6c757d;
+}
+
+.nav-item .nav-link:hover {
+  text-decoration: underline;
+}
+
+.nav-item .nav-link.active {
+  font-weight: 600;
+}
+
+.nav-tabs > a {
+   padding: 1.0rem;
+   font-size: 1.0rem;
+ }
+
+.nav-tabs .nav-link.active {
+    color: #495057;
+    font-weight: 600;
+    background-color: #fff;
+    border-top-width: 3px;
+    border-color: #f0ad4e #dee2e6 #fff;
 }
 
 
