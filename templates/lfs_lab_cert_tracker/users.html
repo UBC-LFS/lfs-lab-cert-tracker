@@ -90,8 +90,10 @@
 	<div class="search-field">
 		<form method="GET">
 			<div class="input-field">
+				<input type="hidden" name="t" value="all" />
 				<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL and Name">
-				<button class="btn btn-light btn-sm" type="submit" name="action">Search</button>
+				<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+				<a class="btn btn-sm btn-light" href="{% url 'users' %}?t=all">Clear</a>
 			</div>
 		</form>
 	</div>
