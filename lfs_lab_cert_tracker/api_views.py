@@ -35,44 +35,6 @@ logger = logging.getLogger(__name__)
 @admin_or_pi_only
 @handle_redirect
 @require_http_methods(['POST'])
-def user_labs(request, lab_id=None):
-    """ Add a user to a lab """
-
-    data = request.POST
-    user = api.get_user_by_username(data['user'].strip())
-
-    # Check whether a user exists or not
-    if user:
-        res = api.create_user_lab(user.id, lab_id, data['role'])
-        if res:
-            valid_email = False
-            valid_email_errors = []
-            try:
-                validate_email(user.email)
-                valid_email = True
-            except ValidationError as e:
-                 valid_email_errors = e
-
-            if valid_email:
-                messages.success(request, 'Success! {0} added.'.format(data['user']))
-            else:
-                messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
-
-            logger.info("%s: Created user lab %s" % (request.user, res))
-            return JsonResponse(res)
-        else:
-            messages.error(request, 'Error! Failed to add {0}. CWL already exists in this lab.'.format(data['user']))
-    else:
-        messages.error(request, 'Error! Failed to add {0}. CWL does not exist.'.format(data['user']))
-
-    return None
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@admin_or_pi_only
-@handle_redirect
-@require_http_methods(['POST'])
 def delete_user_lab(request, user_id, lab_id):
     user = model_to_dict( api.get_user(user_id) )
     res = api.delete_user_lab(user_id, lab_id)
@@ -338,3 +300,44 @@ def get_error_messages(errors):
         value = errors[key]
         messages += value[0]['message'] + ' '
     return messages.strip()
+
+
+
+"""
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@admin_or_pi_only
+@handle_redirect
+@require_http_methods(['POST'])
+def user_labs(request, lab_id=None):
+    ''' Add a user to a lab '''
+
+    data = request.POST
+    user = api.get_user_by_username(data['user'].strip())
+
+    # Check whether a user exists or not
+    if user:
+        res = api.create_user_lab(user.id, lab_id, data['role'])
+        if res:
+            valid_email = False
+            valid_email_errors = []
+            try:
+                validate_email(user.email)
+                valid_email = True
+            except ValidationError as e:
+                 valid_email_errors = e
+
+            if valid_email:
+                messages.success(request, 'Success! {0} added.'.format(data['user']))
+            else:
+                messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
+
+            logger.info("%s: Created user lab %s" % (request.user, res))
+            return JsonResponse(res)
+        else:
+            messages.error(request, 'Error! Failed to add {0}. CWL already exists in this lab.'.format(data['user']))
+    else:
+        messages.error(request, 'Error! Failed to add {0}. CWL does not exist.'.format(data['user']))
+
+    return None
+"""

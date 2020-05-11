@@ -18,6 +18,7 @@ from django.contrib.auth.models import User as AuthUser
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.urls import reverse
+from django.core.validators import validate_email
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
@@ -57,7 +58,7 @@ def users(request):
                 messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
         else:
             errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( get_error_messages(errors) ) )
+            messages.error(request, 'Error! Form is invalid. {0}'.format( api.get_error_messages(errors) ) )
 
         return HttpResponseRedirect(request.get_full_path())
 
@@ -121,7 +122,7 @@ def delete_user(request):
         else:
             messages.error(request, 'Error! Failed to delete {0}.'.format(user.get_full_name()))
 
-    return HttpResponseRedirect(reverse('users') + '?t=all')
+    return HttpResponseRedirect( request.POST.get('next') )
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -141,7 +142,7 @@ def switch_admin(request):
         else:
             messages.error(request, 'Error! Failed to switch an admin role for {0}.'.format(res['username']))
 
-    return HttpResponseRedirect(reverse('users') + '?t=all')
+    return HttpResponseRedirect( request.POST.get('next') )
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -161,7 +162,7 @@ def switch_inactive(request):
         else:
             messages.error(request, 'Error! Failed to switch {0}.'.format(res['username']))
 
-    return HttpResponseRedirect(reverse('users') + '?t=all')
+    return HttpResponseRedirect( request.POST.get('next') )
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -375,10 +376,45 @@ def lab_details(request, lab_id):
         'required_certs': api.get_lab_certs(lab_id),
         'can_edit_user_lab': is_admin or is_pi,
         'can_edit_lab_cert': is_admin,
-        'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url}),
-        'lab_user_form': UserLabForm(initial={'redirect_url': redirect_url})
+        'lab_user_form': UserLabForm(),
+        'lab_cert_form': LabCertForm(initial={'redirect_url': redirect_url})
     })
 
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.admin_or_pi_only
+@require_http_methods(['POST'])
+def add_users_to_labs(request, lab_id):
+    ''' Add users to labs '''
+    if request.method == 'POST':
+        username = request.POST.get('user')
+        role = request.POST.get('role')
+
+        user = api.get_user_by_username(username.strip())
+
+        # Check whether a user exists or not
+        if user != None:
+            if api.create_user_lab(user.id, lab_id, role):
+                valid_email = False
+                valid_email_errors = []
+
+                try:
+                    validate_email(user.email)
+                    valid_email = True
+                except ValidationError as e:
+                     valid_email_errors = e
+
+                if valid_email:
+                    messages.success(request, 'Success! {0} (CWL: {1}) added to this area.'.format(user.get_full_name(), user.username))
+                else:
+                    messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
+            else:
+                messages.error(request, 'Error! Failed to add {0}. CWL already exists in this lab.'.format(user.username))
+        else:
+            messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the area.'.format(username))
+
+    return HttpResponseRedirect( reverse('lab_details', args=[lab_id]) )
 
 # Certificates
 

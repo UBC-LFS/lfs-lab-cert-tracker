@@ -2,6 +2,20 @@
 
 {% block content %}
 
+<nav class="mb-4">
+  <div class="nav nav-tabs">
+    <a class="nav-item nav-link {% if current_tab == 'all' %} active {% endif %}" href="{% url 'users' %}?t=all">
+      All Users
+    </a>
+    <a class="nav-item nav-link {% if current_tab == 'report' %} active {% endif %}" href="{% url 'users' %}?t=report">
+      User Report
+    </a>
+    <a class="nav-item nav-link {% if current_tab == 'new' %} active {% endif %}" href="{% url 'users' %}?t=new">
+      New Users
+    </a>
+  </div>
+</nav>
+
 {% if messages %}
 	{% for message in messages %}
 		<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
@@ -12,21 +26,6 @@
 		</div>
 	{% endfor %}
 {% endif %}
-
-
-<nav class="mb-4">
-  <div class="nav nav-tabs">
-    <a class="nav-item nav-link {% if current_tab == 'all' %} active {% endif %}" href="{% url 'users' %}?t=all">
-      All Users
-    </a>
-    <a class="nav-item nav-link {% if current_tab == 'report' %} active {% endif %}" href="{% url 'users' %}?t=report">
-      User Report
-    </a>
-    <a class="nav-item nav-link {% if current_tab == 'create' %} active {% endif %}" href="{% url 'users' %}?t=create">
-      Create User
-    </a>
-  </div>
-</nav>
 
 {% if current_tab == 'report' %}
 
@@ -72,7 +71,7 @@
 
 	{% include 'lfs_lab_cert_tracker/_pagination.html' with data=users %}
 
-{% elif current_tab == 'create' %}
+{% elif current_tab == 'new' %}
 
 	<h3 class="my-5">New Users</h3>
 
@@ -143,6 +142,7 @@
 			 					{% csrf_token %}
 
 			 					<input type="hidden" name="user" value="{{ user.id }}" />
+								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 								<input class="btn btn-info btn-xs" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
 							</form>
 
@@ -150,6 +150,7 @@
 								{% csrf_token %}
 
 								<input type="hidden" name="user" value="{{ user.id }}" />
+								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 
 								{% if not user.is_active and user.inactive %}
 									<input class="btn btn-inactive btn-xs mx-2" type="submit" value="Inactive" />
@@ -162,6 +163,7 @@
 								{% csrf_token %}
 
 								<input type="hidden" name="user" value="{{ user.id }}" />
+								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 								<input class="btn btn-danger btn-xs" type="submit" value="Delete" />
 			 				</form>
 						</div>

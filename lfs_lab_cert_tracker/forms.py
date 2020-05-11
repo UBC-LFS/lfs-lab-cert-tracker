@@ -57,11 +57,10 @@ class CertNameForm(forms.ModelForm):
 
 class UserLabForm(forms.ModelForm):
     """ Add a user to a lab """
-
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    
     class Meta:
         model = UserLab
-        fields = ['user', 'role', 'redirect_url']
+        fields = ['user', 'role']
         labels = { 'user': 'CWL' }
         widgets = { 'user': forms.TextInput() }
 

@@ -34,7 +34,8 @@ urlpatterns = [
     path('users/switch-inactive/', views.switch_inactive, name='switch_inactive'),
 
     path('all-areas/', views.labs, name='labs'),
-    path('areas/<int:lab_id>/', views.lab_details),
+    path('areas/<int:lab_id>/add-users/', views.add_users_to_labs, name='add_users_to_labs'),
+    path('areas/<int:lab_id>/', views.lab_details, name='lab_details'),
 
     path('all-trainings/', views.certs, name='certs'),
     path('all-trainings/<int:cert_id>/edit/', views.edit_cert, name='edit_cert'),
@@ -46,7 +47,6 @@ urlpatterns = [
     path('api/users/<int:user_id>/certificates/<int:cert_id>/delete/', api_views.delete_user_certs),
 
     path('api/labs/', api_views.labs),
-    path('api/labs/<int:lab_id>/users/', api_views.user_labs),
     path('api/labs/<int:lab_id>/delete/', api_views.delete_labs),
     path('api/labs/<int:lab_id>/update/', api_views.update_labs),
 

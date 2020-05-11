@@ -59,7 +59,6 @@ def get_user(user_id):
 
 def get_user_by_username(username):
     """ Find a user by username """
-
     try:
         return AuthUser.objects.get(username=username)
     except AuthUser.DoesNotExist as dne:
@@ -67,7 +66,6 @@ def get_user_by_username(username):
 
 def delete_user(user_id):
     """ Delete a user """
-
     try:
         user = AuthUser.objects.get(id=user_id)
         user.delete()
@@ -322,6 +320,21 @@ def get_missing_lab_certs(user_id, lab_id):
 
     return [model_to_dict(m) for m in missing]
 
+def add_users_to_labs(user_id, lab_id, role):
+    """ Add a user to a lab """
+
+    try:
+        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
+    except UserLab.DoesNotExist:
+        has_existed = None
+
+    if has_existed:
+        return None
+
+    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
+    return model_to_dict(user_lab)
+
+
 def create_user_lab(user_id, lab_id, role):
     """ Add a user to a lab """
 
@@ -406,4 +419,4 @@ def validate_url_tab(request, path):
 def can_req_parameters_access(request, params):
     ''' Check whether request parameters are valid or not '''
     if validate_parameters(request, params):
-        validate_url_tab(request, ['all', 'report', 'create'])
+        validate_url_tab(request, ['all', 'report', 'new'])
