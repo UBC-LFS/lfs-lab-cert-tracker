@@ -9,17 +9,43 @@ class UserForm(forms.ModelForm):
 
     class Meta:
         model = AuthUser
-        fields = ['first_name', 'last_name', 'email', 'username']
-        labels = { 'email': 'Email', 'username': 'CWL' }
-        help_texts = { 'username': None }
+        fields = ['username', 'first_name', 'last_name', 'email']
+        labels = {
+            'username': 'CWL',
+            'first_name': 'First Name',
+            'last_name': 'Last Name',
+            'email': 'Email'
+        }
+        help_texts = {
+            'username': 'Unique. Maximum 150 characters allowed',
+            'first_name': 'Maximum 30 characters allowed',
+            'last_name': 'Maximum 150 characters allowed',
+            'email': 'Maximum 254 characters allowed'
+        }
         error_messages = {
             'username': { 'required': 'Enter a valid username.' },
         }
         widgets = {
-            'first_name': forms.TextInput(attrs={'required': True}),
-            'last_name': forms.TextInput(attrs={'required': True}),
-            'email': forms.EmailInput(attrs={'required': True}),
-            'username': forms.TextInput(attrs={'required': True}),
+            'first_name': forms.TextInput(attrs={
+                'required': True,
+                'class': 'form-control',
+                'placeholder': 'Enter'
+             }),
+            'last_name': forms.TextInput(attrs={
+                'required': True,
+                'class': 'form-control',
+                'placeholder': 'Enter'
+            }),
+            'email': forms.EmailInput(attrs={
+                'required': True,
+                'class': 'form-control',
+                'placeholder': 'Enter'
+            }),
+            'username': forms.TextInput(attrs={
+                'required': True,
+                'class': 'form-control',
+                'placeholder': 'Enter'
+            })
         }
 
 class LabForm(forms.ModelForm):
@@ -57,7 +83,7 @@ class CertNameForm(forms.ModelForm):
 
 class UserLabForm(forms.ModelForm):
     """ Add a user to a lab """
-    
+
     class Meta:
         model = UserLab
         fields = ['user', 'role']

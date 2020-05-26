@@ -168,26 +168,42 @@ i.material-icons {
     border-color: #f0ad4e #dee2e6 #fff;
 }
 
+.field-wrapper {
+  margin: 2.0rem 0;
+}
+
+.field-wrapper > label {
+  margin: 0;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.field-wrapper > .help {
+  color: #474d52;
+  font-size: 0.8rem;
+  margin-bottom: 5px;
+}
+
+.new-users-section {
+  background-color: #f1f1f1;
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  padding: 40px;
+}
 
 @media (max-width: 575.98px) {
-  .navbar-brand {
-    font-size: 0.9rem;
-  }
-
+  .navbar-brand { font-size: 0.9rem; }
+  .nav-tabs > a { font-size: 0.8rem; }
   footer,
   footer .footer-content {
     height: 150px;
     font-size: 0.9rem;
     padding: 5px;
   }
-
-  footer .footer-content {
-    flex-direction: column;
-  }
+  footer .footer-content { flex-direction: column; }
 }
 
 @media (min-width: 576px) and (max-width: 767.98px) {
-  footer {
-    font-size: 0.9rem;
-  }
+  footer { font-size: 0.9rem; }
 }

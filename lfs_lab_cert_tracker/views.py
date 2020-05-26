@@ -53,7 +53,8 @@ def users(request):
             user = form.save()
             if user:
                 messages.success(request, 'Success! {0} created.'.format(user.username))
-                return HttpResponseRedirect( reverse('users') + '?t=all' )
+                #return HttpResponseRedirect( reverse('users') + '?t=all' )
+                return HttpResponseRedirect(request.get_full_path())
             else:
                 messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
         else:
@@ -106,6 +107,27 @@ def users(request):
         'user_form': UserForm(),
         'current_tab': current_tab
     })
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.admin_only
+@require_http_methods(['POST'])
+def edit_user(request):
+    ''' Delete a user '''
+    if request.method == 'POST':
+        user_id = request.POST.get('user')
+        user = api.get_user_404(user_id)
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            if form.save():
+                messages.success(request, 'Success! {0} updated.'.format(user.get_full_name()))
+            else:
+                messages.error(request, 'Error! Failed to update {0}.'.format(user.get_full_name()))
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( api.get_error_messages(errors) ))
+
+    return HttpResponseRedirect( request.POST.get('next') )
 
 
 @login_required(login_url=settings.LOGIN_URL)

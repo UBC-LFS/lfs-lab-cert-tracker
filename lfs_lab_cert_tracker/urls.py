@@ -23,13 +23,14 @@ urlpatterns = [
     path('', views.index, name='index'),
 
     path('users/', views.users, name='users'),
-    path('users/<int:user_id>/', views.user_details, name='user_details'),
     path('users/<int:user_id>/work-area/', views.user_labs),
     path('users/<int:user_id>/training-record/', views.user_certs, name='user_certs'),
     path('users/<int:user_id>/training-record/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
+    path('users/<int:user_id>/', views.user_details, name='user_details'),
     path('users/report/missing-training/', views.users_in_missing_training_report, name='users_in_missing_training_report'),
     path('users/delete/', views.delete_user, name='delete_user'),
+    path('users/edit', views.edit_user, name='edit_user'),
     path('users/switch-admin/', views.switch_admin, name='switch_admin'),
     path('users/switch-inactive/', views.switch_inactive, name='switch_inactive'),
 

@@ -50,6 +50,10 @@ def add_missing_certs(users):
             user.missing_certs = None
     return users
 
+def get_user_404(user_id):
+    ''' Get an user or 404 '''
+    return get_object_or_404(AuthUser, id=user_id)
+
 def get_user(user_id):
     """ Find a user by id"""
     try:

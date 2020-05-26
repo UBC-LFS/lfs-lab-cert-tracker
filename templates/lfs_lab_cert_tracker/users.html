@@ -16,16 +16,7 @@
   </div>
 </nav>
 
-{% if messages %}
-	{% for message in messages %}
-		<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
-			{{ message }}
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-				<span aria-hidden="true">&times;</span>
-			</button>
-		</div>
-	{% endfor %}
-{% endif %}
+{% include 'lfs_lab_cert_tracker/sub_templates/_return_message.html' with data=messages %}
 
 {% if current_tab == 'report' %}
 
@@ -69,18 +60,36 @@
 		</tbody>
 	</table>
 
-	{% include 'lfs_lab_cert_tracker/_pagination.html' with data=users %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_pagination.html' with data=users %}
 
 {% elif current_tab == 'new' %}
 
-	<h3 class="my-5">New Users</h3>
+  <div class="row">
+    <div class="new-users-section col-md-6 offset-md-3">
+      <h3 class="">New Users</h3>
 
-	<form action="" method="post">
-		{% csrf_token %}
+      {% include 'lfs_lab_cert_tracker/sub_templates/_user_form_note.html' %}
 
-		<table>{{ user_form.as_table }}</table>
-		<input class="btn btn-primary mt-3" type="submit" value="Create User" />
-	</form>
+    	<form action="" method="post">
+    		{% csrf_token %}
+
+        {% for field in user_form.visible_fields  %}
+          <div class="field-wrapper">
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}: <span class="text-danger">*</span>
+            </label>
+
+            {% if field.help_text %}
+              <div class="help">{{ field.help_text|safe }}</div>
+            {% endif %}
+            {{ field }}
+          </div>
+        {% endfor %}
+
+    		<input class="btn btn-primary mt-3" type="submit" value="Create User" />
+    	</form>
+    </div>
+  </div>
 
 {% else %}
 
@@ -138,6 +147,90 @@
 					</td>
 					<td>
 						<div class="btn-toolbar">
+
+              <button type="button" class="btn btn-primary btn-xs mr-2" data-toggle="modal" data-target="#user-edit-modal-{{ user.id }}">Edit</button>
+
+              <div id="user-edit-modal-{{ user.id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="user-edit-modal-{{ user.id }}-label" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title text-info" id="user-edit-modal-{{ user.id }}-label">Edit User</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body text-left p-4">
+                      <h4>{{ user.get_full_name }}</h4>
+                      <h5 class="text-secondary">CWL: {{ user.username }}</h5>
+
+                      {% include 'lfs_lab_cert_tracker/sub_templates/_user_form_note.html' %}
+
+                      <form action="{% url 'edit_user' %}" method="post">
+                        {% csrf_token %}
+
+                        <div class="field-wrapper">
+                          <label for="id_username_{{ user.id }}">
+                            CWL: <span class="text-danger">*</span>
+                          </label>
+                          <div class="help">Unique. Maximum 150 characters allowed</div>
+                          <input id="id_username_{{ user.id }}" type="text" name="username" class="form-control" required maxlength="150" placeholder="Enter"
+                            {% if user.username %}
+                              value="{{ user.username }}"
+                            {% else %}
+                              value=""
+                            {% endif %}
+                          />
+                        </div>
+
+                        <div class="field-wrapper">
+                          <label for="id_first_name_{{ user.id }}">
+                            First Name: <span class="text-danger">*</span>
+                          </label>
+                          <div class="help">Maximum 30 characters allowed</div>
+                          <input id="id_first_name_{{ user.id }}" type="text" name="first_name" class="form-control" required maxlength="30" placeholder="Enter"
+                            {% if user.first_name %}
+                              value="{{ user.first_name }}"
+                            {% else %}
+                              value=""
+                            {% endif %}
+                          />
+                        </div>
+
+                        <div class="field-wrapper">
+                          <label for="id_last_name_{{ user.id }}">
+                            Last Name: <span class="text-danger">*</span>
+                          </label>
+                          <div class="help">Maximum 150 characters allowed</div>
+                          <input id="id_last_name_{{ user.id }}" type="text" name="last_name" class="form-control" required maxlength="150" placeholder="Enter"
+                            {% if user.last_name %}
+                              value="{{ user.last_name }}"
+                            {% else %}
+                              value=""
+                            {% endif %}
+                          />
+                        </div>
+
+                        <div class="field-wrapper">
+                          <label for="id_email_{{ user.id }}">
+                            Email: <span class="text-danger">*</span>
+                          </label>
+                          <div class="help">Maximum 254 characters allowed</div>
+                          <input id="id_email_{{ user.id }}" type="text" name="email" class="form-control" required maxlength="254" placeholder="Enter"
+                            {% if user.email %}
+                              value="{{ user.email }}"
+                            {% else %}
+                              value=""
+                            {% endif %}
+                          />
+                        </div>
+
+        			 					<input type="hidden" name="user" value="{{ user.id }}" />
+        								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                        <input class="btn btn-primary" type="submit" value="Update" />
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
 							<form class="list-form" action="{% url 'switch_admin' %}" method="post" onsubmit="return confirm('Are you sure to {% if user.is_superuser %} REVOKE administrator privileges of {% else %} GRANT administrator privileges to {% endif %} this user - {{user.username}} ?');">
 			 					{% csrf_token %}
 
@@ -173,7 +266,7 @@
 	  </tbody>
 	</table>
 
-	{% include 'lfs_lab_cert_tracker/_pagination.html' with data=users %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_pagination.html' with data=users %}
 
 {% endif %}
 
