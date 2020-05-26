@@ -125,7 +125,7 @@ def edit_user(request):
                 messages.error(request, 'Error! Failed to update {0}.'.format(user.get_full_name()))
         else:
             errors = form.errors.get_json_data()
-            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( api.get_error_messages(errors) ))
+            messages.error(request, 'Error! Form is invalid. {0}'.format( api.get_error_messages(errors) ))
 
     return HttpResponseRedirect( request.POST.get('next') )
 
@@ -527,19 +527,13 @@ def page_not_found(request, exception, template_name="404.html"):
 
 # for local testing
 
-def my_login(request):
+def local_login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            if settings.DEBUG == True:
-                user = AuthUser.objects.get(username=request.POST['username'])
-                if user is not None and user.password == request.POST['password']:
-                    DjangoLogin(request, user)
-                    return redirect('index')
-            else:
-                user = authenticate(username=request.POST['username'], password=request.POST['password'])
-                if user is not None:
-                    DjangoLogin(request, user)
-                    return redirect('index')
+            user = authenticate(username=request.POST['username'], password=request.POST['password'])
+            if user is not None:
+                DjangoLogin(request, user)
+                return redirect('index')
 
-    return render(request, 'lfs_lab_cert_tracker/my_login.html', { 'form': LoginForm() })
+    return render(request, 'lfs_lab_cert_tracker/local_login.html', { 'form': LoginForm() })

@@ -63,7 +63,7 @@ urlpatterns = [
 
     path('error/<str:error_msg>/', views.show_error),
 
-    #path('my_login/', views.my_login, name='my_login'),
+    #path('accounts/local_login/', views.local_login, name='local_login'),
     #path('admin/', admin.site.urls),
     #path('accounts/admin/', include('django.contrib.auth.urls')),
 ]

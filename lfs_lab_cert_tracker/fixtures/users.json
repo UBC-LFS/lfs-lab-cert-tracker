@@ -3,7 +3,7 @@
     "model": "auth.user",
     "pk": 1,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": true,
       "username": "testadmin",
       "first_name": "test",
@@ -15,7 +15,7 @@
     "model": "auth.user",
     "pk": 2,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": true,
       "username": "testadmin2",
       "first_name": "test",
@@ -27,7 +27,7 @@
     "model": "auth.user",
     "pk": 3,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": true,
       "username": "testadmin3",
       "first_name": "test",
@@ -39,7 +39,7 @@
     "model": "auth.user",
     "pk": 4,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi1",
       "first_name": "test",
@@ -51,7 +51,7 @@
     "model": "auth.user",
     "pk": 5,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi2",
       "first_name": "test",
@@ -63,7 +63,7 @@
     "model": "auth.user",
     "pk": 6,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi3",
       "first_name": "test",
@@ -75,7 +75,7 @@
     "model": "auth.user",
     "pk": 7,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi4",
       "first_name": "test",
@@ -87,7 +87,7 @@
     "model": "auth.user",
     "pk": 8,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi5",
       "first_name": "test",
@@ -99,7 +99,7 @@
     "model": "auth.user",
     "pk": 9,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi6",
       "first_name": "test",
@@ -111,7 +111,7 @@
     "model": "auth.user",
     "pk": 10,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testpi7",
       "first_name": "test",
@@ -123,7 +123,7 @@
     "model": "auth.user",
     "pk": 11,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser1",
       "first_name": "test",
@@ -135,7 +135,7 @@
     "model": "auth.user",
     "pk": 12,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser2",
       "first_name": "test",
@@ -147,7 +147,7 @@
     "model": "auth.user",
     "pk": 13,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser3",
       "first_name": "test",
@@ -159,7 +159,7 @@
     "model": "auth.user",
     "pk": 14,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser4",
       "first_name": "test",
@@ -171,7 +171,7 @@
     "model": "auth.user",
     "pk": 15,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser5",
       "first_name": "test",
@@ -183,7 +183,7 @@
     "model": "auth.user",
     "pk": 16,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser6",
       "first_name": "test",
@@ -195,7 +195,7 @@
     "model": "auth.user",
     "pk": 17,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser7",
       "first_name": "test",
@@ -207,7 +207,7 @@
     "model": "auth.user",
     "pk": 18,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser8",
       "first_name": "test",
@@ -219,7 +219,7 @@
     "model": "auth.user",
     "pk": 19,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser9",
       "first_name": "test",
@@ -231,7 +231,7 @@
     "model": "auth.user",
     "pk": 20,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser10",
       "first_name": "test",
@@ -243,7 +243,7 @@
     "model": "auth.user",
     "pk": 21,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser11",
       "first_name": "test",
@@ -255,7 +255,7 @@
     "model": "auth.user",
     "pk": 22,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser12",
       "first_name": "test",
@@ -267,7 +267,7 @@
     "model": "auth.user",
     "pk": 23,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser13",
       "first_name": "test",
@@ -279,7 +279,7 @@
     "model": "auth.user",
     "pk": 24,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser14",
       "first_name": "test",
@@ -291,7 +291,7 @@
     "model": "auth.user",
     "pk": 25,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser15",
       "first_name": "test",
@@ -303,7 +303,7 @@
     "model": "auth.user",
     "pk": 26,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser16",
       "first_name": "test",
@@ -315,7 +315,7 @@
     "model": "auth.user",
     "pk": 27,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser17",
       "first_name": "test",
@@ -327,7 +327,7 @@
     "model": "auth.user",
     "pk": 28,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser18",
       "first_name": "test",
@@ -339,7 +339,7 @@
     "model": "auth.user",
     "pk": 29,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser19",
       "first_name": "test",
@@ -351,7 +351,7 @@
     "model": "auth.user",
     "pk": 30,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser20",
       "first_name": "test",
@@ -363,7 +363,7 @@
     "model": "auth.user",
     "pk": 31,
     "fields": {
-      "password": "12",
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
       "is_superuser": false,
       "username": "testuser21",
       "first_name": "test",
