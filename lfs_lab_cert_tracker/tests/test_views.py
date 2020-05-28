@@ -70,21 +70,6 @@ class UserTest(TestCase):
         self.assertEqual(response.url, reverse('users') + '?t=all&page=2')
         self.assertRedirects(response, response.url)
 
-        # last name is empty
-        data3 = {
-            'username': user.username,
-            'first_name': user.first_name,
-            'email': EMAIL,
-            'user': user.id,
-            'next': reverse('users') + '?t=all&page=2'
-        }
-        response = self.client.post(reverse('edit_user'), data=urlencode(data3, True), content_type=ContentType)
-        messages = self.messages(response)
-        self.assertTrue('Error' in messages[0])
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('users') + '?t=all&page=2')
-        self.assertRedirects(response, response.url)
-
         # First name is long
         data4 = {
             'username': user.username,
