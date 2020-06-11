@@ -42,6 +42,14 @@ def html_template(first_name, last_name, message):
             you must be connected via
             <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
         </div>
+        <br /><br />
+        <div>
+            If you are trying to enroll in a missing or expired training, or to retrieve the training completion record, please visit the following links to get to the appropriate sites:
+            <p>
+                <b>UBC mandatory training</b><br />
+                <a href="https://my.landfood.ubc.ca/new-to-lfs/#mandatory-training-modules-8">https://my.landfood.ubc.ca/new-to-lfs/#mandatory-training-modules-8</a>
+            </p>
+        </div>
         <br />
         <p>Best regards,</p>
         <p>LFS Training Record Management System</p>
