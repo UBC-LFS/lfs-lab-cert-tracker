@@ -19,6 +19,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.urls import reverse
 from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
@@ -33,11 +34,13 @@ HTTP endpoints, responsible for the frontend
 def login(request):
     return render(request, 'lfs_lab_cert_tracker/login.html')
 
+
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def index(request):
     return redirect('/users/%d' % (request.user.id))
+
 
 # Users
 @login_required(login_url=settings.LOGIN_URL)
@@ -201,9 +204,41 @@ def user_details(request, user_id):
         'app_user': app_user,
         'user_lab_list': api.get_user_labs(user_id),
         'pi_user_lab_list': api.get_user_labs(user_id, is_principal_investigator=True),
-        'user_cert_list': api.get_user_certs(user_id),
+        'user_certs': api.get_user_certs_404(user_id),
         'missing_cert_list': api.get_missing_certs(user_id),
         'expired_cert_list': api.get_expired_certs(user_id)
+    })
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+#@auth_utils.user_or_admin
+@auth_utils.admin_or_pi_or_user
+@require_http_methods(['GET', 'POST'])
+def user_cert_details(request, user_id, cert_id):
+    ''' Details of certificates of users '''
+    can_delete = api.can_user_delete(request.user, user_id)
+
+    if request.method == 'POST':
+        user = request.POST.get('user')
+        cert = request.POST.get('cert')
+        if can_delete and user and cert:
+            deleted_user_cert = api.delete_user_cert_404(user, cert)
+            if deleted_user_cert:
+                messages.success( request, 'Success! {0} deleted.'.format(deleted_user_cert.cert.name) )
+                return HttpResponseRedirect( reverse('user_certs', args=[deleted_user_cert.user.id]) )
+            else:
+                messages.error( request, 'Error! Failed to delete a {0} training record of {1}.'.format(deleted_user_cert.cert.name, deleted_user_cert.user.first_name) )
+        else:
+            messages.error(request, 'Error! Form is invalid.')
+
+        return HttpResponseRedirect( reverse('user_certs', args=[request.user.id]) )
+    
+    return render(request, 'lfs_lab_cert_tracker/user_cert_details.html', {
+        'loggedin_user': request.user,
+        'app_user': api.get_user_404(user_id),
+        'user_cert': api.get_user_cert_404(user_id, cert_id),
+        'can_delete': can_delete
     })
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -246,25 +281,6 @@ def user_certs(request, user_id):
         })
     })
 
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-#@auth_utils.user_or_admin
-@auth_utils.admin_or_pi_or_user
-@require_http_methods(['GET'])
-def user_cert_details(request, user_id, cert_id):
-    loggedin_user_id = request.user.id
-    redirect_url = '/users/%d/training-record/' % loggedin_user_id
-
-    user_cert = api.get_user_cert(user_id, cert_id)
-    if not user_cert:
-        raise Http404
-
-    return render(request, 'lfs_lab_cert_tracker/user_cert_details.html', {
-        'loggedin_user': request.user,
-        'app_user': api.get_user(user_id),
-        'user_cert': api.get_user_cert(user_id, cert_id),
-        'delete_user_cert_form': DeleteUserCertForm(initial={'redirect_url': redirect_url})
-    })
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -430,7 +446,7 @@ def add_users_to_labs(request, lab_id):
                 if valid_email:
                     messages.success(request, 'Success! {0} (CWL: {1}) added to this area.'.format(user.get_full_name(), user.username))
                 else:
-                    messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(data['user'], user.email))
+                    messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(user.get_full_name(), user.email))
             else:
                 messages.error(request, 'Error! Failed to add {0}. CWL already exists in this lab.'.format(user.username))
         else:
@@ -480,7 +496,7 @@ def edit_cert(request, cert_id):
     """ Edit a cert """
 
     if request.method == 'POST':
-        cert = api.get_cert_object(cert_id)
+        cert = api.get_cert_404(cert_id)
         form = CertNameForm(request.POST, instance=cert)
         if form.is_valid():
             updated_cert = form.save()

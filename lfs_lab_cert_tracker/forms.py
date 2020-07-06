@@ -116,10 +116,6 @@ class UserCertForm(forms.ModelForm):
         }
         widgets = { 'user': forms.HiddenInput() }
 
-class DeleteUserCertForm(forms.Form):
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
-
-
 
 class LoginForm(forms.Form):
     username = forms.CharField(
@@ -206,3 +202,9 @@ class SafetyWebForm(forms.Form):
     hazardous_materials = forms.MultipleChoiceField(choices=HAZARDOUS_MTRLS_CHOICES, widget=forms.CheckboxSelectMultiple)
     equipment = forms.MultipleChoiceField(choices=EQUIPMENT_CHOICES, widget=forms.CheckboxSelectMultiple)
     ppe_above_min = forms.MultipleChoiceField(choices=PPE_ABOVE_MIN_CHOICES, widget=forms.CheckboxSelectMultiple)
+
+
+# for testing
+
+class DeleteUserCertForm(forms.Form):
+    redirect_url = forms.CharField(widget=forms.HiddenInput())

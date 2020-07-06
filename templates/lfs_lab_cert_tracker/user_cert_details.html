@@ -1,11 +1,32 @@
 {% extends "header.html" %}
 
-{% load crispy_forms_tags %}
-
 {% block content %}
+
+{% if can_delete %}
+	<div class="container">
+		<nav aria-label="breadcrumb">
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item">
+					<a href="{% url 'user_certs' user_id=user_cert.user.id %}">
+						{% if app_user.id == loggedin_user.id %}
+							My
+						{% else %}
+							{{ app_user.get_full_name }}'s
+						{% endif %}
+						Training Record
+					</a>
+				</li>
+				<li class="breadcrumb-item active" aria-current="page">
+					{{ user_cert.cert.name }}
+				</li>
+			</ol>
+		</nav>
+	</div>
+{% endif %}
 
 <div class="row">
 	<div class="col-md-10 offset-md-1">
+
 		<h3 class="title">Training Details</h3>
 
 		<table class="table table-borderless table-sm table-responsive-md">
@@ -13,7 +34,7 @@
 				<tr>
 					<td>Training Name</td>
 					<td>
-						<a href="/media/{{user_cert.cert_file}}">{{ user_cert.name }}</a>
+						<a href="/media/{{user_cert.cert_file}}" target="_blank">{{ user_cert.cert.name }}</a>
 					</td>
 				</tr>
 				<tr>
@@ -39,14 +60,18 @@
 
 		{% if app_user.id == loggedin_user.id %}
 			<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' loggedin_user.id %}">Back to My Account</a>
-
-			<form class="d-inline" action='/api/users/{{ app_user.id }}/certificates/{{ user_cert.id }}/delete/' method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.name }}?');">
-				{% csrf_token %}
-				{{ delete_user_cert_form | crispy }}
-				<input class="btn btn-danger" type="submit" value="Delete" />
-			</form>
 		{% else %}
 			<a class="btn btn-outline-primary" href="{% url 'user_details' app_user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
+		{% endif %}
+
+		{% if can_delete %}
+			<form class="d-inline" action="" method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.cert.name }}?');">
+				{% csrf_token %}
+
+				<input type="hidden" name="user" value="{{ user_cert.user.id }}" />
+				<input type="hidden" name="cert" value="{{ user_cert.cert.id }}" />
+				<input class="btn btn-danger ml-2" type="submit" value="Delete" />
+			</form>
 		{% endif %}
 
 	</div>

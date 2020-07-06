@@ -166,5 +166,53 @@
       "uploaded_date": "2018-06-11",
       "completion_date": "2017-05-29"
     }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 15,
+    "fields": {
+      "expiry_date": "2014-08-15",
+      "cert_id": 1,
+      "user_id": 11,
+      "cert_file": "users/11/certificates/1/New_Young_Worker_Safety_Orientation_Certificate.pdf",
+      "uploaded_date": "2018-06-10",
+      "completion_date": "2014-08-15"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 16,
+    "fields": {
+      "expiry_date": "2014-07-10",
+      "cert_id": 3,
+      "user_id": 11,
+      "cert_file": "users/11/certificates/3/Workplace_Violence_Prevention_Training_Completion_Certificate.pdf",
+      "uploaded_date": "2018-06-10",
+      "completion_date": "2014-07-10"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 17,
+    "fields": {
+      "expiry_date": "2019-07-13",
+      "cert_id": 20,
+      "user_id": 11,
+      "cert_file": "users/11/certificates/20/certificate_1.jpg",
+      "uploaded_date": "2018-06-10",
+      "completion_date": "2014-07-13"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 18,
+    "fields": {
+      "expiry_date": "2019-07-13",
+      "cert_id": 23,
+      "user_id": 11,
+      "cert_file": "users/11/certificates/23/certificate_1.jpg",
+      "uploaded_date": "2018-06-10",
+      "completion_date": "2017-07-13"
+    }
   }
 ]

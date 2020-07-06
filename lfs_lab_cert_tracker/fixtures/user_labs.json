@@ -1,0 +1,20 @@
+[
+  {
+    "model": "lfs_lab_cert_tracker.userlab",
+    "pk": 1,
+    "fields": {
+      "role": 1,
+      "lab_id": 1,
+      "user_id": 4
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.userlab",
+    "pk": 2,
+    "fields": {
+      "role": 0,
+      "lab_id": 1,
+      "user_id": 11
+    }
+  }
+]

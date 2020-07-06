@@ -54,12 +54,6 @@ def get_user_404(user_id):
     ''' Get an user or 404 '''
     return get_object_or_404(AuthUser, id=user_id)
 
-def get_user(user_id):
-    """ Find a user by id"""
-    try:
-        return AuthUser.objects.get(id=user_id)
-    except AuthUser.DoesNotExist as dne:
-        return None
 
 def get_user_by_username(username):
     """ Find a user by username """
@@ -146,14 +140,13 @@ def get_cert(cert_id):
     except Cert.DoesNotExist:
         return None
 
-def get_cert_object(cert_id):
+def get_cert_404(cert_id):
     ''' Get a cert '''
     return get_object_or_404(Cert, id=cert_id)
 
 
 def delete_cert(cert_id):
     """ Delete a certificate """
-
     try:
         Cert.objects.get(id=cert_id).delete()
         return {'cert_id': cert_id}
@@ -162,24 +155,20 @@ def delete_cert(cert_id):
 
 
 # UserCert CRUD
-def get_user_certs(user_id):
-    user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
-    res = []
-    for user_cert in user_certs:
-        dict_user_cert = model_to_dict(user_cert)
-        dict_user_cert.update(model_to_dict(user_cert.cert))
-        res.append(dict_user_cert)
-    return res
 
-def get_user_cert(user_id, cert_id):
-    user_cert_query_set = UserCert.objects.filter(user=user_id, cert=cert_id).prefetch_related('cert')
-    if user_cert_query_set.count() > 0:
-        user_cert = user_cert_query_set[0]
-        res = model_to_dict(user_cert)
-        res.update(model_to_dict(user_cert.cert))
-        return res
-    else:
-        return None
+def get_user_certs_404(user_id):
+    ''' Get all certs of an user '''
+    user = get_user_404(user_id)
+    return user.usercert_set.all()
+
+def get_user_cert_404(user_id, cert_id):
+    ''' Get a cert of an user '''
+    user = get_user_404(user_id)
+    uc = user.usercert_set.filter(cert_id=cert_id)
+    if uc.exists():
+        return uc.first()
+    raise Http404
+
 
 
 def all_certs_expired_in_30days():
@@ -240,14 +229,24 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
 
     return model_to_dict(user_cert)
 
-def delete_user_cert(user_id, cert_id):
-    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
-    os.rmdir( os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) ) )
-    return {'user_id': user_id, 'cert_id': cert_id}
+def can_user_delete(user, user_id):
+    ''' Check whether an user can delete a cert or not '''
+    return user.id == user_id or user.is_superuser
 
-def update_user_cert(user_id, cert_id):
-    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
-    return {'user_id': user_id, 'cert_id': cert_id}
+def delete_user_cert_404(user_id, cert_id):
+    ''' Delete a cert of an user '''
+    user = get_user_404(user_id)
+    user_cert = user.usercert_set.filter(cert_id=cert_id)
+    uc = None
+    if user_cert.exists():
+        uc = user_cert.first()
+        user_cert.delete()
+
+        dirpath = os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) )
+        if os.path.exists(dirpath) and os.path.isdir(dirpath):
+            os.rmdir(dirpath)
+    
+    return uc if uc else False
 
 
 # UserLab CRUD
@@ -424,3 +423,46 @@ def can_req_parameters_access(request, params):
     ''' Check whether request parameters are valid or not '''
     if validate_parameters(request, params):
         validate_url_tab(request, ['all', 'report', 'new'])
+
+
+
+# for testing
+
+def get_user(user_id):
+    """ Find a user by id"""
+    try:
+        return AuthUser.objects.get(id=user_id)
+    except AuthUser.DoesNotExist as dne:
+        return None
+
+def get_user_cert(user_id, cert_id):
+    user_cert_query_set = UserCert.objects.filter(user=user_id, cert=cert_id).prefetch_related('cert')
+    if user_cert_query_set.count() > 0:
+        user_cert = user_cert_query_set[0]
+        res = model_to_dict(user_cert)
+        res.update(model_to_dict(user_cert.cert))
+        return res
+    else:
+        return None
+
+def get_user_certs(user_id):
+    user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
+    res = []
+    for user_cert in user_certs:
+        dict_user_cert = model_to_dict(user_cert)
+        dict_user_cert.update(model_to_dict(user_cert.cert))
+        res.append(dict_user_cert)
+    return res
+
+
+def delete_user_cert(user_id, cert_id):
+    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
+    os.rmdir( os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) ) )
+    return {'user_id': user_id, 'cert_id': cert_id}
+
+
+"""
+def update_user_cert(user_id, cert_id):
+    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
+    return {'user_id': user_id, 'cert_id': cert_id}
+"""

@@ -28,6 +28,7 @@ urlpatterns = [
     path('users/<int:user_id>/training-record/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
     path('users/<int:user_id>/report/', views.user_report),
     path('users/<int:user_id>/', views.user_details, name='user_details'),
+
     path('users/report/missing-training/', views.users_in_missing_training_report, name='users_in_missing_training_report'),
     path('users/delete/', views.delete_user, name='delete_user'),
     path('users/edit', views.edit_user, name='edit_user'),
@@ -45,7 +46,7 @@ urlpatterns = [
     path('api/users/<int:user_id>/labs/<int:lab_id>/switch_lab_role/', api_views.switch_lab_role),
     path('api/users/<int:user_id>/labs/<int:lab_id>/delete/', api_views.delete_user_lab),
     path('api/users/<int:user_id>/certificates/', api_views.user_certs),
-    path('api/users/<int:user_id>/certificates/<int:cert_id>/delete/', api_views.delete_user_certs),
+
 
     path('api/labs/', api_views.labs),
     path('api/labs/<int:lab_id>/delete/', api_views.delete_labs),
@@ -63,7 +64,17 @@ urlpatterns = [
 
     path('error/<str:error_msg>/', views.show_error),
 
-    #path('accounts/local_login/', views.local_login, name='local_login'),
+    # for testing
+    path('api/users/', api_views.users),
+    path('api/users/<int:user_id>/delete/', api_views.delete_user),
+    path('api/users/<int:user_id>/switch_admin/', api_views.switch_admin),
+    path('api/users/<int:user_id>/switch_inactive/', api_views.switch_inactive),
+    path('api/users/<int:user_id>/certificates/<int:cert_id>/delete/', api_views.delete_user_certs),
+
+    path('api/labs/<int:lab_id>/users/', api_views.user_labs),
+
+    
+    path('accounts/local_login/', views.local_login, name='local_login'),
     #path('admin/', admin.site.urls),
     #path('accounts/admin/', include('django.contrib.auth.urls')),
 ]
