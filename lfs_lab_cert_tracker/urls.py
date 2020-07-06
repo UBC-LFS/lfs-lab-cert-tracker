@@ -73,8 +73,8 @@ urlpatterns = [
 
     path('api/labs/<int:lab_id>/users/', api_views.user_labs),
 
-    
-    path('accounts/local_login/', views.local_login, name='local_login'),
+
+    #path('accounts/local_login/', views.local_login, name='local_login'),
     #path('admin/', admin.site.urls),
     #path('accounts/admin/', include('django.contrib.auth.urls')),
 ]
