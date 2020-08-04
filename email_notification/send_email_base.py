@@ -47,7 +47,7 @@ def html_template(first_name, last_name, message):
             If you are trying to enroll in a missing or expired training, or to retrieve the training completion record, please visit the following links to get to the appropriate sites:
             <p>
                 <b>UBC mandatory training</b><br />
-                <a href="https://my.landfood.ubc.ca/new-to-lfs/#mandatory-training-modules-8">https://my.landfood.ubc.ca/new-to-lfs/#mandatory-training-modules-8</a>
+                <a href="https://my.landfood.ubc.ca/lfs-mandatory-training">https://my.landfood.ubc.ca/lfs-mandatory-training</a>
             </p>
         </div>
         <br />
