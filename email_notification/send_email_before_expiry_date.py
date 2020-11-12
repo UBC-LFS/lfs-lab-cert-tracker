@@ -26,10 +26,11 @@ def find_users_by_days(users, target_day):
                         pis[pi] = set()
 
                 for cert in lab['certs']:
-                    if 'expiry_date' in cert and cert['expiry_date'] == target_day:
-                        lab_user['certs'].add(cert['id'])
-                        for pi in lab['pis']:
-                            pis[pi].add(user['id'])
+                    if 'expiry_date' in cert and 'completion_date' in cert:
+                        if cert['expiry_date'] != cert['completion_date'] and cert['expiry_date'] == target_day:
+                            lab_user['certs'].add(cert['id'])
+                            for pi in lab['pis']:
+                                pis[pi].add(user['id'])
 
             if len(lab_user['certs']) > 0:
                 lab_users.append(lab_user)
