@@ -195,12 +195,12 @@
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 17,
     "fields": {
-      "expiry_date": "2019-07-13",
+      "expiry_date": "2019-07-14",
       "cert_id": 20,
       "user_id": 11,
       "cert_file": "users/11/certificates/20/certificate_1.jpg",
       "uploaded_date": "2018-06-10",
-      "completion_date": "2014-07-13"
+      "completion_date": "2014-07-14"
     }
   },
   {
@@ -213,6 +213,54 @@
       "cert_file": "users/11/certificates/23/certificate_1.jpg",
       "uploaded_date": "2018-06-10",
       "completion_date": "2017-07-13"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 19,
+    "fields": {
+      "expiry_date": "2020-07-13",
+      "cert_id": 1,
+      "user_id": 5,
+      "cert_file": "users/5/certificates/1/certificate_1.jpg",
+      "uploaded_date": "2020-08-10",
+      "completion_date": "2020-07-13"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 20,
+    "fields": {
+      "expiry_date": "2020-07-13",
+      "cert_id": 2,
+      "user_id": 5,
+      "cert_file": "users/5/certificates/2/certificate_1.jpg",
+      "uploaded_date": "2020-08-10",
+      "completion_date": "2020-07-13"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 21,
+    "fields": {
+      "expiry_date": "2019-10-01",
+      "cert_id": 16,
+      "user_id": 11,
+      "cert_file": "users/11/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2020-01-10",
+      "completion_date": "2014-10-01"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 22,
+    "fields": {
+      "expiry_date": "2019-10-01",
+      "cert_id": 22,
+      "user_id": 11,
+      "cert_file": "users/11/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2020-01-10",
+      "completion_date": "2016-10-01"
     }
   }
 ]

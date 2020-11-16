@@ -62,5 +62,37 @@
       "cert_id": 20,
       "lab_id": 1
     }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.labcert",
+    "pk": 9,
+    "fields": {
+      "cert_id": 1,
+      "lab_id": 2
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.labcert",
+    "pk": 10,
+    "fields": {
+      "cert_id": 2,
+      "lab_id": 2
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.labcert",
+    "pk": 11,
+    "fields": {
+      "cert_id": 16,
+      "lab_id": 2
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.labcert",
+    "pk": 12,
+    "fields": {
+      "cert_id": 20,
+      "lab_id": 2
+    }
   }
 ]

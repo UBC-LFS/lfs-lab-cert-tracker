@@ -31,7 +31,7 @@ def get_message_pis(users, lab_users):
 
 def send_email_lab_users(users, certs, lab_users):
     for user in lab_users:
-        receiver = get_receiver(users, user['id'])
+        receiver = get_receiver(users[ user['id'] ])
         message = get_message_lab_users(certs, user['id'], user['missing_certs'])
         template = html_template(users[ user['id'] ]['first_name'], users[ user['id'] ]['last_name'], message)
 
@@ -42,7 +42,7 @@ def send_email_lab_users(users, certs, lab_users):
 def send_email_pis(users, pis):
     for id, lab_users in pis.items():
         if len(lab_users) > 0:
-            receiver = get_receiver(users, id)
+            receiver = get_receiver(users[id])
             message = get_message_pis(users, lab_users)
             template = html_template(users[id]['first_name'], users[id]['last_name'], message)
 
@@ -85,4 +85,5 @@ if __name__ == "__main__":
     lab_users, pis = find_missing_cert_users(users, certs)
     send_email_lab_users(users, certs, lab_users)
     send_email_pis(users, pis)
+    
     db.close()
