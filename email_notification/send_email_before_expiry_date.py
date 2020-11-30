@@ -48,15 +48,13 @@ def find_users_by_type(users, type):
     """ Find lab users or PIs by type """
 
     if type == 1:
-        #target_day = datetime.now() + timedelta(days=DAYS30)
-        target_day = datetime(2019, 7, 13)
+        target_day = datetime.now() + timedelta(days=DAYS30)
         print("target_day: ", target_day)
         lab_users, pis = find_users_by_days(users, target_day.date(), 'before')
         return lab_users, pis
 
     elif type == 2:
         target_day = datetime.now() + timedelta(days=DAYS14)
-        #target_day = datetime(2019, 6, 27)
         print("target_day: ", target_day)
         lab_users, pis = find_users_by_days(users, target_day.date(), 'before')
         return lab_users, None
@@ -65,7 +63,7 @@ def find_users_by_type(users, type):
 def send_email_30days_before(users, certs, type):
     """ Send an email to lab users and PIs 1 month before the expiry date """
 
-    print("send_email_30days_before")
+    print("Send email 30days before")
     lab_users, pis = find_users_by_type(users, 1)
     if len(lab_users) > 0:
         send_email_to_lab_users(users, lab_users, DAYS30, type)
@@ -77,7 +75,7 @@ def send_email_30days_before(users, certs, type):
 def send_email_14days_before(users, certs, admin, type):
     """ Send an email to administrators 2 weeks before the expiry date """
 
-    print("send_email_14days_before")
+    print("send email 14days before")
     lab_users, pis, = find_users_by_type(users, 2)
     if len(lab_users) > 0 and len(admin) > 0:
         send_email_to_admin(users, admin, lab_users, DAYS14, type)

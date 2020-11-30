@@ -12,8 +12,11 @@ from send_email_before_expiry_date import find_users_by_days
 def send_email_after(users, certs, admin, type):
     """ Send an email to lab_users/Pis/admin every twice a month after the expiry date """
 
-    print("send_email_after_expiry")
+    print("Send email after expiry date")
+
     target_day = datetime.now()
+    print("target_day: ", target_day)
+
     lab_users, pis = find_users_by_days(users, target_day.date(), 'after')
 
     if len(lab_users) > 0:
