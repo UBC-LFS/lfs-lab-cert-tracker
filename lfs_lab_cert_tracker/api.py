@@ -14,7 +14,92 @@ from lfs_lab_cert_tracker.models import *
 Provides an API to the Django ORM for any queries that are required
 """
 
-# User CRUD
+# User
+
+def get_user_404(user_id):
+    ''' Get an user or 404 '''
+    return get_object_or_404(AuthUser, id=user_id)
+
+
+# Area
+
+def get_area_404(area_id):
+    ''' Get an user or 404 '''
+    return get_object_or_404(Lab, id=area_id)
+
+def get_areas():
+    ''' Get all areas '''
+    return Lab.objects.all().order_by('name')
+
+
+
+# User lab
+
+
+def add_users_to_areas(areas):
+    ''' Add user info to areas '''
+
+    for area in areas:
+        area.has_lab_users = []
+        area.has_pis = []
+        for userlab in area.userlab_set.all():
+            if userlab.role == UserLab.LAB_USER:
+                area.has_lab_users.append(userlab.user.id)
+            elif userlab.role == UserLab.PRINCIPAL_INVESTIGATOR:
+                area.has_pis.append(userlab.user.id)
+
+    return areas
+
+
+def update_or_create_areas_to_user(data):
+    ''' update or create areas to an user '''
+
+    areas = data.getlist('areas[]')
+    user = get_user_404( data.get('user') )
+    all_userlab = user.userlab_set.all()
+
+    report = { 'updated': [], 'created': [], 'deleted': [] }
+    used_areas = []
+    for area in areas:
+        splitted = area.split(',')
+        lab = get_area_404(splitted[0])
+        role = splitted[1]
+        userlab = all_userlab.filter(lab_id=lab.id)
+        used_areas.append(lab.id)
+
+        # update or create
+        if userlab.exists():
+            if userlab.first().role != int(role):
+                updated = userlab.update(role=role)
+                if updated:
+                    report['updated'].append(lab.name)
+        else:
+            created = UserLab.objects.create(user=user, lab=lab, role=role)
+            if created:
+                report['created'].append(lab.name)
+
+    for ul in all_userlab:
+        if ul.lab.id not in used_areas:
+            deleted = ul.delete()
+            if deleted:
+                report['deleted'].append(ul.lab.name)
+
+    return report
+
+def delete_all_areas_in_user(data):
+    ''' Delete all areas in an user '''
+
+    user = get_user_404( data.get('user') )
+    all_userlab = user.userlab_set.all()
+
+    if len(all_userlab) > 0:
+        return user.userlab_set.all().delete()
+
+    return None
+
+
+#------------------
+
 
 def get_users():
     """ Get all users """
@@ -50,9 +135,7 @@ def add_missing_certs(users):
             user.missing_certs = None
     return users
 
-def get_user_404(user_id):
-    ''' Get an user or 404 '''
-    return get_object_or_404(AuthUser, id=user_id)
+
 
 
 def get_user_by_username(username):
@@ -245,7 +328,7 @@ def delete_user_cert_404(user_id, cert_id):
         dirpath = os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) )
         if os.path.exists(dirpath) and os.path.isdir(dirpath):
             os.rmdir(dirpath)
-    
+
     return uc if uc else False
 
 

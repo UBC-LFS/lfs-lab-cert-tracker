@@ -2,6 +2,10 @@
 
 {% block content %}
 
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
 <div class="row">
 	<div class="col-md-10 offset-md-1">
 

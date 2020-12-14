@@ -1,0 +1,282 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
+{% include 'lfs_lab_cert_tracker/sub_templates/_return_message.html' with data=messages %}
+
+<div id="user-areas-message"></div>
+
+<h3 class="my-5">All Users <small class="text-secondary">Total: {{ total_users }}</small></h3>
+
+<div class="search-field">
+	<form method="GET">
+		<div class="input-field">
+			<input type="hidden" name="t" value="all" />
+			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
+			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+			<a class="btn btn-sm btn-light" href="{% url 'all_users' %}">Clear</a>
+		</div>
+	</form>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-lg text-center font-size-sm">
+  <thead>
+    <tr>
+      <th>CWL</th>
+      <th>First <br />Name</th>
+			<th>Last <br />Name</th>
+			<th>E-mail</th>
+			<th>Missing <br />Training <br />Record</th>
+			<th>Areas</th>
+			<th>Admin</th>
+			<th>Inactivated <br />Date</th>
+			<th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+        <td>
+					<a href="/users/{{user.id}}">{{ user.username }}</a>
+				</td>
+        <td>{{ user.first_name }}</td>
+        <td>{{ user.last_name }}</td>
+				<td>{{ user.email }}</td>
+				<td>
+					{% if user.missing_certs|length == 0 %}
+						<span class="badge badge-light">NO</span>
+					{% else %}
+						<span class="badge badge-warning">YES ({{ user.missing_certs|length }})</span>
+					{% endif %}
+				</td>
+				<td>
+					<button type="button" class="btn btn-lime btn-xs" data-toggle="modal" data-target="#user-area-modal-{{ user.id }}">
+						Assign ({{ user.userlab_set.all|length }})
+					</button>
+
+					<div id="user-area-modal-{{ user.id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="user-area-modal-{{ user.id }}-label" aria-hidden="true">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title text-info" id="user-area-modal-{{ user.id }}-label">Assign Areas to User</h5>
+									<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								</div>
+								<div class="modal-body text-left p-4">
+									<div id="user-area-modal-{{ user.id }}-error"></div>
+
+									<div class="row">
+										<div class="col-md-4">
+											<h4>
+												{{ user.get_full_name }} <br />
+												<small class="text-secondary">{{ user.username }}</small>
+											</h4>
+
+											<h6 class="mt-4">Current Areas:</h6>
+											<div class="font-size-sm mb-3">
+												Note:
+												<span class="work-area area-lab-user">Lab User</span>
+												<span class="work-area area-pi">PI</span>
+											</div>
+
+											{% for userlab in user.userlab_set.all %}
+												<span class="font-size-sm work-area{% if userlab.role == roles.LAB_USER %} area-lab-user{% elif userlab.role == roles.PI %} area-pi{% endif %}">
+													{{ userlab.lab.name }}
+												</span><br />
+											{% empty %}
+												<span class="text-secondary font-size-sm">No Areas found</span>
+											{% endfor %}
+
+										</div>
+										<div class="col-md-8">
+											<h5 id="list-of-areas" class="text-info text-center">List of Areas</h5>
+
+											<input class="area-search-input float-right" data-user="{{ user.id }}" type="text" placeholder="Search by Name" />
+
+											<form id="area-list-form-{{ user.id }}" action="" method="post">
+												{% csrf_token %}
+
+												<input class="btn btn-primary btn-sm btn-submit mb-2" type="button" value="Save changes" data-user="{{ user.id }}" data-url="{% url 'assign_user_areas' %}" />
+
+												<table id="area-list-{{ user.id }}" class="custom-table text-center mb-4">
+													<thead>
+														<tr>
+															<th>Select</th>
+															<th>Name</th>
+															<th>Is PI?</th>
+														</tr>
+													</thead>
+													<tbody>
+														{% for area in areas %}
+															<tr>
+																<td>
+																	<input class="area-input" type="checkbox" name="area" value="{{ area.id }}" {% if user.id in area.has_lab_users or user.id in area.has_pis %}checked{% endif %} data-area="{{ area.id }}" data-user="{{ user.id }}" />
+																</td>
+																<td class="text-left">{{ area.name }}</td>
+																<td>
+																	{% if user.id in area.has_lab_users or user.id in area.has_pis %}
+																		<input id="role-input-area{{ area.id }}-user{{ user.id }}" type="checkbox" name="role" value="{{ roles.PI }}" {% if user.id in area.has_pis %}checked{% endif %} />
+																	{% else %}
+																		<input id="role-input-area{{ area.id }}-user{{ user.id }}" type="checkbox" name="role" value="{{ roles.PI }}" disabled />
+																	{% endif %}
+																</td>
+															</tr>
+														{% endfor %}
+													</tbody>
+												</table>
+
+												<input type="hidden" name="user" value="{{ user.id }}" />
+												<input class="btn btn-primary btn-sm btn-submit block-center" type="button" value="Save changes" data-user="{{ user.id }}" data-url="{% url 'assign_user_areas' %}" />
+											</form>
+
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</td>
+				<td>
+					{% if user.is_superuser %}
+						<i class="material-icons text-primary">done</i>
+					{% endif %}
+				</td>
+				<td>
+					{% if not user.is_active and user.inactive %}
+						{{ user.inactive.inactive_date }}
+					{% endif %}
+				</td>
+				<td>
+					<div class="btn-toolbar">
+
+            <button type="button" class="btn btn-primary btn-xs mr-2" data-toggle="modal" data-target="#user-edit-modal-{{ user.id }}">Edit</button>
+
+            <div id="user-edit-modal-{{ user.id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="user-edit-modal-{{ user.id }}-label" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title text-info" id="user-edit-modal-{{ user.id }}-label">Edit User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  </div>
+                  <div class="modal-body text-left p-4">
+                    <h4>{{ user.get_full_name }}</h4>
+                    <h5 class="text-secondary">CWL: {{ user.username }}</h5>
+
+                    {% include 'lfs_lab_cert_tracker/sub_templates/_user_form_note.html' %}
+
+                    <form action="{% url 'edit_user' %}" method="post">
+                      {% csrf_token %}
+
+                      <div class="field-wrapper">
+                        <label for="id_username_{{ user.id }}">
+                          CWL: <span class="text-danger">*</span>
+                        </label>
+                        <div class="help">Unique. Maximum 150 characters allowed</div>
+                        <input id="id_username_{{ user.id }}" type="text" name="username" class="form-control" required maxlength="150" placeholder="Enter"
+                          {% if user.username %}
+                            value="{{ user.username }}"
+                          {% else %}
+                            value=""
+                          {% endif %}
+                        />
+                      </div>
+
+                      <div class="field-wrapper">
+                        <label for="id_first_name_{{ user.id }}">
+                          First Name: <span class="text-danger">*</span>
+                        </label>
+                        <div class="help">Maximum 30 characters allowed</div>
+                        <input id="id_first_name_{{ user.id }}" type="text" name="first_name" class="form-control" required maxlength="30" placeholder="Enter"
+                          {% if user.first_name %}
+                            value="{{ user.first_name }}"
+                          {% else %}
+                            value=""
+                          {% endif %}
+                        />
+                      </div>
+
+                      <div class="field-wrapper">
+                        <label for="id_last_name_{{ user.id }}">
+                          Last Name: <span class="text-danger">*</span>
+                        </label>
+                        <div class="help">Maximum 150 characters allowed</div>
+                        <input id="id_last_name_{{ user.id }}" type="text" name="last_name" class="form-control" required maxlength="150" placeholder="Enter"
+                          {% if user.last_name %}
+                            value="{{ user.last_name }}"
+                          {% else %}
+                            value=""
+                          {% endif %}
+                        />
+                      </div>
+
+                      <div class="field-wrapper">
+                        <label for="id_email_{{ user.id }}">
+                          Email: <span class="text-danger">*</span>
+                        </label>
+                        <div class="help">Maximum 254 characters allowed</div>
+                        <input id="id_email_{{ user.id }}" type="text" name="email" class="form-control" required maxlength="254" placeholder="Enter"
+                          {% if user.email %}
+                            value="{{ user.email }}"
+                          {% else %}
+                            value=""
+                          {% endif %}
+                        />
+                      </div>
+
+      			 					<input type="hidden" name="user" value="{{ user.id }}" />
+      								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                      <input class="btn btn-primary" type="submit" value="Update" />
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+						<form class="list-form" action="{% url 'switch_admin' %}" method="post" onsubmit="return confirm('Are you sure to {% if user.is_superuser %} REVOKE administrator privileges of {% else %} GRANT administrator privileges to {% endif %} this user - {{user.username}} ?');">
+		 					{% csrf_token %}
+
+		 					<input type="hidden" name="user" value="{{ user.id }}" />
+							<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+							<input class="btn btn-info btn-xs" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
+						</form>
+
+						<form class="list-form" action="{% url 'switch_inactive' %}" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
+							{% csrf_token %}
+
+							<input type="hidden" name="user" value="{{ user.id }}" />
+							<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+							{% if not user.is_active and user.inactive %}
+								<input class="btn btn-inactive btn-xs mx-2" type="submit" value="Inactive" />
+							{% else %}
+								<input class="btn btn-success btn-xs mx-2" type="submit" value="Active" />
+							{% endif %}
+						</form>
+
+						<form class="list-form" action="{% url 'delete_user' %}" method="post" onsubmit="return confirm('Are you sure to delete this user - {{user.username}}?');">
+							{% csrf_token %}
+
+							<input type="hidden" name="user" value="{{ user.id }}" />
+							<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+							<input class="btn btn-danger btn-xs" type="submit" value="Delete" />
+		 				</form>
+					</div>
+				</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'lfs_lab_cert_tracker/sub_templates/_pagination.html' with data=users %}
+
+{% endblock %}
+
+{% block js %}
+	{% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/user_areas.js' %}"></script>
+{% endblock %}

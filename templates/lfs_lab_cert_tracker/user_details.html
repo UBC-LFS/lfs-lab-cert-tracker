@@ -2,7 +2,11 @@
 
 {% block content %}
 
-<div class="row">
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
+<div class="row mt-5">
 	<div class="col-md-8">
 		<h3>{{ app_user.get_full_name }}</h3>
 

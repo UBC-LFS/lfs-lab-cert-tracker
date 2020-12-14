@@ -57,9 +57,28 @@ footer .footer-content a {
   margin-bottom: 80px;
 }
 
-header .container  {
-  margin-bottom: 10px;
-  font-size: 0.85rem;
+header {
+  background-color: #283593;
+}
+
+header .navbar-brand,
+header .navbar-text,
+header .nav-link {
+  color: #fff !important;
+}
+
+header .navbar-brand > img {
+  width: auto;
+  height: 45px;
+}
+
+header .navbar-brand .brand-shorthand  {
+  display: none;
+}
+
+header .navbar-toggler {
+  background-color: #fff;
+  border-radius: 4px;
 }
 
 header .container .logout-btn {
@@ -192,9 +211,128 @@ i.material-icons {
   padding: 40px;
 }
 
+
+
+/* admin menu */
+
+.admin-menu {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  background-color: #e3f2fd;
+  /*background-color: #e3f2fd;*/
+}
+
+.admin-menu .dropdown {
+  display: inline-block;
+}
+
+.admin-menu .dropdown button {
+  padding: 4px 8px;
+  background: none;
+  outline: none;
+  border: none;
+}
+
+.admin-menu .dropdown a:focus,
+.admin-menu .dropdown a:active,
+.admin-menu .dropdown button:focus,
+.admin-menu .dropdown button:active {
+  outline: none !important;
+  box-shadow: none;
+}
+
+.admin-menu .dropdown {
+  margin: 0 5px;
+}
+
+.admin-menu .dropdown .dropdown-item {
+  padding: 4px 8px;
+  background: none;
+}
+
+.admin-menu .dropdown .dropdown-item:hover,
+.admin-menu .dropdown .dropdown-toggle:hover {
+  background-color: #90caf9;
+}
+
+.admin-menu .dropdown .dropdown-item:active {
+  color: #212529;
+}
+
+
+.work-area {
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin: 10px 0;
+  line-height: 1.8;
+}
+
+.area-lab-user {
+  border: 1px solid #bbdefb;
+  background-color: #e3f2fd;
+}
+
+.area-pi {
+  border: 1px solid #fff8e1;
+  background-color: #ffecb3;
+}
+
+
+
+.custom-table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #212529;
+  background: none;
+  border-top: 2px solid #dee2e6;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.custom-table th,
+.custom-table td {
+  border-left: none;
+  border-right: none;
+}
+
+.custom-table th,
+.custom-table td {
+  padding: 0.3rem;
+  vertical-align: top;
+}
+
+.custom-table td {
+  background-color: #fff;
+}
+
+
+/* Utils */
+
+
+.btn-lime {
+  background-color: #e6ee9c;
+  border-color: #dce775;
+}
+
+.btn-lime:hover {
+  background-color: #dce775;
+}
+
+.block-center {
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+
+/* Responsive design */
+
 @media (max-width: 575.98px) {
-  .navbar-brand { font-size: 0.9rem; }
+  header .navbar-brand .brand-title { display: none; }
+  header .navbar-brand .brand-shorthand { display: inline; }
   .nav-tabs > a { font-size: 0.8rem; }
+  .admin-menu >.text { display: none; }
   footer,
   footer .footer-content {
     height: 150px;
@@ -202,8 +340,17 @@ i.material-icons {
     padding: 5px;
   }
   footer .footer-content { flex-direction: column; }
+  #list-of-areas {
+    margin-top: 30px;
+    margin-bottom: 20px;
+  }
 }
 
 @media (min-width: 576px) and (max-width: 767.98px) {
   footer { font-size: 0.9rem; }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  header .navbar-brand .brand-title { display: none; }
+  header .navbar-brand .brand-shorthand { display: inline; }
 }

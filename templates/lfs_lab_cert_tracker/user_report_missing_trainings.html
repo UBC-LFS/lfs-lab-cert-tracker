@@ -1,0 +1,51 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
+<h3 class="my-5">
+	User Report <small class="text-secondary">Total: {{ users_in_missing_training|length }}</small>
+</h3>
+
+<div class="text-primary float-right">
+	<i class="material-icons">cloud_download</i>
+	<a href="{% url 'users_in_missing_training_report' %}" target="_blank">Download as PDF</a>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-lg text-center font-size-sm">
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>Full Name</th>
+			<th>CWL</th>
+			<th>Number of <br />Missing Trainings</th>
+			<th>Missing Training Records</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for user in users %}
+			<tr>
+				<td>{{ user.id }}</td>
+				<td>{{ user.get_full_name }}</td>
+				<td>{{ user.username }}</td>
+				<td>{{ user.missing_certs.count }}</td>
+				<td class="text-left">
+					<ul>
+						{% for training in user.missing_certs %}
+							<li>{{ training.cert }}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+		{% empty %}
+			No users found
+		{% endfor %}
+	</tbody>
+</table>
+
+{% include 'lfs_lab_cert_tracker/sub_templates/_pagination.html' with data=users %}
+
+{% endblock %}

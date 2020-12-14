@@ -2,6 +2,10 @@
 
 {% block content %}
 
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
 {% if messages %}
 	{% for message in messages %}
 		<div class="alert {{ message.tags }} alert-dismissible fade show" role="alert">
@@ -24,7 +28,7 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-md">
+<table class="table table-bordered table-striped table-hover table-responsive-lg">
   <thead>
     <tr>
       <th>Name</th>
@@ -46,7 +50,7 @@
 				<td>
 					{% if can_create_cert %}
 					<div class="btn-toolbar">
-						<button class="btn btn-info btn-xs mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
+						<button class="btn btn-info btn-sm mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
 
 						<div class="modal fade" id="cert-name-edit-modal-{{ cert.id }}" tabindex="-1" role="dialog" aria-labelledby="cert-name-edit-modal-label-{{ cert.id }}" aria-hidden="true">
 							<div class="modal-dialog modal-lg" role="document">
@@ -78,7 +82,7 @@
 						<form class="list-form" action='/api/certificates/{{cert.id}}/delete/' method="post" onsubmit="return confirm('Are you sure to delete this certificate - {{cert.name}}?');">
 							{% csrf_token %}
 							<input name="redirect_url" value="/all-trainings/" type="hidden"/>
-							<input class="btn btn-danger btn-xs" type="submit" value="Delete"/>
+							<input class="btn btn-danger btn-sm" type="submit" value="Delete"/>
 						</form>
 					</div>
 					{% endif %}

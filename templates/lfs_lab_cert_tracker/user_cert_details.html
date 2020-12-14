@@ -2,6 +2,10 @@
 
 {% block content %}
 
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
 {% if can_delete %}
 	<div class="container">
 		<nav aria-label="breadcrumb">
@@ -29,7 +33,7 @@
 
 		<h3 class="title">Training Details</h3>
 
-		<table class="table table-borderless table-sm table-responsive-md">
+		<table class="table table-borderless table-sm table-responsive-lg">
 			<tbody>
 				<tr>
 					<td>Training Name</td>

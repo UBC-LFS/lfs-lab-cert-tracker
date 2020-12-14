@@ -1,0 +1,39 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+{% if user.is_superuser %}
+	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% endif %}
+
+{% include 'lfs_lab_cert_tracker/sub_templates/_return_message.html' with data=messages %}
+
+
+<div class="row">
+  <div class="new-users-section col-md-6 offset-md-3">
+    <h3 class="">New Users</h3>
+
+    {% include 'lfs_lab_cert_tracker/sub_templates/_user_form_note.html' %}
+
+  	<form action="" method="post">
+  		{% csrf_token %}
+
+      {% for field in user_form.visible_fields  %}
+        <div class="field-wrapper">
+          <label for="{{ field.id_for_label }}">
+            {{ field.label }}: <span class="text-danger">*</span>
+          </label>
+
+          {% if field.help_text %}
+            <div class="help">{{ field.help_text|safe }}</div>
+          {% endif %}
+          {{ field }}
+        </div>
+      {% endfor %}
+
+  		<input class="btn btn-primary mt-3" type="submit" value="Create User" />
+  	</form>
+  </div>
+</div>
+
+{% endblock %}

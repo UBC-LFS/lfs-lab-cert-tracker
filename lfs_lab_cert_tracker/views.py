@@ -6,12 +6,12 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_control
+from django.views.decorators.cache import cache_control, never_cache
 from django.shortcuts import render, redirect
 from django.views.static import serve
 from django.template.loader import get_template
 from django.template import Context
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404, JsonResponse
 from django.db.models import Q
 from django.contrib.auth import authenticate, login as DjangoLogin
 from django.contrib.auth.models import User as AuthUser
@@ -20,6 +20,9 @@ from django.contrib import messages
 from django.urls import reverse
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from lfs_lab_cert_tracker import api
 from lfs_lab_cert_tracker import auth_utils
@@ -27,9 +30,9 @@ from lfs_lab_cert_tracker.forms import *
 
 from lfs_lab_cert_tracker.models import Lab, Cert, UserCert
 
-"""
-HTTP endpoints, responsible for the frontend
-"""
+# Set 50 users in a page
+NUM_PER_PAGE = 50
+
 
 def login(request):
     return render(request, 'lfs_lab_cert_tracker/login.html')
@@ -43,43 +46,14 @@ def index(request):
 
 
 # Users
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@auth_utils.admin_only
-@require_http_methods(['GET', 'POST'])
-def users(request):
-    """ Display all users """
 
-    if request.method == 'POST':
-        form = UserForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            if user:
-                messages.success(request, 'Success! {0} created.'.format(user.username))
-                #return HttpResponseRedirect( reverse('users') + '?t=all' )
-                return HttpResponseRedirect(request.get_full_path())
-            else:
-                messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( api.get_error_messages(errors) ) )
+@method_decorator([never_cache, login_required, auth_utils.admin_only], name='dispatch')
+class AllUsersView(View):
+    ''' Display all users '''
 
-        return HttpResponseRedirect(request.get_full_path())
-
-    else:
-        current_tab = request.GET.get('t')
-        api.can_req_parameters_access(request, ['t'])
-
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
         user_list = AuthUser.objects.all().order_by('last_name', 'first_name')
-
-        # Find users who have missing certs
-        users_in_missing_training = []
-        if current_tab == 'report':
-            for user in api.add_missing_certs(user_list):
-                if user.missing_certs != None:
-                    users_in_missing_training.append(user)
-
-            user_list = users_in_missing_training.copy()
 
         # Pagination enables
         query = request.GET.get('q')
@@ -89,7 +63,7 @@ def users(request):
             ).order_by('id').distinct()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(user_list, 50) # Set 50 users in a page
+        paginator = Paginator(user_list, NUM_PER_PAGE)
 
         try:
             users = paginator.page(page)
@@ -98,18 +72,127 @@ def users(request):
         except EmptyPage:
             users = paginator.page(paginator.num_pages)
 
-        if current_tab == 'all':
-            users = api.add_inactive_users(users)
-            users = api.add_missing_certs(users)
+        users = api.add_inactive_users(users)
+        users = api.add_missing_certs(users)
 
-    return render(request, 'lfs_lab_cert_tracker/users.html', {
-        'loggedin_user': request.user,
-        'users': users,
-        'total_users': len(user_list),
-        'users_in_missing_training': users_in_missing_training,
-        'user_form': UserForm(),
-        'current_tab': current_tab
-    })
+        areas = api.get_areas()
+
+        return render(request, 'lfs_lab_cert_tracker/all_users.html', {
+            'users': users,
+            'total_users': len(user_list),
+            'areas': api.add_users_to_areas(areas),
+            'roles': {'LAB_USER': 0, 'PI': 1}
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        pass
+
+
+@method_decorator([never_cache, login_required, auth_utils.admin_only], name='dispatch')
+class UserReportMissingTrainingsView(View):
+    ''' Display an user report for missing trainings '''
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        user_list = AuthUser.objects.all().order_by('last_name', 'first_name')
+
+        # Find users who have missing certs
+        users_in_missing_training = []
+        for user in api.add_missing_certs(user_list):
+            if user.missing_certs != None:
+                users_in_missing_training.append(user)
+
+        user_list = users_in_missing_training.copy()
+
+        # Pagination enables
+        query = request.GET.get('q')
+        if query:
+            user_list = AuthUser.objects.filter(
+                Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
+            ).order_by('id').distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(user_list, NUM_PER_PAGE)
+
+        try:
+            users = paginator.page(page)
+        except PageNotAnInteger:
+            users = paginator.page(1)
+        except EmptyPage:
+            users = paginator.page(paginator.num_pages)
+
+        return render(request, 'lfs_lab_cert_tracker/user_report_missing_trainings.html', {
+            'users': users,
+            'users_in_missing_training': users_in_missing_training
+        })
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.admin_only
+@require_http_methods(['POST'])
+def assign_user_areas(request):
+    ''' Assign user's areas '''
+    
+    user = api.get_user_404(request.POST.get('user'))
+
+    # delete all or not
+    if len(request.POST.getlist('areas[]')) == 0:
+        deleted = api.delete_all_areas_in_user(request.POST)
+        if deleted == None:
+            return JsonResponse({ 'status': 'warning', 'message': 'Warning! Nothing has changed.' })
+        elif deleted:
+            return JsonResponse({ 'status': 'success', 'message': "Success! {0}'s all areas have deleted.".format(user.get_full_name()) })
+
+    else:
+        report = api.update_or_create_areas_to_user(request.POST)
+        message = ''
+
+        if len(report['updated']) > 0:
+            message += '<li>Changed: ' + ', '.join(report['updated']) + '</li>'
+        if len(report['created']) > 0:
+            message += '<li>Added: ' + ', '.join(report['created']) + '</li>'
+        if len(report['deleted']) > 0:
+            message += '<li>Deleted: ' + ', '.join(report['deleted']) + '</li>'
+
+        if len(message) == 0:
+            return JsonResponse({ 'status': 'warning', 'message': 'Warning! Nothing has changed.' })
+        else:
+            return JsonResponse({ 'status': 'success', 'message': 'Success! ' + user.get_full_name() + "'s Areas have changed. Please see the following status: <ul class='mb-0'>" + message + '</ul>' })
+
+    return JsonResponse({ 'status': 'error', 'message': 'Error! Something went wrong.' })
+
+
+
+
+@method_decorator([never_cache, login_required, auth_utils.admin_only], name='dispatch')
+class NewUserView(View):
+    ''' Create a new user '''
+
+    form_class = UserForm
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'lfs_lab_cert_tracker/new_user.html', {
+            'user_form': self.form_class()
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            user = form.save()
+            if user:
+                messages.success(request, 'Success! {0} created.'.format(user.username))
+            else:
+                messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'Error! Form is invalid. {0}'.format( api.get_error_messages(errors) ) )
+
+        return redirect('new_user')
+
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -196,8 +279,8 @@ def switch_inactive(request):
 @auth_utils.admin_or_pi_or_user
 @require_http_methods(['GET'])
 def user_details(request, user_id):
-    """ Display user's details """
-    app_user = api.get_user(user_id)
+    ''' Display user's details '''
+    app_user = api.get_user_404(user_id)
 
     return render(request, 'lfs_lab_cert_tracker/user_details.html', {
         'loggedin_user': request.user,
@@ -233,7 +316,7 @@ def user_cert_details(request, user_id, cert_id):
             messages.error(request, 'Error! Form is invalid.')
 
         return HttpResponseRedirect( reverse('user_certs', args=[request.user.id]) )
-    
+
     return render(request, 'lfs_lab_cert_tracker/user_cert_details.html', {
         'loggedin_user': request.user,
         'app_user': api.get_user_404(user_id),
@@ -260,17 +343,14 @@ def user_labs(request, user_id):
 @auth_utils.user_or_admin
 @require_http_methods(['GET'])
 def user_certs(request, user_id):
-    """ Display user's certificates """
-    if api.get_user(user_id) is None:
-        raise Http404
+    ''' Display user's certificates '''
+    app_user = api.get_user_404(user_id)
 
     if request.user.id != user_id:
         if not auth_utils.is_admin(request.user): raise PermissionDenied
 
     return render(request, 'lfs_lab_cert_tracker/user_certs.html', {
-        'loggedin_user': request.user,
-        'user_id': user_id,
-        'user': api.get_user(user_id),
+        'app_user': app_user,
         'user_cert_list': api.get_user_certs(user_id),
         'missing_cert_list': api.get_missing_certs(user_id),
         'expired_cert_list': api.get_expired_certs(user_id),
@@ -529,16 +609,14 @@ def show_error(request, error_msg=''):
 # Exception handlers
 
 def permission_denied(request, exception, template_name="403.html"):
-    """ Exception handlder for permission denied """
-    return render(request, '403.html', {
-        'loggedin_user': request.user
-    })
+    ''' Exception handlder for permission denied '''
+
+    return render(request, '403.html', { 'loggedin_user': request.user }, status=403)
 
 def page_not_found(request, exception, template_name="404.html"):
-    """ Exception handlder for page not found """
-    return render(request, '404.html', {
-        'loggedin_user': request.user
-    })
+    ''' Exception handlder for page not found '''
+
+    return render(request, '404.html', { 'loggedin_user': request.user }, status=404)
 
 
 # for local testing
@@ -553,3 +631,76 @@ def local_login(request):
                 return redirect('index')
 
     return render(request, 'lfs_lab_cert_tracker/local_login.html', { 'form': LoginForm() })
+
+
+
+
+"""
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@auth_utils.admin_only
+@require_http_methods(['GET', 'POST'])
+def users(request):
+    ''' Display all users '''
+
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            if user:
+                messages.success(request, 'Success! {0} created.'.format(user.username))
+                #return HttpResponseRedirect( reverse('users') + '?t=all' )
+                return HttpResponseRedirect(request.get_full_path())
+            else:
+                messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'Error! Form is invalid. {0}'.format( api.get_error_messages(errors) ) )
+
+        return HttpResponseRedirect(request.get_full_path())
+
+    else:
+        current_tab = request.GET.get('t')
+        api.can_req_parameters_access(request, ['t'])
+
+        user_list = AuthUser.objects.all().order_by('last_name', 'first_name')
+
+        # Find users who have missing certs
+        users_in_missing_training = []
+        if current_tab == 'report':
+            for user in api.add_missing_certs(user_list):
+                if user.missing_certs != None:
+                    users_in_missing_training.append(user)
+
+            user_list = users_in_missing_training.copy()
+
+        # Pagination enables
+        query = request.GET.get('q')
+        if query:
+            user_list = AuthUser.objects.filter(
+                Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
+            ).order_by('id').distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(user_list, 50) # Set 50 users in a page
+
+        try:
+            users = paginator.page(page)
+        except PageNotAnInteger:
+            users = paginator.page(1)
+        except EmptyPage:
+            users = paginator.page(paginator.num_pages)
+
+        if current_tab == 'all':
+            users = api.add_inactive_users(users)
+            users = api.add_missing_certs(users)
+
+    return render(request, 'lfs_lab_cert_tracker/users.html', {
+        'loggedin_user': request.user,
+        'users': users,
+        'total_users': len(user_list),
+        'users_in_missing_training': users_in_missing_training,
+        'user_form': UserForm(),
+        'current_tab': current_tab
+    })
+"""
