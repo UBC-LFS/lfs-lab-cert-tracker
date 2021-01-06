@@ -83,7 +83,7 @@ if __name__ == "__main__":
     admin = db.get_admin()
 
     lab_users, pis = find_missing_cert_users(users, certs)
-    send_email_lab_users(users, certs, lab_users)
-    send_email_pis(users, pis)
-    
+    #send_email_lab_users(users, certs, lab_users)
+    #send_email_pis(users, pis)
+
     db.close()

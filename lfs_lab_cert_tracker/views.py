@@ -30,6 +30,8 @@ from lfs_lab_cert_tracker.forms import *
 
 from lfs_lab_cert_tracker.models import Lab, Cert, UserCert
 
+from scheduler import tasks
+
 # Set 50 users in a page
 NUM_PER_PAGE = 50
 
@@ -134,7 +136,7 @@ class UserReportMissingTrainingsView(View):
 @require_http_methods(['POST'])
 def assign_user_areas(request):
     ''' Assign user's areas '''
-    
+
     user = api.get_user_404(request.POST.get('user'))
 
     # delete all or not

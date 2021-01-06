@@ -98,7 +98,7 @@ if __name__ == "__main__":
     users = db.get_users()
     certs = db.get_certs()
     admin = db.get_admin()
-    send_email_30days_before(users, certs, 'before')
-    send_email_14days_before(users, certs, admin, 'before')
+    #send_email_30days_before(users, certs, 'before')
+    #send_email_14days_before(users, certs, admin, 'before')
 
     db.close()

@@ -14,7 +14,8 @@ def send_email_after(users, certs, admin, type):
 
     print("Send email after expiry date")
 
-    target_day = datetime.now()
+    #target_day = datetime.now()
+    target_day = datetime(2020, 1, 1)
     print("target_day: ", target_day)
 
     lab_users, pis = find_users_by_days(users, target_day.date(), 'after')
@@ -34,6 +35,6 @@ if __name__ == "__main__":
     users = db.get_users()
     certs = db.get_certs()
     admin = db.get_admin()
-    send_email_after(users, certs, admin, 'after')
+    #send_email_after(users, certs, admin, 'after')
 
     db.close()

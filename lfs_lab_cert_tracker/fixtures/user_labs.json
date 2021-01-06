@@ -61,5 +61,23 @@
       "lab_id": 2,
       "user_id": 11
     }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.userlab",
+    "pk": 8,
+    "fields": {
+      "role": 0,
+      "lab_id": 2,
+      "user_id": 20
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.userlab",
+    "pk": 9,
+    "fields": {
+      "role": 1,
+      "lab_id": 4,
+      "user_id": 20
+    }
   }
 ]

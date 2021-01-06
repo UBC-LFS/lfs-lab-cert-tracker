@@ -32,7 +32,7 @@ ALTER ROLE lfs_lab_cert_tracker_user SET timezone TO 'UTC';
 8. Exit the sql prompt with `\q`
 9. To see if local db setup worked run `python manage.py makemigrations` if that worked then db setup was a success
 10. Then run `python manage.py migrate` to complete setting up the database
-11. To prepopulate db with certificates and labs run `./manage.py loaddata lfs_lab_cert_trackere/fixtures/*`
+11. To prepopulate db with certificates and labs run `./manage.py loaddata lfs_lab_cert_tracker/fixtures/*`
 
 ### Admin Setup
 1. Run
@@ -233,6 +233,15 @@ def my_login(request):
 15. Now, it's good to go. Run this web application in your production!
 ```
 $ python manage.py runserver
+
+For scheduling tasks
+$ python manage.py runserver --noreload
+```
+
+16. Test
+```
+# Email notification
+$ python manage.py test lfs_lab_cert_tracker.tests.notifications
 ```
 
 Happy coding!

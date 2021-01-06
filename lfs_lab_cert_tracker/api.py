@@ -18,7 +18,13 @@ Provides an API to the Django ORM for any queries that are required
 
 def get_user_404(user_id):
     ''' Get an user or 404 '''
+
     return get_object_or_404(AuthUser, id=user_id)
+
+def get_users_order_by_name():
+    ''' Get all users ordered by a full name '''
+
+    return AuthUser.objects.all().order_by('last_name', 'first_name')
 
 
 # Area
@@ -31,6 +37,8 @@ def get_areas():
     ''' Get all areas '''
     return Lab.objects.all().order_by('name')
 
+
+# User Training
 
 
 # User lab
