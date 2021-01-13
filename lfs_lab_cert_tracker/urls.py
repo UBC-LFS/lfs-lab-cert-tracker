@@ -22,53 +22,83 @@ urlpatterns = [
     path('accounts/login/', views.login),
     path('', views.index, name='index'),
 
-    #path('users/', views.users, name='users'),
-    path('users/<int:user_id>/work-area/', views.user_labs),
-    path('users/<int:user_id>/training-record/', views.user_certs, name='user_certs'),
-    path('users/<int:user_id>/training-record/<int:cert_id>/', views.user_cert_details, name='user_cert_details'),
-    path('users/<int:user_id>/report/', views.user_report),
-    path('users/<int:user_id>/', views.user_details, name='user_details'),
 
-    path('users/report/missing-training/', views.users_in_missing_training_report, name='users_in_missing_training_report'),
-    path('users/delete/', views.delete_user, name='delete_user'),
-    path('users/edit', views.edit_user, name='edit_user'),
-    path('users/switch-admin/', views.switch_admin, name='switch_admin'),
-    path('users/switch-inactive/', views.switch_inactive, name='switch_inactive'),
-    path('users/new/', views.NewUserView.as_view(), name='new_user'),
+
+    # Users - classes
+
     path('users/report/missing-trainings/', views.UserReportMissingTrainingsView.as_view(), name='user_report_missing_trainings'),
-    path('users/assign/areas/', views.assign_user_areas, name='assign_user_areas'),
+    path('users/new/', views.NewUserView.as_view(), name='new_user'),
     path('users/all/', views.AllUsersView.as_view(), name='all_users'),
+    path('users/<int:user_id>/', views.UserDetailsView.as_view(), name='user_details'),
 
-    path('all-areas/', views.labs, name='all_areas'),
-    path('areas/<int:lab_id>/add-users/', views.add_users_to_labs, name='add_users_to_labs'),
-    path('areas/<int:lab_id>/', views.lab_details, name='lab_details'),
+
+    # Users - functions
+
+    path('users/<int:user_id>/report/', views.user_report),
+    path('users/report/missing-trainings/download/', views.download_user_report_missing_trainings, name='download_user_report_missing_trainings'),
+
+    # Users - api
+
+    path('api/user/delete/', views.delete_user, name='delete_user'),
+    path('api/user/switch-admin/', views.switch_admin, name='switch_admin'),
+    path('api/user/switch-inactive/', views.switch_inactive, name='switch_inactive'),
+    path('api/users/assign/areas/', views.assign_user_areas, name='assign_user_areas'),
+
+
+
+    # Areas - classes
+
+    path('areas/all/', views.AllAreasView.as_view(), name='all_areas'),
+    path('areas/<int:area_id>/', views.AreaDetailsView.as_view(), name='area_details'),
+    path('users/<int:user_id>/work-area/', views.UserAreasView.as_view(), name='user_areas'),
+
+    # Areas - functions
+
+
+    # Areas - api
+
+    path('api/area/update/', views.update_area, name='update_area'),
+    path('api/area/delete/', views.delete_area, name='delete_area'),
+    path('api/area/user/add/', views.add_user_to_area, name='add_user_to_area'),
+    path('api/area/training/add/', views.add_training_area, name='add_training_area'),
+    path('api/area/user/role/switch/', views.switch_user_role_in_area, name='switch_user_role_in_area'),
+    path('api/area/user/delete/', views.delete_user_in_area, name='delete_user_in_area'),
+
+
+    # Trainings - classes
+
+    path('users/<int:user_id>/training-record/', views.UserTrainingsView.as_view(), name='user_trainings'),
+    path('users/<int:user_id>/training-record/<int:training_id>/', views.UserTrainingDetailsView.as_view(), name='user_training_details'),
+
+    # Trainings - functions
 
     path('all-trainings/', views.certs, name='all_trainings'),
     path('all-trainings/<int:cert_id>/edit/', views.edit_cert, name='edit_cert'),
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
-    path('api/users/<int:user_id>/labs/<int:lab_id>/switch_lab_role/', api_views.switch_lab_role),
-    path('api/users/<int:user_id>/labs/<int:lab_id>/delete/', api_views.delete_user_lab),
+
+    # Api
+
+
     path('api/users/<int:user_id>/certificates/', api_views.user_certs),
 
 
     path('api/labs/', api_views.labs),
-    path('api/labs/<int:lab_id>/delete/', api_views.delete_labs),
-    path('api/labs/<int:lab_id>/update/', api_views.update_labs),
+
 
     path('api/certificates/', api_views.certs),
+
+
+
+
     path('api/certificates/<int:cert_id>/delete/', api_views.delete_certs),
-
-    path('api/labs/<int:lab_id>/certificates/', api_views.lab_certs),
-    path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete/', api_views.delete_lab_certs),
-
     path('saml/', saml_views.saml, name='saml'),
     path('attrs/', saml_views.attrs, name='attrs'),
     path('metadata/', saml_views.metadata, name='metadata'),
 
-    path('error/<str:error_msg>/', views.show_error),
 
     # for testing
+
     path('labs/', views.labs, name='labs'),
     path('certs/', views.certs, name='certs'),
     path('api/users/', api_views.users),
@@ -76,13 +106,14 @@ urlpatterns = [
     path('api/users/<int:user_id>/switch_admin/', api_views.switch_admin),
     path('api/users/<int:user_id>/switch_inactive/', api_views.switch_inactive),
     path('api/users/<int:user_id>/certificates/<int:cert_id>/delete/', api_views.delete_user_certs),
-
+    path('api/labs/<int:lab_id>/certificates/<int:cert_id>/delete/', api_views.delete_lab_certs),
     path('api/labs/<int:lab_id>/users/', api_views.user_labs),
-
+    path('api/labs/<int:lab_id>/certificates/', api_views.lab_certs),
 
     path('accounts/local_login/', views.local_login, name='local_login'),
     #path('admin/', admin.site.urls),
     #path('accounts/admin/', include('django.contrib.auth.urls')),
+    #path('error/<str:error_msg>/', views.show_error),
 ]
 
 handler403 = views.permission_denied

@@ -2,8 +2,35 @@
 
 {% block content %}
 
-{% if user.is_superuser %}
-	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
+{% endif %}
+
+{% if viewing %}
+	{% include 'subpages/_viewing_info.html' with data=viewing %}
+{% endif %}
+
+
+{% if request.user.id != app_user.id %}
+
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item active" aria-current="page">
+				<i class="material-icons">home</i> {{ app_user.get_full_name }}'s Account
+			</li>
+		</ol>
+	</nav>
+
+{% else %}
+
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item active" aria-current="page">
+				<i class="material-icons">home</i> My Account
+			</li>
+		</ol>
+	</nav>
+
 {% endif %}
 
 <div class="row mt-5">
@@ -18,7 +45,9 @@
 				<ul>
 					{% for user_cert in user_certs %}
 						<li>
-							<a href="{% url 'user_cert_details' user_id=user_cert.user.id cert_id=user_cert.cert.id %}">{{ user_cert.cert.name }}</a>
+							<a href="{% url 'user_training_details' user_id=user_cert.user.id training_id=user_cert.cert.id %}?p=account">
+								{{ user_cert.cert.name }}
+							</a>
 						</li>
 					{% empty %}
 						<li>
@@ -108,8 +137,8 @@
 			</h5>
 			<p class="text-dark">
 				Please go to
-				<a href="/users/{{ app_user.id }}/training-record/">
-					{% if loggedin_user.id == app_user.id %}
+				<a href="{% url 'user_trainings' user_id=app_user.id %}">
+					{% if request.user.id == app_user.id %}
 						My
 					{% else %}
 						{{ app_user.get_full_name }}'s

@@ -59,51 +59,7 @@ def add_users_to_areas(areas):
     return areas
 
 
-def update_or_create_areas_to_user(data):
-    ''' update or create areas to an user '''
 
-    areas = data.getlist('areas[]')
-    user = get_user_404( data.get('user') )
-    all_userlab = user.userlab_set.all()
-
-    report = { 'updated': [], 'created': [], 'deleted': [] }
-    used_areas = []
-    for area in areas:
-        splitted = area.split(',')
-        lab = get_area_404(splitted[0])
-        role = splitted[1]
-        userlab = all_userlab.filter(lab_id=lab.id)
-        used_areas.append(lab.id)
-
-        # update or create
-        if userlab.exists():
-            if userlab.first().role != int(role):
-                updated = userlab.update(role=role)
-                if updated:
-                    report['updated'].append(lab.name)
-        else:
-            created = UserLab.objects.create(user=user, lab=lab, role=role)
-            if created:
-                report['created'].append(lab.name)
-
-    for ul in all_userlab:
-        if ul.lab.id not in used_areas:
-            deleted = ul.delete()
-            if deleted:
-                report['deleted'].append(ul.lab.name)
-
-    return report
-
-def delete_all_areas_in_user(data):
-    ''' Delete all areas in an user '''
-
-    user = get_user_404( data.get('user') )
-    all_userlab = user.userlab_set.all()
-
-    if len(all_userlab) > 0:
-        return user.userlab_set.all().delete()
-
-    return None
 
 
 #------------------
@@ -123,15 +79,7 @@ def get_users():
 
     return users
 
-def add_inactive_users(users):
-    ''' Add inactive status into users '''
-    for user in users:
-        user_inactive = UserInactive.objects.filter(user_id=user.id)
-        if user_inactive.exists():
-            user.inactive = user_inactive.first()
-        else:
-            user.inactive = None
-    return users
+
 
 def add_missing_certs(users):
     ''' Add missing certs into users '''
@@ -153,25 +101,8 @@ def get_user_by_username(username):
     except AuthUser.DoesNotExist as dne:
         return None
 
-def delete_user(user_id):
-    """ Delete a user """
-    try:
-        user = AuthUser.objects.get(id=user_id)
-        user.delete()
-        return {'user_id': user_id}
-    except AuthUser.DoesNotExist:
-        return None
 
-def switch_admin(user_id):
-    """ Switch a user to Admin or not Admin """
 
-    try:
-        user = AuthUser.objects.get(id=user_id)
-        user.is_superuser = not user.is_superuser
-        user.save(update_fields=['is_superuser'])
-        return model_to_dict(user)
-    except AuthUser.DoesNotExist:
-        return None
 
 
 def switch_inactive(user_id):
@@ -191,10 +122,7 @@ def switch_inactive(user_id):
 
 
 # Lab CRUD
-def get_labs():
-    """ Get all labs """
 
-    return [model_to_dict(lab) for lab in Lab.objects.all()]
 
 def get_lab(lab_id):
     """ Find a lab by id """
@@ -205,14 +133,7 @@ def get_lab(lab_id):
     except Lab.DoesNotExist:
         return None
 
-def delete_lab(lab_id):
-    """ Delete a lab """
 
-    try:
-        Lab.objects.get(id=lab_id).delete()
-        return {'lab_id': lab_id}
-    except Lab.DoesNotExist:
-        return None
 
 
 
@@ -429,75 +350,19 @@ def add_users_to_labs(user_id, lab_id, role):
     return model_to_dict(user_lab)
 
 
-def create_user_lab(user_id, lab_id, role):
-    """ Add a user to a lab """
 
-    try:
-        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
-    except UserLab.DoesNotExist:
-        has_existed = None
-
-    if has_existed:
-        return None
-
-    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
-    return model_to_dict(user_lab)
-
-def delete_user_lab(user_id, lab_id):
-    """ Delete a user in a lab """
-
-    UserLab.objects.get(user=user_id, lab=lab_id).delete()
-    return {'user_id': user_id, 'lab_id': lab_id}
-
-def switch_lab_role(user_id, lab_id):
-    role = None
-    try:
-        user_lab = UserLab.objects.get(user=user_id, lab=lab_id)
-        if user_lab.role == UserLab.LAB_USER:
-            user_lab.role = UserLab.PRINCIPAL_INVESTIGATOR
-            role = 'Supervisor'
-        else:
-            user_lab.role = UserLab.LAB_USER
-            role = 'User'
-        user_lab.save(update_fields=['role'])
-        return {'user_id': user_id, 'lab_id': lab_id, 'role': role}
-    except UserLab.DoesNotExist:
-        return None
 
 
 
 
 # LabCert CRUD
-def get_lab_certs(lab_id, n=None):
-    """ Get all certificates in a lab """
 
-    lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
-    return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
 
-def create_lab_cert(lab_id, cert_id):
-    """ Add a certificate to a lab """
-
-    lab_cert, created = LabCert.objects.get_or_create(lab_id=lab_id, cert_id=cert_id)
-    if created:
-        return model_to_dict(lab_cert)
-    else:
-        return None
-
-def delete_lab_cert(lab_id, cert_id):
-    """ Delete a certificate in a lab """
-
-    LabCert.objects.get(lab=lab_id, cert=cert_id).delete()
-    return {'lab_id': lab_id, 'cert_id': cert_id}
 
 
 # Helper methods
 
-def get_error_messages(errors):
-    messages = ''
-    for key in errors.keys():
-        value = errors[key]
-        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
-    return messages.strip()
+
 
 def validate_parameters(request, params):
     ''' Validate request parameters '''
@@ -518,6 +383,33 @@ def can_req_parameters_access(request, params):
 
 
 # for testing
+
+def get_error_messages(errors):
+    messages = ''
+    for key in errors.keys():
+        value = errors[key]
+        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
+    return messages.strip()
+
+def switch_admin(user_id):
+    """ Switch a user to Admin or not Admin """
+
+    try:
+        user = AuthUser.objects.get(id=user_id)
+        user.is_superuser = not user.is_superuser
+        user.save(update_fields=['is_superuser'])
+        return model_to_dict(user)
+    except AuthUser.DoesNotExist:
+        return None
+
+def delete_user(user_id):
+    """ Delete a user """
+    try:
+        user = AuthUser.objects.get(id=user_id)
+        user.delete()
+        return {'user_id': user_id}
+    except AuthUser.DoesNotExist:
+        return None
 
 def get_user(user_id):
     """ Find a user by id"""
@@ -557,3 +449,126 @@ def update_user_cert(user_id, cert_id):
     UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
     return {'user_id': user_id, 'cert_id': cert_id}
 """
+
+
+def delete_all_areas_in_user(data):
+    ''' Delete all areas in an user '''
+
+    user = get_user_404( data.get('user') )
+    all_userlab = user.userlab_set.all()
+
+    if len(all_userlab) > 0:
+        return user.userlab_set.all().delete()
+
+    return None
+
+def update_or_create_areas_to_user(data):
+    ''' update or create areas to an user '''
+
+    areas = data.getlist('areas[]')
+    user = get_user_404( data.get('user') )
+    all_userlab = user.userlab_set.all()
+
+    report = { 'updated': [], 'created': [], 'deleted': [] }
+    used_areas = []
+    for area in areas:
+        splitted = area.split(',')
+        lab = get_area_404(splitted[0])
+        role = splitted[1]
+        userlab = all_userlab.filter(lab_id=lab.id)
+        used_areas.append(lab.id)
+
+        # update or create
+        if userlab.exists():
+            if userlab.first().role != int(role):
+                updated = userlab.update(role=role)
+                if updated:
+                    report['updated'].append(lab.name)
+        else:
+            created = UserLab.objects.create(user=user, lab=lab, role=role)
+            if created:
+                report['created'].append(lab.name)
+
+    for ul in all_userlab:
+        if ul.lab.id not in used_areas:
+            deleted = ul.delete()
+            if deleted:
+                report['deleted'].append(ul.lab.name)
+
+    return report
+
+
+def delete_lab(lab_id):
+    """ Delete a lab """
+
+    try:
+        Lab.objects.get(id=lab_id).delete()
+        return {'lab_id': lab_id}
+    except Lab.DoesNotExist:
+        return None
+
+
+def get_labs():
+    """ Get all labs """
+
+    return [model_to_dict(lab) for lab in Lab.objects.all()]
+
+
+def get_lab_certs(lab_id, n=None):
+    """ Get all certificates in a lab """
+
+    lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
+    return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
+
+def delete_lab_cert(lab_id, cert_id):
+    """ Delete a certificate in a lab """
+
+    LabCert.objects.get(lab=lab_id, cert=cert_id).delete()
+    return {'lab_id': lab_id, 'cert_id': cert_id}
+
+
+def create_lab_cert(lab_id, cert_id):
+    """ Add a certificate to a lab """
+
+    lab_cert, created = LabCert.objects.get_or_create(lab_id=lab_id, cert_id=cert_id)
+    if created:
+        return model_to_dict(lab_cert)
+    else:
+        return None
+
+
+def create_user_lab(user_id, lab_id, role):
+    """ Add a user to a lab """
+
+    try:
+        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
+    except UserLab.DoesNotExist:
+        has_existed = None
+
+    if has_existed:
+        return None
+
+    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
+    return model_to_dict(user_lab)
+
+
+def switch_lab_role(user_id, lab_id):
+    role = None
+    try:
+        user_lab = UserLab.objects.get(user=user_id, lab=lab_id)
+        if user_lab.role == UserLab.LAB_USER:
+            user_lab.role = UserLab.PRINCIPAL_INVESTIGATOR
+            role = 'Supervisor'
+        else:
+            user_lab.role = UserLab.LAB_USER
+            role = 'User'
+        user_lab.save(update_fields=['role'])
+        return {'user_id': user_id, 'lab_id': lab_id, 'role': role}
+    except UserLab.DoesNotExist:
+        return None
+
+def delete_user_lab(user_id, lab_id):
+    """ Delete a user in a lab """
+
+    UserLab.objects.get(user=user_id, lab=lab_id).delete()
+    return {'user_id': user_id, 'lab_id': lab_id}

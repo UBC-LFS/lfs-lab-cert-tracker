@@ -1,0 +1,114 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
+{% endif %}
+
+{% if viewing %}
+	{% include 'subpages/_viewing_info.html' with data=viewing %}
+{% endif %}
+
+{% if request.user.id != app_user.id %}
+
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item">
+				{% if request.GET.p == 'account' %}
+					<a href="{% url 'user_details' user_id=user_cert.user.id %}">
+						<i class="material-icons">home</i> {{ app_user.get_full_name }}'s Account
+					</a>
+				{% elif request.GET.p == 'training' %}
+					<a href="{% url 'user_trainings' user_id=user_cert.user.id %}">{{ app_user.get_full_name }}'s Training Record</a>
+				{% endif %}
+			</li>
+			<li class="breadcrumb-item active" aria-current="page">Training Details</li>
+		</ol>
+	</nav>
+
+{% else %}
+
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item">
+				{% if request.GET.p == 'account' %}
+					<a href="{% url 'user_details' user_id=user_cert.user.id %}">
+						<i class="material-icons">home</i> My Account
+					</a>
+				{% elif request.GET.p == 'training' %}
+					<a href="{% url 'user_trainings' user_id=user_cert.user.id %}">My Training Record</a>
+				{% endif %}
+			</li>
+			<li class="breadcrumb-item active" aria-current="page">Training Details</li>
+		</ol>
+	</nav>
+
+{% endif %}
+
+<div class="row">
+	<div class="col-md-10 offset-md-1">
+
+		<h3 class="title">Training Details</h3>
+
+		<table class="table table-borderless table-sm table-responsive-lg">
+			<tbody>
+				<tr>
+					<td>Training Name</td>
+					<td>
+						<a href="/media/{{user_cert.cert_file}}" target="_blank">{{ user_cert.cert.name }}</a>
+					</td>
+				</tr>
+				<tr>
+					<td>Uploaded on</td>
+					<td>{{ user_cert.uploaded_date }}</td>
+				</tr>
+				<tr>
+					<td>Completion date</td>
+					<td>{{ user_cert.completion_date }}</td>
+				</tr>
+				<tr>
+					<td>Expiry date</td>
+					<td>
+						{% ifequal user_cert.completion_date|date:"Y-m-d" user_cert.expiry_date|date:"Y-m-d" %}
+							NO expiry date
+						{% else %}
+							{{ user_cert.expiry_date }}
+						{% endifequal %}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		{% if request.user.id == app_user.id %}
+
+			{% if request.GET.p == 'account' %}
+				<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' request.user.id %}">Back to My Account</a>
+			{% elif request.GET.p == 'training' %}
+				<a class="btn btn-outline-primary d-inline" href="{% url 'user_trainings' user_id=user_cert.user.id %}">Back to My Training Record</a>
+			{% endif %}
+
+		{% else %}
+
+			{% if request.GET.p == 'account' %}
+				<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' user_id=user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
+			{% elif request.GET.p == 'training' %}
+				<a class="btn btn-outline-primary d-inline" href="{% url 'user_trainings' user_id=user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
+			{% endif %}
+
+		{% endif %}
+
+		{% if can_delete %}
+			<form class="d-inline" action="" method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.cert.name }}?');">
+				{% csrf_token %}
+
+				<input type="hidden" name="user" value="{{ user_cert.user.id }}" />
+				<input type="hidden" name="cert" value="{{ user_cert.cert.id }}" />
+				<input class="btn btn-danger ml-2" type="submit" value="Delete" />
+			</form>
+		{% endif %}
+
+	</div>
+</div>
+
+{% endblock %}

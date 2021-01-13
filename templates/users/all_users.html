@@ -2,20 +2,22 @@
 
 {% block content %}
 
-{% if user.is_superuser %}
-	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
 {% endif %}
 
-{% include 'lfs_lab_cert_tracker/sub_templates/_return_message.html' with data=messages %}
+{% include 'subpages/_return_message.html' with data=messages %}
 
 <div id="user-areas-message"></div>
 
-<h3 class="my-5">All Users <small class="text-secondary">Total: {{ total_users }}</small></h3>
+<h3 class="my-5">
+	All Users
+	<small class="text-secondary">Total: {{ total_users }}</small>
+</h3>
 
 <div class="search-field">
 	<form method="GET">
 		<div class="input-field">
-			<input type="hidden" name="t" value="all" />
 			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
 			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
 			<a class="btn btn-sm btn-light" href="{% url 'all_users' %}">Clear</a>
@@ -26,6 +28,7 @@
 <table class="table table-bordered table-striped table-hover table-responsive-lg text-center font-size-sm">
   <thead>
     <tr>
+			<th>ID</th>
       <th>CWL</th>
       <th>First <br />Name</th>
 			<th>Last <br />Name</th>
@@ -40,8 +43,9 @@
   <tbody>
     {% for user in users %}
       <tr>
+				<td>{{ user.id }}</td>
         <td>
-					<a href="/users/{{user.id}}">{{ user.username }}</a>
+					<a href="{% url 'user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
 				</td>
         <td>{{ user.first_name }}</td>
         <td>{{ user.last_name }}</td>
@@ -167,9 +171,9 @@
                     <h4>{{ user.get_full_name }}</h4>
                     <h5 class="text-secondary">CWL: {{ user.username }}</h5>
 
-                    {% include 'lfs_lab_cert_tracker/sub_templates/_user_form_note.html' %}
+                    {% include 'subpages/_user_form_note.html' %}
 
-                    <form action="{% url 'edit_user' %}" method="post">
+                    <form action="" method="post">
                       {% csrf_token %}
 
                       <div class="field-wrapper">
@@ -229,7 +233,7 @@
                       </div>
 
       			 					<input type="hidden" name="user" value="{{ user.id }}" />
-      								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
                       <input class="btn btn-primary" type="submit" value="Update" />
                     </form>
                   </div>
@@ -272,7 +276,7 @@
   </tbody>
 </table>
 
-{% include 'lfs_lab_cert_tracker/sub_templates/_pagination.html' with data=users %}
+{% include 'subpages/_pagination.html' with data=users %}
 
 {% endblock %}
 

@@ -2,18 +2,18 @@
 
 {% block content %}
 
-{% if user.is_superuser %}
-	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
 {% endif %}
 
-{% include 'lfs_lab_cert_tracker/sub_templates/_return_message.html' with data=messages %}
+{% include 'subpages/_return_message.html' with data=messages %}
 
 
 <div class="row">
   <div class="new-users-section col-md-6 offset-md-3">
     <h3 class="">New Users</h3>
 
-    {% include 'lfs_lab_cert_tracker/sub_templates/_user_form_note.html' %}
+    {% include 'subpages/_user_form_note.html' %}
 
   	<form action="" method="post">
   		{% csrf_token %}

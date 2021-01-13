@@ -2,8 +2,8 @@
 
 {% block content %}
 
-{% if user.is_superuser %}
-	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
 {% endif %}
 
 {% if messages %}

@@ -136,7 +136,7 @@ def saml(request, action=None):
         else:
             return HttpResponseRedirect(settings.LOGIN_URL)
 
-    return render(request, 'lfs_lab_cert_tracker/login.html', {'errors': errors, 'error_reason': error_reason, 'not_auth_warn': not_auth_warn, 'success_slo': success_slo,
+    return render(request, 'accounts/login.html', {'errors': errors, 'error_reason': error_reason, 'not_auth_warn': not_auth_warn, 'success_slo': success_slo,
                                           'attributes': attributes, 'paint_logout': paint_logout})
 
 def attrs(request):

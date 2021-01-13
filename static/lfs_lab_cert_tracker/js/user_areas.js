@@ -39,6 +39,7 @@ $(document).ready(function() {
 
 		const userId = $(this).data('user');
 		const formData = $('#area-list-form-' + userId).serializeArray();
+		const $self = $(this);
 
 		$.ajax({
 			method: 'POST',
@@ -65,6 +66,9 @@ $(document).ready(function() {
 													'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
 												'</div>';
 				$('#user-area-modal-' + userId + '-error').html(message);
+
+				$self.val('Save changes');
+				$self.prop('disabled', false);
 		 }
 		});
 	});
@@ -86,7 +90,7 @@ function formDataToJson(form_data) {
 	json[ data[len-1]['name'] ] = data[len-1]['value'];
 	let areas = [];
   for (let i = 1; i < len - 1; i++) {
-		console.log(data[i]['name']);
+		
 		if (data[i+1]['name'] === 'role') {
 			areas.push([data[i]['value'], 1]);
 			i += 1;
@@ -95,6 +99,6 @@ function formDataToJson(form_data) {
 		}
   }
 	json['areas[]'] = areas;
-	console.log(json);
+
   return json;
 }

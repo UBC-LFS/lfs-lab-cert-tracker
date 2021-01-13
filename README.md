@@ -202,31 +202,12 @@ $ python manage.py test lfs_lab_cert_tracker
 $ python email_notification/test.py
 ```
 
-14. Remove those lines and a my_login.html for local login and testing.
+14. Uncomment a **local_login** path for local running routes.
 
 ```
 # urls.py
-path('my_login/', views.my_login, name='my_login'),
+path('accounts/local_login/', views.local_login, name='local_login')
 
-
-# views.py
-def my_login(request):
-    auth_users = AuthUser.objects.all()
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            auth_user = AuthUser.objects.get(username=request.POST['username'])
-            if auth_user is not None and request.POST['password'] is not None:
-                DjangoLogin(request, auth_user)
-                return redirect('index')
-
-    context = {
-        'form': LoginForm()
-    }
-    return render(request, 'lfs_lab_cert_tracker/my_login.html', context)
-
-
-# templates/lfs_lab_cert_tracker/my_login.html
 
 ```
 
@@ -240,6 +221,9 @@ $ python manage.py runserver --noreload
 
 16. Test
 ```
+# Users
+$ python manage.py test lfs_lab_cert_tracker.tests.users
+
 # Email notification
 $ python manage.py test lfs_lab_cert_tracker.tests.notifications
 ```

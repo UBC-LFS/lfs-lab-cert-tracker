@@ -25,7 +25,7 @@
 				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
 				</button>
-				{% if user.is_authenticated %}
+				{% if request.user.is_authenticated %}
 					<div class="collapse navbar-collapse" id="navbarText">
 						<ul class="navbar-nav mr-auto">
 							<li class="nav-item">
@@ -39,7 +39,7 @@
 							</li>
 				    </ul>
 				    <span class="navbar-text">
-							<span>Hi, <b>{{ user.username }}</b></span>
+							<span>Hi, <b>{{ request.user.username }}</b></span>
 							<a class="nav-link logout-btn" href="{% url "saml" %}?slo">Logout</a>
 						</span>
 				  </div>

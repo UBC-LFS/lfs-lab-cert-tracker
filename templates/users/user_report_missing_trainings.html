@@ -2,18 +2,19 @@
 
 {% block content %}
 
-{% if user.is_superuser %}
-	{% include 'lfs_lab_cert_tracker/sub_templates/_admin_menu.html' %}
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
 {% endif %}
 
 <h3 class="my-5">
-	User Report - Missing Trainings
-	<small class="text-secondary">Total: {{ users_in_missing_training|length }}</small>
+	User Report
+	<small class="text-secondary">Total: {{ total_users }}</small><br />
+	<small>for Missing Training Records</small>
 </h3>
 
 <div class="text-primary float-right">
 	<i class="material-icons">cloud_download</i>
-	<a href="{% url 'users_in_missing_training_report' %}" target="_blank">Download as PDF</a>
+	<a href="{% url 'download_user_report_missing_trainings' %}" target="_blank">Download as PDF</a>
 </div>
 
 <table class="table table-bordered table-striped table-hover table-responsive-lg text-center font-size-sm">
@@ -47,6 +48,6 @@
 	</tbody>
 </table>
 
-{% include 'lfs_lab_cert_tracker/sub_templates/_pagination.html' with data=users %}
+{% include 'subpages/_pagination.html' with data=users %}
 
 {% endblock %}

@@ -2,10 +2,84 @@ import os
 import smtplib, ssl
 from email.mime.text import MIMEText
 
+from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import Cert, Lab, UserCert, UserLab, LabCert
+from django.db.models import Q
+from django.urls import resolve
+from urllib.parse import urlparse
+
+from lfs_lab_cert_tracker.models import *
+from lfs_lab_cert_tracker import api
+
+
+def access_admin_only(view_func):
+    ''' Access an admin only '''
+
+    def wrap(request, *args, **kwargs):
+        if request.user.is_superuser == True:
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return wrap
+
+
+def access_pi_admin(view_func):
+    '''
+    Access for an admin and PI in the area
+    Usage: used in AreaDetailsView
+    '''
+
+    def wrap(request, *args, **kwargs):
+        api = Api()
+        if request.user.is_superuser == True or api.is_pi_in_area(request.user.id, kwargs['area_id']):
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    return wrap
+
+
+def access_loggedin_user_pi_admin(view_func):
+    '''
+    Access for a loggedin user and a PI in the area and an admin
+    Usage: used in UserDetailsView
+    '''
+
+    def wrap(request, *args, **kwargs):
+        api = Api()
+        user_id = kwargs['user_id']
+        if request.user.id == user_id or request.user.is_superuser == True or user_id in api.get_users_in_area_by_pi(request.user.id):
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    return wrap
+
+
+
+def access_all(view_func):
+    ''' Access for all users authenticated '''
+
+    def wrap(request, *args, **kwargs):
+        if request.user.is_authenticated != True:
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return wrap
+
+
+
+def access_loggedin_user_admin(view_func):
+    ''' Access for a logged-in user or an admin '''
+
+    def wrap(request, *args, **kwargs):
+        if request.user.is_superuser == True or request.user.id == kwargs['user_id']:
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return wrap
+
 
 
 class Api:
@@ -13,9 +87,11 @@ class Api:
     # User
     def get_users(self, option=None):
         ''' Get all users '''
+
         if option == 'active':
             return User.objects.filter(is_active=True)
-        return User.objects.all()
+
+        return User.objects.all().order_by('last_name', 'first_name')
 
     def get_user(self, attr, by='id'):
         ''' Get a user '''
@@ -25,12 +101,41 @@ class Api:
 
         return get_object_or_404(User, id=attr)
 
+
     def get_admins(self):
+        ''' Get all administrators '''
+
         return User.objects.filter(is_superuser=True)
 
 
+    def add_inactive_users(self, users):
+        ''' Add inactive status into users '''
 
-    # Cert
+        for user in users:
+            user_inactive = UserInactive.objects.filter(user_id=user.id)
+            if user_inactive.exists():
+                user.inactive = user_inactive.first()
+            else:
+                user.inactive = None
+        return users
+
+
+    # Areas
+    def get_areas(self):
+        ''' Get all areas '''
+
+        return Lab.objects.all()
+
+
+    def get_area(self, attr, by='id'):
+        ''' Get an user or 404 '''
+
+        if by == 'name':
+            return get_object_or_404(Lab, name=attr)
+
+        return get_object_or_404(Lab, id=attr)
+
+    # Trainings
     def get_trainings(self):
         ''' Get trainings '''
 
@@ -46,6 +151,8 @@ class Api:
 
 
     # UserCert
+
+
     def get_usercerts(self, option=None):
         if option == 'active':
             return UserCert.objects.filter(user__is_active=True)
@@ -53,13 +160,118 @@ class Api:
 
 
     # UserLab
+
     def get_userlabs(self):
         return UserLab.objects.all()
 
 
+    def get_userlab(self, user_id, area_id):
+        ''' Get a userlab'''
+
+        userlab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
+        return userlab.first() if userlab.exists() else None
+
+
+    def is_pi_in_area(self, user_id, area_id):
+        ''' Check whether an user is in the area or not '''
+
+        return UserLab.objects.filter( Q(user=user_id) & Q(lab=area_id) & Q(role=UserLab.PRINCIPAL_INVESTIGATOR) ).exists()
+
+
+
+    def get_users_in_area_by_pi(self, user_id):
+        ''' Get a list of users in PI's area '''
+
+        users = set()
+
+        userlabs = UserLab.objects.filter( Q(user_id=user_id) & Q(role=UserLab.PRINCIPAL_INVESTIGATOR) )
+        if userlabs.exists():
+            for userlab in userlabs:
+                labs = UserLab.objects.filter(lab=userlab.lab.id)
+                if labs.exists():
+                    for lab in labs:
+                        users.add(lab.user.id)
+
+        return list(users)
+
+
+    def update_or_create_areas_to_user(self, user, areas):
+        ''' update or create areas to an user '''
+
+        all_userlab = user.userlab_set.all()
+
+        report = { 'updated': [], 'created': [], 'deleted': [] }
+        used_areas = []
+        for area in areas:
+            splitted = area.split(',')
+            lab = self.get_area(splitted[0])
+            role = splitted[1]
+            userlab = all_userlab.filter(lab_id=lab.id)
+            used_areas.append(lab.id)
+
+            # update or create
+            if userlab.exists():
+                if userlab.first().role != int(role):
+                    updated = userlab.update(role=role)
+                    if updated:
+                        report['updated'].append(lab.name)
+            else:
+                created = UserLab.objects.create(user=user, lab=lab, role=role)
+                if created:
+                    report['created'].append(lab.name)
+
+        for ul in all_userlab:
+            if ul.lab.id not in used_areas:
+                deleted = ul.delete()
+                if deleted:
+                    report['deleted'].append(ul.lab.name)
+
+        return report
+
+
     # LabCert
     def get_labcerts(self):
+        ''' Get labcerts '''
+
         return LabCert.objects.all()
+
+    def get_labcert(self, area_id, training_id):
+        ''' Get a labcert'''
+
+        labcert = LabCert.objects.filter( Q(lab_id=area_id) & Q(cert_id=training_id) )
+        return labcert.first() if labcert.exists() else None
+
+    # Utils
+    def get_viewing(self, next):
+        ''' Get viewing information for going back to the previous page '''
+        print('get_viewing', next)
+        split_query = next.split('?')
+        print(split_query)
+        res = resolve(split_query[0])
+        print(res)
+        if res.url_name == 'all_users':
+            query = ''
+            if len(split_query) > 1: query = split_query[1]
+
+            viewing = { 'page': 'all_users', 'query': query }
+
+        elif res.url_name == 'area_details':
+            id = res.kwargs['area_id']
+            viewing = { 'page': 'area_details', 'id': id, 'name': self.get_area(id).name }
+
+        return viewing
+
+    def get_error_messages(self, errors):
+        ''' Get error messages '''
+
+        messages = ''
+        for key in errors.keys():
+            value = errors[key]
+            messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
+        return messages.strip()
+
+
+
 
 
 class Notification(Api):
@@ -74,10 +286,6 @@ class Notification(Api):
         self.pis_in_area = pis_in_area
         self.required_trainings_in_area = required_trainings_in_area
 
-        #print(self.areas_in_user)
-        #print(self.pis_in_area)
-        #print(self.required_trainings_in_area)
-        #print('----------------------------')
 
     def get_areas_in_user(self):
         ''' Get areas in user '''

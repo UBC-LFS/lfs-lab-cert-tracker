@@ -48,16 +48,16 @@ class UserForm(forms.ModelForm):
             })
         }
 
-class LabForm(forms.ModelForm):
+class AreaForm(forms.ModelForm):
     """ Create a new lab """
 
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = Lab
-        fields = ['name', 'redirect_url']
+        fields = ['name']
         error_messages = {
             'name': { 'required': 'Enter a valid name.' },
         }
+
 
 class CertForm(forms.ModelForm):
     """ Create a certificate """
@@ -80,7 +80,6 @@ class CertNameForm(forms.ModelForm):
         }
 
 
-
 class UserLabForm(forms.ModelForm):
     """ Add a user to a lab """
 
@@ -90,18 +89,20 @@ class UserLabForm(forms.ModelForm):
         labels = { 'user': 'CWL' }
         widgets = { 'user': forms.TextInput() }
 
-class LabCertForm(forms.ModelForm):
-    """ Add a certificate to a lab """
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
+
+
+class AreaTrainingForm(forms.ModelForm):
+    ''' Add a training to an area '''
+
     class Meta:
         model = LabCert
-        fields = ['cert', 'redirect_url']
+        fields = ['cert']
         labels = { 'cert': 'Training' }
 
-class UserCertForm(forms.ModelForm):
-    """ Add user's certificate """
 
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
+class UserTrainingForm(forms.ModelForm):
+    """ Add user's training records """
+
     date = datetime.now()
     completion_date = forms.DateField(
         initial=dt.date.today,
@@ -109,7 +110,7 @@ class UserCertForm(forms.ModelForm):
     )
     class Meta:
         model = UserCert
-        fields = ['user', 'cert', 'cert_file', 'redirect_url']
+        fields = ['user', 'cert', 'cert_file']
         labels = {
             'cert': 'Training',
             'cert_file': ''
@@ -208,3 +209,44 @@ class SafetyWebForm(forms.Form):
 
 class DeleteUserCertForm(forms.Form):
     redirect_url = forms.CharField(widget=forms.HiddenInput())
+
+
+
+class LabForm(forms.ModelForm):
+    """ Create a new lab """
+
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = Lab
+        fields = ['name', 'redirect_url']
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
+
+class LabCertForm(forms.ModelForm):
+    """ Add a certificate to a lab """
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = LabCert
+        fields = ['cert', 'redirect_url']
+        labels = { 'cert': 'Training' }
+
+
+
+class UserCertForm(forms.ModelForm):
+    """ Add user's certificate """
+
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    date = datetime.now()
+    completion_date = forms.DateField(
+        initial=dt.date.today,
+        widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20))
+    )
+    class Meta:
+        model = UserCert
+        fields = ['user', 'cert', 'cert_file', 'redirect_url']
+        labels = {
+            'cert': 'Training',
+            'cert_file': ''
+        }
+        widgets = { 'user': forms.HiddenInput() }

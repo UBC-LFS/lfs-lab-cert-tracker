@@ -17,7 +17,7 @@ def send_missing_trainings():
     # Lab users
     for lab_user in lab_users:
         user_id = lab_user['id']
-        user = api.get_user(uid)
+        user = api.get_user(user_id)
 
         receiver = notification.get_receiver(user)
         message = notification.get_message_lab_users_missing_trainings(user_id, lab_user['missing_trainings'])
@@ -57,7 +57,7 @@ def send_before_expiry_date_user_pi():
     # to Lab users
     if len(lab_users) > 0:
         notification.send_email_to_lab_users(lab_users, DAYS14, TYPE)
-        
+
         # to PIs
         if len(pis.keys()) > 0:
             notification.send_email_to_pis(pis, DAYS14, TYPE)
@@ -79,16 +79,6 @@ def send_before_expiry_date_admin():
 
     if len(lab_users) > 0 and len(admins) > 0:
         notification.send_email_to_admins(admins, lab_users, DAYS14, TYPE)
-
-        #lab_users_list = notification.get_message_admins_expired_trainings(lab_users)
-
-        # for admin in admins:
-        #     receiver = notification.get_receiver(admin)
-        #     message = notification.get_message_pis_expired_trainings(lab_users_list, DAYS14, type)
-        #     template = notification.html_template('LFS TRMS', 'administrators', message)
-        #
-        #     notification.send_email(receiver, template)
-        #     print( 'Admin: Sent it to {0}'.format(receiver) )
 
     print('Done: send it 14 days before the expiry date')
 
@@ -122,8 +112,8 @@ def run():
 
     scheduler = BackgroundScheduler()
     #scheduler.add_job(send, 'cron', day_of_week='mon-fri', hour='9-17')
-    scheduler.add_job(send_missing_trainings, 'cron', day_of_week='mon-fri', hour=12, minute=10) # 2 weeks
-    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=12, minute=13) # everyday
-    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=12, minute=13) # everyday
-    scheduler.add_job(send_after_expiry_date, 'cron', day_of_week='mon-fri', hour=12, minute=16) # 2 weeks
+    scheduler.add_job(send_missing_trainings, 'cron', day_of_week='mon-fri', hour=11, minute=00) # 2 weeks
+    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=11, minute=10) # everyday
+    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=11, minute=20) # everyday
+    scheduler.add_job(send_after_expiry_date, 'cron', day_of_week='mon-fri', hour=11, minute=30) # 2 weeks
     scheduler.start()
