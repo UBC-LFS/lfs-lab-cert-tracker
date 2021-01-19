@@ -6,9 +6,6 @@
 	{% include 'subpages/_admin_menu.html' %}
 {% endif %}
 
-{% include 'subpages/_return_message.html' with data=messages %}
-
-
 <nav aria-label="breadcrumb">
 	<ol class="breadcrumb">
 		<li class="breadcrumb-item">
@@ -21,6 +18,9 @@
 		<li class="breadcrumb-item active" aria-current="page">Area: {{ area.name }}</li>
 	</ol>
 </nav>
+
+
+{% include 'subpages/_return_message.html' with data=messages %}
 
 
 <h3 class="title">Area: {{ area.name }}</h3>
@@ -39,7 +39,7 @@
 								<td>
 									{% if is_admin %}
 
-										<form class="d-inline float-right" action="" method="post" onsubmit="return confirm('Are you sure to remove {{ training.name }}?');">
+										<form class="d-inline float-right" action="{% url 'delete_training_in_area' %}" method="post" onsubmit="return confirm('Are you sure to remove {{ training.name }}?');">
 											{% csrf_token %}
 
 											<input type="hidden" name="area" value="{{ area.id }}" />
@@ -90,7 +90,7 @@
 
 					{% if is_admin or is_pi %}
 
-						<form class="list-form" action="{% url 'switch_user_role_in_area' %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
+						<form class="list-form" action="{% url 'switch_user_role_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
 							{% csrf_token %}
 
 							<input type="hidden" name="user" value="{{ user.id }}" />
@@ -98,7 +98,7 @@
 							<input class="btn btn-sm btn-info" type="submit" value="Switch Role" />
 						</form>
 
-						<form class="list-form" action="{% url 'delete_user_in_area' %}" method="post" onsubmit="return confirm('Are you sure to remove User - {{user.username}}?');">
+						<form class="list-form" action="{% url 'delete_user_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to remove User - {{user.username}}?');">
 							{% csrf_token %}
 
 							<input type="hidden" name="user" value="{{ user.id }}" />
@@ -208,13 +208,12 @@
 
 	<h4 class="text-info mt-5">Add User to Area</h4>
 
-	<form action="{% url 'add_user_to_area' %}" method="post">
+	<form action="" method="post">
 		{% csrf_token %}
 
-		<table>{{ lab_user_form.as_table }}</table>
+		<table>{{ user_area_form.as_table }}</table>
 
-		<input type="hidden" name="area" value="{{ area.id }}" />
-		<input class="btn btn-primary" type="submit" value="ADD" />
+		<input class="btn btn-primary mt-3" type="submit" value="ADD" />
 	</form>
 
 {% endif %}
@@ -227,9 +226,8 @@
 		{% csrf_token %}
 
 		<table>{{ area_training_form.as_table }}</table>
-		<input type="hidden" name="area" value="{{ area.id }}" />
 
-		<input class="btn btn-primary" type="submit" value="ADD" />
+		<input class="btn btn-primary mt-3" type="submit" value="ADD" />
 	</form>
 
 {% endif %}

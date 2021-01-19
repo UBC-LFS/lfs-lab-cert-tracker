@@ -2,7 +2,7 @@ import os
 import smtplib, ssl
 from email.mime.text import MIMEText
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
@@ -135,6 +135,7 @@ class Api:
 
         return get_object_or_404(Lab, id=attr)
 
+
     # Trainings
     def get_trainings(self):
         ''' Get trainings '''
@@ -154,6 +155,7 @@ class Api:
 
 
     def get_usercerts(self, option=None):
+        ''' Get all usercerts '''
         if option == 'active':
             return UserCert.objects.filter(user__is_active=True)
         return UserCert.objects.all()
@@ -241,14 +243,14 @@ class Api:
         labcert = LabCert.objects.filter( Q(lab_id=area_id) & Q(cert_id=training_id) )
         return labcert.first() if labcert.exists() else None
 
+
     # Utils
     def get_viewing(self, next):
         ''' Get viewing information for going back to the previous page '''
-        print('get_viewing', next)
+
         split_query = next.split('?')
-        print(split_query)
         res = resolve(split_query[0])
-        print(res)
+
         if res.url_name == 'all_users':
             query = ''
             if len(split_query) > 1: query = split_query[1]
@@ -261,6 +263,7 @@ class Api:
 
         return viewing
 
+
     def get_error_messages(self, errors):
         ''' Get error messages '''
 
@@ -271,7 +274,12 @@ class Api:
         return messages.strip()
 
 
+    def check_input_fields(self, request, fields):
+        ''' Check input fields. Raise a 400 bad request'''
 
+        for field in fields:
+            if request.POST.get(field, None) == None:
+                raise SuspiciousOperation
 
 
 class Notification(Api):

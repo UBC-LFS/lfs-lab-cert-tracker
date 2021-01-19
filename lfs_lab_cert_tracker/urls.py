@@ -11,7 +11,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include, handler403, handler403
+from django.conf.urls import url, include, handler400, handler403, handler404
 from django.urls import path
 from django.contrib import admin
 from django.conf import settings
@@ -57,23 +57,26 @@ urlpatterns = [
 
     # Areas - api
 
-    path('api/area/update/', views.update_area, name='update_area'),
+    path('api/area/update/', views.edit_area, name='edit_area'),
     path('api/area/delete/', views.delete_area, name='delete_area'),
-    path('api/area/user/add/', views.add_user_to_area, name='add_user_to_area'),
+    path('api/area/training/delete/', views.delete_training_in_area, name='delete_training_in_area'),
     path('api/area/training/add/', views.add_training_area, name='add_training_area'),
-    path('api/area/user/role/switch/', views.switch_user_role_in_area, name='switch_user_role_in_area'),
-    path('api/area/user/delete/', views.delete_user_in_area, name='delete_user_in_area'),
+    path('api/area/<int:area_id>/user/role/switch/', views.switch_user_role_in_area, name='switch_user_role_in_area'),
+    path('api/area/<int:area_id>/user/delete/', views.delete_user_in_area, name='delete_user_in_area'),
 
 
     # Trainings - classes
 
+    path('trainings/all/', views.AllTrainingsView.as_view(), name='all_trainings'),
     path('users/<int:user_id>/training-record/', views.UserTrainingsView.as_view(), name='user_trainings'),
     path('users/<int:user_id>/training-record/<int:training_id>/', views.UserTrainingDetailsView.as_view(), name='user_training_details'),
 
+
     # Trainings - functions
 
-    path('all-trainings/', views.certs, name='all_trainings'),
-    path('all-trainings/<int:cert_id>/edit/', views.edit_cert, name='edit_cert'),
+    path('api/trainings/edit/', views.edit_training, name='edit_training'),
+    path('api/trainings/delete/', views.delete_training, name='delete_training'),
+    path('api/users/<int:user_id>/training/delete/', views.delete_user_training, name='delete_user_training'),
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
 
@@ -86,12 +89,10 @@ urlpatterns = [
     path('api/labs/', api_views.labs),
 
 
-    path('api/certificates/', api_views.certs),
 
 
 
 
-    path('api/certificates/<int:cert_id>/delete/', api_views.delete_certs),
     path('saml/', saml_views.saml, name='saml'),
     path('attrs/', saml_views.attrs, name='attrs'),
     path('metadata/', saml_views.metadata, name='metadata'),
@@ -100,7 +101,7 @@ urlpatterns = [
     # for testing
 
     path('labs/', views.labs, name='labs'),
-    path('certs/', views.certs, name='certs'),
+
     path('api/users/', api_views.users),
     path('api/users/<int:user_id>/delete/', api_views.delete_user),
     path('api/users/<int:user_id>/switch_admin/', api_views.switch_admin),
@@ -116,5 +117,6 @@ urlpatterns = [
     #path('error/<str:error_msg>/', views.show_error),
 ]
 
+handler400 = views.bad_request
 handler403 = views.permission_denied
 handler404 = views.page_not_found

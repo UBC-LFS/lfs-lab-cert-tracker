@@ -58,20 +58,21 @@ class AreaForm(forms.ModelForm):
             'name': { 'required': 'Enter a valid name.' },
         }
 
-
-class CertForm(forms.ModelForm):
+class TrainingForm(forms.ModelForm):
     """ Create a certificate """
 
-    redirect_url = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = Cert
-        fields = ['name', 'expiry_in_years', 'redirect_url']
-        help_texts = { 'expiry_in_years': '(0 means "NO Expiry Date")' }
+        fields = ['name', 'expiry_in_years']
+        help_texts = {
+            'name': '(Maximum characters: 256)',
+            'expiry_in_years': '(0 means "NO Expiry Date")'
+        }
         error_messages = {
             'name': { 'required': 'Enter a valid name.' },
         }
 
-class CertNameForm(forms.ModelForm):
+class TrainingNameForm(forms.ModelForm):
     class Meta:
         model = Cert
         fields = ['name']
@@ -80,15 +81,33 @@ class CertNameForm(forms.ModelForm):
         }
 
 
-class UserLabForm(forms.ModelForm):
-    """ Add a user to a lab """
+class UserAreaForm(forms.ModelForm):
+    ''' Add a user to an area '''
 
     class Meta:
         model = UserLab
-        fields = ['user', 'role']
+        fields = ['user', 'lab', 'role']
         labels = { 'user': 'CWL' }
-        widgets = { 'user': forms.TextInput() }
+        widgets = {
+            'user': forms.TextInput(),
+            'lab': forms.HiddenInput()
+        }
 
+
+class UserAreaSimpleForm(forms.ModelForm):
+    ''' Add a user to an area '''
+
+    class Meta:
+        model = UserLab
+        fields = ['user', 'lab']
+        widgets = {
+            'user': forms.HiddenInput(),
+            'lab': forms.HiddenInput()
+        }
+        error_messages = {
+            'user': { 'required': 'This field is required' },
+            'lab': { 'required': 'This field is required' }
+        }
 
 
 class AreaTrainingForm(forms.ModelForm):
@@ -96,8 +115,9 @@ class AreaTrainingForm(forms.ModelForm):
 
     class Meta:
         model = LabCert
-        fields = ['cert']
+        fields = ['lab', 'cert']
         labels = { 'cert': 'Training' }
+        widgets = { 'lab': forms.HiddenInput() }
 
 
 class UserTrainingForm(forms.ModelForm):
@@ -250,3 +270,27 @@ class UserCertForm(forms.ModelForm):
             'cert_file': ''
         }
         widgets = { 'user': forms.HiddenInput() }
+
+
+
+class CertForm(forms.ModelForm):
+    """ Create a certificate """
+
+    redirect_url = forms.CharField(widget=forms.HiddenInput())
+    class Meta:
+        model = Cert
+        fields = ['name', 'expiry_in_years', 'redirect_url']
+        help_texts = { 'expiry_in_years': '(0 means "NO Expiry Date")' }
+        error_messages = {
+            'name': { 'required': 'Enter a valid name.' },
+        }
+
+
+class UserLabForm(forms.ModelForm):
+    """ Add a user to a lab """
+
+    class Meta:
+        model = UserLab
+        fields = ['user', 'role']
+        labels = { 'user': 'CWL' }
+        widgets = { 'user': forms.TextInput() }

@@ -29,13 +29,13 @@
 					<div class="collapse navbar-collapse" id="navbarText">
 						<ul class="navbar-nav mr-auto">
 							<li class="nav-item">
-								<a class="nav-link" href="/">My Account</a>
+								<a class="nav-link" href="{% url 'user_details' user_id=request.user.id %}">My Account</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link" href="/users/{{ user.id }}/work-area">My Work Area</a>
+								<a class="nav-link" href="{% url 'user_areas' user_id=request.user.id %}">My Work Area</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link" href="/users/{{ user.id }}/training-record">My Training Record</a>
+								<a class="nav-link" href="/users/{{ request.user.id }}/training-record">My Training Record</a>
 							</li>
 				    </ul>
 				    <span class="navbar-text">

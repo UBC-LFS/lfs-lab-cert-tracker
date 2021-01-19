@@ -80,33 +80,35 @@
 			</tbody>
 		</table>
 
-		{% if request.user.id == app_user.id %}
+		<div class="mt-5">
+			{% if request.user.id == app_user.id %}
 
-			{% if request.GET.p == 'account' %}
-				<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' request.user.id %}">Back to My Account</a>
-			{% elif request.GET.p == 'training' %}
-				<a class="btn btn-outline-primary d-inline" href="{% url 'user_trainings' user_id=user_cert.user.id %}">Back to My Training Record</a>
+				{% if request.GET.p == 'account' %}
+					<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' request.user.id %}">Back to My Account</a>
+				{% elif request.GET.p == 'training' %}
+					<a class="btn btn-outline-primary d-inline" href="{% url 'user_trainings' user_id=user_cert.user.id %}">Back to My Training Record</a>
+				{% endif %}
+
+			{% else %}
+
+				{% if request.GET.p == 'account' %}
+					<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' user_id=user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
+				{% elif request.GET.p == 'training' %}
+					<a class="btn btn-outline-primary d-inline" href="{% url 'user_trainings' user_id=user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
+				{% endif %}
+
 			{% endif %}
 
-		{% else %}
+			{% if request.user.id == app_user.id or request.user.is_superuser %}
+				<form class="d-inline" action="{% url 'delete_user_training' user_id=user_cert.user.id %}" method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.cert.name }}?');">
+					{% csrf_token %}
 
-			{% if request.GET.p == 'account' %}
-				<a class="btn btn-outline-primary d-inline" href="{% url 'user_details' user_id=user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
-			{% elif request.GET.p == 'training' %}
-				<a class="btn btn-outline-primary d-inline" href="{% url 'user_trainings' user_id=user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
+					<input type="hidden" name="user" value="{{ user_cert.user.id }}" />
+					<input type="hidden" name="training" value="{{ user_cert.cert.id }}" />
+					<input class="btn btn-danger ml-2" type="submit" value="Delete" />
+				</form>
 			{% endif %}
-
-		{% endif %}
-
-		{% if can_delete %}
-			<form class="d-inline" action="" method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.cert.name }}?');">
-				{% csrf_token %}
-
-				<input type="hidden" name="user" value="{{ user_cert.user.id }}" />
-				<input type="hidden" name="cert" value="{{ user_cert.cert.id }}" />
-				<input class="btn btn-danger ml-2" type="submit" value="Delete" />
-			</form>
-		{% endif %}
+		</div>
 
 	</div>
 </div>

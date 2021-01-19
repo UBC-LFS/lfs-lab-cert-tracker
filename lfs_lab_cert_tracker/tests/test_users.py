@@ -9,8 +9,6 @@ from datetime import datetime
 from lfs_lab_cert_tracker.utils import Api
 
 
-
-
 LOGIN_URL = reverse('local_login')
 ContentType='application/x-www-form-urlencoded'
 
@@ -48,6 +46,8 @@ class UserTest(TestCase):
     def messages(self, res):
         return [m.message for m in get_messages(res.wsgi_request)]
 
+    def json_messages(self, res):
+        return json.loads( res.content.decode('utf-8') )
 
     def test_check_access_normal_user(self):
         print('\n- Test: check access - normal user')
@@ -55,24 +55,26 @@ class UserTest(TestCase):
 
         lab_user = self.api.get_user(USERS[2], 'username')
 
-        # all users
-
-        res = self.client.get(reverse('all_users') + ALL_USERS_QUERY)
+        res = self.client.get(reverse('all_users')) # all users
         self.assertEqual(res.status_code, 403)
 
 
         # user details
 
-
-        res = self.client.get(reverse('user_details', args=[2]) + '?next=/area/all/?page=1&q=user&u=2') # anonymous
+        res = self.client.get(reverse('user_details', args=[2]) + '?next=/area/all/?page=1&q=user') # anonymous
         self.assertEqual(res.status_code, 403)
 
-        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user&u=' + str(lab_user.id)) # myself
+        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # myself
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/areas/1/') # myself
+        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/areas/1/') # myself from area
         self.assertEqual(res.status_code, 200)
 
+        res = self.client.get(reverse('new_user')) # new user
+        self.assertEqual(res.status_code, 403)
+
+        res = self.client.get(reverse('user_report_missing_trainings')) # user report - missing trainings
+        self.assertEqual(res.status_code, 403)
 
 
     def test_check_access_pi(self):
@@ -82,22 +84,29 @@ class UserTest(TestCase):
         pi = self.api.get_user(USERS[1], 'username')
         lab_user = self.api.get_user(USERS[2], 'username')
 
-        # all users
-
-        res = self.client.get(reverse('all_users') + ALL_USERS_QUERY)
+        res = self.client.get(reverse('all_users')) # all users
         self.assertEqual(res.status_code, 403)
 
 
         # user details
 
-        res = self.client.get(reverse('user_details', args=[2]) + '?next=/users/all/?page=1&q=user&u=2') # anonymous
+        res = self.client.get(reverse('user_details', args=[2]) + '?next=/users/all/?page=1&q=user') # anonymous
         self.assertEqual(res.status_code, 403)
 
-        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user&u=' + str(lab_user.id)) # lab user
+        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('user_details', args=[pi.id]) + '?next=/areas/1/') # myself from work area
+        res = self.client.get(reverse('user_details', args=[pi.id]) + '?next=/users/all/?page=1&q=user') # lab user
         self.assertEqual(res.status_code, 200)
+
+        res = self.client.get(reverse('user_details', args=[pi.id]) + '?next=/areas/1/') # myself
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.get(reverse('new_user')) # new user
+        self.assertEqual(res.status_code, 403)
+
+        res = self.client.get(reverse('user_report_missing_trainings')) # user report - missing trainings
+        self.assertEqual(res.status_code, 403)
 
 
     def test_check_access_admin(self):
@@ -119,18 +128,24 @@ class UserTest(TestCase):
         res = self.client.get(reverse('user_details', args=[2]) + '?next=/users/all/?page=1&q=user&u=2') # anonymous
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user&u=' + str(lab_user.id)) # lab user
+        res = self.client.get(reverse('user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('user_details', args=[pi.id]) + '?next=/users/all/?page=1&q=user&u=' + str(pi.id)) # pi
+        res = self.client.get(reverse('user_details', args=[pi.id]) + '?next=/users/all/?page=1&q=user') # pi
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('user_details', args=[admin.id]) + '?next=/users/all/?page=1&q=user&u=' + str(admin.id)) # admin
+        res = self.client.get(reverse('user_details', args=[admin.id]) + '?next=/users/all/?page=1&q=user') # admin
         self.assertEqual(res.status_code, 200)
 
         res = self.client.get(reverse('user_details', args=[admin.id]) + '?next=/areas/1/') # myself from work area
         self.assertEqual(res.status_code, 200)
 
+
+        res = self.client.get(reverse('new_user')) # new user
+        self.assertEqual(res.status_code, 200)
+
+        res = self.client.get(reverse('user_report_missing_trainings')) # user report - missing trainings
+        self.assertEqual(res.status_code, 200)
 
 
 
@@ -145,7 +160,6 @@ class UserTest(TestCase):
         self.assertEqual(res.context['total_users'], 21)
         self.assertEqual(len(res.context['areas']), 5)
         self.assertEqual(res.context['roles'], {'LAB_USER': 0, 'PI': 1})
-        self.assertEqual(res.context['next'], ALL_USERS_NEXT)
 
     def test_edit_user_duplicated_username(self):
         print('\n- Test: edit an user basic information - duplicated information')
@@ -365,11 +379,355 @@ class UserTest(TestCase):
         # check inactive, training records, areas
 
 
-    def test_assign_user_to_areas(self):
-        print('\n- Test: assign a user to areas')
+
+    def test_assign_areas_to_user_one_selected(self):
+        print('\n- Test: Assign areas to an user - one selected')
         self.login()
 
-        # See test_userlabs.py
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+        data1 = {
+            'user': self.user.id,
+            'areas[]': ['2,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data1, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Bio Lab</li></ul>")
+
+        userlabs1 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs1), 1)
+        self.assertEqual(userlabs1.first().lab.name, 'Bio Lab')
+        self.assertEqual(userlabs1.first().role, 1)
+
+
+        # test.user1
+        user = self.api.get_user(11)
+        self.assertEqual(user.userlab_set.count(), 2)
+
+        data2 = {
+            'user': user.id,
+            'areas[]': ['3,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data2, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test user1's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Chemistry Lab</li><li>Deleted: Learning Centre, Bio Lab</li></ul>")
+
+        userlabs2 = user.userlab_set.all()
+        self.assertEqual(userlabs2.first().lab.name, 'Chemistry Lab')
+        self.assertEqual(userlabs2.first().role, 1)
+
+
+    def test_assign_areas_to_user_two_selected(self):
+        print('\n- Test: Assign areas to an user - two selected')
+        self.login()
+
+        userlabs = self.user.userlab_set.count()
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+        data = {
+            'user': self.user.id,
+            'areas[]': ['2,0', '3,0']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Bio Lab, Chemistry Lab</li></ul>")
+
+        userlabs = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs), 2)
+
+        labs = []
+        roles = []
+        for userlab in userlabs:
+            labs.append(userlab.lab.name)
+            roles.append(userlab.role)
+
+        self.assertEqual(labs[0], 'Bio Lab')
+        self.assertEqual(roles[0], 0)
+        self.assertEqual(labs[1], 'Chemistry Lab')
+        self.assertEqual(roles[1], 0)
+
+
+    def test_assign_areas_to_user_nothing_selected(self):
+        print('\n- Test: Assign areas to an user - nothing selected')
+        self.login()
+
+        userlabs = self.user.userlab_set.count()
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+        data = {
+            'user': self.user.id,
+            'areas[]': []
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'warning')
+        self.assertEqual(messages['message'], "Warning! Nothing has changed.")
+
+        userlabs = self.user.userlab_set.count()
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+
+    def test_assign_areas_to_user_nothing_selected(self):
+        print('\n- Test: Assign areas to an user - existing area unchecked')
+        self.login()
+
+        user = self.api.get_user(11)
+        userlabs = user.userlab_set.count()
+        self.assertEqual(user.userlab_set.count(), 2)
+
+        data = {
+            'user': self.user.id,
+            'areas[]': []
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'warning')
+        self.assertEqual(messages['message'], "Warning! Nothing has changed.")
+
+        userlabs = self.user.userlab_set.count()
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+
+
+    def test_assign_areas_to_user_all_selected(self):
+        print('\n- Test: Assign areas to an user - all selected')
+        self.login()
+
+        user = self.api.get_user(11)
+        userlabs = user.userlab_set.count()
+        self.assertEqual(user.userlab_set.count(), 2)
+
+        data = {
+            'user': user.id,
+            'areas[]': ['1,0','2,0','3,0','4,1','5,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data, True), content_type=ContentType )
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test user1's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Chemistry Lab, Food Lab, Safety Lab</li></ul>")
+
+        userlabs = user.userlab_set.all()
+        self.assertEqual(len(userlabs), 5)
+
+        labs = []
+        roles = []
+        for userlab in userlabs:
+            labs.append(userlab.lab.name)
+            roles.append(userlab.role)
+
+        self.assertEqual(labs, ['Learning Centre', 'Bio Lab', 'Chemistry Lab', 'Food Lab', 'Safety Lab'])
+        self.assertEqual(roles, [0, 0, 0, 1, 1])
+
+    def test_assign_areas_to_user_all_selected_change_role(self):
+        print('\n- Test: Assign areas to an user - all selected and change role')
+        self.login()
+
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+        data1 = {
+            'user': self.user.id,
+            'areas[]': ['1,0','2,0','3,0','4,1','5,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data1, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Learning Centre, Bio Lab, Chemistry Lab, Food Lab, Safety Lab</li></ul>")
+
+        userlabs1 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs1), 5)
+
+        labs1 = []
+        roles1 = []
+        for userlab in userlabs1:
+            labs1.append(userlab.lab.name)
+            roles1.append(userlab.role)
+
+        self.assertEqual(labs1, ['Learning Centre', 'Bio Lab', 'Chemistry Lab', 'Food Lab', 'Safety Lab'])
+        self.assertEqual(roles1, [0, 0, 0, 1, 1])
+
+        data2 = {
+            'user': self.user.id,
+            'areas[]': ['1,1','2,1','3,0','4,0','5,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data2, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Changed: Learning Centre, Bio Lab, Food Lab</li></ul>")
+
+        userlabs2 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs2), 5)
+
+        labs2 = []
+        roles2 = []
+        for userlab in userlabs2:
+            labs2.append(userlab.lab.name)
+            roles2.append(userlab.role)
+
+        self.assertEqual(labs2, ['Learning Centre', 'Bio Lab', 'Chemistry Lab', 'Food Lab', 'Safety Lab'])
+        self.assertEqual(roles2, [1, 1, 0, 0, 1])
+
+
+    def test_assign_areas_to_user_all_selected_unchecked(self):
+        print('\n- Test: Assign areas to an user - all selected and two unchecked')
+        self.login()
+
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+        data1 = {
+            'user': self.user.id,
+            'areas[]': ['1,0','2,0','3,0','4,1','5,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data1, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Learning Centre, Bio Lab, Chemistry Lab, Food Lab, Safety Lab</li></ul>")
+
+        userlabs1 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs1), 5)
+
+        labs1 = []
+        roles1 = []
+        for userlab in userlabs1:
+            labs1.append(userlab.lab.name)
+            roles1.append(userlab.role)
+
+        self.assertEqual(labs1, ['Learning Centre', 'Bio Lab', 'Chemistry Lab', 'Food Lab', 'Safety Lab'])
+        self.assertEqual(roles1, [0, 0, 0, 1, 1])
+
+        data2 = {
+            'user': self.user.id,
+            'areas[]': ['1,0','3,0','5,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data2, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Deleted: Bio Lab, Food Lab</li></ul>")
+
+        userlabs2 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs2), 3)
+
+        labs2 = []
+        roles2 = []
+        for userlab in userlabs2:
+            labs2.append(userlab.lab.name)
+            roles2.append(userlab.role)
+
+        self.assertEqual(labs2, ['Learning Centre', 'Chemistry Lab', 'Safety Lab'])
+        self.assertEqual(roles2, [0, 0, 1])
+
+    def test_assign_areas_to_user_all_selected_all_unchecked(self):
+        print('\n- Test: Assign areas to an user - all selected and all unchecked')
+        self.login()
+
+        self.assertEqual(self.user.userlab_set.count(), 0)
+
+        data1 = {
+            'user': self.user.id,
+            'areas[]': ['1,0','2,0','3,0','4,1','5,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data1, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Learning Centre, Bio Lab, Chemistry Lab, Food Lab, Safety Lab</li></ul>")
+
+
+        userlabs1 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs1), 5)
+
+        labs1 = []
+        roles1 = []
+        for userlab in userlabs1:
+            labs1.append(userlab.lab.name)
+            roles1.append(userlab.role)
+
+        self.assertEqual(labs1, ['Learning Centre', 'Bio Lab', 'Chemistry Lab', 'Food Lab', 'Safety Lab'])
+        self.assertEqual(roles1, [0, 0, 0, 1, 1])
+
+        data2 = {
+            'user': self.user.id,
+            'areas[]': []
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data2, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's all areas have deleted.")
+
+        userlabs2 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs2), 0)
+
+        labs2 = []
+        roles2 = []
+        for userlab in userlabs2:
+            labs2.append(userlab.lab.name)
+            roles2.append(userlab.role)
+
+        self.assertEqual(labs2, [])
+        self.assertEqual(roles2, [])
+
+
+    def test_assign_areas_to_user_all_actions(self):
+        print('\n- Test: Assign areas to an user - all actions')
+        self.login()
+
+        data1 = {
+            'user': self.user.id,
+            'areas[]': ['1,0','4,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data1, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Added: Learning Centre, Food Lab</li></ul>")
+
+        userlabs1 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs1), 2)
+
+        labs1 = []
+        roles1 = []
+        for userlab in userlabs1:
+            labs1.append(userlab.lab.name)
+            roles1.append(userlab.role)
+
+        self.assertEqual(labs1,  ['Learning Centre', 'Food Lab'])
+        self.assertEqual(roles1, [0, 1])
+
+
+        data2 = {
+            'user': self.user.id,
+            'areas[]': ['1,1','2,0','3,1']
+        }
+        res = self.client.post( reverse('assign_user_areas'), data=urlencode(data2, True), content_type=ContentType )
+        self.assertEqual(res.status_code, 200)
+        messages = self.json_messages(res)
+        self.assertEqual(messages['status'], 'success')
+        self.assertEqual(messages['message'], "Success! test admin's Areas have changed. Please see the following status: <ul class='mb-0'><li>Changed: Learning Centre</li><li>Added: Bio Lab, Chemistry Lab</li><li>Deleted: Food Lab</li></ul>")
+
+        userlabs2 = self.user.userlab_set.all()
+        self.assertEqual(len(userlabs2), 3)
+
+        labs2 = []
+        roles2 = []
+        for userlab in userlabs2:
+            labs2.append(userlab.lab.name)
+            roles2.append(userlab.role)
+
+        self.assertEqual(labs2,  ['Learning Centre', 'Bio Lab', 'Chemistry Lab'])
+        self.assertEqual(roles2, [1, 0, 1])
+
 
     def test_user_details(self):
         print('\n- Test: show user details')
@@ -381,7 +739,6 @@ class UserTest(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user.id)
         self.assertEqual(res.context['app_user'].username, user.username)
-        self.assertEqual(res.context['next'], 'next=/users/all/?page=1&q=user&u=11')
         self.assertEqual(res.context['viewing'], {'page': 'all_users', 'query': 'page=1&q=user&u=11'})
 
         # TODO

@@ -1,0 +1,110 @@
+{% extends "header.html" %}
+
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'subpages/_admin_menu.html' %}
+{% endif %}
+
+{% include 'subpages/_return_message.html' with data=messages %}
+
+<h3 class="title">
+	All Trainings
+	<small class="text-secondary">Total: {{ total_certs }}</small>
+</h3>
+
+<div class="search-field">
+	<form method="GET" >
+		<div class="input-field">
+			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name" />
+			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+			<a class="btn btn-sm btn-light" href="{% url 'all_trainings' %}">Clear</a>
+		</div>
+	</form>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-lg">
+  <thead>
+    <tr>
+			<th>ID</th>
+      <th>Name</th>
+			<th>Expiry in year</th>
+			<th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+		{% for cert in certs %}
+			<tr>
+				<td>{{ cert.id }}</td>
+				<td>{{ cert.name }}</td>
+				<td>
+					{% if cert.expiry_in_years == 0 %}
+						None
+					{% else %}
+						{{ cert.expiry_in_years }} years
+					{% endif %}
+				</td>
+				<td>
+					{% if request.user.is_superuser %}
+						<div class="btn-toolbar">
+							<button class="btn btn-primary btn-sm mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
+
+							<div class="modal fade" id="cert-name-edit-modal-{{ cert.id }}" tabindex="-1" role="dialog" aria-labelledby="cert-name-edit-modal-label-{{ cert.id }}" aria-hidden="true">
+								<div class="modal-dialog modal-lg" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title text-info" id="cert-name-edit-modal-label-{{ cert.id }}">Edit Training</h5>
+											<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+										</div>
+										<div class="modal-body text-left">
+											<div class="modal-item">
+												<form action="{% url 'edit_training' %}" method="post">
+													{% csrf_token %}
+
+													<div class="mb-3">
+														<label for="id_name_{{ cert.id }}" class="font-weight-bold">Name:</label>
+														<small class="text-muted">(Maximum characters: 256)</small>
+														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" />
+													</div>
+
+													<input type="hidden" name="training" value="{{ cert.id }}" />
+													<input class="btn btn-primary btn-sm" type="submit" value="Update" />
+												</form>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<form class="list-form" action="{% url 'delete_training' %}" method="post" onsubmit="return confirm('Are you sure to delete this training - {{ cert.name }}?');">
+								{% csrf_token %}
+
+								<input type="hidden" name="training" value="{{ cert.id }}"  />
+								<input class="btn btn-danger btn-sm" type="submit" value="Delete" />
+							</form>
+						</div>
+					{% endif %}
+				</td>
+			</tr>
+
+		{% endfor %}
+	</tbody>
+</table>
+
+{% include 'subpages/_pagination.html' with data=certs %}
+
+
+{% if request.user.is_superuser %}
+
+	<h4 class="text-info mt-5 mb-3">Create Training</h4>
+
+	<form action="" method="POST">
+		{% csrf_token %}
+
+		<table class="form-table">{{ form.as_table }}</table>
+		<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
+	</form>
+
+{% endif %}
+
+{% endblock %}

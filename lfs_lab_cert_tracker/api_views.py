@@ -42,47 +42,6 @@ logger = logging.getLogger(__name__)
 
 # Certificates
 
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@admin_only
-@handle_redirect
-@require_http_methods(['POST'])
-def certs(request):
-    """ Create a new certificate """
-
-    form = CertForm(request.POST)
-    if form.is_valid():
-        cert = form.save()
-        if cert:
-            messages.success(request, 'Success! {0} created.'.format(cert.name))
-            logger.info("%s: Created cert %s" % (request.user, cert.name))
-            return JsonResponse( model_to_dict(cert) )
-        else:
-            messages.error(request, 'Error! Failed to create {0}. This cert has already existed.'.format(cert.name))
-    else:
-        errors = form.errors.get_json_data()
-        messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(errors)))
-
-    return None
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@admin_only
-@handle_redirect
-@require_http_methods(['POST'])
-def delete_certs(request, cert_id):
-    """ Delete a certificate """
-
-    cert = api.get_cert(cert_id)
-    res = api.delete_cert(cert_id)
-    if res:
-        messages.success(request, 'Success! {0} deleted.'.format(cert['name']))
-        logger.info("%s: Deleted cert %s" % (request.user, res))
-        return JsonResponse(res)
-    else:
-        messages.error(request, 'Error! Failed to delete {0}.'.format(cert['name']))
-    return None
 
 
 

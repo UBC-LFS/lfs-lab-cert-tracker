@@ -241,24 +241,6 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
 
     return model_to_dict(user_cert)
 
-def can_user_delete(user, user_id):
-    ''' Check whether an user can delete a cert or not '''
-    return user.id == user_id or user.is_superuser
-
-def delete_user_cert_404(user_id, cert_id):
-    ''' Delete a cert of an user '''
-    user = get_user_404(user_id)
-    user_cert = user.usercert_set.filter(cert_id=cert_id)
-    uc = None
-    if user_cert.exists():
-        uc = user_cert.first()
-        user_cert.delete()
-
-        dirpath = os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) )
-        if os.path.exists(dirpath) and os.path.isdir(dirpath):
-            os.rmdir(dirpath)
-
-    return uc if uc else False
 
 
 # UserLab CRUD
@@ -572,3 +554,23 @@ def delete_user_lab(user_id, lab_id):
 
     UserLab.objects.get(user=user_id, lab=lab_id).delete()
     return {'user_id': user_id, 'lab_id': lab_id}
+
+
+def can_user_delete(user, user_id):
+    ''' Check whether an user can delete a cert or not '''
+    return user.id == user_id or user.is_superuser
+
+def delete_user_cert_404(user_id, cert_id):
+    ''' Delete a cert of an user '''
+    user = get_user_404(user_id)
+    user_cert = user.usercert_set.filter(cert_id=cert_id)
+    uc = None
+    if user_cert.exists():
+        uc = user_cert.first()
+        user_cert.delete()
+
+        dirpath = os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) )
+        if os.path.exists(dirpath) and os.path.isdir(dirpath):
+            os.rmdir(dirpath)
+
+    return uc if uc else False

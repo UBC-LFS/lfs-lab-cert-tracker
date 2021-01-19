@@ -1,9 +1,10 @@
+import os
 from io import BytesIO
 from cgi import escape
 from xhtml2pdf import pisa
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
@@ -19,7 +20,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.urls import reverse
 from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
@@ -353,26 +353,31 @@ class AllAreasView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        lab_list = uApi.get_areas()
+
+        area_list = uApi.get_areas()
 
         # Pagination enables
         query = request.GET.get('q')
         if query:
-            lab_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
+            area_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(lab_list, NUM_PER_PAGE)
+        paginator = Paginator(area_list, NUM_PER_PAGE)
 
         try:
-            labs = paginator.page(page)
+            areas = paginator.page(page)
         except PageNotAnInteger:
-            labs = paginator.page(1)
+            areas = paginator.page(1)
         except EmptyPage:
-            labs = paginator.page(paginator.num_pages)
+            areas = paginator.page(paginator.num_pages)
+
+        # Add a number of users in each area
+        for area in areas:
+            area.num_users = area.userlab_set.count()
 
         return render(request, 'areas/all_areas.html', {
-            'areas': labs,
-            'total_labs': len(lab_list),
+            'areas': areas,
+            'total_labs': len(area_list),
             'form': self.form_class()
         })
 
@@ -384,16 +389,14 @@ class AllAreasView(View):
         if form.is_valid():
             lab = form.save()
             if lab:
-                messages.success(request, 'Success! Area - {0} created.'.format(lab.name))
+                messages.success(request, 'Success! {0} created.'.format(lab.name))
             else:
-                messages.error(request, 'Error! Failed to create Area - {0}.'.format(lab.name))
+                messages.error(request, 'Error! Failed to create {0}.'.format(lab.name))
         else:
             errors = form.errors.get_json_data()
             messages.error(request, 'Error! Form is invalid. {0}.'.format(get_error_messages(errors)))
 
         return redirect('all_areas')
-
-
 
 
 @method_decorator([never_cache, login_required, access_loggedin_user_admin], name='dispatch')
@@ -445,26 +448,49 @@ class AreaDetailsView(View):
             'is_pi': is_pi,
             'users_missing_certs': api.get_users_missing_certs(area_id),
             'users_expired_certs': api.get_users_expired_certs(area_id),
-            'lab_user_form': UserLabForm(),
-            'area_training_form': AreaTrainingForm()
+            'user_area_form': UserAreaForm(initial={ 'lab': area.id }),
+            'area_training_form': AreaTrainingForm(initial={ 'lab': area.id })
         })
 
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
+        ''' Add a user to an area '''
 
-        # Delete a required training in the area
-        labcert = uApi.get_labcert(request.POST.get('area'), request.POST.get('training'))
-        if labcert != None:
-            if labcert.delete():
-                messages.success(request, 'Success! Training - {0} deleted.'.format(labcert.cert.name))
+        username = request.POST.get('user')
+        role = request.POST.get('role')
+        area_id = request.POST.get('lab')
+
+        found_user = AuthUser.objects.filter(username=username)
+
+        # Check whether a user exists or not
+        if found_user.exists():
+            user = found_user.first()
+            found_userlab = UserLab.objects.filter( Q(user_id=user.id) & Q(lab_id=area_id) )
+
+            if found_userlab.exists() != True:
+                userlab = UserLab.objects.create(user_id=user.id, lab_id=area_id, role=role)
+                valid_email = False
+                valid_email_errors = []
+
+                try:
+                    validate_email(user.email)
+                    valid_email = True
+                except ValidationError as e:
+                     valid_email_errors = e
+
+                if valid_email:
+                    messages.success(request, 'Success! {0} (CWL: {1}) added to this area.'.format(user.get_full_name(), user.username))
+                else:
+                    messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(user.get_full_name(), user.email))
             else:
-                messages.error(request, 'Error! Failed to delete Training - {0}.'.format(labcert.cert.name))
+                messages.error(request, 'Error! Failed to add {0}. CWL already exists in this area.'.format(user.username))
         else:
-            training = uApi.get_training(request.POST.get('training'))
-            messages.error(request, 'Error! Training - {0} does not exist in this area.'.format(training.name))
+            messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the area.'.format(username))
 
-        return HttpResponseRedirect( reverse('area_details', args=[request.POST.get('area')]) )
+        return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
+
+
 
 
 # Areas - functions
@@ -477,55 +503,32 @@ class AreaDetailsView(View):
 def add_training_area(request):
     ''' Add a training to an area '''
 
-    obj = LabCert.objects.filter( Q(lab_id=request.POST.get('area')) & Q(cert_id=request.POST.get('cert')) )
-    if obj.exists():
-        messages.error(request, 'Error! Failed to add Training - {0}. This training has already existed.'.format(obj.first().cert.name))
+    area_id = request.POST.get('lab', None)
+    training_id = request.POST.get('cert', None)
 
-    else:
-        labcert = LabCert.objects.create(lab_id=request.POST.get('area'), cert_id=request.POST.get('cert'))
-        messages.success(request, 'Success! Training - {0} added.'.format(labcert.cert.name))
+    if area_id == None:
+        messages.error(request, 'Error! Something went wrong. Area is required.')
+        return redirect('all_areas')
 
-    return HttpResponseRedirect( reverse('area_details', args=[request.POST.get('area')]) )
+    if training_id == None:
+        messages.error(request, 'Error! Something went wrong. Training is required.')
+        return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
+    area = uApi.get_area(area_id)
+    training = uApi.get_training(training_id)
 
+    labcert = uApi.get_labcert(request.POST.get('lab'), request.POST.get('cert'))
 
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_pi_admin
-@require_http_methods(['POST'])
-def add_user_to_area(request):
-    ''' Add a user to an area '''
-
-    username = request.POST.get('user')
-    role = request.POST.get('role')
-    area_id = request.POST.get('area')
-
-    found_user = AuthUser.objects.filter(username=username)
-
-    # Check whether a user exists or not
-    if found_user.exists():
-        user = found_user.first()
-        found_userlab = UserLab.objects.filter( Q(user_id=user.id) & Q(lab_id=area_id) )
-
-        if found_userlab.exists() != True:
-            userlab = UserLab.objects.create(user_id=user.id, lab_id=area_id, role=role)
-            valid_email = False
-            valid_email_errors = []
-
-            try:
-                validate_email(user.email)
-                valid_email = True
-            except ValidationError as e:
-                 valid_email_errors = e
-
-            if valid_email:
-                messages.success(request, 'Success! {0} (CWL: {1}) added to this area.'.format(user.get_full_name(), user.username))
-            else:
-                messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(user.get_full_name(), user.email))
+    if labcert == None:
+        form = AreaTrainingForm(request.POST, instance=labcert)
+        if form.is_valid():
+            new_labcert = form.save()
+            messages.success(request, 'Success! {0} added.'.format(new_labcert.cert.name))
         else:
-            messages.error(request, 'Error! Failed to add {0}. CWL already exists in this lab.'.format(user.username))
+            errors = form.errors.get_json_data()
+            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
     else:
-        messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the area.'.format(username))
+        messages.error(request, 'Error! Failed to add Training. This training has already existed.'.format(labcert.cert.name))
 
     return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
@@ -535,7 +538,42 @@ def add_user_to_area(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
-def update_area(request):
+def delete_training_in_area(request):
+    ''' Delete a required training in the area '''
+
+    area_id = request.POST.get('area', None)
+    training_id = request.POST.get('training', None)
+
+    if area_id == None:
+        messages.error(request, 'Error! Something went wrong. Area is required.')
+        return redirect('all_areas')
+
+    if training_id == None:
+        messages.error(request, 'Error! Something went wrong. Training is required.')
+        return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
+
+    area = uApi.get_area(area_id)
+    training = uApi.get_training(training_id)
+
+    labcert = uApi.get_labcert(area_id, training_id)
+
+    if labcert == None:
+        messages.error(request, 'Error! {0} does not exist in this area.'.format(training.name))
+    else:
+        if labcert.delete():
+            messages.success(request, 'Success! {0} deleted.'.format(labcert.cert.name))
+        else:
+            messages.error(request, 'Error! Failed to delete {0}.'.format(labcert.cert.name))
+
+    return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def edit_area(request):
     ''' Update the name of area '''
 
     area = uApi.get_area(request.POST.get('area'))
@@ -544,9 +582,9 @@ def update_area(request):
     if form.is_valid():
         updated_area = form.save()
         if updated_area:
-            messages.success(request, 'Success! Area - {0} updated.'.format(updated_area.name))
+            messages.success(request, 'Success! {0} updated.'.format(updated_area.name))
         else:
-            messages.error(request, 'Error! Failed to update Area - {0}.'.format(area.name))
+            messages.error(request, 'Error! Failed to update {0}.'.format(area.name))
     else:
         errors = form.errors.get_json_data()
         messages.error(request, 'Error! Form is invalid. {0}.'.format(get_error_messages(errors)))
@@ -564,9 +602,9 @@ def delete_area(request):
 
     area = uApi.get_area(request.POST.get('area'))
     if area.delete():
-        messages.success(request, 'Success! Area - {0} deleted.'.format(area.name))
+        messages.success(request, 'Success! {0} deleted.'.format(area.name))
     else:
-        messages.error(request, 'Error! Failed to delete Area - {0}.'.format(area.name))
+        messages.error(request, 'Error! Failed to delete {0}.'.format(area.name))
 
     return redirect('all_areas')
 
@@ -575,44 +613,79 @@ def delete_area(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_pi_admin
 @require_http_methods(['POST'])
-def switch_user_role_in_area(request):
+def switch_user_role_in_area(request, area_id):
     ''' Switch a user's role in the area '''
 
-    user = uApi.get_user(request.POST.get('user'))
-    area_id = request.POST.get('area')
+    user_id = request.POST.get('user', None)
+    area_id = request.POST.get('area', None)
 
-    found_userlab = UserLab.objects.filter( Q(user_id=user.id) & Q(lab_id=area_id) )
+    if user_id == None:
+        messages.error(request, 'Error! Something went wrong. User is required.')
+        return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
-    role = ''
-    if found_userlab.exists():
-        if found_userlab.first().role == UserLab.LAB_USER:
-            found_userlab.update(role=UserLab.PRINCIPAL_INVESTIGATOR)
+    if area_id == None:
+        messages.error(request, 'Error! Something went wrong. Area is required.')
+        return redirect('all_areas')
+
+    user = uApi.get_user(user_id)
+    area = uApi.get_area(area_id)
+
+    userlab = uApi.get_userlab(user_id, area_id)
+
+    if userlab == None:
+        messages.error(request, 'Error! A user or an area data does not exist.')
+    else:
+        role = ''
+        prev_role = userlab.role
+
+        if userlab.role == UserLab.LAB_USER:
+            userlab.role = UserLab.PRINCIPAL_INVESTIGATOR
             role = 'Supervisor'
         else:
-            found_userlab.update(role=UserLab.LAB_USER)
+            userlab.role = UserLab.LAB_USER
             role = 'User'
 
-        messages.success(request, 'Success! {0} is now a {1}.'.format(user.get_full_name(), role))
-    else:
-        messages.error(request, 'Error! Failed to switch a role of {0}.'.format(user.get_full_name()))
+        userlab.save(update_fields=['role'])
+
+        if userlab.role != prev_role:
+            messages.success(request, 'Success! {0} is now a {1}.'.format(user.get_full_name(), role))
+        else:
+            messages.error(request, 'Error! Failed to switch a role of {0}.'.format(user.get_full_name()))
 
     return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
-
 
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_pi_admin
 @require_http_methods(['POST'])
-def delete_user_in_area(request):
-    user = uApi.get_user(request.POST.get('user'))
-    area_id = request.POST.get('area')
-    userlab = uApi.get_userlab(user.id, area_id)
+def delete_user_in_area(request, area_id):
+    ''' Delete a user in the area '''
 
-    if userlab.delete():
-        messages.success(request, 'Success! {0} deleted.'.format(user.get_full_name()))
+    user_id = request.POST.get('user', None)
+    area_id = request.POST.get('area', None)
+
+    if user_id == None:
+        messages.error(request, 'Error! Something went wrong. User is required.')
+        return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
+
+    if area_id == None:
+        messages.error(request, 'Error! Something went wrong. Area is required.')
+        return redirect('all_areas')
+
+    user = uApi.get_user(user_id)
+    area = uApi.get_area(area_id)
+
+    userlab = uApi.get_userlab(user_id, area_id)
+
+    if userlab == None:
+        messages.error(request, 'Error! A user or an area data does not exist.')
     else:
-        messages.error(request, 'Error! Failed to delete {0}.'.format(user.get_full_name()))
+        if userlab.delete():
+            messages.success(request, 'Success! {0} deleted.'.format(user.get_full_name()))
+        else:
+            messages.error(request, 'Error! Failed to delete {0}.'.format(user.get_full_name()))
+
 
     return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
@@ -620,6 +693,56 @@ def delete_user_in_area(request):
 # -------------------------
 
 # Trainings - classes
+
+@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
+class AllTrainingsView(View):
+    ''' Display all training records of a user '''
+
+    form_class = TrainingForm
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        cert_list = api.get_certs()
+
+        # Pagination enables
+        query = request.GET.get('q')
+        if query:
+            cert_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(cert_list, NUM_PER_PAGE)
+
+        try:
+            certs = paginator.page(page)
+        except PageNotAnInteger:
+            certs = paginator.page(1)
+        except EmptyPage:
+            certs = paginator.page(paginator.num_pages)
+
+        return render(request, 'trainings/all_trainings.html', {
+            'certs': certs,
+            'total_certs': len(cert_list),
+            'form': self.form_class()
+        })
+
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+
+        # Create a new training
+
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            cert = form.save()
+            if cert:
+                messages.success(request, 'Success! {0} created.'.format(cert.name))
+            else:
+                messages.error(request, 'Error! Failed to create {0}. This training has already existed.'.format(cert.name))
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
+
+        return redirect('all_trainings')
 
 
 
@@ -703,7 +826,6 @@ class UserTrainingsView(View):
 
 
 
-
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserTrainingDetailsView(View):
     ''' Display details of a training record of a user '''
@@ -712,40 +834,97 @@ class UserTrainingDetailsView(View):
     def get(self, request, *args, **kwargs):
         user_id = kwargs['user_id']
         training_id = kwargs['training_id']
-        can_delete = api.can_user_delete(request.user, user_id)
 
         viewing = {}
         if request.user.id != user_id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
-            print(viewing)
 
         return render(request, 'trainings/user_training_details.html', {
             'app_user': uApi.get_user(user_id),
             'user_cert': api.get_user_cert_404(user_id, training_id),
-            'can_delete': can_delete,
             'viewing': viewing
         })
 
 
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-
-        user = request.POST.get('user')
-        cert = request.POST.get('cert')
-        if can_delete and user and cert:
-            deleted_user_cert = api.delete_user_cert_404(user, cert)
-            if deleted_user_cert:
-                messages.success( request, 'Success! {0} deleted.'.format(deleted_user_cert.cert.name) )
-                return HttpResponseRedirect( reverse('user_certs', args=[deleted_user_cert.user.id]) )
-            else:
-                messages.error( request, 'Error! Failed to delete a {0} training record of {1}.'.format(deleted_user_cert.cert.name, deleted_user_cert.user.first_name) )
-        else:
-            messages.error(request, 'Error! Form is invalid.')
-
-        return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
-
-
 # Trainings - functions
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def edit_training(request):
+    ''' Edit a cert '''
+
+    training_id = request.POST.get('training')
+
+    training = uApi.get_training(training_id)
+    form = TrainingNameForm(request.POST, instance=training)
+    if form.is_valid():
+        updated_cert = form.save()
+        messages.success(request, 'Success! {0} updated'.format(updated_cert.name))
+    else:
+        errors = form.errors.get_json_data()
+        messages.error(request, 'An error occurred. Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
+
+    return redirect('all_trainings')
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def delete_training(request):
+    ''' Delete a training '''
+
+    training = uApi.get_training(request.POST.get('training'))
+
+    if training.delete():
+        messages.success(request, 'Success! {0} deleted.'.format(training.name))
+    else:
+        messages.error(request, 'Error! Failed to delete {0}.'.format(training.name))
+
+    return redirect('all_trainings')
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_loggedin_user_admin
+@require_http_methods(['POST'])
+def delete_user_training(request, user_id):
+    ''' Delete user's training record '''
+
+    user_id = request.POST.get('user', None)
+    training_id = request.POST.get('training', None)
+
+    # If inputs are invalid, raise a 400 error
+    uApi.check_input_fields(request, ['user', 'training'])
+
+
+    user = uApi.get_user(user_id)
+    usercert = user.usercert_set.filter(cert_id=training_id)
+
+    if usercert.exists():
+        usercert_obj = usercert.first()
+
+        is_dir_deleted = False
+        dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(training_id))
+
+        is_deleted = usercert.delete()
+
+        if os.path.exists(dirpath) and os.path.isdir(dirpath):
+            os.rmdir(dirpath)
+            is_dir_deleted = True
+
+        if is_deleted and is_dir_deleted == True:
+            messages.success( request, 'Success! {0} deleted.'.format(usercert_obj.cert.name) )
+            return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
+        else:
+            messages.error( request, 'Error! Failed to delete a {0} training record of {1}.'.format(usercert_obj.cert.name, usercert_obj.user.get_full_name()) )
+    else:
+        messages.error(request, 'Error! Form is invalid.')
+
+    return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
+
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -812,57 +991,6 @@ def render_to_pdf(template_src, context_dict):
 
 # Certificates
 
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['GET'])
-def certs(request):
-    """ Display all certificates """
-
-    can_create_cert = auth_utils.is_admin(request.user)
-    redirect_url = '/all-trainings/'
-
-    cert_list = api.get_certs()
-
-    # Pagination enables
-    query = request.GET.get('q')
-    if query:
-        cert_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
-
-    page = request.GET.get('page', 1)
-    paginator = Paginator(cert_list, 50) # Set 50 certificates in a page
-    try:
-        certs = paginator.page(page)
-    except PageNotAnInteger:
-        certs = paginator.page(1)
-    except EmptyPage:
-        certs = paginator.page(paginator.num_pages)
-
-    return render(request, 'lfs_lab_cert_tracker/certs.html', {
-        'loggedin_user': request.user,
-        'certs': certs,
-        'total_certs': len(cert_list),
-        'can_create_cert': can_create_cert,
-        'cert_form': CertForm(initial={'redirect_url': redirect_url})
-    })
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['POST'])
-def edit_cert(request, cert_id):
-    """ Edit a cert """
-
-    if request.method == 'POST':
-        cert = api.get_cert_404(cert_id)
-        form = CertNameForm(request.POST, instance=cert)
-        if form.is_valid():
-            updated_cert = form.save()
-            messages.success(request, 'Success! Training - {0} updated'.format(updated_cert.name))
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
-
-    return redirect('certs')
-
 
 
 
@@ -879,15 +1007,19 @@ def show_error(request, error_msg=''):
 
 # Exception handlers
 
+def bad_request(request, exception, template_name='400.html'):
+    ''' Exception handlder for bad request '''
+    return render(request, '400.html', context={}, status=400)
+
 def permission_denied(request, exception, template_name="403.html"):
     ''' Exception handlder for permission denied '''
 
-    return render(request, '403.html', { 'loggedin_user': request.user }, status=403)
+    return render(request, '403.html', context={}, status=403)
 
 def page_not_found(request, exception, template_name="404.html"):
     ''' Exception handlder for page not found '''
 
-    return render(request, '404.html', { 'loggedin_user': request.user }, status=404)
+    return render(request, '404.html', context={}, status=404)
 
 
 # for local testing

@@ -7,11 +7,12 @@
     <i class="material-icons">lock</i>
     Permission Denied
   </h4>
+
   <p>
     You do not have permission to access this page. Please refer to your system administrator.
   </p>
 
-  <p><a href="{% url 'user_details' user_id=user.id %}">Go to My Account</a></p>
+  <p><a href="{% url 'user_details' user_id=request.user.id %}">Go to My Account</a></p>
 </div>
 
 {% endblock %}
