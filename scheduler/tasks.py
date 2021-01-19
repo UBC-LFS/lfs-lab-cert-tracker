@@ -111,9 +111,16 @@ def run():
 
     scheduler = BackgroundScheduler()
 
-    scheduler.add_job(send_missing_trainings, 'cron', day_of_week='mon-fri', hour=16, minute=20) # 2 weeks
-    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=16, minute=30) # everyday
-    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=16, minute=40) # everyday
-    scheduler.add_job(send_after_expiry_date, 'cron', day_of_week='mon-fri', hour=16, minute=50) # 2 weeks
+    # 1st Monday, 3rd Monday at 4:00 PM
+    scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=16, minute=0)
+
+    # 1st Monday, 3rd Monday at 4:10 PM
+    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=16, minute=10)
+
+    # Monday ~ Friday, Everyday at 4:20 PM
+    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=16, minute=20)
+
+    # Monday ~ Friday, Everyday at 4:30 PM
+    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=16, minute=30)
 
     scheduler.start()
