@@ -111,7 +111,7 @@ urlpatterns = [
     path('api/labs/<int:lab_id>/users/', api_views.user_labs),
     path('api/labs/<int:lab_id>/certificates/', api_views.lab_certs),
 
-    path('accounts/local_login/', views.local_login, name='local_login'),
+    #path('accounts/local_login/', views.local_login, name='local_login'),
     #path('admin/', admin.site.urls),
     #path('accounts/admin/', include('django.contrib.auth.urls')),
     #path('error/<str:error_msg>/', views.show_error),
