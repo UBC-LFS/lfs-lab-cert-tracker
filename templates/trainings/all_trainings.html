@@ -10,10 +10,10 @@
 
 <h3 class="title">
 	All Trainings
-	<small class="text-secondary">Total: {{ total_certs }}</small>
+	<small class="text-secondary">Total: {{ total_trainings }}</small>
 </h3>
 
-<div class="search-field">
+<div class="search-field mb-2">
 	<form method="GET" >
 		<div class="input-field">
 			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name" />
@@ -33,7 +33,7 @@
     </tr>
   </thead>
   <tbody>
-		{% for cert in certs %}
+		{% for cert in trainings %}
 			<tr>
 				<td>{{ cert.id }}</td>
 				<td>{{ cert.name }}</td>
@@ -64,7 +64,7 @@
 													<div class="mb-3">
 														<label for="id_name_{{ cert.id }}" class="font-weight-bold">Name:</label>
 														<small class="text-muted">(Maximum characters: 256)</small>
-														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" />
+														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" required />
 													</div>
 
 													<input type="hidden" name="training" value="{{ cert.id }}" />
@@ -91,19 +91,23 @@
 	</tbody>
 </table>
 
-{% include 'subpages/_pagination.html' with data=certs %}
+{% include 'subpages/_pagination.html' with data=trainings %}
 
 
 {% if request.user.is_superuser %}
 
-	<h4 class="text-info mt-5 mb-3">Create Training</h4>
+	<div class="row">
+		<div class="col-md-6">
+			<h4 class="text-info mt-5 mb-3">Create Training</h4>
 
-	<form action="" method="POST">
-		{% csrf_token %}
+			<form action="" method="POST">
+				{% csrf_token %}
 
-		<table class="form-table">{{ form.as_table }}</table>
-		<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
-	</form>
+				<table class="form-table">{{ form.as_table }}</table>
+				<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
+			</form>
+		</div>
+	</div>
 
 {% endif %}
 

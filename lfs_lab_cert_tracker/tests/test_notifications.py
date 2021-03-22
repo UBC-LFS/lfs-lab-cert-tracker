@@ -27,7 +27,7 @@ class NotificationTest(TestCase):
         print('\n- Test: missing trainings')
 
         lab_users, pis = self.notification.find_missing_trainings()
-
+        
         # Lab users
         self.assertEqual( len(lab_users), 7 )
 
@@ -50,7 +50,7 @@ class NotificationTest(TestCase):
         self.assertEqual(lab_users[5]['missing_trainings'], [1, 2, 3, 5, 22, 15])
 
         self.assertEqual(lab_users[6]['id'], 20)
-        self.assertEqual(lab_users[6]['missing_trainings'], [16, 1, 2, 20])
+        self.assertEqual(lab_users[6]['missing_trainings'], [16, 20])
 
         # PIs
 

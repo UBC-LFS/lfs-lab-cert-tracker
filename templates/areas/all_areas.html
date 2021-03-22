@@ -11,10 +11,10 @@
 
 <h3 class="title">
 	All Areas
-	<small class="text-secondary">Total: {{ total_labs }}</small>
+	<small class="text-secondary">Total: {{ total_areas }}</small>
 </h3>
 
-<div class="search-field">
+<div class="search-field mb-2">
 	<form method="GET" >
 		<div class="input-field">
 			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name" />
@@ -22,7 +22,7 @@
 			<a class="btn btn-sm btn-light" href="{% url 'all_areas' %}">Clear</a>
 		</div>
 	</form>
- </div>
+</div>
 
 <table class="table table-bordered table-striped table-hover table-responsive-lg">
   <thead>
@@ -49,18 +49,22 @@
 							<div class="modal-dialog modal-lg" role="document">
 								<div class="modal-content">
 									<div class="modal-header">
-										<h5 class="modal-title" id="lab-edit-modal-label-{{ area.id }}">Edit Area</h5>
+										<h5 class="modal-title text-info" id="lab-edit-modal-label-{{ area.id }}">Edit Area</h5>
 										<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 											<span aria-hidden="true">&times;</span>
 										</button>
 									</div>
 									<div class="modal-body">
-										<form class="list-form" action="{% url 'edit_area' %}" method="post">
+										<form action="{% url 'edit_area' %}" method="post">
 											{% csrf_token %}
 
-											<input type="text" name="name" value="{{ area.name }}" />
-											<input type="hidden" name="area" value="{{ area.id }}" />
+											<div class="mb-3">
+												<label for="id_name_{{ area.id }}" class="font-weight-bold">Name:</label>
+												<small class="text-muted">(Maximum characters: 256)</small>
+												<input id="id_name_{{ area.id }}" class="form-control" type="text" name="name" value="{{ area.name }}" required />
+											</div>
 
+											<input type="hidden" name="area" value="{{ area.id }}" />
 											<input class="btn btn-primary btn-sm" type="submit" value="Update"/>
 										</form>
 									</div>
@@ -88,14 +92,18 @@
 
 {% if request.user.is_superuser %}
 
-	<h4 class="text-info mt-5 mb-3">New Area</h4>
+	<div class="row">
+		<div class="col-md-6">
+			<h4 class="text-info mt-5 mb-3">New Area</h4>
 
-	<form action="" method="post">
-		{% csrf_token %}
+			<form action="" method="post">
+				{% csrf_token %}
 
-		<table>{{ form.as_table }}</table>
-		<input class="btn btn-primary mt-3" type="submit" value="Create Area" />
-	</form>
+				<table class="form-table">{{ form.as_table}}</table>
+				<input class="btn btn-primary mt-3" type="submit" value="Create Area" />
+			</form>
+		</div>
+	</div>
 
 {% endif %}
 

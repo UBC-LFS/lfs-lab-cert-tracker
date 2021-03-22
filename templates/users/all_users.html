@@ -15,7 +15,7 @@
 	<small class="text-secondary">Total: {{ total_users }}</small>
 </h3>
 
-<div class="search-field">
+<div class="search-field mb-2">
 	<form method="GET">
 		<div class="input-field">
 			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
@@ -249,7 +249,7 @@
 							<input class="btn btn-info btn-xs" type="submit" value="{% if user.is_superuser %} Revoke Admin {% else %} Grant Admin {% endif %}"/>
 						</form>
 
-						<form class="list-form" action="{% url 'switch_inactive' %}" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive_date %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
+						<form class="list-form" action="{% url 'switch_inactive' %}" method="post" onsubmit="return confirm('Are you sure to switch this user - {{user.username}} {% if not user.is_active and user.inactive %} from INACTIVE to ACTIVE {% else %} from ACTIVE to INACTIVE {% endif %} ?');">
 							{% csrf_token %}
 
 							<input type="hidden" name="user" value="{{ user.id }}" />

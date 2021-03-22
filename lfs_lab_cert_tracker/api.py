@@ -14,72 +14,6 @@ from lfs_lab_cert_tracker.models import *
 Provides an API to the Django ORM for any queries that are required
 """
 
-# User
-
-def get_user_404(user_id):
-    ''' Get an user or 404 '''
-
-    return get_object_or_404(AuthUser, id=user_id)
-
-def get_users_order_by_name():
-    ''' Get all users ordered by a full name '''
-
-    return AuthUser.objects.all().order_by('last_name', 'first_name')
-
-
-# Area
-
-def get_area_404(area_id):
-    ''' Get an user or 404 '''
-    return get_object_or_404(Lab, id=area_id)
-
-def get_areas():
-    ''' Get all areas '''
-    return Lab.objects.all().order_by('name')
-
-
-# User Training
-
-
-# User lab
-
-
-def add_users_to_areas(areas):
-    ''' Add user info to areas '''
-
-    for area in areas:
-        area.has_lab_users = []
-        area.has_pis = []
-        for userlab in area.userlab_set.all():
-            if userlab.role == UserLab.LAB_USER:
-                area.has_lab_users.append(userlab.user.id)
-            elif userlab.role == UserLab.PRINCIPAL_INVESTIGATOR:
-                area.has_pis.append(userlab.user.id)
-
-    return areas
-
-
-
-
-
-#------------------
-
-
-def get_users():
-    """ Get all users """
-
-    user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
-    users = []
-    for user in AuthUser.objects.all().order_by('id'):
-        user_dict = model_to_dict(user)
-        for user_inactive in user_inactives:
-            if user.id == user_inactive['user']:
-                user_dict['inactive_date'] = user_inactive['inactive_date']
-        users.append(user_dict)
-
-    return users
-
-
 
 def add_missing_certs(users):
     ''' Add missing certs into users '''
@@ -91,106 +25,6 @@ def add_missing_certs(users):
             user.missing_certs = None
     return users
 
-
-
-
-def get_user_by_username(username):
-    """ Find a user by username """
-    try:
-        return AuthUser.objects.get(username=username)
-    except AuthUser.DoesNotExist as dne:
-        return None
-
-
-
-
-
-def switch_inactive(user_id):
-    """ Switch a user to Active or Inactive """
-
-    try:
-        user = AuthUser.objects.get(id=user_id)
-        if user.is_active:
-            UserInactive.objects.create(user_id=user_id, inactive_date=datetime.now())
-        else:
-            UserInactive.objects.get(user_id=user_id).delete()
-        user.is_active = not user.is_active
-        user.save(update_fields=['is_active'])
-        return model_to_dict(user)
-    except AuthUser.DoesNotExist:
-        return None
-
-
-# Lab CRUD
-
-
-def get_lab(lab_id):
-    """ Find a lab by id """
-
-    try:
-        lab = Lab.objects.get(id=lab_id)
-        return lab
-    except Lab.DoesNotExist:
-        return None
-
-
-
-
-
-# Cert CRUD
-def get_certs():
-    """ Get all certificates """
-
-    return [model_to_dict(cert) for cert in Cert.objects.all()]
-
-def get_cert(cert_id):
-    """ Find a certificate by id """
-
-    try:
-        cert = Cert.objects.get(id=cert_id)
-        return model_to_dict(cert)
-    except Cert.DoesNotExist:
-        return None
-
-def get_cert_404(cert_id):
-    ''' Get a cert '''
-    return get_object_or_404(Cert, id=cert_id)
-
-
-def delete_cert(cert_id):
-    """ Delete a certificate """
-    try:
-        Cert.objects.get(id=cert_id).delete()
-        return {'cert_id': cert_id}
-    except:
-        return None
-
-
-# UserCert CRUD
-
-def get_user_certs_404(user_id):
-    ''' Get all certs of an user '''
-    user = get_user_404(user_id)
-    return user.usercert_set.all()
-
-def get_user_cert_404(user_id, cert_id):
-    ''' Get a cert of an user '''
-    user = get_user_404(user_id)
-    uc = user.usercert_set.filter(cert_id=cert_id)
-    if uc.exists():
-        return uc.first()
-    raise Http404
-
-
-
-def all_certs_expired_in_30days():
-    min_date = datetime.now()
-    max_date = datetime.now() + timedelta(days=30)
-    certs = UserCert.objects.filter(expiry_date__gte=min_date).order_by('expiry_date')
-    return certs.filter(expiry_date__lte=max_date)
-
-
-# UserCert CRUD
 def get_missing_certs(user_id):
     # Get the labs that the user is signed up for
     user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
@@ -203,14 +37,10 @@ def get_missing_certs(user_id):
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
 
 
-def get_missing_certs_query_object(user_id):
-    user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
-    lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
+def is_user_cert_expired(cert):
+    now = datetime.now().date()
+    return cert.expiry_date is not None and now > cert.expiry_date and cert.expiry_date != cert.completion_date
 
-    # From these labs determine which certs are missing or expired
-    user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
-
-    return lab_certs.exclude(cert_id__in=user_cert_ids)
 
 def get_expired_certs(user_id):
     user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
@@ -220,6 +50,53 @@ def get_expired_certs(user_id):
         if is_user_cert_expired(uc):
             expired_user_certs.append(uc)
     return [model_to_dict(uc.cert) for uc in expired_user_certs]
+
+
+def get_user_labs(user_id, is_principal_investigator=None):
+    if is_principal_investigator:
+        user_labs = UserLab.objects.filter(user=user_id, role=UserLab.PRINCIPAL_INVESTIGATOR)
+    else:
+        user_labs = UserLab.objects.filter(user=user_id)
+    return [model_to_dict(user_lab.lab) for user_lab in user_labs]
+
+
+
+def get_user_certs_404(user_id):
+    ''' Get all certs of an user '''
+    user = get_user_404(user_id)
+    return user.usercert_set.all()
+
+
+def get_cert(cert_id):
+    """ Find a certificate by id """
+
+    try:
+        cert = Cert.objects.get(id=cert_id)
+        return model_to_dict(cert)
+    except Cert.DoesNotExist:
+        return None
+
+
+def get_user_cert_404(user_id, cert_id):
+    ''' Get a cert of an user '''
+    user = get_user_404(user_id)
+    uc = user.usercert_set.filter(cert_id=cert_id)
+    if uc.exists():
+        return uc.first()
+    raise Http404
+
+
+
+def get_missing_certs_query_object(user_id):
+    user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
+    lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
+
+    # From these labs determine which certs are missing or expired
+    user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
+
+    return lab_certs.exclude(cert_id__in=user_cert_ids)
+
+
 
 def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
     user_cert, created = UserCert.objects.get_or_create(
@@ -243,19 +120,6 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
 
 
 
-# UserLab CRUD
-def get_user_labs(user_id, is_principal_investigator=None):
-    if is_principal_investigator:
-        user_labs = UserLab.objects.filter(user=user_id, role=UserLab.PRINCIPAL_INVESTIGATOR)
-    else:
-        user_labs = UserLab.objects.filter(user=user_id)
-    return [model_to_dict(user_lab.lab) for user_lab in user_labs]
-
-
-def get_users_in_lab(lab_id):
-    users_in_lab = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
-    return [model_to_dict(user_in_lab.user) for user_in_lab in users_in_lab]
-
 def get_users_missing_certs(lab_id):
     """
     Given a lab returns users that are missing certs and the certs they are missing
@@ -269,6 +133,8 @@ def get_users_missing_certs(lab_id):
             users_missing_certs.append((lab_user, missing_lab_certs))
 
     return [(model_to_dict(user_missing_certs.user), missing_lab_cert) for user_missing_certs, missing_lab_cert in users_missing_certs]
+
+
 
 def get_users_expired_certs(lab_id):
     lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
@@ -295,9 +161,6 @@ def get_users_expired_certs(lab_id):
     return users_expired_certs
 
 
-def is_user_cert_expired(cert):
-    now = datetime.now().date()
-    return cert.expiry_date is not None and now > cert.expiry_date and cert.expiry_date != cert.completion_date
 
 def get_missing_lab_certs(user_id, lab_id):
     user_certs = UserCert.objects.filter(user=user_id).prefetch_related('cert')
@@ -317,30 +180,38 @@ def get_missing_lab_certs(user_id, lab_id):
 
     return [model_to_dict(m) for m in missing]
 
-def add_users_to_labs(user_id, lab_id, role):
-    """ Add a user to a lab """
-
-    try:
-        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
-    except UserLab.DoesNotExist:
-        has_existed = None
-
-    if has_existed:
-        return None
-
-    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
-    return model_to_dict(user_lab)
+def get_user_certs(user_id):
+    user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
+    res = []
+    for user_cert in user_certs:
+        dict_user_cert = model_to_dict(user_cert)
+        dict_user_cert.update(model_to_dict(user_cert.cert))
+        res.append(dict_user_cert)
+    return res
 
 
+def get_lab_certs(lab_id, n=None):
+    ''' Get all certificates in a lab '''
+
+    lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
+    return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
+
+
+# --------------
+
+
+def get_user_404(user_id):
+    ''' Get an user or 404 '''
+    return get_object_or_404(AuthUser, id=user_id)
 
 
 
+def get_area_404(area_id):
+    ''' Get an user or 404 '''
+    return get_object_or_404(Lab, id=area_id)
 
 
-# LabCert CRUD
-
-
-
+#------------------
 
 # Helper methods
 
@@ -366,15 +237,9 @@ def can_req_parameters_access(request, params):
 
 # for testing
 
-def get_error_messages(errors):
-    messages = ''
-    for key in errors.keys():
-        value = errors[key]
-        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
-    return messages.strip()
-
+"""
 def switch_admin(user_id):
-    """ Switch a user to Admin or not Admin """
+    ''' Switch a user to Admin or not Admin '''
 
     try:
         user = AuthUser.objects.get(id=user_id)
@@ -385,7 +250,7 @@ def switch_admin(user_id):
         return None
 
 def delete_user(user_id):
-    """ Delete a user """
+    ''' Delete a user '''
     try:
         user = AuthUser.objects.get(id=user_id)
         user.delete()
@@ -394,7 +259,7 @@ def delete_user(user_id):
         return None
 
 def get_user(user_id):
-    """ Find a user by id"""
+    ''' Find a user by id '''
     try:
         return AuthUser.objects.get(id=user_id)
     except AuthUser.DoesNotExist as dne:
@@ -410,14 +275,7 @@ def get_user_cert(user_id, cert_id):
     else:
         return None
 
-def get_user_certs(user_id):
-    user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
-    res = []
-    for user_cert in user_certs:
-        dict_user_cert = model_to_dict(user_cert)
-        dict_user_cert.update(model_to_dict(user_cert.cert))
-        res.append(dict_user_cert)
-    return res
+
 
 
 def delete_user_cert(user_id, cert_id):
@@ -425,12 +283,6 @@ def delete_user_cert(user_id, cert_id):
     os.rmdir( os.path.join( settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(cert_id) ) )
     return {'user_id': user_id, 'cert_id': cert_id}
 
-
-"""
-def update_user_cert(user_id, cert_id):
-    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
-    return {'user_id': user_id, 'cert_id': cert_id}
-"""
 
 
 def delete_all_areas_in_user(data):
@@ -481,7 +333,7 @@ def update_or_create_areas_to_user(data):
 
 
 def delete_lab(lab_id):
-    """ Delete a lab """
+    ''' Delete a lab '''
 
     try:
         Lab.objects.get(id=lab_id).delete()
@@ -491,26 +343,22 @@ def delete_lab(lab_id):
 
 
 def get_labs():
-    """ Get all labs """
+    ''' Get all labs '''
 
     return [model_to_dict(lab) for lab in Lab.objects.all()]
 
 
-def get_lab_certs(lab_id, n=None):
-    """ Get all certificates in a lab """
 
-    lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
-    return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
 
 def delete_lab_cert(lab_id, cert_id):
-    """ Delete a certificate in a lab """
+    ''' Delete a certificate in a lab '''
 
     LabCert.objects.get(lab=lab_id, cert=cert_id).delete()
     return {'lab_id': lab_id, 'cert_id': cert_id}
 
 
 def create_lab_cert(lab_id, cert_id):
-    """ Add a certificate to a lab """
+    ''' Add a certificate to a lab '''
 
     lab_cert, created = LabCert.objects.get_or_create(lab_id=lab_id, cert_id=cert_id)
     if created:
@@ -520,7 +368,7 @@ def create_lab_cert(lab_id, cert_id):
 
 
 def create_user_lab(user_id, lab_id, role):
-    """ Add a user to a lab """
+    ''' Add a user to a lab '''
 
     try:
         has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
@@ -550,7 +398,7 @@ def switch_lab_role(user_id, lab_id):
         return None
 
 def delete_user_lab(user_id, lab_id):
-    """ Delete a user in a lab """
+    ''' Delete a user in a lab '''
 
     UserLab.objects.get(user=user_id, lab=lab_id).delete()
     return {'user_id': user_id, 'lab_id': lab_id}
@@ -574,3 +422,84 @@ def delete_user_cert_404(user_id, cert_id):
             os.rmdir(dirpath)
 
     return uc if uc else False
+"""
+
+"""
+def update_user_cert(user_id, cert_id):
+    UserCert.objects.get(user_id=user_id, cert_id=cert_id).delete()
+    return {'user_id': user_id, 'cert_id': cert_id}
+"""
+
+
+
+"""
+def get_areas():
+    ''' Get all areas '''
+    return Lab.objects.all().order_by('name')
+"""
+
+
+"""
+def get_certs():
+    ''' Get all certificates '''
+
+    return [model_to_dict(cert) for cert in Cert.objects.all()]
+"""
+
+
+"""
+def get_users():
+    ''' Get all users '''
+
+    user_inactives = [ model_to_dict(user_inactive) for user_inactive in UserInactive.objects.all() ]
+    users = []
+    for user in AuthUser.objects.all().order_by('id'):
+        user_dict = model_to_dict(user)
+        for user_inactive in user_inactives:
+            if user.id == user_inactive['user']:
+                user_dict['inactive_date'] = user_inactive['inactive_date']
+        users.append(user_dict)
+
+    return users
+"""
+
+
+"""
+def all_certs_expired_in_30days():
+    min_date = datetime.now()
+    max_date = datetime.now() + timedelta(days=30)
+    certs = UserCert.objects.filter(expiry_date__gte=min_date).order_by('expiry_date')
+    return certs.filter(expiry_date__lte=max_date)
+"""
+
+"""
+def get_users_in_lab(lab_id):
+    users_in_lab = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
+    return [model_to_dict(user_in_lab.user) for user_in_lab in users_in_lab]
+"""
+
+
+"""
+def add_users_to_labs(user_id, lab_id, role):
+    ''' Add a user to a lab '''
+
+    try:
+        has_existed = UserLab.objects.get(user_id=user_id, lab_id=lab_id)
+    except UserLab.DoesNotExist:
+        has_existed = None
+
+    if has_existed:
+        return None
+
+    user_lab = UserLab.objects.create(user_id=user_id, lab_id=lab_id, role=role)
+    return model_to_dict(user_lab)
+"""
+
+
+"""def get_error_messages(errors):
+    messages = ''
+    for key in errors.keys():
+        value = errors[key]
+        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
+    return messages.strip()
+"""

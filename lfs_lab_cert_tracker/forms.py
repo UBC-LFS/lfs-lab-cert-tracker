@@ -54,6 +54,9 @@ class AreaForm(forms.ModelForm):
     class Meta:
         model = Lab
         fields = ['name']
+        help_texts = {
+            'name': '(Maximum characters: 256)'
+        }
         error_messages = {
             'name': { 'required': 'Enter a valid name.' },
         }

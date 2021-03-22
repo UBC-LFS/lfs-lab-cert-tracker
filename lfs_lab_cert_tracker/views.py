@@ -4,7 +4,7 @@ from cgi import escape
 from xhtml2pdf import pisa
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
@@ -85,12 +85,12 @@ class AllUsersView(View):
         users = uApi.add_inactive_users(users)
         users = api.add_missing_certs(users)
 
-        areas = api.get_areas()
+        areas = uApi.get_areas()
 
         return render(request, 'users/all_users.html', {
             'users': users,
             'total_users': len(user_list),
-            'areas': api.add_users_to_areas(areas),
+            'areas': uApi.add_users_to_areas(areas),
             'roles': {'LAB_USER': 0, 'PI': 1}
         })
 
@@ -210,6 +210,120 @@ class UserDetailsView(View):
             'expired_cert_list': api.get_expired_certs(user_id),
             'viewing': viewing
         })
+
+
+@method_decorator([never_cache, login_required, access_loggedin_user_admin], name='dispatch')
+class UserAreasView(View):
+    ''' Display user's areas '''
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        return render(request, 'areas/user_areas.html', {
+            'user_lab_list': api.get_user_labs(request.user.id),
+            'pi_user_lab_list': api.get_user_labs(request.user.id, is_principal_investigator=True)
+        })
+
+
+@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
+class UserTrainingsView(View):
+    ''' Display all training records of a user '''
+
+    form_class = UserTrainingForm
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        user_id = kwargs['user_id']
+        app_user = uApi.get_user(user_id)
+
+        viewing = {}
+        if request.user.id != user_id and request.session.get('next'):
+            viewing = uApi.get_viewing(request.session.get('next'))
+
+        return render(request, 'trainings/user_trainings.html', {
+            'app_user': app_user,
+            'user_cert_list': api.get_user_certs(user_id),
+            'missing_cert_list': api.get_missing_certs(user_id),
+            'expired_cert_list': api.get_expired_certs(user_id),
+            'form': self.form_class(initial={ 'user': user_id }),
+            'viewing': viewing
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+
+        # Add a training record
+        user_id = request.POST.get('user')
+        form = self.form_class(request.POST, request.FILES)
+
+        # Whether form is valid or not
+        if form.is_valid():
+            data = request.POST
+            files = request.FILES
+            cert = api.get_cert(data['cert'])
+
+            year = int(data['completion_date_year'])
+            month = int(data['completion_date_month'])
+            day = int(data['completion_date_day'])
+
+            completion_date = dt.datetime(year=year, month=month, day=day)
+
+            # Calculate a expiry year
+            expiry_year = year + int(cert['expiry_in_years'])
+            expiry_date = dt.datetime(year=expiry_year, month=month, day=day)
+
+            result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
+
+            # Whether user's certficiate is created successfully or not
+            if result:
+                messages.success(request, 'Success! {0} added.'.format(cert['name']))
+                res = { 'user_id': user_id, 'cert_id': result['cert'] }
+            else:
+                messages.error(request, "Error! Failed to add a training.")
+        else:
+            errors_data = form.errors.get_json_data()
+            error_message = 'Please check your inputs.'
+
+            for key in errors_data.keys():
+                error_code = errors_data[key][0]['code']
+
+                if error_code == 'unique_together':
+                    error_message = "The certificate already exists. If you wish to update a new training, please delete your old training first."
+
+                elif error_code == 'invalid_extension':
+                    error_message = errors_data[key][0]['message']
+
+                elif error_code == 'file_size_limit':
+                    error_message = errors_data[key][0]['message']
+
+                elif error_code == 'max_length':
+                    error_message = errors_data[key][0]['message']
+
+            messages.error(request, "Error! Failed to add your training. {0}".format(error_message))
+
+        return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
+
+
+
+@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
+class UserTrainingDetailsView(View):
+    ''' Display details of a training record of a user '''
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        user_id = kwargs['user_id']
+        training_id = kwargs['training_id']
+
+        viewing = {}
+        if request.user.id != user_id and request.session.get('next'):
+            viewing = uApi.get_viewing(request.session.get('next'))
+
+        return render(request, 'trainings/user_training_details.html', {
+            'app_user': uApi.get_user(user_id),
+            'user_cert': api.get_user_cert_404(user_id, training_id),
+            'viewing': viewing
+        })
+
 
 
 # Users - functions
@@ -377,7 +491,7 @@ class AllAreasView(View):
 
         return render(request, 'areas/all_areas.html', {
             'areas': areas,
-            'total_labs': len(area_list),
+            'total_areas': len(area_list),
             'form': self.form_class()
         })
 
@@ -394,22 +508,10 @@ class AllAreasView(View):
                 messages.error(request, 'Error! Failed to create {0}.'.format(lab.name))
         else:
             errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}.'.format(get_error_messages(errors)))
+            messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
 
         return redirect('all_areas')
 
-
-@method_decorator([never_cache, login_required, access_loggedin_user_admin], name='dispatch')
-class UserAreasView(View):
-    ''' Display user's areas '''
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-
-        return render(request, 'areas/user_areas.html', {
-            'user_lab_list': api.get_user_labs(request.user.id),
-            'pi_user_lab_list': api.get_user_labs(request.user.id, is_principal_investigator=True)
-        })
 
 
 @method_decorator([never_cache, login_required, access_pi_admin], name='dispatch')
@@ -587,7 +689,7 @@ def edit_area(request):
             messages.error(request, 'Error! Failed to update {0}.'.format(area.name))
     else:
         errors = form.errors.get_json_data()
-        messages.error(request, 'Error! Form is invalid. {0}.'.format(get_error_messages(errors)))
+        messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
 
     return redirect('all_areas')
 
@@ -702,26 +804,26 @@ class AllTrainingsView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        cert_list = api.get_certs()
+        training_list = uApi.get_trainings()
 
         # Pagination enables
         query = request.GET.get('q')
         if query:
-            cert_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
+            training_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(cert_list, NUM_PER_PAGE)
+        paginator = Paginator(training_list, NUM_PER_PAGE)
 
         try:
-            certs = paginator.page(page)
+            trainings = paginator.page(page)
         except PageNotAnInteger:
-            certs = paginator.page(1)
+            trainings = paginator.page(1)
         except EmptyPage:
-            certs = paginator.page(paginator.num_pages)
+            trainings = paginator.page(paginator.num_pages)
 
         return render(request, 'trainings/all_trainings.html', {
-            'certs': certs,
-            'total_certs': len(cert_list),
+            'trainings': trainings,
+            'total_trainings': len(training_list),
             'form': self.form_class()
         })
 
@@ -743,107 +845,6 @@ class AllTrainingsView(View):
             messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
 
         return redirect('all_trainings')
-
-
-
-@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingsView(View):
-    ''' Display all training records of a user '''
-
-    form_class = UserTrainingForm
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        user_id = kwargs['user_id']
-        app_user = uApi.get_user(user_id)
-
-        viewing = {}
-        if request.user.id != user_id and request.session.get('next'):
-            viewing = uApi.get_viewing(request.session.get('next'))
-
-        return render(request, 'trainings/user_trainings.html', {
-            'app_user': app_user,
-            'user_cert_list': api.get_user_certs(user_id),
-            'missing_cert_list': api.get_missing_certs(user_id),
-            'expired_cert_list': api.get_expired_certs(user_id),
-            'form': self.form_class(initial={ 'user': user_id }),
-            'viewing': viewing
-        })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-
-        # Add a training record
-        user_id = request.POST.get('user')
-        form = self.form_class(request.POST, request.FILES)
-
-        # Whether form is valid or not
-        if form.is_valid():
-            data = request.POST
-            files = request.FILES
-            cert = api.get_cert(data['cert'])
-
-            year = int(data['completion_date_year'])
-            month = int(data['completion_date_month'])
-            day = int(data['completion_date_day'])
-
-            completion_date = dt.datetime(year=year, month=month, day=day)
-
-            # Calculate a expiry year
-            expiry_year = year + int(cert['expiry_in_years'])
-            expiry_date = dt.datetime(year=expiry_year, month=month, day=day)
-
-            result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
-
-            # Whether user's certficiate is created successfully or not
-            if result:
-                messages.success(request, 'Success! {0} added.'.format(cert['name']))
-                res = { 'user_id': user_id, 'cert_id': result['cert'] }
-            else:
-                messages.error(request, "Error! Failed to add a training.")
-        else:
-            errors_data = form.errors.get_json_data()
-            error_message = 'Please check your inputs.'
-
-            for key in errors_data.keys():
-                error_code = errors_data[key][0]['code']
-
-                if error_code == 'unique_together':
-                    error_message = "The certificate already exists. If you wish to update a new training, please delete your old training first."
-
-                elif error_code == 'invalid_extension':
-                    error_message = errors_data[key][0]['message']
-
-                elif error_code == 'file_size_limit':
-                    error_message = errors_data[key][0]['message']
-
-                elif error_code == 'max_length':
-                    error_message = errors_data[key][0]['message']
-
-            messages.error(request, "Error! Failed to add your training. {0}".format(error_message))
-
-        return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
-
-
-
-@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingDetailsView(View):
-    ''' Display details of a training record of a user '''
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        user_id = kwargs['user_id']
-        training_id = kwargs['training_id']
-
-        viewing = {}
-        if request.user.id != user_id and request.session.get('next'):
-            viewing = uApi.get_viewing(request.session.get('next'))
-
-        return render(request, 'trainings/user_training_details.html', {
-            'app_user': uApi.get_user(user_id),
-            'user_cert': api.get_user_cert_404(user_id, training_id),
-            'viewing': viewing
-        })
 
 
 # Trainings - functions
@@ -944,14 +945,12 @@ def download_user_cert(request, user_id, cert_id, filename):
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-#@auth_utils.user_or_admin
-@auth_utils.admin_or_pi_or_user
+@access_loggedin_user_pi_admin
 @require_http_methods(['GET'])
-def user_report(request, user_id=None):
-    """ Download user's report as PDF """
-    app_user = api.get_user(user_id)
-    if app_user is None:
-        raise PermissionDenied
+def user_report(request, user_id):
+    ''' Download user's report as PDF '''
+
+    app_user = uApi.get_user(user_id)
 
     missing_cert_list = api.get_missing_certs(user_id)
     user_cert_list = api.get_user_certs(user_id)
@@ -968,9 +967,9 @@ def user_report(request, user_id=None):
                 missing_lab_certs.append(lc)
         user_labs.append((user_lab, lab_certs, missing_lab_certs))
 
-    return render_to_pdf('lfs_lab_cert_tracker/user_report.html', {
-        'user_cert_list': user_cert_list,
+    return render_to_pdf('users/user_report.html', {
         'app_user': app_user,
+        'user_cert_list': user_cert_list,
         'user_labs': user_labs
     })
 
@@ -987,23 +986,6 @@ def render_to_pdf(template_src, context_dict):
     return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
 
 
-# Labs
-
-# Certificates
-
-
-
-
-"""
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['GET'])
-def show_error(request, error_msg=''):
-    return render(request, 'lfs_lab_cert_tracker/error.html', {
-        'loggedin_user': request.user,
-        'error_msg': error_msg
-    })
-"""
 
 # Exception handlers
 
@@ -1034,135 +1016,3 @@ def local_login(request):
                 return redirect('index')
 
     return render(request, 'accounts/local_login.html', { 'form': LoginForm() })
-
-
-
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['GET'])
-def labs(request):
-    """ Display all labs """
-
-    is_admin = auth_utils.is_admin(request.user)
-    redirect_url = '/all-areas/'
-
-    lab_list = api.get_labs()
-
-    # Pagination enables
-    query = request.GET.get('q')
-    if query:
-        lab_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
-
-    page = request.GET.get('page', 1)
-    paginator = Paginator(lab_list, 50) # Set 50 labs in a page
-    try:
-        labs = paginator.page(page)
-    except PageNotAnInteger:
-        labs = paginator.page(1)
-    except EmptyPage:
-        labs = paginator.page(paginator.num_pages)
-
-    return render(request, 'lfs_lab_cert_tracker/labs.html', {
-        'loggedin_user': request.user,
-        'labs': labs,
-        'total_labs': len(lab_list),
-        'can_create_lab': is_admin,
-        'lab_form': LabForm(initial={'redirect_url': redirect_url})
-    })
-
-
-
-"""
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@auth_utils.admin_only
-@require_http_methods(['GET', 'POST'])
-def users(request):
-    ''' Display all users '''
-
-    if request.method == 'POST':
-        form = UserForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            if user:
-                messages.success(request, 'Success! {0} created.'.format(user.username))
-                #return HttpResponseRedirect( reverse('users') + '?t=all' )
-                return HttpResponseRedirect(request.get_full_path())
-            else:
-                messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ) )
-
-        return HttpResponseRedirect(request.get_full_path())
-
-    else:
-        current_tab = request.GET.get('t')
-        api.can_req_parameters_access(request, ['t'])
-
-        user_list = AuthUser.objects.all().order_by('last_name', 'first_name')
-
-        # Find users who have missing certs
-        users_in_missing_training = []
-        if current_tab == 'report':
-            for user in api.add_missing_certs(user_list):
-                if user.missing_certs != None:
-                    users_in_missing_training.append(user)
-
-            user_list = users_in_missing_training.copy()
-
-        # Pagination enables
-        query = request.GET.get('q')
-        if query:
-            user_list = AuthUser.objects.filter(
-                Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
-            ).order_by('id').distinct()
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(user_list, 50) # Set 50 users in a page
-
-        try:
-            users = paginator.page(page)
-        except PageNotAnInteger:
-            users = paginator.page(1)
-        except EmptyPage:
-            users = paginator.page(paginator.num_pages)
-
-        if current_tab == 'all':
-            users = api.add_inactive_users(users)
-            users = api.add_missing_certs(users)
-
-    return render(request, 'lfs_lab_cert_tracker/users.html', {
-        'loggedin_user': request.user,
-        'users': users,
-        'total_users': len(user_list),
-        'users_in_missing_training': users_in_missing_training,
-        'user_form': UserForm(),
-        'current_tab': current_tab
-    })
-"""
-
-"""
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@auth_utils.admin_only
-@require_http_methods(['POST'])
-def edit_user(request):
-    ''' Delete a user '''
-    if request.method == 'POST':
-        user_id = request.POST.get('user')
-        user = api.get_user_404(user_id)
-        form = UserForm(request.POST, instance=user)
-        if form.is_valid():
-            if form.save():
-                messages.success(request, 'Success! {0} updated.'.format(user.get_full_name()))
-            else:
-                messages.error(request, 'Error! Failed to update {0}.'.format(user.get_full_name()))
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
-
-    return HttpResponseRedirect( request.POST.get('next') )
-"""

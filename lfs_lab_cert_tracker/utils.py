@@ -136,6 +136,21 @@ class Api:
         return get_object_or_404(Lab, id=attr)
 
 
+    def add_users_to_areas(self, areas):
+        ''' Add user info to areas '''
+
+        for area in areas:
+            area.has_lab_users = []
+            area.has_pis = []
+            for userlab in area.userlab_set.all():
+                if userlab.role == UserLab.LAB_USER:
+                    area.has_lab_users.append(userlab.user.id)
+                elif userlab.role == UserLab.PRINCIPAL_INVESTIGATOR:
+                    area.has_pis.append(userlab.user.id)
+
+        return areas
+
+
     # Trainings
     def get_trainings(self):
         ''' Get trainings '''

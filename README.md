@@ -221,11 +221,15 @@ $ python manage.py runserver --noreload
 
 16. Test
 ```
-# Users
-$ python manage.py test lfs_lab_cert_tracker.tests.users
+$ python manage.py test lfs_lab_cert_tracker.tests.test_users
+$ python manage.py test lfs_lab_cert_tracker.tests.test_trainings
+$ python manage.py test lfs_lab_cert_tracker.tests.test_areas
+$ python manage.py test lfs_lab_cert_tracker.tests.test_notifications
+```
 
-# Email notification
-$ python manage.py test lfs_lab_cert_tracker.tests.notifications
+**Note** Upgrade Django
+```
+$ pip install --upgrade django==new version (e.g., 2.2.19)
 ```
 
 Happy coding!
