@@ -47,7 +47,7 @@ def authenticate(saml_authentication=None):
                 user_data['first_name'] = ' '.join(full_name_list[:-1])
                 user_data['last_name'] = full_name_list[-1]
 
-        found_user = AuthUser.objects.filter(username=data['username'])
+        found_user = AuthUser.objects.filter(username=user_data['username'])
         if found_user.exists():
             return found_user.first()
         else:
