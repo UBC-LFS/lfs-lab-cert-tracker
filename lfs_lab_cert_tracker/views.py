@@ -2,6 +2,8 @@ import os
 from io import BytesIO
 from cgi import escape
 from xhtml2pdf import pisa
+import datetime as dt
+from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -331,6 +333,70 @@ class UserTrainingDetailsView(View):
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_loggedin_user_pi_admin
+@require_http_methods(['GET'])
+def user_report(request, user_id):
+    ''' Download user's report as PDF '''
+
+    app_user = uApi.get_user(user_id)
+
+    missing_cert_list = api.get_missing_certs(user_id)
+    user_cert_list = api.get_user_certs(user_id)
+    user_cert_ids = set([uc['id'] for uc in user_cert_list])
+    expired_cert_ids = set([ec['id'] for ec in api.get_expired_certs(user_id)])
+
+    user_lab_list = api.get_user_labs(user_id)
+    user_labs = []
+    for user_lab in user_lab_list:
+        lab_certs = api.get_lab_certs(user_lab['id'])
+        missing_lab_certs = []
+        for lc in lab_certs:
+            if lc['id'] not in user_cert_ids or lc['id'] in expired_cert_ids:
+                missing_lab_certs.append(lc)
+        user_labs.append((user_lab, lab_certs, missing_lab_certs))
+
+    return render_to_pdf('users/user_report.html', {
+        'app_user': app_user,
+        'user_cert_list': user_cert_list,
+        'user_labs': user_labs
+    })
+
+
+def render_to_pdf(template_src, context_dict):
+    template = get_template(template_src)
+    context = Context(context_dict)
+    html  = template.render(context_dict)
+    response = BytesIO()
+
+    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), response)
+    if not pdf.err:
+        return HttpResponse(response.getvalue(), content_type='application/pdf')
+    return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def download_user_report_missing_trainings(request):
+    '''Download a user report for missing trainings '''
+
+    users = uApi.get_users()
+
+    # Find users who have missing certs
+    users_in_missing_training = []
+    for user in api.add_missing_certs(users):
+        if user.missing_certs != None:
+            users_in_missing_training.append(user)
+
+    return render_to_pdf('users/download_user_report_missing_trainings.html', {
+        'users': users_in_missing_training,
+    })
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def delete_user(request):
@@ -434,26 +500,18 @@ def assign_user_areas(request):
     return JsonResponse({ 'status': 'error', 'message': 'Error! Something went wrong.' })
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_admin_only
-@require_http_methods(['GET'])
-def download_user_report_missing_trainings(request):
-    '''Download a user report for missing trainings '''
+@access_loggedin_user_pi_admin
+@require_http_methods(['POST'])
+def read_welcome_message(request, user_id):
+    ''' Read a welcome message '''
 
-    users = uApi.get_users()
+    if request.POST.get('read_welcome_message') == 'true':
+        request.session['is_first_time'] = False
+        return JsonResponse({ 'status': 'success', 'message': 'Success! A user read a welcome message.' })
 
-    # Find users who have missing certs
-    users_in_missing_training = []
-    for user in api.add_missing_certs(users):
-        if user.missing_certs != None:
-            users_in_missing_training.append(user)
-
-    return render_to_pdf('users/download_user_report_missing_trainings.html', {
-        'users': users_in_missing_training,
-    })
-
+    return JsonResponse({ 'status': 'error', 'message': 'Error! Something went wrong while reading a welcome message.' })
 
 
 # Areas - classes
@@ -943,47 +1001,6 @@ def download_user_cert(request, user_id, cert_id, filename):
 
 
 
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_loggedin_user_pi_admin
-@require_http_methods(['GET'])
-def user_report(request, user_id):
-    ''' Download user's report as PDF '''
-
-    app_user = uApi.get_user(user_id)
-
-    missing_cert_list = api.get_missing_certs(user_id)
-    user_cert_list = api.get_user_certs(user_id)
-    user_cert_ids = set([uc['id'] for uc in user_cert_list])
-    expired_cert_ids = set([ec['id'] for ec in api.get_expired_certs(user_id)])
-
-    user_lab_list = api.get_user_labs(user_id)
-    user_labs = []
-    for user_lab in user_lab_list:
-        lab_certs = api.get_lab_certs(user_lab['id'])
-        missing_lab_certs = []
-        for lc in lab_certs:
-            if lc['id'] not in user_cert_ids or lc['id'] in expired_cert_ids:
-                missing_lab_certs.append(lc)
-        user_labs.append((user_lab, lab_certs, missing_lab_certs))
-
-    return render_to_pdf('users/user_report.html', {
-        'app_user': app_user,
-        'user_cert_list': user_cert_list,
-        'user_labs': user_labs
-    })
-
-
-def render_to_pdf(template_src, context_dict):
-    template = get_template(template_src)
-    context = Context(context_dict)
-    html  = template.render(context_dict)
-    response = BytesIO()
-
-    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), response)
-    if not pdf.err:
-        return HttpResponse(response.getvalue(), content_type='application/pdf')
-    return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
 
 
 
@@ -1011,7 +1028,12 @@ def local_login(request):
         form = LoginForm(request.POST)
         if form.is_valid():
             user = authenticate(username=request.POST['username'], password=request.POST['password'])
+
             if user is not None:
+
+                # To check whether users are logged in for the first time or not
+                request.session['is_first_time'] = True if user.last_login == None else False
+
                 DjangoLogin(request, user)
                 return redirect('index')
 

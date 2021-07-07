@@ -47,17 +47,16 @@ def authenticate(saml_authentication=None):
                 user_data['first_name'] = ' '.join(full_name_list[:-1])
                 user_data['last_name'] = full_name_list[-1]
 
-        try:
-            user = AuthUser.objects.get(username=user_data['username'])
-        except AuthUser.DoesNotExist:
-            user = AuthUser(username=user_data['username'])
+        found_user = AuthUser.objects.filter(username=data['username'])
+        if found_user.exists():
+            return found_user.first()
+        else:
+            user = AuthUser(username=user_data['username'], first_name=user_data['first_name'], last_name=user_data['last_name'], email=user_data['email'])
             user.set_unusable_password()
-            user.email = user_data['email']
-            user.first_name = user_data['first_name']
-            user.last_name = user_data['last_name']
             user.save()
 
-        return user
+            return user
+
     return None
 
 @csrf_exempt
@@ -111,10 +110,13 @@ def saml(request, action=None):
                 request.session['samlNameIdFormat'] = auth.get_nameid_format()
 
                 user = authenticate(saml_authentication=auth)
+
+                # To check whether users are logged in for the first time or not
+                request.session['is_first_time'] = True if user.last_login == None else False
+
                 login(request, user)
 
                 if 'RelayState' in req['post_data'] and OneLogin_Saml2_Utils.get_self_url(req) != req['post_data']['RelayState']:
-                    #return HttpResponseRedirect(auth.redirect_to(req['post_data']['RelayState']))
                     return HttpResponseRedirect( '/users/{0}'.format(user.id) )
                 else:
                     for attr_name in request.session['samlUserdata'].keys():

@@ -52,7 +52,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ['CERT_TRACKER_ENV'] != 'prod'
+DEBUG = False
+LOCAL_LOGIN = False
 
 ALLOWED_HOSTS = ['localhost']
 

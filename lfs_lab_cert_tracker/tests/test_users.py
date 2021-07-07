@@ -432,6 +432,72 @@ class UserTest(TestCase):
         self.assertEqual(res.context['app_user'].username, user.username)
         self.assertEqual(res.context['viewing'], {'page': 'all_users', 'query': 'page=1&q=user&u=11'})
 
+
+    def test_user_logged_not_first_time(self):
+        print('\n- Test: check whether users are logged in')
+        self.login(USERS[2], PASSWORD)
+
+        user = self.api.get_user(USERS[2], 'username')
+        self.assertIsNotNone(user.last_login)
+        self.assertTrue(self.client.session.get('is_first_time'))
+
+        self.client.post(LOGIN_URL, data={'username': USERS[2], 'password': PASSWORD})
+        self.assertFalse(self.client.session.get('is_first_time'))
+
+
+    def test_user_logged_first_time_success(self):
+        print('\n- Test: check whether users are logged in for the first time - success')
+        self.login(USERS[2], PASSWORD)
+
+        user = self.api.get_user(USERS[2], 'username')
+        user.last_login = None
+        user.save(update_fields=['last_login'])
+
+        user = self.api.get_user(USERS[2], 'username')
+        self.assertIsNone(user.last_login)
+        self.assertTrue(self.client.session.get('is_first_time'))
+
+        self.client.post(LOGIN_URL, data={'username': USERS[2], 'password': PASSWORD})
+        self.assertTrue(self.client.session.get('is_first_time'))
+
+
+        # read a welcome message
+        res = self.client.post(reverse('read_welcome_message', args=[user.id]), data=urlencode({ 'read_welcome_message': 'true' }), content_type=ContentType)
+        content = json.loads(res.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['message'], 'Success! A user read a welcome message.')
+        self.assertEqual(res.status_code, 200)
+
+        self.assertFalse(self.client.session.get('is_first_time'))
+
+
+
+    def test_user_logged_first_time_failture(self):
+        print('\n- Test: check whether users are logged in for the first time - failture')
+        self.login(USERS[2], PASSWORD)
+
+        user = self.api.get_user(USERS[2], 'username')
+        user.last_login = None
+        user.save(update_fields=['last_login'])
+
+        user = self.api.get_user(USERS[2], 'username')
+        self.assertIsNone(user.last_login)
+        self.assertTrue(self.client.session.get('is_first_time'))
+
+        self.client.post(LOGIN_URL, data={'username': USERS[2], 'password': PASSWORD})
+        self.assertTrue(self.client.session.get('is_first_time'))
+
+
+        # read a welcome message
+        res = self.client.post(reverse('read_welcome_message', args=[user.id]), data=urlencode({ 'read_welcome_message': 't' }), content_type=ContentType)
+        content = json.loads(res.content)
+        self.assertEqual(content['status'], 'error')
+        self.assertEqual(content['message'], 'Error! Something went wrong while reading a welcome message.')
+        self.assertEqual(res.status_code, 200)
+
+        self.assertTrue(self.client.session.get('is_first_time'))
+
+
         # TODO
         # different next path
 
@@ -1739,6 +1805,5 @@ class UserTrainingTest(TestCase):
                 missing_trs = []
                 for tr in area[2]: missing_trs.append(tr['name'])
                 self.assertEqual(missing_trs, areas[c2]['missing_trainings'])
-
 
             c2 += 1

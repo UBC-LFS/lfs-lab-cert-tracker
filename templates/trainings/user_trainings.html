@@ -1,4 +1,4 @@
-{% extends "header.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 
@@ -10,8 +10,6 @@
 {% if viewing %}
 	{% include 'subpages/_viewing_info.html' with data=viewing %}
 {% endif %}
-
-{% include 'subpages/_return_message.html' with data=messages %}
 
 {% if request.user.id != app_user.id %}
 
@@ -41,6 +39,7 @@
 
 {% endif %}
 
+{% include 'subpages/_return_message.html' with data=messages %}
 
 <h3 class="title">
 	{% if request.user.id == app_user.id %}

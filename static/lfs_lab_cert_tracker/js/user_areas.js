@@ -41,6 +41,9 @@ $(document).ready(function() {
 		const formData = $('#area-list-form-' + userId).serializeArray();
 		const $self = $(this);
 
+		console.log( $(this).data('url') );
+		console.log( formDataToJson(JSON.stringify(formData)) );
+
 		$.ajax({
 			method: 'POST',
 			url: $(this).data('url'),
@@ -90,7 +93,7 @@ function formDataToJson(form_data) {
 	json[ data[len-1]['name'] ] = data[len-1]['value'];
 	let areas = [];
   for (let i = 1; i < len - 1; i++) {
-		
+
 		if (data[i+1]['name'] === 'role') {
 			areas.push([data[i]['value'], 1]);
 			i += 1;

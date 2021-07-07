@@ -1,4 +1,5 @@
-{% extends "header.html" %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 
@@ -10,6 +11,80 @@
 	{% include 'subpages/_viewing_info.html' with data=viewing %}
 {% endif %}
 
+
+{% if request.session.is_first_time %}
+
+	<div class="modal fade" id="welcome-modal" tabindex="-1" role="dialog" aria-labelledby="welcome-modal-label" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="welcome-modal-label">
+						Welcome Message for TRMS
+						<small><a href="{% static 'lfs_lab_cert_tracker/pdf/welcome_message.pdf' %}" target="_blank">Download as PDF</a></small>
+					</h5>
+				</div>
+				<div class="modal-body p-4">
+					<p>Welcome to LFS!</p>
+
+					<p>
+						Thank you for using the LFS Training Record Management System! We want to take this opportunity to introduce you to the <a href="https://my.landfood.ubc.ca/operations/health-and-safety/johsc/" target="_blank">LFS Joint Occupational Health and Safety Committee (JOHSC)</a> and our Local Safety Teams (LSTs). We hope you spend some time to familiarize yourself with your local area’s LST membership and contact information. Below are the four LSTs covering the health and safety of the four main buildings in our faculty:
+					</p>
+
+					<ul style="list-style-type:none;">
+					  <li>
+							<a href="https://my.landfood.ubc.ca/operations/health-and-safety/macmillan-lst/" target="_blank">
+								MacMillan Local Safety Team (MCML LST)
+							</a>
+						</li>
+					  <li>
+							<a href="https://my.landfood.ubc.ca/operations/health-and-safety/fnh-lst/" target="_blank">
+								Food Nutrition and Health Local Safety Team (FNH LST)
+							</a>
+						</li>
+					  <li>
+							<a href="https://my.landfood.ubc.ca/operations/health-and-safety/ubc-farm-lst/" target="_blank">
+								UBC Farm Local Safety Team (Farm LST)
+							</a>
+						</li>
+						<li>Dairy Centre Local Safety Team (Dairy LST) – coming soon</li>
+					</ul>
+
+					<p>
+						Thank you for going through all the mandatory health and safety training. What a champion! Please note that if you have not already done so, your supervisor should be reviewing any <a href="https://srs.ubc.ca/health-safety/research-safety/" target="_blank">additional specific training<a/> required for your work duties with you. Your LST may have some safety orientation that is mandatory specific to the building you work in so please check <a href="https://my.landfood.ubc.ca/operations/health-and-safety/lfs-mandatory-training/" target="_blank">mandatory training<a/> for guidelines. Please note that all mandatory training as well as any additional training records should be uploaded to <a href="https://training-report.landfood.ubc.ca" target="_blank">https://training-report.landfood.ubc.ca<a/> via your Campus Wide Login. To access the website off campus, please ensure you connect via <a href="https://it.ubc.ca/services/email-voice-internet/myvpn" target="_blank">UBC VPN</a>.
+					</p>
+
+					<p>
+						To receive regular updates from our faculty, please subscribe to the appropriate <a href="https://my.landfood.ubc.ca/communications/communication-channels/" target="_blank">communication channels</a> below:
+					</p>
+
+					<ul>
+						<li>
+							LFS Today (Staff and Faculty):
+							<a href="https://my.landfood.ubc.ca/lfs-today/" target="_blank">https://my.landfood.ubc.ca/lfs-today/</a>
+						</li>
+						<li>
+							LFS Grad Student Listserve (Grad students):
+							email <a href="mailto:lia.maria@ubc.ca">lia.maria@ubc.ca</a>
+						</li>
+						<li>
+							Newslettuce (Undergraduates):
+							email <a href="mailto:lfs.programassistant@ubc.ca">lfs.programassistant@ubc.ca</a>
+						</li>
+					</ul>
+
+					<p>
+						If you have any questions, please don’t hesitate to contact us at <a href="mailto:lfs-johsc@lists.ubc.ca">lfs-johsc@lists.ubc.ca</a>.
+					</p>
+				</div>
+				<div class="modal-footer">
+					Click the <span class="text text-success ml-1">Close</span> button to close this window
+					<button id="close-welcome-modal" class="btn btn-success ml-3" type="button" data-url="{% url 'read_welcome_message' user_id=app_user.id %}" data-token="{{ csrf_token }}">Close</button>
+			</div>
+			</div>
+		</div>
+	</div>
+
+{% endif %}
 
 {% if request.user.id != app_user.id %}
 
@@ -33,7 +108,10 @@
 
 {% endif %}
 
+<div id="welcome-message-alert"></div>
+
 <div class="row mt-5">
+
 	<div class="col-md-8">
 		<h3>{{ app_user.get_full_name }}</h3>
 
@@ -152,3 +230,44 @@
 </div>
 
 {% endblock %}
+
+{% if request.session.is_first_time %}
+	{% block js %}
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+		  $('#welcome-modal').modal('show');
+
+			$('#close-welcome-modal').on('click', function() {
+				$('#welcome-modal').modal('hide');
+
+				$.ajax({
+		      method: 'POST',
+		      url: $(this).data('url'),
+		      data: {
+						read_welcome_message: true,
+						csrfmiddlewaretoken: $(this).data('token')
+					},
+		      dataType: 'json',
+		      success: function(res) {
+						let message = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+								res.message +
+								'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+							'</div>';
+
+						$('#welcome-message-alert').html(message);
+					},
+					error: function(err) {
+						const message = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+		                          'Error: ' + err.statusText + ' (' + err.status + '). ' +
+		                          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+		                        '</div>';
+		        $('#welcome-message-alert').html(message);
+					}
+				});
+			});
+		});
+
+	</script>
+	{% endblock %}
+{% endif %}

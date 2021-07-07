@@ -1,16 +1,3 @@
-"""lfs_lab_cert_tracker URL Configuration
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/1.11/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home') Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.conf.urls import url, include
-    2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
-"""
 from django.conf.urls import url, include, handler400, handler403, handler404
 from django.urls import path
 from django.contrib import admin
@@ -35,16 +22,19 @@ urlpatterns = [
     path('users/<int:user_id>/report/', views.user_report, name='user_report'),
     path('users/report/missing-trainings/download/', views.download_user_report_missing_trainings, name='download_user_report_missing_trainings'),
 
+
     # Users - api
     path('api/user/delete/', views.delete_user, name='delete_user'),
     path('api/user/switch-admin/', views.switch_admin, name='switch_admin'),
     path('api/user/switch-inactive/', views.switch_inactive, name='switch_inactive'),
     path('api/users/assign/areas/', views.assign_user_areas, name='assign_user_areas'),
+    path('api/users/<int:user_id>/read/welcome-message/', views.read_welcome_message, name="read_welcome_message"),
 
 
     # Areas - classes
     path('areas/all/', views.AllAreasView.as_view(), name='all_areas'),
     path('areas/<int:area_id>/', views.AreaDetailsView.as_view(), name='area_details'),
+
 
     # Areas - api
     path('api/area/update/', views.edit_area, name='edit_area'),
@@ -68,11 +58,19 @@ urlpatterns = [
 
     path('saml/', saml_views.saml, name='saml'),
     path('attrs/', saml_views.attrs, name='attrs'),
-    path('metadata/', saml_views.metadata, name='metadata'),
+    path('metadata/', saml_views.metadata, name='metadata')
 
-    #path('accounts/local_login/', views.local_login, name='local_login'),
-    #path('admin/', admin.site.urls)
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path('admin/', admin.site.urls)
+    ]
+
+if settings.LOCAL_LOGIN:
+    urlpatterns += [
+        path('accounts/local-login/', views.local_login, name='local_login')
+    ]
 
 handler400 = views.bad_request
 handler403 = views.permission_denied
