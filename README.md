@@ -225,6 +225,7 @@ $ python manage.py test lfs_lab_cert_tracker.tests.test_users
 $ python manage.py test lfs_lab_cert_tracker.tests.test_trainings
 $ python manage.py test lfs_lab_cert_tracker.tests.test_areas
 $ python manage.py test lfs_lab_cert_tracker.tests.test_notifications
+$ python manage.py test lfs_lab_cert_tracker.tests.test_login
 ```
 
 **Note** Upgrade Django
