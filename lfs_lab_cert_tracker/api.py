@@ -1,22 +1,14 @@
-import os
-from django.conf import settings
-from datetime import datetime, timedelta
-from django.contrib.auth.hashers import make_password
+from datetime import datetime
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 from django.http import Http404
 
 from django.contrib.auth.models import User as AuthUser
-from lfs_lab_cert_tracker.models import *
-
-
-"""
-Provides an API to the Django ORM for any queries that are required
-"""
+from .models import UserCert, LabCert, UserLab, Cert, Lab
 
 
 def add_missing_certs(users):
-    ''' Add missing certs into users '''
+    """ Add missing certs into users """
     for user in users:
         certs = get_missing_certs_query_object(user.id)
         if len(certs) > 0:
@@ -24,6 +16,7 @@ def add_missing_certs(users):
         else:
             user.missing_certs = None
     return users
+
 
 def get_missing_certs(user_id):
     # Get the labs that the user is signed up for
@@ -60,9 +53,8 @@ def get_user_labs(user_id, is_principal_investigator=None):
     return [model_to_dict(user_lab.lab) for user_lab in user_labs]
 
 
-
 def get_user_certs_404(user_id):
-    ''' Get all certs of an user '''
+    """ Get all certs of an user """
     user = get_user_404(user_id)
     return user.usercert_set.all()
 
@@ -78,13 +70,12 @@ def get_cert(cert_id):
 
 
 def get_user_cert_404(user_id, cert_id):
-    ''' Get a cert of an user '''
+    """ Get a cert of an user """
     user = get_user_404(user_id)
     uc = user.usercert_set.filter(cert_id=cert_id)
     if uc.exists():
         return uc.first()
     raise Http404
-
 
 
 def get_missing_certs_query_object(user_id):
@@ -95,7 +86,6 @@ def get_missing_certs_query_object(user_id):
     user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
 
     return lab_certs.exclude(cert_id__in=user_cert_ids)
-
 
 
 def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
@@ -119,7 +109,6 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
     return model_to_dict(user_cert)
 
 
-
 def get_users_missing_certs(lab_id):
     """
     Given a lab returns users that are missing certs and the certs they are missing
@@ -133,7 +122,6 @@ def get_users_missing_certs(lab_id):
             users_missing_certs.append((lab_user, missing_lab_certs))
 
     return [(model_to_dict(user_missing_certs.user), missing_lab_cert) for user_missing_certs, missing_lab_cert in users_missing_certs]
-
 
 
 def get_users_expired_certs(lab_id):
@@ -161,7 +149,6 @@ def get_users_expired_certs(lab_id):
     return users_expired_certs
 
 
-
 def get_missing_lab_certs(user_id, lab_id):
     user_certs = UserCert.objects.filter(user=user_id).prefetch_related('cert')
     required_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
@@ -180,6 +167,7 @@ def get_missing_lab_certs(user_id, lab_id):
 
     return [model_to_dict(m) for m in missing]
 
+
 def get_user_certs(user_id):
     user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
     res = []
@@ -191,44 +179,38 @@ def get_user_certs(user_id):
 
 
 def get_lab_certs(lab_id, n=None):
-    ''' Get all certificates in a lab '''
+    """ Get all certificates in a lab """
 
     lab_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
     return [model_to_dict(lab_cert.cert) for lab_cert in lab_certs]
 
 
-# --------------
-
-
 def get_user_404(user_id):
-    ''' Get an user or 404 '''
+    """ Get an user or 404 """
     return get_object_or_404(AuthUser, id=user_id)
 
 
-
 def get_area_404(area_id):
-    ''' Get an user or 404 '''
+    """ Get an user or 404 """
     return get_object_or_404(Lab, id=area_id)
 
 
-#------------------
-
 # Helper methods
 
-
-
 def validate_parameters(request, params):
-    ''' Validate request parameters '''
+    """ Validate request parameters """
     for param in params:
-        if request.GET.get(param) == None: raise Http404
+        if request.GET.get(param) is None: raise Http404
     return True
 
+
 def validate_url_tab(request, path):
-    ''' Validate a tab name in url '''
+    """ Validate a tab name in url """
     if request.GET.get('t') not in path:
         raise Http404
 
+
 def can_req_parameters_access(request, params):
-    ''' Check whether request parameters are valid or not '''
+    """ Check whether request parameters are valid or not """
     if validate_parameters(request, params):
         validate_url_tab(request, ['all', 'report', 'new'])

@@ -1,23 +1,16 @@
 import os
-from io import BytesIO
-from cgi import escape
-from xhtml2pdf import pisa
-import datetime as dt
-from datetime import datetime
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
 from django.shortcuts import render, redirect
 from django.views.static import serve
 from django.template.loader import get_template
 from django.template import Context
-from django.http import HttpResponse, HttpResponseRedirect, Http404, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db.models import Q
 from django.contrib.auth import authenticate, login as DjangoLogin
-from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.urls import reverse
@@ -25,15 +18,16 @@ from django.core.validators import validate_email
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
-from django.urls import resolve
-from urllib.parse import urlparse
 
-from lfs_lab_cert_tracker import api
-from lfs_lab_cert_tracker import auth_utils
-from lfs_lab_cert_tracker.forms import *
+from io import BytesIO
+from cgi import escape
+from xhtml2pdf import pisa
+from datetime import datetime
 
-from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserCert, LabCert, UserLab
-from lfs_lab_cert_tracker.utils import Api, access_all, access_admin_only, access_pi_admin, access_loggedin_user_pi_admin, access_loggedin_user_admin
+from .utils import Api, access_admin_only, access_pi_admin, access_loggedin_user_pi_admin, access_loggedin_user_admin
+from .models import UserInactive, Lab, Cert, UserLab
+from .forms import UserForm, UserAreaForm, AreaTrainingForm, AreaForm, TrainingNameForm, LoginForm, UserTrainingForm, TrainingForm
+from . import api
 
 # Set 50 users in a page
 NUM_PER_PAGE = 50
@@ -56,7 +50,7 @@ def index(request):
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class AllUsersView(View):
-    ''' Display all users '''
+    """ Display all users """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -70,7 +64,7 @@ class AllUsersView(View):
         # Pagination enables
         query = request.GET.get('q')
         if query:
-            user_list = AuthUser.objects.filter(
+            user_list = User.objects.filter(
                 Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
             ).order_by('id').distinct()
 
@@ -114,10 +108,9 @@ class AllUsersView(View):
         return HttpResponseRedirect( request.POST.get('next') )
 
 
-
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class UserReportMissingTrainingsView(View):
-    ''' Display an user report for missing trainings '''
+    """ Display an user report for missing trainings """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -135,7 +128,7 @@ class UserReportMissingTrainingsView(View):
         # Pagination enables
         query = request.GET.get('q')
         if query:
-            user_list = AuthUser.objects.filter(
+            user_list = User.objects.filter(
                 Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
             ).order_by('id').distinct()
 
@@ -155,17 +148,17 @@ class UserReportMissingTrainingsView(View):
         })
 
 
-
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class NewUserView(View):
-    ''' Create a new user '''
+    """ Create a new user """
 
     form_class = UserForm
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'users/new_user.html', {
-            'user_form': self.form_class()
+            'user_form': self.form_class(),
+            'last_ten_users': User.objects.all().order_by('-date_joined')[:15]
         })
 
     @method_decorator(require_POST)
@@ -174,9 +167,23 @@ class NewUserView(View):
         if form.is_valid():
             user = form.save()
             if user:
-                messages.success(request, 'Success! {0} created.'.format(user.username))
+                if request.POST.get('send_email') == 'yes':
+                    email_error = None
+                    try:
+                        validate_email(user.email)
+                    except ValidationError as e:
+                         email_error = e
+
+                    if email_error is None:
+                        sent = uApi.send_notification(user)
+                        if sent:
+                            messages.success(request, 'Success! {0} created and sent an email.'.format(user.get_full_name()))
+                        else:
+                            messages.warning(request, 'Warning! {0} created, but failed to send an email due to {1}'.format(user.get_full_name(), sent.error))
+                else:
+                    messages.success(request, 'Success! {0} created.'.format(user.get_full_name()))
             else:
-                messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.username))
+                messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.get_full_name()))
         else:
             errors = form.errors.get_json_data()
             messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ) )
@@ -186,7 +193,7 @@ class NewUserView(View):
 
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserDetailsView(View):
-    ''' View user details '''
+    """ View user details """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -210,13 +217,14 @@ class UserDetailsView(View):
             'user_certs': api.get_user_certs_404(user_id),
             'missing_cert_list': api.get_missing_certs(user_id),
             'expired_cert_list': api.get_expired_certs(user_id),
+            'welcome_message': uApi.welcome_message(),
             'viewing': viewing
         })
 
 
 @method_decorator([never_cache, login_required, access_loggedin_user_admin], name='dispatch')
 class UserAreasView(View):
-    ''' Display user's areas '''
+    """ Display user's areas """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -229,7 +237,7 @@ class UserAreasView(View):
 
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserTrainingsView(View):
-    ''' Display all training records of a user '''
+    """ Display all training records of a user """
 
     form_class = UserTrainingForm
 
@@ -268,11 +276,11 @@ class UserTrainingsView(View):
             month = int(data['completion_date_month'])
             day = int(data['completion_date_day'])
 
-            completion_date = dt.datetime(year=year, month=month, day=day)
+            completion_date = datetime(year=year, month=month, day=day)
 
             # Calculate a expiry year
             expiry_year = year + int(cert['expiry_in_years'])
-            expiry_date = dt.datetime(year=expiry_year, month=month, day=day)
+            expiry_date = datetime(year=expiry_year, month=month, day=day)
 
             result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
 
@@ -306,10 +314,9 @@ class UserTrainingsView(View):
         return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
 
 
-
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserTrainingDetailsView(View):
-    ''' Display details of a training record of a user '''
+    """ Display details of a training record of a user """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -327,16 +334,14 @@ class UserTrainingDetailsView(View):
         })
 
 
-
 # Users - functions
-
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_loggedin_user_pi_admin
 @require_http_methods(['GET'])
 def user_report(request, user_id):
-    ''' Download user's report as PDF '''
+    """ Download user's report as PDF """
 
     app_user = uApi.get_user(user_id)
 
@@ -374,13 +379,12 @@ def render_to_pdf(template_src, context_dict):
     return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['GET'])
 def download_user_report_missing_trainings(request):
-    '''Download a user report for missing trainings '''
+    """Download a user report for missing trainings """
 
     users = uApi.get_users()
 
@@ -400,7 +404,7 @@ def download_user_report_missing_trainings(request):
 @access_admin_only
 @require_http_methods(['POST'])
 def delete_user(request):
-    ''' Delete a user '''
+    """ Delete a user """
 
     user = uApi.get_user(request.POST.get('user'))
     if user.delete():
@@ -416,7 +420,7 @@ def delete_user(request):
 @access_admin_only
 @require_http_methods(['POST'])
 def switch_admin(request):
-    ''' Switch a user to Admin or not Admin '''
+    """ Switch a user to Admin or not Admin """
 
     user = uApi.get_user(request.POST.get('user'))
 
@@ -436,7 +440,7 @@ def switch_admin(request):
 @access_admin_only
 @require_http_methods(['POST'])
 def switch_inactive(request):
-    ''' Switch a user to Active or Inactive '''
+    """ Switch a user to Active or Inactive """
 
     user = uApi.get_user(request.POST.get('user'))
 
@@ -461,7 +465,7 @@ def switch_inactive(request):
 @access_admin_only
 @require_http_methods(['POST'])
 def assign_user_areas(request):
-    ''' Assign user's areas '''
+    """ Assign user's areas """
 
     user = uApi.get_user(request.POST.get('user'))
 
@@ -505,7 +509,7 @@ def assign_user_areas(request):
 @access_loggedin_user_pi_admin
 @require_http_methods(['POST'])
 def read_welcome_message(request, user_id):
-    ''' Read a welcome message '''
+    """ Read a welcome message """
 
     if request.POST.get('read_welcome_message') == 'true':
         request.session['is_first_time'] = False
@@ -516,10 +520,9 @@ def read_welcome_message(request, user_id):
 
 # Areas - classes
 
-
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class AllAreasView(View):
-    ''' Display all areas '''
+    """ Display all areas """
 
     form_class = AreaForm
 
@@ -571,10 +574,9 @@ class AllAreasView(View):
         return redirect('all_areas')
 
 
-
 @method_decorator([never_cache, login_required, access_pi_admin], name='dispatch')
 class AreaDetailsView(View):
-    ''' Display all areas '''
+    """ Display all areas """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -612,37 +614,36 @@ class AreaDetailsView(View):
             'area_training_form': AreaTrainingForm(initial={ 'lab': area.id })
         })
 
-
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        ''' Add a user to an area '''
+        """ Add a user to an area """
 
         username = request.POST.get('user')
         role = request.POST.get('role')
         area_id = request.POST.get('lab')
 
-        found_user = AuthUser.objects.filter(username=username)
+        found_user = User.objects.filter(username=username)
 
         # Check whether a user exists or not
         if found_user.exists():
             user = found_user.first()
             found_userlab = UserLab.objects.filter( Q(user_id=user.id) & Q(lab_id=area_id) )
 
-            if found_userlab.exists() != True:
+            if found_userlab.exists() == False:
                 userlab = UserLab.objects.create(user_id=user.id, lab_id=area_id, role=role)
                 valid_email = False
-                valid_email_errors = []
+                valid_email_error = None
 
                 try:
                     validate_email(user.email)
                     valid_email = True
                 except ValidationError as e:
-                     valid_email_errors = e
+                     valid_email_error = e
 
                 if valid_email:
                     messages.success(request, 'Success! {0} (CWL: {1}) added to this area.'.format(user.get_full_name(), user.username))
                 else:
-                    messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid)'.format(user.get_full_name(), user.email))
+                    messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid) {2}'.format(user.get_full_name(), user.email, valid_email_error))
             else:
                 messages.error(request, 'Error! Failed to add {0}. CWL already exists in this area.'.format(user.username))
         else:
@@ -651,17 +652,14 @@ class AreaDetailsView(View):
         return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
 
-
-
 # Areas - functions
-
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def add_training_area(request):
-    ''' Add a training to an area '''
+    """ Add a training to an area """
 
     area_id = request.POST.get('lab', None)
     training_id = request.POST.get('cert', None)
@@ -693,13 +691,12 @@ def add_training_area(request):
     return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def delete_training_in_area(request):
-    ''' Delete a required training in the area '''
+    """ Delete a required training in the area """
 
     area_id = request.POST.get('area', None)
     training_id = request.POST.get('training', None)
@@ -728,13 +725,12 @@ def delete_training_in_area(request):
     return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def edit_area(request):
-    ''' Update the name of area '''
+    """ Update the name of area """
 
     area = uApi.get_area(request.POST.get('area'))
 
@@ -752,13 +748,12 @@ def edit_area(request):
     return redirect('all_areas')
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def delete_area(request):
-    ''' Delete an area '''
+    """ Delete an area """
 
     area = uApi.get_area(request.POST.get('area'))
     if area.delete():
@@ -774,7 +769,7 @@ def delete_area(request):
 @access_pi_admin
 @require_http_methods(['POST'])
 def switch_user_role_in_area(request, area_id):
-    ''' Switch a user's role in the area '''
+    """ Switch a user's role in the area """
 
     user_id = request.POST.get('user', None)
     area_id = request.POST.get('area', None)
@@ -820,7 +815,7 @@ def switch_user_role_in_area(request, area_id):
 @access_pi_admin
 @require_http_methods(['POST'])
 def delete_user_in_area(request, area_id):
-    ''' Delete a user in the area '''
+    """ Delete a user in the area """
 
     user_id = request.POST.get('user', None)
     area_id = request.POST.get('area', None)
@@ -850,13 +845,11 @@ def delete_user_in_area(request, area_id):
     return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
 
 
-# -------------------------
-
 # Trainings - classes
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class AllTrainingsView(View):
-    ''' Display all training records of a user '''
+    """ Display all training records of a user """
 
     form_class = TrainingForm
 
@@ -912,7 +905,7 @@ class AllTrainingsView(View):
 @access_admin_only
 @require_http_methods(['POST'])
 def edit_training(request):
-    ''' Edit a cert '''
+    """ Edit a cert """
 
     training_id = request.POST.get('training')
 
@@ -928,13 +921,12 @@ def edit_training(request):
     return redirect('all_trainings')
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def delete_training(request):
-    ''' Delete a training '''
+    """ Delete a training """
 
     training = uApi.get_training(request.POST.get('training'))
 
@@ -945,12 +937,13 @@ def delete_training(request):
 
     return redirect('all_trainings')
 
+
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_loggedin_user_admin
 @require_http_methods(['POST'])
 def delete_user_training(request, user_id):
-    ''' Delete user's training record '''
+    """ Delete user's training record """
 
     user_id = request.POST.get('user', None)
     training_id = request.POST.get('training', None)
@@ -985,7 +978,6 @@ def delete_user_training(request, user_id):
     return HttpResponseRedirect( reverse('user_trainings', args=[user_id]) )
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_loggedin_user_pi_admin
@@ -995,28 +987,21 @@ def download_user_cert(request, user_id, cert_id, filename):
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
 
-
-#------------------------
-
-
-
-
-
-
-
 # Exception handlers
 
 def bad_request(request, exception, template_name='400.html'):
-    ''' Exception handlder for bad request '''
+    """ Exception handlder for bad request """
     return render(request, '400.html', context={}, status=400)
 
+
 def permission_denied(request, exception, template_name="403.html"):
-    ''' Exception handlder for permission denied '''
+    """ Exception handlder for permission denied """
 
     return render(request, '403.html', context={}, status=403)
 
+
 def page_not_found(request, exception, template_name="404.html"):
-    ''' Exception handlder for page not found '''
+    """ Exception handlder for page not found """
 
     return render(request, '404.html', context={}, status=404)
 

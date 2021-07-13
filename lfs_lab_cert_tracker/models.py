@@ -15,11 +15,6 @@ from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
 
 
-"""
-Contains app models
-"""
-
-
 class Lab(models.Model):
     """ Lab Model """
 
@@ -143,11 +138,12 @@ class UserLab(models.Model):
         unique_together = (('user', 'lab'))
         ordering = ['user']
 
+
 # Send an email when adding a user to a lab
 def send_notification(sender, created, **kwargs):
     if created:
         obj = kwargs['instance']
-        title = 'You are added to {0}'.format(obj.lab.name)
+        title = 'You are added to {0} in LFS TRMS'.format(obj.lab.name)
         message = '''\
         <div>
             <p>Hi {0} {1},</p>

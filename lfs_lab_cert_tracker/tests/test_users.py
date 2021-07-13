@@ -530,14 +530,34 @@ class UserTest(TestCase):
 
         res = self.client.post(reverse('new_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
-        self.assertEqual(messages[0], 'Success! testuser500 created.')
+        self.assertEqual(messages[0], 'Success! user500 test created.')
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, reverse('new_user'))
+        self.assertRedirects(res, res.url)
+
+
+    def test_create_user_with_send_email(self):
+        print('\n- Test: create a new user - send email')
+        self.login()
+
+        data = {
+            'username': 'testuser500',
+            'last_name': 'test',
+            'first_name': 'user500',
+            'email': 'email address',
+            'send_email': 'yes'
+        }
+
+        res = self.client.post(reverse('new_user'), data=urlencode(data), content_type=ContentType)
+        messages = self.messages(res)
+        self.assertEqual(messages[0], 'Success! user500 test created and sent an email.')
         self.assertEqual(res.status_code, 302)
         self.assertEqual(res.url, reverse('new_user'))
         self.assertRedirects(res, res.url)
 
 
     def test_create_user_long_first_name(self):
-        print('\n- Test: create a new user - long first name')
+        print('\n- Test: create a new user - failure - long first name')
         self.login()
 
         data = {
@@ -556,7 +576,7 @@ class UserTest(TestCase):
 
 
     def test_create_user_invalid_email(self):
-        print('\n- Test: create a new user - invalid email')
+        print('\n- Test: create a new user - failure - invalid email')
         self.login()
 
         data = {
@@ -575,7 +595,7 @@ class UserTest(TestCase):
 
 
     def test_create_user_missed_username(self):
-        print('\n- Test: create a new user - missed username')
+        print('\n- Test: create a new user - failure - missed username')
         self.login()
 
         data = {
@@ -593,7 +613,7 @@ class UserTest(TestCase):
 
 
     def test_create_user_duplicated_username(self):
-        print('\n- Test: create a new user - duplicated username')
+        print('\n- Test: create a new user - failure - duplicated username')
         self.login()
 
         data = {
