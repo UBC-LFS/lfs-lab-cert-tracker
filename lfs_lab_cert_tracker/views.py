@@ -24,10 +24,10 @@ from cgi import escape
 from xhtml2pdf import pisa
 from datetime import datetime
 
-from .utils import Api, access_admin_only, access_pi_admin, access_loggedin_user_pi_admin, access_loggedin_user_admin
-from .models import UserInactive, Lab, Cert, UserLab
-from .forms import UserForm, UserAreaForm, AreaTrainingForm, AreaForm, TrainingNameForm, LoginForm, UserTrainingForm, TrainingForm
-from . import api
+from lfs_lab_cert_tracker.utils import Api, access_admin_only, access_pi_admin, access_loggedin_user_pi_admin, access_loggedin_user_admin
+from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert
+from lfs_lab_cert_tracker.forms import *
+from lfs_lab_cert_tracker import api
 
 # Set 50 users in a page
 NUM_PER_PAGE = 50
@@ -905,15 +905,26 @@ class AllTrainingsView(View):
 @access_admin_only
 @require_http_methods(['POST'])
 def edit_training(request):
-    """ Edit a cert """
+    """ Edit a training """
 
-    training_id = request.POST.get('training')
+    training = uApi.get_training( request.POST.get('training') )
+    new_expiry_in_years = int(request.POST.get('expiry_in_years')) - training.expiry_in_years
 
-    training = uApi.get_training(training_id)
-    form = TrainingNameForm(request.POST, instance=training)
+    form = TrainingForm(request.POST, instance=training)
     if form.is_valid():
-        updated_cert = form.save()
-        messages.success(request, 'Success! {0} updated'.format(updated_cert.name))
+        updated_training = form.save()
+        usercerts = UserCert.objects.filter(cert_id=training.id)
+
+        objs = []
+        if usercerts.count() > 0:
+            for usercert in usercerts:
+                usercert.expiry_date = datetime(usercert.expiry_date.year + new_expiry_in_years, usercert.expiry_date.month, usercert.expiry_date.day)
+                objs.append(usercert)
+
+            UserCert.objects.bulk_update(objs, ['expiry_date'])
+            messages.success(request, 'Success! {0} training and {1} user training record(s) updated'.format(updated_training.name, len(objs)))
+        else:
+            messages.success(request, 'Success! {0} training updated'.format(updated_training.name))
     else:
         errors = form.errors.get_json_data()
         messages.error(request, 'An error occurred. Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))

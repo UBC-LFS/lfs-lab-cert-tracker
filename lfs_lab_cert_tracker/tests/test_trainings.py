@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 import json
 
+from lfs_lab_cert_tracker.models import UserCert
 from lfs_lab_cert_tracker.utils import Api
 from lfs_lab_cert_tracker.tests.test_users import LOGIN_URL, ContentType, DATA, USERS, PASSWORD
 
@@ -121,25 +122,64 @@ class TrainingTest(TestCase):
         self.assertEqual(len(self.api.get_trainings()), total_trainings)
 
 
-    def test_edit_training(self):
-        print('\n- Test: edit a training')
+    def test_edit_training_name(self):
+        print('\n- Test: edit a training - name')
         self.login(USERS[0], PASSWORD)
 
+        training = self.api.get_training(1)
         data = {
-            'name': 'updated training name',
-            'training': 1
+            'name': 'New certificate',
+            'expiry_in_years': training.expiry_in_years,
+            'training': training.id
         }
 
         res = self.client.post(reverse('edit_training'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
-        self.assertEqual(messages[0], 'Success! updated training name updated')
+        self.assertEqual(messages[0], 'Success! New certificate training and 6 user training record(s) updated')
         self.assertEqual(res.status_code, 302)
         self.assertEqual(res.url, reverse('all_trainings'))
         self.assertRedirects(res, res.url)
 
-        training = self.api.get_training(data['name'], 'name')
-        self.assertEqual(training.name, data['name'])
-        self.assertEqual(training.expiry_in_years, 0)
+        training1 = self.api.get_training(data['name'], 'name')
+        self.assertEqual(training1.name, data['name'])
+        self.assertEqual(training1.expiry_in_years, 0)
+
+    def test_edit_training_expiry_in_years(self):
+        print('\n- Test: edit a training - expiry_in_years')
+        self.login(USERS[0], PASSWORD)
+
+        training = self.api.get_training(1)
+        data = {
+            'name': training.name,
+            'expiry_in_years': 5,
+            'training': training.id
+        }
+
+        old_expiry_date = []
+        usercerts = UserCert.objects.filter(cert_id=training.id)
+        for usercert in usercerts:
+            old_expiry_date.append({ "id": usercert.id, "expiry_date": usercert.expiry_date })
+
+        res = self.client.post(reverse('edit_training'), data=urlencode(data), content_type=ContentType)
+        messages = self.messages(res)
+        self.assertEqual(messages[0], 'Success! New Worker Safety Orientation training and 6 user training record(s) updated')
+        self.assertEqual(res.status_code, 302)
+        self.assertEqual(res.url, reverse('all_trainings'))
+        self.assertRedirects(res, res.url)
+
+        training1 = self.api.get_training(data['name'], 'name')
+        self.assertEqual(training1.name, data['name'])
+        self.assertEqual(training1.expiry_in_years, 5)
+
+        new_expiry_date = []
+        usercerts = UserCert.objects.filter(cert_id=training.id)
+        for usercert in usercerts:
+            new_expiry_date.append({ "id": usercert.id, "expiry_date": usercert.expiry_date })
+
+        for date1 in old_expiry_date:
+            for date2 in new_expiry_date:
+                if date1["id"] == date2["id"]:
+                    self.assertEqual(date1["expiry_date"].year + 5, date2["expiry_date"].year)
 
 
     def test_delete_training(self):

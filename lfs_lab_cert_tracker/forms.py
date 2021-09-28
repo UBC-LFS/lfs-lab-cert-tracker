@@ -64,6 +64,12 @@ class AreaForm(forms.ModelForm):
 class TrainingForm(forms.ModelForm):
     """ Create a certificate """
 
+    def clean_expiry_in_years(self):
+        expiry_in_years = self.cleaned_data['expiry_in_years']
+        if expiry_in_years < 0:
+            raise forms.ValidationError("Expiry in years cannot be less than 0")
+        return expiry_in_years
+
     class Meta:
         model = Cert
         fields = ['name', 'expiry_in_years']
@@ -71,14 +77,6 @@ class TrainingForm(forms.ModelForm):
             'name': '(Maximum characters: 256)',
             'expiry_in_years': '(0 means "NO Expiry Date")'
         }
-        error_messages = {
-            'name': { 'required': 'Enter a valid name.' },
-        }
-
-class TrainingNameForm(forms.ModelForm):
-    class Meta:
-        model = Cert
-        fields = ['name']
         error_messages = {
             'name': { 'required': 'Enter a valid name.' },
         }

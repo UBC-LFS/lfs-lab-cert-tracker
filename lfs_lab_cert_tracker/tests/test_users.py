@@ -544,7 +544,7 @@ class UserTest(TestCase):
             'username': 'testuser500',
             'last_name': 'test',
             'first_name': 'user500',
-            'email': 'email address',
+            'email': 'email address', # add real email address
             'send_email': 'yes'
         }
 

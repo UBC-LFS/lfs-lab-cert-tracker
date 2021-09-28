@@ -489,7 +489,8 @@ class AreaTest(TestCase):
         res = self.client.post(reverse('area_details', args=[area.id]), data=urlencode(data), content_type=ContentType)
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
-        self.assertEqual(messages[0], 'Warning! Added test user2 successfully, but failed to send an email. (email address is invalid)')
+        print(messages)
+        self.assertEqual(messages[0], "Warning! Added test user2 successfully, but failed to send an email. (email address is invalid) ['Enter a valid email address.']")
         self.assertEqual(res.url, reverse('area_details', args=[area.id]))
         self.assertRedirects(res, res.url)
 
@@ -517,7 +518,7 @@ class AreaTest(TestCase):
         res = self.client.post(reverse('area_details', args=[area.id]), data=urlencode(data), content_type=ContentType)
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
-        self.assertEqual(messages[0], 'Warning! Added test user2 successfully, but failed to send an email. (email address is invalid)')
+        self.assertEqual(messages[0], "Warning! Added test user2 successfully, but failed to send an email. (email address is invalid) ['Enter a valid email address.']")
         self.assertEqual(res.url, reverse('area_details', args=[area.id]))
         self.assertRedirects(res, res.url)
 

@@ -13,6 +13,9 @@
 	<small class="text-secondary">Total: {{ total_trainings }}</small>
 </h3>
 
+
+
+
 <div class="search-field mb-2">
 	<form method="GET" >
 		<div class="input-field">
@@ -65,6 +68,13 @@
 														<label for="id_name_{{ cert.id }}" class="font-weight-bold">Name:</label>
 														<small class="text-muted">(Maximum characters: 256)</small>
 														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" required />
+													</div>
+
+													<div class="mb-3">
+														<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">Expiry in years:</label>
+														<small class="text-muted">(0 means "NO Expiry Date")</small>
+														<input id="id_expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
+
 													</div>
 
 													<input type="hidden" name="training" value="{{ cert.id }}" />

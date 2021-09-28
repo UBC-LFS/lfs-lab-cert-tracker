@@ -372,12 +372,9 @@ class Api:
         '''.format(user.first_name, user.last_name, self.welcome_message(), os.environ['LFS_LAB_CERT_TRACKER_URL'])
 
         sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)
-        print('send notification', sent)
         if not sent:
             sent.error = 'Django send_mail went wrong'
         return sent
-
-
 
 
 class Notification(Api):
