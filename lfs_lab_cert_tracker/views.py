@@ -21,6 +21,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 
 from io import BytesIO
 from cgi import escape
+# from html import escape # >= 3.8
 from xhtml2pdf import pisa
 from datetime import datetime
 
@@ -916,7 +917,7 @@ def edit_training(request):
         usercerts = UserCert.objects.filter(cert_id=training.id)
 
         objs = []
-        if usercerts.count() > 0:
+        if usercerts.count() > 0 and new_expiry_in_years != 0:
             for usercert in usercerts:
                 usercert.expiry_date = datetime(usercert.expiry_date.year + new_expiry_in_years, usercert.expiry_date.month, usercert.expiry_date.day)
                 objs.append(usercert)
