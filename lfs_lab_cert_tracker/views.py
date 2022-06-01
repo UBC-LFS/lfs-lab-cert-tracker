@@ -21,7 +21,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 
 from io import BytesIO
 from cgi import escape
-# from html import escape # >= 3.8
+# from html import escape # >= python 3.8
 from xhtml2pdf import pisa
 from datetime import datetime
 

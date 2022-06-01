@@ -469,9 +469,9 @@ class Notification(Api):
 
                     # If there are some missing trainings found, then add PIs in thi work area
                     if len(temp_missing_trainings) > 0:
-                        supervisors = self.pis_in_area[ userlab.lab.id ]
-                        for supervisor in supervisors:
-                            pis[supervisor].add(user.id)
+                        if userlab.lab.id in self.pis_in_area:
+                            for sup in self.pis_in_area[ userlab.lab.id ]:
+                                pis[sup].add(user.id)
 
                     # Update some of missing trainings to a set of missing trainings
                     missing_trainings.update(temp_missing_trainings)
@@ -513,7 +513,7 @@ class Notification(Api):
         """ Help to find expired trainings  """
 
         for userlab in user.userlab_set.all():
-            if usercert.cert.id in self.required_trainings_in_area[userlab.lab.id]:
+            if usercert.cert.id in self.required_trainings_in_area[ userlab.lab.id ]:
                 info = {
                     'id': usercert.cert.id,
                     'training': usercert.cert,
@@ -526,11 +526,12 @@ class Notification(Api):
                     lab_user['trainings'].append(info)
 
                 # Insert PIs in this work area
-                for pi in self.pis_in_area[userlab.lab.id]:
-                    if pi not in pis.keys(): pis[pi] = dict()
-                    if user.id not in pis[pi]: pis[pi][user.id] = []
+                if userlab.lab.id in self.pis_in_area.keys():
+                    for pi in self.pis_in_area[ userlab.lab.id ]:
+                        if pi not in pis.keys(): pis[pi] = dict()
+                        if user.id not in pis[pi]: pis[pi][user.id] = []
 
-                    pis[pi][user.id].append(info)
+                        pis[pi][user.id].append(info)
 
         return lab_user, pis
 

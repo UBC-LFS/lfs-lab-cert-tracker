@@ -11,6 +11,7 @@ notification = Notification()
 
 def send_missing_trainings():
     ''' Send an email to users who have missing trainings twice per month '''
+    print('send_missing_trainings')
 
     lab_users, pis = notification.find_missing_trainings()
 
@@ -33,7 +34,7 @@ def send_missing_trainings():
             user = api.get_user(id)
 
             receiver = notification.get_receiver(user)
-            message = notification.get_message_pis_missing_trainings(users, lab_users)
+            message = notification.get_message_pis_missing_trainings(lab_users)
             template = notification.html_template(user.first_name, user.last_name, message)
 
             notification.send_email(receiver, template)
@@ -50,17 +51,18 @@ def send_before_expiry_date_user_pi():
 
     TYPE = 'before'
 
-    #target_day = datetime(2019, 6, 14) + timedelta(days=DAYS30)
+    # target_day = datetime(2019, 6, 14) + timedelta(days=DAYS30) # for testing
     target_day = datetime.now() + timedelta(days=DAYS30)
+
     lab_users, pis = notification.find_expired_trainings(target_day.date(), TYPE)
 
     # to Lab users
     if len(lab_users) > 0:
-        notification.send_email_to_lab_users(lab_users, DAYS14, TYPE)
+        notification.send_email_to_lab_users(lab_users, DAYS30, TYPE)
 
         # to PIs
         if len(pis.keys()) > 0:
-            notification.send_email_to_pis(pis, DAYS14, TYPE)
+            notification.send_email_to_pis(pis, DAYS30, TYPE)
 
     print('Done: send it 30 days before the expiry date')
 
@@ -70,7 +72,7 @@ def send_before_expiry_date_admin():
 
     TYPE = 'before'
 
-    #target_day = datetime(2019, 6, 30) + timedelta(days=DAYS14)
+    #target_day = datetime(2019, 6, 30) + timedelta(days=DAYS14)  # for testing
     target_day = datetime.now() + timedelta(days=DAYS14)
 
     lab_users, _ = notification.find_expired_trainings(target_day.date(), TYPE)
@@ -89,7 +91,6 @@ def send_after_expiry_date():
 
     target_day = datetime.now()
     #target_day = datetime(2020, 1, 1)
-    print("target_day: ", target_day)
 
     admins = api.get_admins()
     lab_users, pis = notification.find_expired_trainings(target_day.date(), TYPE)
@@ -111,16 +112,16 @@ def run():
 
     scheduler = BackgroundScheduler()
 
-    # 1st Monday, 3rd Monday at 4:00 PM
-    scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=16, minute=0)
+    # 1st Monday, 3rd Monday at 10:00 AM
+    scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
 
-    # 1st Monday, 3rd Monday at 4:10 PM
-    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=16, minute=10)
+    # 1st Monday, 3rd Monday at 10:10 AM
+    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=10)
 
-    # Monday ~ Friday, Everyday at 4:20 PM
-    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=16, minute=20)
+    # Monday ~ Friday, Everyday at 10:20 AM
+    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=10, minute=20)
 
-    # Monday ~ Friday, Everyday at 4:30 PM
-    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=16, minute=30)
+    # Monday ~ Friday, Everyday at 10:30 AM
+    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=10, minute=30)
 
     scheduler.start()
