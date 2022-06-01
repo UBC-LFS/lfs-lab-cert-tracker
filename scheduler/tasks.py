@@ -110,7 +110,7 @@ def send_after_expiry_date():
 def run():
     print('Scheduling tasks running...')
 
-    scheduler = BackgroundScheduler()
+    scheduler = BackgroundScheduler(timezone='America/Vancouver')
 
     # 1st Monday, 3rd Monday at 10:00 AM
     scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
