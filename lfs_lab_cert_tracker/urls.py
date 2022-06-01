@@ -1,4 +1,4 @@
-from django.conf.urls import url, include, handler400, handler403, handler404
+from django.conf.urls import include, handler400, handler403, handler404
 from django.urls import path
 from django.contrib import admin
 from django.conf import settings
