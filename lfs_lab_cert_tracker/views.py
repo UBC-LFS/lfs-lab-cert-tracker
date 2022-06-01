@@ -20,8 +20,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 
 from io import BytesIO
-from cgi import escape
-# from html import escape # >= python 3.8
+# from cgi import escape
+from html import escape # >= python 3.8
 from xhtml2pdf import pisa
 from datetime import datetime
 
