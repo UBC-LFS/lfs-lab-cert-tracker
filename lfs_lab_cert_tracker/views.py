@@ -328,9 +328,15 @@ class UserTrainingDetailsView(View):
         if request.user.id != user_id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
 
+        user_cert = api.get_user_cert_404(user_id, training_id)
+        no_expiry_date = False
+        if user_cert.completion_date == user_cert.expiry_date:
+            no_expiry_date = True
+
         return render(request, 'trainings/user_training_details.html', {
             'app_user': uApi.get_user(user_id),
-            'user_cert': api.get_user_cert_404(user_id, training_id),
+            'user_cert': user_cert,
+            'no_expiry_date': no_expiry_date,
             'viewing': viewing
         })
 
@@ -361,10 +367,16 @@ def user_report(request, user_id):
                 missing_lab_certs.append(lc)
         user_labs.append((user_lab, lab_certs, missing_lab_certs))
 
+    for uc in user_cert_list:
+        no_expiry_date = False
+        if uc['completion_date'] == uc['expiry_date']:
+            no_expiry_date = True
+        uc['no_expiry_date'] = no_expiry_date
+
     return render_to_pdf('users/user_report.html', {
         'app_user': app_user,
-        'user_cert_list': user_cert_list,
-        'user_labs': user_labs
+        'user_labs': user_labs,
+        'user_cert_list': user_cert_list
     })
 
 
@@ -1016,6 +1028,11 @@ def page_not_found(request, exception, template_name="404.html"):
     """ Exception handlder for page not found """
 
     return render(request, '404.html', context={}, status=404)
+
+
+def internal_server_error(request, template_name='500.html'):
+    ''' Exception handlder internal server error '''
+    return render(request, '500.html', context={}, status=500)
 
 
 # for local testing

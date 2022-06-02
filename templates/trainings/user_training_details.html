@@ -70,11 +70,11 @@
 				<tr>
 					<td>Expiry date</td>
 					<td>
-						{% ifequal user_cert.completion_date|date:"Y-m-d" user_cert.expiry_date|date:"Y-m-d" %}
-							NO expiry date
+						{% if no_expiry_date %}
+							No expiry date
 						{% else %}
 							{{ user_cert.expiry_date }}
-						{% endifequal %}
+						{% endif %}
 					</td>
 				</tr>
 			</tbody>

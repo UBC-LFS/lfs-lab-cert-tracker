@@ -1,5 +1,5 @@
-from django.conf.urls import include, handler400, handler403, handler404
-from django.urls import path
+from django.urls import path, include
+from django.conf.urls import handler400, handler403, handler404, handler500
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
@@ -75,3 +75,4 @@ if settings.LOCAL_LOGIN:
 handler400 = views.bad_request
 handler403 = views.permission_denied
 handler404 = views.page_not_found
+handler500 = views.internal_server_error
