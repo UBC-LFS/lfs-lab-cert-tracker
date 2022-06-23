@@ -1,13 +1,40 @@
 {% extends "base.html" %}
-{% load static %}
 {% block content %}
 
-<form action="" method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">
-      <img src="{% static 'lfs_lab_cert_tracker/images/CWL_login_button.gif' %}" alt="CWL login button"/>
-    </button>
-</form>
+<div class="container local-login">
+  {% include 'subpages/_return_message.html' with data=messages %}
+
+  <div class="row">
+    <div class="col-md-6 offset-md-3 col-sm-12">
+
+      <div class="bg-light-gray card mt-5 p-5">
+        <div class="text-center">
+          <h3 class="d-inline-block">Local Login</h3>
+        </div>
+
+        <form action="" method="POST">
+          {% csrf_token %}
+
+          {% for field in form.visible_fields  %}
+            <div class="field-wrapper">
+              {{ field.label_tag }}
+              {% if field.help_text %}
+                <div class="help">{{ field.help_text|safe }}</div>
+              {% endif %}
+              {{ field }}
+            </div>
+          {% endfor %}
+
+          {% for field in form.hidden_fields %}
+            {{ field }}
+          {% endfor %}
+
+          <button class="btn btn-primary" type="submit">Login</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 {% endblock %}

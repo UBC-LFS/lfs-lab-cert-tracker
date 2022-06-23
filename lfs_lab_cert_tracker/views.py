@@ -1039,7 +1039,7 @@ def internal_server_error(request, template_name='500.html'):
 
 def local_login(request):
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = LocalLoginForm(request.POST)
         if form.is_valid():
             user = authenticate(username=request.POST['username'], password=request.POST['password'])
 
@@ -1051,4 +1051,6 @@ def local_login(request):
                 DjangoLogin(request, user)
                 return redirect('index')
 
-    return render(request, 'accounts/local_login.html', { 'form': LoginForm() })
+    return render(request, 'accounts/local_login.html', { 
+        'form': LocalLoginForm() 
+    })

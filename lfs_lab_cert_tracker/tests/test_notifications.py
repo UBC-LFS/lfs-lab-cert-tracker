@@ -273,15 +273,15 @@ class NotificationTest(TestCase):
         # Lab users
         self.assertEqual(lab_users[0]['id'], 11)
 
-        self.assertEqual(lab_users[0]['trainings'][0]['id'], 20)
-        self.assertEqual(lab_users[0]['trainings'][0]['training'].name, 'Biosafety for Permit Holders')
-        self.assertEqual(lab_users[0]['trainings'][0]['completion_date'], dt.date(2014, 7, 14))
-        self.assertEqual(lab_users[0]['trainings'][0]['expiry_date'], dt.date(2019, 7, 14))
+        self.assertEqual(lab_users[0]['trainings'][0]['id'], 16)
+        self.assertEqual(lab_users[0]['trainings'][0]['training'].name, 'Biological Safety Course')
+        self.assertEqual(lab_users[0]['trainings'][0]['completion_date'], dt.date(2014, 10, 1))
+        self.assertEqual(lab_users[0]['trainings'][0]['expiry_date'], dt.date(2019, 10, 1))
 
-        self.assertEqual(lab_users[0]['trainings'][1]['id'], 16)
-        self.assertEqual(lab_users[0]['trainings'][1]['training'].name, 'Biological Safety Course')
-        self.assertEqual(lab_users[0]['trainings'][1]['completion_date'], dt.date(2014, 10, 1))
-        self.assertEqual(lab_users[0]['trainings'][1]['expiry_date'], dt.date(2019, 10, 1))
+        self.assertEqual(lab_users[0]['trainings'][1]['id'], 20)
+        self.assertEqual(lab_users[0]['trainings'][1]['training'].name, 'Biosafety for Permit Holders')
+        self.assertEqual(lab_users[0]['trainings'][1]['completion_date'], dt.date(2014, 7, 14))
+        self.assertEqual(lab_users[0]['trainings'][1]['expiry_date'], dt.date(2019, 7, 14))
 
         self.assertEqual(lab_users[0]['trainings'][2]['id'], 22)
         self.assertEqual(lab_users[0]['trainings'][2]['training'].name, 'Transportation of Dangerous Goods Class 7 (Radioactivity) Receiving Course for ground')
@@ -314,15 +314,15 @@ class NotificationTest(TestCase):
 
         # PIs
 
-        self.assertEqual(pis[4][11][0]['id'], 20)
-        self.assertEqual(pis[4][11][0]['training'].name, 'Biosafety for Permit Holders')
-        self.assertEqual(pis[4][11][0]['completion_date'], dt.date(2014, 7, 14))
-        self.assertEqual(pis[4][11][0]['expiry_date'], dt.date(2019, 7, 14))
+        self.assertEqual(pis[4][11][0]['id'], 16)
+        self.assertEqual(pis[4][11][0]['training'].name, 'Biological Safety Course')
+        self.assertEqual(pis[4][11][0]['completion_date'], dt.date(2014, 10, 1))
+        self.assertEqual(pis[4][11][0]['expiry_date'], dt.date(2019, 10, 1))
 
-        self.assertEqual(pis[4][11][1]['id'], 16)
-        self.assertEqual(pis[4][11][1]['training'].name, 'Biological Safety Course')
-        self.assertEqual(pis[4][11][1]['completion_date'], dt.date(2014, 10, 1))
-        self.assertEqual(pis[4][11][1]['expiry_date'], dt.date(2019, 10, 1))
+        self.assertEqual(pis[4][11][1]['id'], 20)
+        self.assertEqual(pis[4][11][1]['training'].name, 'Biosafety for Permit Holders')
+        self.assertEqual(pis[4][11][1]['completion_date'], dt.date(2014, 7, 14))
+        self.assertEqual(pis[4][11][1]['expiry_date'], dt.date(2019, 7, 14))
 
         self.assertEqual(pis[4][11][2]['id'], 22)
         self.assertEqual(pis[4][11][2]['training'].name, 'Transportation of Dangerous Goods Class 7 (Radioactivity) Receiving Course for ground')
@@ -344,16 +344,15 @@ class NotificationTest(TestCase):
         self.assertEqual(pis[4][15][1]['completion_date'], dt.date(2014, 5, 29))
         self.assertEqual(pis[4][15][1]['expiry_date'], dt.date(2019, 5, 29))
 
+        self.assertEqual(pis[5][11][0]['id'], 16)
+        self.assertEqual(pis[5][11][0]['training'].name, 'Biological Safety Course')
+        self.assertEqual(pis[5][11][0]['completion_date'], dt.date(2014, 10, 1))
+        self.assertEqual(pis[5][11][0]['expiry_date'], dt.date(2019, 10, 1))
 
-        self.assertEqual(pis[5][11][0]['id'], 20)
-        self.assertEqual(pis[5][11][0]['training'].name, 'Biosafety for Permit Holders')
-        self.assertEqual(pis[5][11][0]['completion_date'], dt.date(2014, 7, 14))
-        self.assertEqual(pis[5][11][0]['expiry_date'], dt.date(2019, 7, 14))
-
-        self.assertEqual(pis[5][11][1]['id'], 16)
-        self.assertEqual(pis[5][11][1]['training'].name, 'Biological Safety Course')
-        self.assertEqual(pis[5][11][1]['completion_date'], dt.date(2014, 10, 1))
-        self.assertEqual(pis[5][11][1]['expiry_date'], dt.date(2019, 10, 1))
+        self.assertEqual(pis[5][11][1]['id'], 20)
+        self.assertEqual(pis[5][11][1]['training'].name, 'Biosafety for Permit Holders')
+        self.assertEqual(pis[5][11][1]['completion_date'], dt.date(2014, 7, 14))
+        self.assertEqual(pis[5][11][1]['expiry_date'], dt.date(2019, 7, 14))
 
         self.assertEqual(pis[5][11][2]['id'], 22)
         self.assertEqual(pis[5][11][2]['training'].name, 'Transportation of Dangerous Goods Class 7 (Radioactivity) Receiving Course for ground')
@@ -375,15 +374,15 @@ class NotificationTest(TestCase):
         self.assertEqual(pis[5][15][1]['completion_date'], dt.date(2014, 5, 29))
         self.assertEqual(pis[5][15][1]['expiry_date'], dt.date(2019, 5, 29))
 
-        self.assertEqual(pis[6][11][0]['id'], 20)
-        self.assertEqual(pis[6][11][0]['training'].name, 'Biosafety for Permit Holders')
-        self.assertEqual(pis[6][11][0]['completion_date'], dt.date(2014, 7, 14))
-        self.assertEqual(pis[6][11][0]['expiry_date'], dt.date(2019, 7, 14))
+        self.assertEqual(pis[6][11][0]['id'], 16)
+        self.assertEqual(pis[6][11][0]['training'].name, 'Biological Safety Course')
+        self.assertEqual(pis[6][11][0]['completion_date'], dt.date(2014, 10, 1))
+        self.assertEqual(pis[6][11][0]['expiry_date'], dt.date(2019, 10, 1))
 
-        self.assertEqual(pis[6][11][1]['id'], 16)
-        self.assertEqual(pis[6][11][1]['training'].name, 'Biological Safety Course')
-        self.assertEqual(pis[6][11][1]['completion_date'], dt.date(2014, 10, 1))
-        self.assertEqual(pis[6][11][1]['expiry_date'], dt.date(2019, 10, 1))
+        self.assertEqual(pis[6][11][1]['id'], 20)
+        self.assertEqual(pis[6][11][1]['training'].name, 'Biosafety for Permit Holders')
+        self.assertEqual(pis[6][11][1]['completion_date'], dt.date(2014, 7, 14))
+        self.assertEqual(pis[6][11][1]['expiry_date'], dt.date(2019, 7, 14))
 
 
     def test_after_expiry_date_day5(self):

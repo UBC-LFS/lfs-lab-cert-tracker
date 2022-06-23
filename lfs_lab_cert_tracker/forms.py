@@ -139,14 +139,20 @@ class UserTrainingForm(forms.ModelForm):
         widgets = { 'user': forms.HiddenInput() }
 
 
-class LoginForm(forms.Form):
+class LocalLoginForm(forms.Form):
     username = forms.CharField(
         max_length=200,
-        widget=forms.TextInput(attrs={ 'placeholder': 'Enter your username' })
+        widget=forms.TextInput(attrs={ 
+            'class': 'form-control',
+            'placeholder': 'Enter'
+        })
     )
     password = forms.CharField(
         max_length=200,
-        widget=forms.PasswordInput(attrs={ 'placeholder': 'Enter your password' })
+        widget=forms.PasswordInput(attrs={ 
+            'class': 'form-control',
+            'placeholder': 'Enter'
+        })
     )
 
 class SafetyWebForm(forms.Form):

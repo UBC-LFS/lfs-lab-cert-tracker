@@ -1,3 +1,4 @@
+from django.conf import settings
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -72,7 +73,7 @@ def send_before_expiry_date_admin():
 
     TYPE = 'before'
 
-    #target_day = datetime(2019, 6, 30) + timedelta(days=DAYS14)  # for testing
+    # target_day = datetime(2019, 6, 30) + timedelta(days=DAYS14)  # for testing
     target_day = datetime.now() + timedelta(days=DAYS14)
 
     lab_users, _ = notification.find_expired_trainings(target_day.date(), TYPE)
@@ -90,7 +91,7 @@ def send_after_expiry_date():
     TYPE = 'after'
 
     target_day = datetime.now()
-    #target_day = datetime(2020, 1, 1)
+    # target_day = datetime(2020, 1, 1) # for testing
 
     admins = api.get_admins()
     lab_users, pis = notification.find_expired_trainings(target_day.date(), TYPE)
@@ -110,18 +111,18 @@ def send_after_expiry_date():
 def run():
     print('Scheduling tasks running...')
 
-    scheduler = BackgroundScheduler(timezone='America/Vancouver')
+    scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
 
     # 1st Monday, 3rd Monday at 10:00 AM
     scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
 
-    # 1st Monday, 3rd Monday at 10:10 AM
-    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=10)
+    # 1st Monday, 3rd Monday at 10:30 AM
+    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=30)
 
-    # Monday ~ Friday, Everyday at 10:20 AM
-    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=10, minute=20)
+    # Monday ~ Friday, Everyday at 11:00 AM
+    scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=11, minute=0)
 
-    # Monday ~ Friday, Everyday at 10:30 AM
-    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=10, minute=30)
+    # Monday ~ Friday, Everyday at 11:30 AM
+    scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=11, minute=30)
 
     scheduler.start()
