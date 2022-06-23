@@ -123,7 +123,7 @@ WSGI_APPLICATION = 'lfs_lab_cert_tracker.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('LFS_LAB_CERT_TRACKER_DB_ENGINE', 'django.db.backends.postgresql_psycopg2'),
+        'ENGINE': os.environ.get('LFS_LAB_CERT_TRACKER_DB_ENGINE'),
         'NAME': os.environ['LFS_LAB_CERT_TRACKER_DB_NAME'],
         'USER': os.environ['LFS_LAB_CERT_TRACKER_DB_USER'],
         'PASSWORD': os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD'],

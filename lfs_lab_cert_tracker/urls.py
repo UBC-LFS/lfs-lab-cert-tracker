@@ -19,7 +19,7 @@ urlpatterns = [
     path('users/<int:user_id>/training-record/<int:training_id>/', views.UserTrainingDetailsView.as_view(), name='user_training_details'),
 
     # Users - functions
-    path('users/<int:user_id>/report/', views.user_report, name='user_report'),
+    path('users/<int:user_id>/report.pdf/', views.user_report, name='user_report'),
     path('users/report/missing-trainings/download/', views.download_user_report_missing_trainings, name='download_user_report_missing_trainings'),
 
 
