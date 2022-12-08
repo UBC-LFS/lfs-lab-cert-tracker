@@ -25,10 +25,13 @@ from html import escape # >= python 3.8
 from xhtml2pdf import pisa
 from datetime import datetime
 
-from lfs_lab_cert_tracker.utils import Api, access_admin_only, access_pi_admin, access_loggedin_user_pi_admin, access_loggedin_user_admin
-from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert
-from lfs_lab_cert_tracker.forms import *
-from lfs_lab_cert_tracker import api
+from .utils import Api
+from .models import UserInactive, Lab, Cert, UserLab, UserCert
+from .forms import *
+from .auth import access_admin_only, access_pi_admin, access_loggedin_user_pi_admin, access_loggedin_user_admin
+
+from . import api
+
 
 # Set 50 users in a page
 NUM_PER_PAGE = 50
@@ -36,15 +39,16 @@ NUM_PER_PAGE = 50
 uApi = Api()
 
 
-def login(request):
-    return render(request, 'accounts/login.html')
+def landing_page(request):
+    return render(request, 'landing_page.html')
 
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def index(request):
-    return redirect('/users/%d' % (request.user.id))
+    return HttpResponseRedirect(reverse('user_details', args=[request.user.id]))
+    #return redirect('/users/%d' % (request.user.id))
 
 
 # Users - classes
@@ -1040,9 +1044,10 @@ def internal_server_error(request, template_name='500.html'):
 def local_login(request):
     if request.method == 'POST':
         form = LocalLoginForm(request.POST)
+        print(form.is_valid(), request.POST['username'], request.POST['password'])
         if form.is_valid():
             user = authenticate(username=request.POST['username'], password=request.POST['password'])
-
+            print(user)
             if user is not None:
 
                 # To check whether users are logged in for the first time or not
@@ -1050,6 +1055,14 @@ def local_login(request):
 
                 DjangoLogin(request, user)
                 return redirect('index')
+            else:
+                messages.error(request, 'Error! User not found.')
+                return redirect('local_login')
+        else:
+            errors = form.errors.get_json_data()
+            print(error)
+            messages.error(request, 'Error! Please check your CWL or password. {0}'.format( uApi.get_error_messages(errors) ))
+            return redirect('local_login')
 
     return render(request, 'accounts/local_login.html', { 
         'form': LocalLoginForm() 

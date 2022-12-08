@@ -6,8 +6,8 @@ from django.conf.urls.static import static
 from lfs_lab_cert_tracker import views, saml_views
 
 urlpatterns = [
-    path('accounts/login/', views.login),
-    path('', views.index, name='index'),
+    path('', views.landing_page, name='landing_page'),
+    path('index/', views.index, name='index'),
 
     # Users - classes
     path('users/report/missing-trainings/', views.UserReportMissingTrainingsView.as_view(), name='user_report_missing_trainings'),
@@ -56,9 +56,9 @@ urlpatterns = [
 
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
-    path('saml/', saml_views.saml, name='saml'),
-    path('attrs/', saml_views.attrs, name='attrs'),
-    path('metadata/', saml_views.metadata, name='metadata')
+    # path('saml/', saml_views.saml, name='saml'),
+    # path('attrs/', saml_views.attrs, name='attrs'),
+    # path('metadata/', saml_views.metadata, name='metadata')
 
 ]
 

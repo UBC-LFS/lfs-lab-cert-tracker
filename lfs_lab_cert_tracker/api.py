@@ -7,6 +7,15 @@ from django.contrib.auth.models import User as AuthUser
 from .models import UserCert, LabCert, UserLab, Cert, Lab
 
 
+
+
+
+
+
+
+# --------------------------------
+
+
 def add_missing_certs(users):
     """ Add missing certs into users """
     for user in users:
