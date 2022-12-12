@@ -1,11 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as DjangoLogin
 
 from .forms import LocalLoginForm
 
 
 def login(request):
-    print('login', request.user)
+    print('login', hasattr(request, 'user'), request.user)
+    return redirect('landing_page')
 
 
 def local_login(request):
