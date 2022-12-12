@@ -5,12 +5,12 @@ from django.shortcuts import render
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User as AuthUser
 
-from onelogin.saml2.auth import OneLogin_Saml2_Auth
-from onelogin.saml2.settings import OneLogin_Saml2_Settings
-from onelogin.saml2.utils import OneLogin_Saml2_Utils
+# from onelogin.saml2.auth import OneLogin_Saml2_Auth
+# from onelogin.saml2.settings import OneLogin_Saml2_Settings
+# from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 
-def init_saml_auth(req):
+"""def init_saml_auth(req):
     auth = OneLogin_Saml2_Auth(req, custom_base_path=settings.SAML_FOLDER)
     return auth
 
@@ -30,7 +30,7 @@ def prepare_django_request(request):
     return result
 
 def authenticate(saml_authentication=None):
-    """ Create a new user if the user does not exist; otherwise, return a user """
+    ''' Create a new user if the user does not exist; otherwise, return a user '''
 
     if not saml_authentication:
         return None
@@ -166,4 +166,4 @@ def metadata(request):
         resp = HttpResponse(content=metadata, content_type='text/xml')
     else:
         resp = HttpResponseServerError(content=', '.join(errors))
-    return resp
+    return resp"""
