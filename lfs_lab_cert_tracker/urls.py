@@ -56,20 +56,17 @@ urlpatterns = [
 
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
+    
+    path('accounts/', include('accounts.urls'))
+
     # path('saml/', saml_views.saml, name='saml'),
     # path('attrs/', saml_views.attrs, name='attrs'),
     # path('metadata/', saml_views.metadata, name='metadata')
-
 ]
 
 if settings.DEBUG:
     urlpatterns += [
         path('admin/', admin.site.urls)
-    ]
-
-if settings.LOCAL_LOGIN:
-    urlpatterns += [
-        path('accounts/local-login/', views.local_login, name='local_login')
     ]
 
 handler400 = views.bad_request

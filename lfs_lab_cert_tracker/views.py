@@ -9,7 +9,6 @@ from django.template.loader import get_template
 from django.template import Context
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db.models import Q
-from django.contrib.auth import authenticate, login as DjangoLogin
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -1037,33 +1036,3 @@ def page_not_found(request, exception, template_name="404.html"):
 def internal_server_error(request, template_name='500.html'):
     ''' Exception handlder internal server error '''
     return render(request, '500.html', context={}, status=500)
-
-
-# for local testing
-
-def local_login(request):
-    if request.method == 'POST':
-        form = LocalLoginForm(request.POST)
-        print(form.is_valid(), request.POST['username'], request.POST['password'])
-        if form.is_valid():
-            user = authenticate(username=request.POST['username'], password=request.POST['password'])
-            print(user)
-            if user is not None:
-
-                # To check whether users are logged in for the first time or not
-                request.session['is_first_time'] = True if user.last_login == None else False
-
-                DjangoLogin(request, user)
-                return redirect('index')
-            else:
-                messages.error(request, 'Error! User not found.')
-                return redirect('local_login')
-        else:
-            errors = form.errors.get_json_data()
-            print(error)
-            messages.error(request, 'Error! Please check your CWL or password. {0}'.format( uApi.get_error_messages(errors) ))
-            return redirect('local_login')
-
-    return render(request, 'accounts/local_login.html', { 
-        'form': LocalLoginForm() 
-    })
