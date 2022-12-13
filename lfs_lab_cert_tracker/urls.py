@@ -3,7 +3,7 @@ from django.conf.urls import handler400, handler403, handler404, handler500
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from lfs_lab_cert_tracker import views, saml_views
+from lfs_lab_cert_tracker import views
 
 urlpatterns = [
     path('', views.landing_page, name='landing_page'),
@@ -53,15 +53,9 @@ urlpatterns = [
     path('api/trainings/delete/', views.delete_training, name='delete_training'),
     path('api/users/<int:user_id>/training/delete/', views.delete_user_training, name='delete_user_training'),
 
-
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
-    
     path('accounts/', include('accounts.urls'))
-
-    # path('saml/', saml_views.saml, name='saml'),
-    # path('attrs/', saml_views.attrs, name='attrs'),
-    # path('metadata/', saml_views.metadata, name='metadata')
 ]
 
 if settings.DEBUG:
