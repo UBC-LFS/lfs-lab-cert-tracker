@@ -6,7 +6,9 @@ from .forms import LocalLoginForm
 
 def login(request):
     print('login', hasattr(request, 'user'), request.user)
-    return redirect('landing_page')
+    return render(request, 'accounts:meta', {
+        'meta': request.META
+    })
 
 
 def local_login(request):
