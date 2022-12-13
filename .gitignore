@@ -7,7 +7,6 @@ __pycache__
 .vagrant
 vagrant
 *.log
-staticfiles
-saml/
+assets/staticfiles
 lfs_lab_cert_tracker/settings.py
 run
