@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth import authenticate, login
+from django.contrib import auth
 from django.contrib.auth.middleware import RemoteUserMiddleware
 from django.core.exceptions import ImproperlyConfigured
 
@@ -52,12 +52,12 @@ class CustomRemoteUserMiddleware(RemoteUserMiddleware):
 
         # We are seeing this user for the first time in this session, attempt
         # to authenticate the user.
-        user = authenticate(request, remote_user=username)
+        user = auth.authenticate(request, remote_user=username)
         if user:
             # User is valid.  Set request.user and persist user in the session
             # by logging the user in.
             request.user = user
-            login(request, user)
+            auth.login(request, user)
 
             # Check whether first name, last name and email are stored in the database or not
             full_name = request.META[self.full_name]
