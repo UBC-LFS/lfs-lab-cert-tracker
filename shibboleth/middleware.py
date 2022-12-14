@@ -80,7 +80,3 @@ class CustomRemoteUserMiddleware(RemoteUserMiddleware):
 
             if len(update_fields) > 0:
                 user.save(update_fields=update_fields)
-
-
-            
-    
