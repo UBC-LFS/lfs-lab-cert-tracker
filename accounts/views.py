@@ -5,11 +5,11 @@ from django.urls import reverse
 
 from .forms import LocalLoginForm
 
-
+"""
 def login(request):
     print('login', hasattr(request, 'user'), request.user)
     return HttpResponseRedirect(reverse('user_details', args=[request.user.id]))
-
+"""
 
 def local_login(request):
     ''' local login '''
