@@ -1,7 +1,17 @@
-def authenticate_user(request):
-    user_auth = None
-    print(request.user, request.user.is_authenticated)
+from django.urls import reverse
+from urllib.parse import quote
+
+
+def login_target(request):
     
-    return {
-        'user_auth': user_auth
+    print('login target', request.user, request.user.is_authenticated)
+
+    full_path = quote(request.get_full_path())
+    login = 'login'
+    ll = '{0}?target={1}'.format(login, full_path)
+
+    print(full_path, ll)
+
+    return { 
+        'login_link': ll 
     }
