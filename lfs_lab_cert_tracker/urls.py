@@ -56,7 +56,7 @@ urlpatterns = [
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
     path('accounts/', include('accounts.urls')),
-    path('shibboleth/', include'shibboleth.urls')
+    path('shibboleth/', include('shibboleth.urls'))
 ]
 
 if settings.DEBUG:
