@@ -59,6 +59,8 @@ class CustomRemoteUserMiddleware(RemoteUserMiddleware):
             request.user = user
             auth.login(request, user)
 
+            print('middleware =====', request.user, request.user.is_authenticated)
+
             # Check whether first name, last name and email are stored in the database or not
             full_name = request.META[self.full_name]
             last_name = request.META[self.last_name]

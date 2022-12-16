@@ -2,16 +2,11 @@ from django.urls import reverse
 from urllib.parse import quote
 
 
-def login_target(request):
-    
-    print('login target', request.user, request.user.is_authenticated)
-
+def login_link(request):
+    shib_login = reverse('shibboleth:login')
     full_path = quote(request.get_full_path())
-    login = 'login'
-    ll = '{0}?target={1}'.format(login, full_path)
-
-    print(full_path, ll)
-
+    print('login_link =====', shib_login, full_path, '{0}?target={1}'.format(shib_login, full_path))
+    print(request.user, request.user.is_authenticated)
     return { 
-        'login_link': ll 
+        'login_link': '{0}?target={1}'.format(shib_login, full_path)
     }
