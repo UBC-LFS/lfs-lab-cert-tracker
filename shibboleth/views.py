@@ -2,6 +2,8 @@ from django.conf import settings
 from django.views import View
 from django.shortcuts import render, redirect
 from urllib.parse import quote
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 class Shib_Login(View):
@@ -14,4 +16,4 @@ class Shib_Login(View):
         print('Shib_Login =====', login, request.GET.get('next'))
         print(request.user, request.user.is_authenticated)
 
-        return redirect(login)
+        return redirect(settings.LOGIN_URL + '?next=index')

@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from lfs_lab_cert_tracker import views
 
 urlpatterns = [
-    path('', views.landing_page, name='landing_page'),
+    path('welcome/', views.welcome, name='welcome'),
     path('index/', views.index, name='index'),
 
     # Users - classes

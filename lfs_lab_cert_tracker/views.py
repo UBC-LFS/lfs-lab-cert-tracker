@@ -38,8 +38,8 @@ NUM_PER_PAGE = 50
 uApi = Api()
 
 
-def landing_page(request):
-    return render(request, 'landing_page.html')
+def welcome(request):
+    return render(request, 'welcome.html')
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -201,6 +201,7 @@ class UserDetailsView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        print('user details =====', request.user, request.user.is_authenticated)
         user_id = kwargs['user_id']
 
         if request.user.id != user_id:
