@@ -99,9 +99,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
-AUTHENTICATION_BACKENDS = [
+"""AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.RemoteUserBackend'
-]
+]"""
 
 ROOT_URLCONF = 'lfs_lab_cert_tracker.urls'
 
