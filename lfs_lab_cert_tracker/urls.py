@@ -18,7 +18,7 @@ urlpatterns = [
 
     # Users - functions
     path('app/users/<int:user_id>/report.pdf/', views.user_report, name='user_report'),
-    path('app/users/report/missing-trainings/download/', views.download_user_report_missing_trainings, name='download_user_report_missing_trainings'),
+    path('app/users/report/missing-trainings/download.pdf/', views.download_user_report_missing_trainings, name='download_user_report_missing_trainings'),
 
 
     # Users - api

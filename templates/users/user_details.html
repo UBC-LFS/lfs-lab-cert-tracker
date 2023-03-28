@@ -128,7 +128,7 @@
 				<i class="material-icons">cloud_download</i>
 				Report
 			</h5>
-			<a href="/users/{{app_user.id}}/report.pdf/" target="_blank">Download as PDF</a>
+			<a href="{% url 'user_report' user_id=app_user.id  %}" target="_blank">Download as PDF</a>
 		</div>
 
 		<div class="mt-5">
@@ -150,7 +150,7 @@
 				<ul class="text-secondary">
 					{% for pi_user_lab in pi_user_lab_list %}
 						<li>
-							<a href="/areas/{{pi_user_lab.id}}/">{{ pi_user_lab.name }}</a>
+							<a href="{% url 'area_details' area_id=pi_user_lab.id %}">{{ pi_user_lab.name }}</a>
 						</li>
 					{% endfor %}
 				</ul>
