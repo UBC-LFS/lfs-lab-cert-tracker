@@ -611,7 +611,7 @@ class Notification(Api):
         message = """\
             <p>You have missing training(s). Please update it.</p>
             <ul>{0}</ul>
-            <p>See <a href="{1}/users/{2}/report.pdf/">User report</a></p>
+            <p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
         """.format(''.join(trainings), settings.SITE_URL, user_id)
 
         return message
@@ -640,13 +640,13 @@ class Notification(Api):
             message = """\
                 <p>Your training(s) will expire in {0} days.</p>
                 <ul>{1}</ul>
-                <p>See <a href="{2}/users/{3}/report.pdf/">User report</a></p>
+                <p>See <a href="{2}/app/users/{3}/report.pdf/">User report</a></p>
                 """.format(days, "".join(trainings), settings.SITE_URL, user_id)
         else:
             message = """\
                 <p>Your training expiration date has already passed. Please update it.</p>
                 <ul>{0}</ul>
-                <p>See <a href="{1}/users/{2}/report.pdf/">User report</a></p>
+                <p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
                 """.format("".join(trainings), settings.SITE_URL, user_id)
 
         return message
@@ -727,7 +727,7 @@ class Notification(Api):
         for lab_user in lab_users:
             user_id = lab_user['id']
             user = self.get_user(user_id)
-            content = '<div>' + user.first_name + ' ' + user.last_name + " (<a href='" + settings.SITE_URL + '/users/' + str(user_id) + "/report.pdf/'>User report</a>)</div><ul>"
+            content = '<div>' + user.first_name + ' ' + user.last_name + " (<a href='" + settings.SITE_URL + '/app/users/' + str(user_id) + "/report.pdf/'>User report</a>)</div><ul>"
 
             for item in lab_user['trainings']:
                 content += '<li>' + item['training'].name + ' (Expiry Date: ' + self.datetime_to_string(item['expiry_date']) + ')</li>'
