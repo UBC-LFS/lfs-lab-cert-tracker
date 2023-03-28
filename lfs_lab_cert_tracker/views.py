@@ -44,8 +44,8 @@ def landing_page(request):
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
-def index(request):
-    return redirect('/users/%d' % (request.user.id))
+def app_home(request):
+    return HttpResponseRedirect(reverse('user_details', args=[request.user.id]))
 
 
 # Users - classes

@@ -51,8 +51,9 @@ urlpatterns = [
     path('app/api/trainings/delete/', views.delete_training, name='delete_training'),
     path('app/api/users/<int:user_id>/training/delete/', views.delete_user_training, name='delete_user_training'),
 
-    path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
+    path('app/media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
+    path('app/', views.app_home, name='app_home'),
     path('', views.landing_page, name='landing_page')
 ]
 
