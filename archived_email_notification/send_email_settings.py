@@ -3,7 +3,7 @@ import os
 # Global variables
 DAYS30 = 30
 DAYS14 = 14
-LFS_LAB_CERT_TRACKER_URL = os.environ['LFS_LAB_CERT_TRACKER_URL']
+SITE_URL = 'http://localhost:8000'
 
 DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
 USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']

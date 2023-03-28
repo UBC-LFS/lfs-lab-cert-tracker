@@ -134,7 +134,7 @@ EMAIL_HOST = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
 EMAIL_FROM = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
 
 # Environment variables for sending reminder emails
-LFS_LAB_CERT_TRACKER_URL = os.environ['LFS_LAB_CERT_TRACKER_URL']
+SITE_URL = 'http://localhost:8000'
 ```
 
 4. Switch *DEBUG* to **False** in a *settings.py* file

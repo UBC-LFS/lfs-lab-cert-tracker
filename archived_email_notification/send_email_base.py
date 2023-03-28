@@ -68,13 +68,13 @@ def get_message_lab_users(certificates, user, days, type):
             <p>Your training(s) will expire in {0} days.</p>
             <ul>{1}</ul>
             <p>See <a href="{2}/users/{3}/report">User report</a></p>
-            '''.format(days, "".join(certificates), LFS_LAB_CERT_TRACKER_URL, user['id'])
+            '''.format(days, "".join(certificates), SITE_URL, user['id'])
     else:
         message = '''\
             <p>Your training expiration date has already passed. Please update it.</p>
             <ul>{0}</ul>
             <p>See <a href="{1}/users/{2}/report">User report</a></p>
-            '''.format("".join(certificates), LFS_LAB_CERT_TRACKER_URL, user['id'])
+            '''.format("".join(certificates), SITE_URL, user['id'])
 
     return message
 
@@ -150,7 +150,7 @@ def send_email_to_admin(users, admin, lab_users, days, type):
     contents = []
     for lab_user in lab_users:
         user = users[ lab_user['id'] ]
-        content = "<div>" + user['first_name'] + " " + user['last_name'] + " (<a href='" + LFS_LAB_CERT_TRACKER_URL + "/users/" + str(user['id']) + "/report'>User report</a>)</div><ul>"
+        content = "<div>" + user['first_name'] + " " + user['last_name'] + " (<a href='" + SITE_URL + "/users/" + str(user['id']) + "/report'>User report</a>)</div><ul>"
 
         for cert in lab_user['certs']:
             content += "<li>" + cert['name'] + " (Expiry Date: " + datetime_to_string(cert['expiry_date']) + ")</li>"

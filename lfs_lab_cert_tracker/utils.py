@@ -369,7 +369,7 @@ class Api:
             <p>Best regards,</p>
             <p>LFS Training Record Management System</p>
         </div>
-        '''.format(user.first_name, user.last_name, self.welcome_message(), os.environ['LFS_LAB_CERT_TRACKER_URL'])
+        '''.format(user.first_name, user.last_name, self.welcome_message(), settings.SITE_URL)
 
         sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)
         if not sent:
@@ -612,7 +612,7 @@ class Notification(Api):
             <p>You have missing training(s). Please update it.</p>
             <ul>{0}</ul>
             <p>See <a href="{1}/users/{2}/report.pdf/">User report</a></p>
-        """.format(''.join(trainings), settings.LFS_LAB_CERT_TRACKER_URL, user_id)
+        """.format(''.join(trainings), settings.SITE_URL, user_id)
 
         return message
 
@@ -641,13 +641,13 @@ class Notification(Api):
                 <p>Your training(s) will expire in {0} days.</p>
                 <ul>{1}</ul>
                 <p>See <a href="{2}/users/{3}/report.pdf/">User report</a></p>
-                """.format(days, "".join(trainings), settings.LFS_LAB_CERT_TRACKER_URL, user_id)
+                """.format(days, "".join(trainings), settings.SITE_URL, user_id)
         else:
             message = """\
                 <p>Your training expiration date has already passed. Please update it.</p>
                 <ul>{0}</ul>
                 <p>See <a href="{1}/users/{2}/report.pdf/">User report</a></p>
-                """.format("".join(trainings), settings.LFS_LAB_CERT_TRACKER_URL, user_id)
+                """.format("".join(trainings), settings.SITE_URL, user_id)
 
         return message
 
@@ -727,7 +727,7 @@ class Notification(Api):
         for lab_user in lab_users:
             user_id = lab_user['id']
             user = self.get_user(user_id)
-            content = '<div>' + user.first_name + ' ' + user.last_name + " (<a href='" + settings.LFS_LAB_CERT_TRACKER_URL + '/users/' + str(user_id) + "/report.pdf/'>User report</a>)</div><ul>"
+            content = '<div>' + user.first_name + ' ' + user.last_name + " (<a href='" + settings.SITE_URL + '/users/' + str(user_id) + "/report.pdf/'>User report</a>)</div><ul>"
 
             for item in lab_user['trainings']:
                 content += '<li>' + item['training'].name + ' (Expiry Date: ' + self.datetime_to_string(item['expiry_date']) + ')</li>'

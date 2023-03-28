@@ -13,7 +13,7 @@ def get_message_lab_users(certs, user_id, missing_certs):
         <p>You have missing training(s). Please update it.</p>
         <ul>{0}</ul>
         <p>See <a href="{1}/users/{2}/report">User report</a></p>
-    '''.format("".join(certificates), LFS_LAB_CERT_TRACKER_URL, user_id)
+    '''.format("".join(certificates), SITE_URL, user_id)
 
     return message
 

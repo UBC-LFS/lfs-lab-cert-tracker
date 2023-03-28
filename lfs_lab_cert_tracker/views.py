@@ -36,8 +36,9 @@ NUM_PER_PAGE = 50
 uApi = Api()
 
 
-def login(request):
-    return render(request, 'accounts/login.html')
+def landing_page(request):
+    print(request.get_full_path())
+    return render(request, 'landing_page.html')
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -1049,7 +1050,7 @@ def local_login(request):
                 request.session['is_first_time'] = True if user.last_login == None else False
 
                 DjangoLogin(request, user)
-                return redirect('index')
+                return HttpResponseRedirect(reverse('user_details', args=[user.id]))
 
     return render(request, 'accounts/local_login.html', { 
         'form': LocalLoginForm() 

@@ -21,31 +21,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ### Deployment checklist
 # > python manage.py check --deploy
 
-# DEBUG = False
-# CSRF_COOKIE_SECURE = True
-# SESSION_COOKIE_SECURE = True
-# SECURE_BROWSER_XSS_FILTER = True
-# SECURE_CONTENT_TYPE_NOSNIFF = True
-# SECURE_SSL_REDIRECT = True
-# X_FRAME_OPTIONS = 'DENY'
-
-## Environment variables
-# SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
-# DATABASE_ENGINE = os.environ['LFS_LAB_CERT_TRACKER_DB_ENGINE']
-# DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
-# USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
-# PASSWORD = os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD']
-# HOST = os.environ['LFS_LAB_CERT_TRACKER_DB_HOST']
-# PORT = os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
-# EMAIL_HOST = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST']
-# EMAIL_FROM = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 ## Environment variables for sending reminder emails
-LFS_LAB_CERT_TRACKER_URL = os.environ['LFS_LAB_CERT_TRACKER_URL']
-
-## Change media root
-# MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
-
+SITE_URL = 'http://localhost:8000'
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -53,17 +33,12 @@ SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-LOCAL_LOGIN = True
+LOCAL_LOGIN = False
 
 ALLOWED_HOSTS = ['localhost']
 
-# URLs
-LOGIN_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login/'
-SAML_LOGOUT_URL = 'https://authentication.stg.id.ubc.ca/idp/profile/Logout'
+LOGIN_URL = '/'
 
-# Saml configs
-SAML_FOLDER = os.path.join(BASE_DIR, 'saml')
 
 # Send email
 EMAIL_USE_TLS = True
@@ -88,13 +63,18 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    #'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.RemoteUserBackend',
 ]
 
 ROOT_URLCONF = 'lfs_lab_cert_tracker.urls'
@@ -110,6 +90,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'lfs_lab_cert_tracker.context_processors.site_url'
             ],
         },
     },
@@ -170,17 +151,17 @@ USE_TZ = True
 # https://devcenter.heroku.com/articles/django-assets
 # https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django/Deployment
 # > python manage.py collectstatic --noinput
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'assets', 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'assets', 'static')]
 
 # Simplified static file serving.
 # https://warehouse.python.org/project/whitenoise/
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
+
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-info',

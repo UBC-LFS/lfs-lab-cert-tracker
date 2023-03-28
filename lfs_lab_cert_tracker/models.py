@@ -162,7 +162,7 @@ def send_notification(sender, created, **kwargs):
             obj.user.first_name,
             obj.user.last_name,
             obj.lab.name,
-            os.environ['LFS_LAB_CERT_TRACKER_URL']
+            settings.SITE_URL
         )
 
         valid_email = False
