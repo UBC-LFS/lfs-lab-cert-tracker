@@ -660,7 +660,7 @@ class AreaDetailsView(View):
         else:
             messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the area.'.format(username))
 
-        return HttpResponseRedirect( reverse('area_details', args=[area_id]) )
+        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
 
 # Areas - functions
