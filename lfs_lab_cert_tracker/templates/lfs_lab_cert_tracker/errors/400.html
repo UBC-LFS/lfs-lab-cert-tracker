@@ -1,0 +1,20 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block content %}
+
+<div class="text-center">
+  <h4 class="mt-5 text-danger">
+    <i class="material-icons">mood_bad</i>
+    Oops! Something went wrong
+  </h4>
+
+  <h4>The system has encountered an error.</h4>
+  
+  <p>
+    Please contact administrator, or the LFS Learning Centre (<span class="text-primary">it@landfood.ubc.ca</span>) for help.
+  </p>
+
+  <p><a href="{% url 'app:user_details' user_id=request.user.id %}">Go to My Account</a></p>
+</div>
+
+{% endblock %}

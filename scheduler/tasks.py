@@ -2,7 +2,7 @@ from django.conf import settings
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from lfs_lab_cert_tracker.utils import Api, Notification
+from app.utils import Api, Notification
 
 DAYS30 = 30
 DAYS14 = 14

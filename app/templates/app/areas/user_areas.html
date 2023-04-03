@@ -1,0 +1,49 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'app/subpages/_admin_menu.html' %}
+{% endif %}
+
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item">
+			<a href="{% url 'app:user_details' user_id=request.user.id %}">
+				<i class="material-icons">home</i> My Account
+			</a>
+		</li>
+		<li class="breadcrumb-item active" aria-current="page">My Work Area(s)</li>
+	</ol>
+</nav>
+
+<div class="row">
+	<div class="col-md-10 offset-md-1">
+
+		<h3 class="title">My Work Area(s)</h3>
+		{% if user_lab_list %}
+			<ul>
+				{% for user_lab in user_lab_list %}
+					<li>{{ user_lab.name }}</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			<p>You are not in work area(s)</p>
+		{% endif %}
+
+		{% if pi_user_lab_list %}
+			<h3 class="title">Main Work Area(s)</h3>
+			<ul>
+				{% for pi_user_lab in pi_user_lab_list %}
+				<li>
+					<a href="{% url 'app:area_details' area_id=pi_user_lab.id %}">{{ pi_user_lab.name }}</a>
+				</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+
+		<a class="btn btn-outline-primary mt-5" href="{% url 'app:user_details' request.user.id %}">Back to My Account</a>
+	</div>
+</div>
+
+{% endblock %}

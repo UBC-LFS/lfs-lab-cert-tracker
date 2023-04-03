@@ -1,0 +1,17 @@
+<div class="viewing-message">
+  <h6>Go back to my previous page</h6>
+
+  {% if data.page == 'all_users' %}
+
+    {% if data.query %}
+      <a href="{% url 'app:all_users' %}?{{ data.query }}">All Users</a>
+    {% else %}
+      <a href="{% url 'app:all_users' %}">All Users</a>
+    {% endif %}
+
+  {% elif data.page == 'area_details' %}
+
+    <a href="{% url 'app:area_details' area_id=data.id %}">{{ data.name }}</a>
+
+  {% endif %}
+</div>

@@ -1,0 +1,30 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+	<div class="col-md-6">
+		<div class="accounts-login">
+			<h3 class="login-title">LFS Training Record Management System</h3>
+
+			<p class="text-secondary">Please click the button below to login</p>
+			<a href="{{ site_url }}/app/">
+				<img src="{% static 'lfs_lab_cert_tracker/images/CWL_login_button.gif' %}" alt="CWL login button"/>
+			</a>
+		</div>
+	</div>
+
+	<div class="col-md-6">
+		<div class="card text-white bg-info">
+		  <div class="card-header">About LFS Training Record Management System</div>
+	  	<div class="card-body">
+		    <blockquote class="blockquote mb-0">
+		      <p>The LFS Training Record Management System (TRMS) aims to collect and keep track of the training records required for all students, staffs and faculties that are working in LFS. This system will ensure that people working in specific space or area in LFS receive the appropriate training catered to the work environment.</p>
+		      <p class="blockquote-footer text-white">Faculty of Land and Food System @ UBC</p>
+		    </blockquote>
+		  </div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+<nav class="container admin-menu">
+  <span class="text">Admin Menu: </span>
+
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'app:all_areas' %}">All Areas</a>
+  </div>
+
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'app:all_trainings' %}">All Trainings</a>
+  </div>
+
+  <div class="dropdown">
+    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      Users
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+      <a class="dropdown-item" href="{% url 'app:all_users' %}">All Users</a>
+      <a class="dropdown-item" href="{% url 'app:user_report_missing_trainings' %}">User Report</a>
+      <a class="dropdown-item" href="{% url 'app:new_user' %}">New User</a>
+    </div>
+  </div>
+</nav>
