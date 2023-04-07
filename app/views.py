@@ -18,6 +18,8 @@ from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.contrib.auth.models import User
+from django.core.exceptions import SuspiciousOperation
+
 
 from io import BytesIO
 # from cgi import escape
@@ -42,6 +44,37 @@ uApi = Api()
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def index(request):
+    first_name = request.META[settings.SHIB_ATTR_MAP['first_name']] if settings.SHIB_ATTR_MAP['first_name'] in request.META else None
+    last_name = request.META[settings.SHIB_ATTR_MAP['last_name']] if settings.SHIB_ATTR_MAP['last_name'] in request.META else None
+    email = request.META[settings.SHIB_ATTR_MAP['email']] if settings.SHIB_ATTR_MAP['email'] in request.META else None
+    username = request.META[settings.SHIB_ATTR_MAP['username']] if settings.SHIB_ATTR_MAP['username'] in request.META else None
+
+    if not username:
+        raise SuspiciousOperation
+
+    u = User.objects.filter(username=data['username'])
+    if u.exists():
+        user = u.first()
+
+        # Update user information if it's None
+        update_fields = []
+        if not user.first_name and data['first_name']:
+            user.first_name = data['first_name']
+            update_fields.append('first_name')
+        
+        if not user.last_name and data['last_name']:
+            user.last_name = data['last_name']
+            update_fields.append('last_name')
+            
+        if not user.email and data['email']:
+            user.email = data['email']
+            update_fields.append('email')
+        
+        if len(update_fields) > 0:
+            user.save(update_fields=update_fields)
+    else:
+        raise SuspiciousOperation
+
     return HttpResponseRedirect(reverse('app:user_details', args=[request.user.id]))
 
 
