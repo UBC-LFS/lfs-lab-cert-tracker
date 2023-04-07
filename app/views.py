@@ -58,16 +58,16 @@ def index(request):
 
         # Update user information if it's None
         update_fields = []
-        if not user.first_name and data['first_name']:
-            user.first_name = data['first_name']
+        if not user.first_name and first_name:
+            user.first_name = first_name
             update_fields.append('first_name')
         
-        if not user.last_name and data['last_name']:
-            user.last_name = data['last_name']
+        if not user.last_name and last_name:
+            user.last_name = last_name
             update_fields.append('last_name')
             
-        if not user.email and data['email']:
-            user.email = data['email']
+        if not user.email and email:
+            user.email = email
             update_fields.append('email')
         
         if len(update_fields) > 0:
