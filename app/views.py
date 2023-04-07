@@ -52,28 +52,22 @@ def index(request):
     if not username:
         raise SuspiciousOperation
 
-    u = User.objects.filter(username=data['username'])
-    if u.exists():
-        user = u.first()
-
-        # Update user information if it's None
-        update_fields = []
-        if not user.first_name and first_name:
-            user.first_name = first_name
-            update_fields.append('first_name')
+    # Update user information if it's None
+    update_fields = []
+    if not request.user.first_name and first_name:
+        request.user.first_name = first_name
+        update_fields.append('first_name')
+    
+    if not request.user.last_name and last_name:
+        request.user.last_name = last_name
+        update_fields.append('last_name')
         
-        if not user.last_name and last_name:
-            user.last_name = last_name
-            update_fields.append('last_name')
-            
-        if not user.email and email:
-            user.email = email
-            update_fields.append('email')
-        
-        if len(update_fields) > 0:
-            user.save(update_fields=update_fields)
-    else:
-        raise SuspiciousOperation
+    if not request.user.email and email:
+        request.user.email = email
+        update_fields.append('email')
+    
+    if len(update_fields) > 0:
+        request.user.save(update_fields=update_fields)
 
     return HttpResponseRedirect(reverse('app:user_details', args=[request.user.id]))
 
