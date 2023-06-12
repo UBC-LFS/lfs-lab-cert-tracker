@@ -7,6 +7,8 @@ from django.db.models import Q
 from django.urls import resolve
 from django.core.mail import send_mail
 import smtplib
+import requests
+import json
 from email.mime.text import MIMEText
 
 from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert
@@ -188,6 +190,64 @@ class Api:
 
 
     # Utils
+    def get_certificates_for_cwls(self, cwls):
+        client_id = getattr(settings, 'TRMS_CLIENT_ID', None)
+        client_secret = getattr(settings, 'TRMS_CLIENT_SECRET', None)
+        if client_id == None or client_secret == None:
+            print("ID OR SECRET IS NONE, RETURNING")
+            return
+        
+        url = "https://stg.api.ubc.ca/partner/v2/retrieve-certificates"
+        header = {
+        "X-Client-Id": client_id,
+        "X-Client-Secret": client_secret,
+        }
+        
+        payload = {   
+            "requestIdentifiers": [{"identifierType": "CWL", "identifier": cwl} for cwl in cwls],
+            "page": 2
+        }
+        
+        all_data = []
+        count = 0
+        while True and count <= 3:
+            result = requests.post(url,  json=payload, headers=header)
+            data = result.json()
+            print("dATA IS ", data)
+            all_data += data['pageItems']
+            
+            if not data['hasNextPage']:
+                break
+            
+            payload['page'] += 1
+            count += 1
+        
+        return all_data
+
+    
+    def get_certificates_for_user(self, cwl):
+        client_id = getattr(settings, 'TRMS_CLIENT_ID', None)
+        client_secret = getattr(settings, 'TRMS_CLIENT_SECRET', None)
+        if client_id == None or client_secret == None:
+            print("ID OR SECRET IS NONE, RETURNING")
+            return
+        
+        url = "https://stg.api.ubc.ca/partner/v2/retrieve-certificates"
+        header = {
+        "X-Client-Id": client_id,
+        "X-Client-Secret": client_secret,
+        }
+        payload = {   
+            "requestIdentifiers": [
+                {
+                    "identifierType": "CWL",
+                    "identifier": cwl
+                }
+            ]
+        }
+        
+        result = requests.post(url,  json=payload, headers=header, params={'page': 1})
+        return result
 
     def get_viewing(self, next):
         """ Get viewing information for going back to the previous page """
@@ -204,6 +264,8 @@ class Api:
         elif res.url_name == 'area_details':
             id = res.kwargs['area_id']
             viewing = { 'page': 'area_details', 'id': id, 'name': self.get_area(id).name }
+        else:
+            viewing = { 'page': 'user_certificates' }
 
         return viewing
 
