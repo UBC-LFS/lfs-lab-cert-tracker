@@ -11,7 +11,7 @@ import requests
 import json
 from email.mime.text import MIMEText
 
-from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert
+from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert, UserApiCerts
 from app import api
 
 
@@ -104,6 +104,12 @@ class Api:
         if option == 'active':
             return UserCert.objects.filter(user__is_active=True)
         return UserCert.objects.all()
+    
+    def get_apicerts(self, option=None):
+        """ Get all usercerts grabbed from api """
+        if option == 'active':
+            return UserApiCerts.objects.filter(user__is_active=True)
+        return UserApiCerts.objects.all()       
 
 
     # UserLab
@@ -190,52 +196,103 @@ class Api:
 
 
     # Utils
+
+    def get_certificates_for_cwls_at_once(self, cwls):
+        client_id = getattr(settings, 'TRMS_CLIENT_ID', None)
+        client_secret = getattr(settings, 'TRMS_CLIENT_SECRET', None)
+        if client_id is None or client_secret is None:
+            print("ID OR SECRET IS NONE, RETURNING")
+            return []
+
+        url = "https://stg.api.ubc.ca/partner/v2/retrieve-certificates"
+        headers = {
+            "X-Client-Id": client_id,
+            "X-Client-Secret": client_secret,
+        }
+
+        payload = {
+            "requestIdentifiers": [{"identifierType": "CWL", "identifier": cwl} for cwl in cwls]
+        }
+
+        data = []
+        next_url = url
+        print("NEXT URL IS", next_url)
+        while next_url:
+            response = requests.post(next_url, json=payload, headers=headers)
+            result = response.json()
+
+            if 'pageItems' in result:
+                data.extend(result['pageItems'])
+            else:
+                print("Page items not found in the response:", result)
+                return data
+
+            if not result['hasNextPage']:
+                break
+
+            next_page = result['page'] + 1
+            next_url = f"{url}?page={next_page}&pageSize={result['pageSize']}"
+
+        return data
+
     def get_certificates_for_cwls(self, cwls):
         client_id = getattr(settings, 'TRMS_CLIENT_ID', None)
         client_secret = getattr(settings, 'TRMS_CLIENT_SECRET', None)
-        if client_id == None or client_secret == None:
+        if client_id is None or client_secret is None:
             print("ID OR SECRET IS NONE, RETURNING")
-            return
-        
-        url = "https://stg.api.ubc.ca/partner/v2/retrieve-certificates"
-        header = {
-        "X-Client-Id": client_id,
-        "X-Client-Secret": client_secret,
-        }
-        
-        payload = {   
-            "requestIdentifiers": [{"identifierType": "CWL", "identifier": cwl} for cwl in cwls],
-            "page": 2
-        }
-        
-        all_data = []
-        count = 0
-        while True and count <= 3:
-            result = requests.post(url,  json=payload, headers=header)
-            data = result.json()
-            print("dATA IS ", data)
-            all_data += data['pageItems']
-            
-            if not data['hasNextPage']:
-                break
-            
-            payload['page'] += 1
-            count += 1
-        
-        return all_data
+            return []
 
-    
+        url = "https://stg.api.ubc.ca/partner/v2/retrieve-certificates"
+        headers = {
+            "X-Client-Id": client_id,
+            "X-Client-Secret": client_secret,
+        }
+
+        data = []
+
+        for cwl in cwls:
+            payload = {   
+                "requestIdentifiers": [
+                    {
+                        "identifierType": "CWL",
+                        "identifier": cwl
+                    }
+                ]
+            }
+
+            next_url = url
+            print("NEXT URL IS", next_url)
+
+            while next_url:
+                response = requests.post(next_url, json=payload, headers=headers)
+                print("RESPONSE IS", response.text)
+                result = response.json()
+
+                if 'pageItems' in result:
+                    data.extend(result['pageItems'])
+                else:
+                    print("Page items not found in the response:", result)
+                    return data
+
+                if not result['hasNextPage']:
+                    break
+
+                next_page = result['page'] + 1
+                next_url = f"{url}?page={next_page}&pageSize={result['pageSize']}"
+
+        return data
+
     def get_certificates_for_user(self, cwl):
         client_id = getattr(settings, 'TRMS_CLIENT_ID', None)
         client_secret = getattr(settings, 'TRMS_CLIENT_SECRET', None)
-        if client_id == None or client_secret == None:
+        if client_id is None or client_secret is None:
             print("ID OR SECRET IS NONE, RETURNING")
             return
-        
+
         url = "https://stg.api.ubc.ca/partner/v2/retrieve-certificates"
-        header = {
-        "X-Client-Id": client_id,
-        "X-Client-Secret": client_secret,
+        headers = {
+            "X-Client-Id": client_id,
+            "X-Client-Secret": client_secret,
         }
         payload = {   
             "requestIdentifiers": [
@@ -245,9 +302,49 @@ class Api:
                 }
             ]
         }
-        
-        result = requests.post(url,  json=payload, headers=header, params={'page': 1})
-        return result
+
+        data = []
+        next_url = url
+
+        print("RUNNING FOR", cwl)
+        try:
+            response = requests.post(next_url, json=payload, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Error: {response.text} for CWL: {cwl}")
+            print("OKAY RESPONSE IS", response)
+            return response.json()['pageItems'] 
+        except requests.exceptions.HTTPError as errh:
+            message = f"HTTP Error {errh} for {cwl}"
+            raise Exception(message)  # Raise a custom exception
+        except requests.exceptions.ConnectionError as errc:
+            message = f"Connection Error {errc} for {cwl}"
+            raise Exception(message)
+        except requests.exceptions.Timeout as errt:
+            message = f"Timeout Error {errt} for {cwl}"
+            raise Exception(message)
+        except requests.exceptions.RequestException as err:
+            message = f"Request Error {err} for {cwl}"
+            raise Exception(message)
+    
+        # TODO: Add pagination when api is fixed
+        # while next_url:
+        #     response = requests.post(next_url, json=payload, headers=headers)
+        #     result = response.json()
+        #     print("RESUL TIS", result)
+
+        #     if 'pageItems' in result:
+        #         data.extend(result['pageItems'])
+        #     else:
+        #         print("Page items not found in the response:", result)
+        #         return data
+
+        #     if not result['hasNextPage']:
+        #         break
+
+        #     next_page = result['page'] + 1
+        #     next_url = f"{url}?page={next_page}&pageSize={result['pageSize']}"
+
+        # return data
 
     def get_viewing(self, next):
         """ Get viewing information for going back to the previous page """

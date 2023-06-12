@@ -56,6 +56,19 @@ def FileSizeValidator(file):
             _('The maximum file size that can be uploaded is 1.5 MB. The size of this file (%(name)s) is %(size)s '), params={'name': file.name, 'size': format_bytes(int(file.size)) }, code='file_size_limit'
         )
 
+class UserApiCerts(models.Model):
+    """
+    The Certificates for a user retrieved from the WPL api
+    Issues with API:
+    - Only gets the first 10 certificates
+    - Server timeouts on users
+    - Some certificates don't show up for users
+    """
+
+    user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
+    training_name = models.CharField(max_length=256)
+    completion_date = models.DateField()
+    
 class UserCert(models.Model):
     """
     Keeps track of which certs a user has or will need to complete

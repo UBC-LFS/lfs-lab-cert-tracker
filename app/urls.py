@@ -8,6 +8,7 @@ urlpatterns = [
     path('users/report/missing-trainings/', views.UserReportMissingTrainingsView.as_view(), name='user_report_missing_trainings'),
     path('users/new/', views.NewUserView.as_view(), name='new_user'),
     path('users/all/', views.AllUsersView.as_view(), name='all_users'),
+    path('users/certificates/', views.UserCertificatesView.as_view(), name='user_certificates'),
     path('users/<int:user_id>/work-area/', views.UserAreasView.as_view(), name='user_areas'),
     path('users/<int:user_id>/', views.UserDetailsView.as_view(), name='user_details'),
     path('users/<int:user_id>/training-record/', views.UserTrainingsView.as_view(), name='user_trainings'),

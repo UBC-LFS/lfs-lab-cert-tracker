@@ -1,0 +1,56 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'app/subpages/_admin_menu.html' %}
+{% endif %}
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+<div id="user-areas-message"></div>
+
+<h3 class="my-5">
+	All Users Certs
+	<small class="text-secondary">Total: {{ total_users }}</small>
+</h3>
+
+<div class="search-field mb-2">
+	<form method="GET">
+		<div class="input-field">
+			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
+			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+			<a class="btn btn-sm btn-light" href="{% url 'app:user_certificates' %}">Clear</a>
+		</div>
+	</form>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-lg text-center font-size-sm">
+  <thead>
+    <tr>
+        <th>CWL</th>
+		<th>Training Name</th>
+		<th>Completion Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cert in certificates %}
+      <tr>
+        <td>
+			<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ cert.user.username }}</a>
+		</td>
+		<td>{{ cert.training_name }}</td>
+		<td>{{ cert.completion_date }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'app/subpages/_pagination.html' with data=users %}
+
+{% endblock %}
+
+{% block js %}
+	{% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/user_areas.js' %}"></script>
+{% endblock %}
