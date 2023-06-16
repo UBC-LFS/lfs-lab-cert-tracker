@@ -169,7 +169,7 @@ class UserCertificatesView(View):
 
         return render(request, 'app/users/user_certificates.html', {
             'certificates': certs,
-            'total_users': len(certs),
+            'total_users': cert_list.count(),
         })
 
     @method_decorator(require_POST)
