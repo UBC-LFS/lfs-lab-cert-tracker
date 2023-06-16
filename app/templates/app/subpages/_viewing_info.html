@@ -13,5 +13,7 @@
 
     <a href="{% url 'app:area_details' area_id=data.id %}">{{ data.name }}</a>
 
+  {% elif data.page == 'user_certificates' %}
+    <a href="javascript:history.go(-1)">Previous Page</a>
   {% endif %}
 </div>

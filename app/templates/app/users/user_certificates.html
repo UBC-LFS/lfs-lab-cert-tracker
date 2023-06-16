@@ -11,7 +11,7 @@
 <div id="user-areas-message"></div>
 
 <h3 class="my-5">
-	All Users Certs
+	User Certificates
 	<small class="text-secondary">Total: {{ total_users }}</small>
 </h3>
 
@@ -37,7 +37,7 @@
     {% for cert in certificates %}
       <tr>
         <td>
-			<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ cert.user.username }}</a>
+			<a href="{% url 'app:user_details' user_id=cert.user.id %}?next={{ request.get_full_path }}">{{ cert.user.username }}</a>
 		</td>
 		<td>{{ cert.training_name }}</td>
 		<td>{{ cert.completion_date }}</td>

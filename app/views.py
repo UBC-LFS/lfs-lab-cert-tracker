@@ -172,23 +172,6 @@ class UserCertificatesView(View):
             'total_users': cert_list.count(),
         })
 
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-
-        # Edit a user
-        user = uApi.get_user(request.POST.get('user'))
-        form = UserForm(request.POST, instance=user)
-        if form.is_valid():
-            if form.save():
-                messages.success(request, 'Success! {0} updated.'.format(user.get_full_name()))
-            else:
-                messages.error(request, 'Error! Failed to update {0}.'.format(user.get_full_name()))
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
-
-        return HttpResponseRedirect( request.POST.get('next') )
-
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class UserReportMissingTrainingsView(View):
