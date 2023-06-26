@@ -34,19 +34,31 @@
     </tr>
   </thead>
   <tbody>
-    {% for cert in certificates %}
-      <tr>
-        <td>
-			<a href="{% url 'app:user_details' user_id=cert.user.id %}?next={{ request.get_full_path }}">{{ cert.user.username }}</a>
-		</td>
-		<td>{{ cert.training_name }}</td>
-		<td>{{ cert.completion_date }}</td>
-      </tr>
-    {% endfor %}
+	{% for user, certificates in user_certificates_dict.items %}
+		<tr>
+			<td>
+				<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
+			</td>
+			<td>
+				<ol>
+					{% for certificate in certificates %}
+						<li>{{ certificate.training_name }}</li>
+					{% endfor %}
+				</ol>
+			</td>
+			<td>
+					{% for certificate in certificates %}
+						{{ certificate.completion_date }}
+						<br>
+					{% endfor %}
+			</td>
+
+		</tr>
+	{% endfor %}
   </tbody>
 </table>
 
-{% include 'app/subpages/_pagination.html' with data=certificates %}
+{% include 'app/subpages/_pagination.html' with data=users_paginated %}
 
 {% endblock %}
 

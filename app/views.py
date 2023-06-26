@@ -19,7 +19,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
-
+from collections import defaultdict
 
 from io import BytesIO
 # from cgi import escape
@@ -137,39 +137,47 @@ class AllUsersView(View):
 
         return HttpResponseRedirect( request.POST.get('next') )
     
+
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class UserCertificatesView(View):
-    """ Display all users certificates grabbed from API """
+    """ Display all users' certificates grabbed from API """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        # Retrieve all UserApiCerts objects
+        user_api_certs = UserApiCerts.objects.all()
 
-        # if session has next value, delete it
+        # Create a defaultdict to store the user certificates
+        user_certificates = defaultdict(list)
+
+        # Iterate over UserApiCerts objects and group them by user
+        for cert in user_api_certs:
+            user_certificates[cert.user].append(cert)
+
+        # Convert defaultdict to a regular dictionary
+        user_certificates_dict = dict(user_certificates)
+        
+        # Get a list of unique users
+        users = list(user_certificates_dict.keys())
+
         if request.session.get('next'):
             del request.session['next']
 
-        cert_list = uApi.get_apicerts()
-
-        # Pagination enables
-        query = request.GET.get('q')
-        if query:
-            cert_list = cert_list.filter(
-                Q(user__username__icontains=query)
-            ).order_by('id').distinct()
-
+        # Pagination
         page = request.GET.get('page', 1)
-        paginator = Paginator(cert_list, NUM_PER_PAGE)
+        paginator = Paginator(users, NUM_PER_PAGE)
 
         try:
-            certs = paginator.page(page)
+            users_paginated = paginator.page(page)
         except PageNotAnInteger:
-            certs = paginator.page(1)
+            users_paginated = paginator.page(1)
         except EmptyPage:
-            certs = paginator.page(paginator.num_pages)
+            users_paginated = paginator.page(paginator.num_pages)
 
         return render(request, 'app/users/user_certificates.html', {
-            'certificates': certs,
-            'total_users': cert_list.count(),
+            'user_certificates_dict': user_certificates_dict,
+            'users_paginated': users_paginated,
+            'total_users': len(users),
         })
 
 
