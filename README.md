@@ -123,7 +123,7 @@ $ pip install -r requirements.txt
 
 3. Set Environment Variables in your machine:
 ```
-SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
+SECRET_KEY = os.environ['LFS_LAB_CERT_TRACKER_SECRET_KEY']
 DATABASE_ENGINE = os.environ['LFS_LAB_CERT_TRACKER_DB_ENGINE']
 DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
 USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
