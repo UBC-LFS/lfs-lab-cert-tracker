@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 import lfs_lab_cert_tracker.models as models
 from app.utils import Api
+from app import api
 from django.db.models import Q
 
 class Command(BaseCommand):
@@ -12,9 +13,18 @@ class Command(BaseCommand):
     api = Api()
         
     def handle(self, *args, **options):
-        for user in models.AuthUser.objects.all():
+        # Find users who have missing certs
+        all_users = self.api.get_users()
+        user_list = []
+        for user in api.add_missing_certs(all_users):
+            if user.missing_certs != None:
+                user_list.append(user)
+
+
+        for user in user_list:
             try:
                 certificates = self.api.get_certificates_for_user(user.username)
+                certificates = []
                 for cert in certificates:
                     completion_date_str = cert['certificate']['completionDate']
                     completion_date = date(

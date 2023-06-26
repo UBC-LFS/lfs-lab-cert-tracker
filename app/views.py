@@ -31,7 +31,7 @@ from .accesses import *
 from .forms import *
 from .utils import Api
 from . import api
-from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert
+from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert, UserApiCerts
 
 
 # Set 50 users in a page
