@@ -29,7 +29,7 @@ SITE_URL = 'http://localhost:8000'
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['CERT_TRACKER_SECRET_KEY']
+SECRET_KEY = os.environ['LFS_LAB_CERT_TRACKER_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -183,7 +183,7 @@ MAX_UPLOAD_SIZE = '2097152'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SHIB_ATTR_MAP = {
-    'first_name': '',
+    'full_name': '',
     'last_name': '',
     'email': '',
     'username': ''
