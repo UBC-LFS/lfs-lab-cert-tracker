@@ -13,9 +13,6 @@
 	<small class="text-secondary">Total: {{ total_trainings }}</small>
 </h3>
 
-
-
-
 <div class="search-field mb-2">
 	<form method="GET" >
 		<div class="input-field">
@@ -95,6 +92,12 @@
 						</div>
 					{% endif %}
 				</td>
+			</tr>
+
+		{% empty %}
+
+			<tr>
+				<td colspan="4">No trainings found</td>
 			</tr>
 
 		{% endfor %}
