@@ -2,6 +2,8 @@
 
 {% block content %}
 
+{% load custom_tags %}
+
 {% if request.user.is_superuser %}
 	{% include 'app/subpages/_admin_menu.html' %}
 {% endif %}
@@ -34,27 +36,27 @@
     </tr>
   </thead>
   <tbody>
-	{% for user, certificates in user_certificates_dict.items %}
+	{% for user in users_paginated %}
 		<tr>
 			<td>
 				<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
 			</td>
 			<td>
 				<ol>
-					{% for certificate in certificates %}
+					{% for certificate in user_certificates_dict|get_item:user %}
 						<li>{{ certificate.training_name }}</li>
 					{% endfor %}
 				</ol>
 			</td>
 			<td>
-					{% for certificate in certificates %}
-						{{ certificate.completion_date }}
-						<br>
-					{% endfor %}
+				{% for certificate in user_certificates_dict|get_item:user %}
+					{{ certificate.completion_date }}
+					<br>
+				{% endfor %}
 			</td>
-
 		</tr>
 	{% endfor %}
+
   </tbody>
 </table>
 
