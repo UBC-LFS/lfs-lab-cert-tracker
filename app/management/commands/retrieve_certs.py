@@ -17,7 +17,7 @@ class Command(BaseCommand):
         all_users = self.api.get_users()
         user_list = []
         for user in api.add_missing_certs(all_users):
-            if user.missing_certs != None:
+            if user.missing_certs != None and user.is_active:
                 user_list.append(user)
 
 
