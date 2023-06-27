@@ -41,7 +41,7 @@
 			<td>
 				<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
 			</td>
-			<td>
+			<td style="text-align: left;">
 				<ol>
 					{% for certificate in user_certificates_dict|get_item:user %}
 						<li>{{ certificate.training_name }}</li>
