@@ -162,7 +162,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'assets', 'static')]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/srv/www/lfs-lab-cert-tracker/media'
+MEDIA_ROOT = '/srv/www/trms/media'
 
 
 MESSAGE_TAGS = {
@@ -174,7 +174,7 @@ MESSAGE_TAGS = {
 }
 
 
-MAX_UPLOAD_SIZE = '2097152'
+MAX_UPLOAD_SIZE = 1572864
 
 
 # Default primary key field type
