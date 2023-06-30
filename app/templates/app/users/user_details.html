@@ -76,6 +76,9 @@
 							<a href="{% url 'app:user_training_details' user_id=user_cert.user.id training_id=user_cert.cert.id %}?p=account">
 								{{ user_cert.cert.name }}
 							</a>
+							{% if not user_cert.cert_file %}
+								<span style="color: red">*</span> 
+							{% endif %}
 						</li>
 					{% empty %}
 						<li>
@@ -84,6 +87,7 @@
 					{% endfor %}
 				</ul>
 			</div>
+			<p style="font-size: 12px; color: #666;">Note: Records marked with <span style="color: red">*</span> automatically added.</p>
 		</div>
 
 		<div class="box border-red mt-5">

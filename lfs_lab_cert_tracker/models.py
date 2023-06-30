@@ -96,7 +96,8 @@ class UserCert(models.Model):
 
     def save(self, *args, **kwargs):
         """ Reduce a size and quality of the image """
-
+        if not self.cert_file:
+            return super(UserCert, self).save(*args, **kwargs)
         file_split = os.path.splitext(self.cert_file.name)
         file_name = file_split[0]
         file_extension = file_split[1]

@@ -56,7 +56,11 @@
 				<tr>
 					<td>Training Name</td>
 					<td>
-						<a href="/app{{ user_cert.cert_file.url }}" target="_blank">{{ user_cert.cert.name }}</a>
+						{% if user_cert.cert_file %}
+							<a href="/app{{ user_cert.cert_file.url }}" target="_blank">{{ user_cert.cert.name }}</a>
+						{% else %}
+							Added automatically (no file)
+						{% endif %}
 					</td>
 				</tr>
 				<tr>
