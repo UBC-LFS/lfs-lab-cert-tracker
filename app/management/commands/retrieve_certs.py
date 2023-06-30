@@ -1,11 +1,46 @@
 import requests
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from django.conf import settings
 from django.core.management.base import BaseCommand
 import lfs_lab_cert_tracker.models as models
 from app.utils import Api
 from app import api
 from django.db.models import Q
+import re
+
+def do_names_match(string1, string2):
+    """
+    Check if string1 matches string2 according to these rules:
+    
+    1. Removes words enclosed in parentheses from string1.
+    2. Removes the word 'Online' from string1 if it exists. This is for the missmatch: Privacy & Information Security - Fundamentals Part 1 Online
+    3. Splits string1 into words, allowing alphanumeric words that start with a capital letter or digit.
+    4. Converts the words from string1 and string2 to lowercase for case-insensitive comparison.
+    5. Checks if each word from string1 is present in string2.
+
+    Args:
+        string1 (str): The first string to compare.
+        string2 (str): The second string to compare.
+
+    Returns:
+        bool: True if all words from string1 are found in string2; False otherwise.
+    """
+    string1 = re.sub(r'\([^()]*\)', '', string1)
+    
+    # Remove the word 'Online' from string1 if it exists
+    string1 = string1.replace('Online', '')
+    
+    words1 = re.findall(r'\b(?:[A-Z]\w*|\d+)\b', string1)
+    
+    words1 = [word.lower() for word in words1]
+    string2 = string2.lower()
+
+    for word in words1:
+        if word not in string2:
+            return False
+    
+    return True
+
 
 class Command(BaseCommand):
     help = 'Retrieve certificates from the API and save to UserApiCerts model'
@@ -24,7 +59,6 @@ class Command(BaseCommand):
         for user in user_list:
             try:
                 certificates = self.api.get_certificates_for_user(user.username)
-                certificates = []
                 for cert in certificates:
                     completion_date_str = cert['certificate']['completionDate']
                     completion_date = date(
@@ -34,24 +68,27 @@ class Command(BaseCommand):
                     )
                     
                     # Check if a UserApiCerts instance already exists with the same user, name, and completion date
-                    existing_cert = models.UserApiCerts.objects.filter(
+                    api_cert = models.UserApiCerts.objects.filter(
                         Q(user=user) &
                         Q(training_name=cert['certificate']['trainingName']) &
                         Q(completion_date=completion_date)
                     ).first()
                     
-                    if existing_cert:
-                        print("Certificate already exists for", user.username)
-                        continue
+                    if not api_cert:
+                        # Create a UserApiCerts instance and save it to the database
+                        api_cert = models.UserApiCerts.objects.create(
+                            user=user,
+                            training_name=cert['certificate']['trainingName'],
+                            completion_date=completion_date
+                        )
                     
-                    # Create a UserApiCerts instance and save it to the database
-                    models.UserApiCerts.objects.create(
-                        user=user,
-                        training_name=cert['certificate']['trainingName'],
-                        completion_date=completion_date
-                    )
-                    print("Created certificate for", user.username)
-            
+                    # Check user missing certs and try to create certificate if names match
+                    for missing_cert in user.missing_certs:
+                        if do_names_match(api_cert.training_name, missing_cert.cert.name):
+                            res = api.update_or_create_user_cert(user_id=user.id, cert_id=missing_cert.cert.id, cert_file=None, completion_date=api_cert.completion_date, expiry_date=api_cert.completion_date + timedelta(days=365 * missing_cert.cert.expiry_in_years))
+                            print(f"AUTO ADD {missing_cert.cert.name} WITH RESULT: {res}")
+                            break
+
             except Exception as e:
                 # Handle any exceptions that occurred during the API request
                 print(f"An error occurred for user {user.username}: {str(e)}")
