@@ -11,7 +11,7 @@ import requests
 import json
 from email.mime.text import MIMEText
 
-from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert, UserApiCerts
+from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert, UserApiCerts, MissingCert
 from app import api
 
 
@@ -96,6 +96,43 @@ class Api:
 
         return get_object_or_404(Cert, id=attr)
 
+    def add_missing_trainings(self, area_id, cert):
+        """ If users in the area don't have the certificate, add a missing_cert for them """
+
+        users_in_lab = UserLab.objects.filter(lab=area_id)
+
+        for user_lab in users_in_lab:
+            has_certificate = UserCert.objects.filter(user=user_lab.user, cert=cert).exists()
+            if not has_certificate:
+               missing_cert_obj, created = MissingCert.objects.get_or_create(user=user_lab.user, cert=cert) 
+               if created:
+                   print(f"CREATED MISSING CERTIFICATE {cert} FOR {user_lab.user}")
+        
+    def remove_missing_trainings(self, area_id, cert):
+        """ Check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
+
+        users_in_lab = UserLab.objects.filter(lab=area_id)
+
+        for user_lab in users_in_lab:
+            has_certificate = UserCert.objects.filter(user=user_lab.user, cert=cert).exists()
+            if has_certificate: # If user already uploaded certificate, we don't need to remove anything
+                continue
+
+            other_labs_with_same_cert = [lab_cert.lab for lab_cert in LabCert.objects.filter(cert=cert)]
+            user_other_labs = [user_lab.lab for user_lab in UserLab.objects.filter(user=user_lab.user).exclude(lab=area_id)] # don't search current area
+
+            # If user has another lab that needs the certificate, keep the certificate as missing
+            for lab in other_labs_with_same_cert:
+                if lab in user_other_labs:
+                    # Found a common Lab object, this user does not need the missing cert removed
+                    break
+            else: # User has no other lab's that require this certificate
+                try:
+                    missing_cert_obj = MissingCert.objects.get(user=user_lab.user, cert=cert)
+                    missing_cert_obj.delete()
+                    print(f"Successfully deleted missing Certificate for {user_lab.user}")
+                except MissingCert.DoesNotExist:
+                    print("USER DIDN'T HAVE A MISSING CERT TO DELETE (This should not be possible if Missing Cert maintained properly)")
 
     # UserCert
 

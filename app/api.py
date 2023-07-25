@@ -4,9 +4,23 @@ from django.forms.models import model_to_dict
 from django.http import Http404
 
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import UserCert, LabCert, UserLab, Cert, Lab
+from lfs_lab_cert_tracker.models import UserCert, LabCert, UserLab, Cert, Lab, MissingCert
 
+import time
+from functools import wraps
 
+def timing_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"The function {func.__name__} took {elapsed_time} seconds to execute.")
+        return result
+    return wrapper
+
+@timing_decorator
 def add_missing_certs(users):
     """ Add missing certs into users """
     for user in users:
@@ -17,8 +31,13 @@ def add_missing_certs(users):
             user.missing_certs = None
     return users
 
-
+# @timing_decorator
 def get_missing_certs(user_id):
+    # Get the labs that the user is signed up for
+    user = User.objects.get(id=user_id)
+    return [model_to_dict(missing_user_cert.cert) for missing_user_cert in user.missing_certs.all()]
+
+def get_missing_certs_obj(user_id):
     # Get the labs that the user is signed up for
     user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
     lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
@@ -27,7 +46,11 @@ def get_missing_certs(user_id):
     user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
     missing_user_certs = lab_certs.exclude(cert_id__in=user_cert_ids)
 
-    return [model_to_dict(missing_user_cert.cert) for missing_user_cert in missing_user_certs]
+    return [missing_user_cert.cert for missing_user_cert in missing_user_certs]
+
+def get_users_with_missing_certs(user_list):
+    """ Takes in list of Users and returns a list of Users"""
+    return user_list.filter(missing_certs__isnull=False).order_by('id').distinct()
 
 
 def is_user_cert_expired(cert):
@@ -77,9 +100,10 @@ def get_user_cert_404(user_id, cert_id):
         return uc.first()
     raise Http404
 
-
+# @timing_decorator
 def get_missing_certs_query_object(user_id):
     user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
+    # print("UESR LAB IDS ARE", user_lab_ids)
     lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
 
     # From these labs determine which certs are missing or expired
@@ -150,22 +174,10 @@ def get_users_expired_certs(lab_id):
 
 
 def get_missing_lab_certs(user_id, lab_id):
-    user_certs = UserCert.objects.filter(user=user_id).prefetch_related('cert')
-    required_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
+    lab_certs = LabCert.objects.filter(lab_id=lab_id)
+    missing = lab_certs.filter(cert__missingcert__user_id=user_id)
 
-    user_cert_ids = set(user_certs.values_list('cert_id', flat=True))
-    required_cert_ids = set(required_certs.values_list('cert_id', flat=True))
-
-    missing = []
-    for rc in required_certs:
-        if rc.cert.id not in user_cert_ids:
-            missing.append(rc.cert)
-
-    #for uc in user_certs:
-    #    if uc.cert.id in required_cert_ids and is_user_cert_expired(uc):
-    #        expiried.append(uc.cert)
-
-    return [model_to_dict(m) for m in missing]
+    return [model_to_dict(m.cert) for m in missing]
 
 
 def get_user_certs(user_id):

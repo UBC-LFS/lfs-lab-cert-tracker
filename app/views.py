@@ -39,6 +39,19 @@ NUM_PER_PAGE = 50
 
 uApi = Api()
 
+import time
+from functools import wraps
+
+def timing_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"The function {func.__name__} took {elapsed_time} seconds to execute.")
+        return result
+    return wrapper
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -82,6 +95,7 @@ def index(request):
 class AllUsersView(View):
     """ Display all users """
 
+    @timing_decorator
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
@@ -89,7 +103,6 @@ class AllUsersView(View):
         if request.session.get('next'):
             del request.session['next']
 
-        user_list = uApi.get_users()
 
         # Pagination enables
         query = request.GET.get('q')
@@ -97,6 +110,8 @@ class AllUsersView(View):
             user_list = User.objects.filter(
                 Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
             ).order_by('id').distinct()
+        else:
+            user_list = uApi.get_users()
 
         page = request.GET.get('page', 1)
         paginator = Paginator(user_list, NUM_PER_PAGE)
@@ -109,7 +124,6 @@ class AllUsersView(View):
             users = paginator.page(paginator.num_pages)
 
         users = uApi.add_inactive_users(users)
-        users = api.add_missing_certs(users)
 
         areas = uApi.get_areas()
 
@@ -183,27 +197,21 @@ class UserCertificatesView(View):
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class UserReportMissingTrainingsView(View):
-    """ Display an user report for missing trainings """
+    """ Display a user report for missing trainings """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        all_users = uApi.get_users()
-
-        # Find users who have missing certs
-        user_list = []
-        for user in api.add_missing_certs(all_users):
-            if user.missing_certs != None:
-                user_list.append(user)
-
-        #user_list = users_in_missing_training.copy()
+        user_list = uApi.get_users()
 
         # Pagination enables
         query = request.GET.get('q')
         if query:
-            user_list = User.objects.filter(
+            user_list = user_list.filter(
                 Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
             ).order_by('id').distinct()
+
+        user_list = api.get_users_with_missing_certs(user_list)
 
         page = request.GET.get('page', 1)
         paginator = Paginator(user_list, NUM_PER_PAGE)
@@ -475,9 +483,8 @@ def download_user_report_missing_trainings(request):
 
     # Find users who have missing certs
     users_in_missing_training = []
-    for user in api.add_missing_certs(users):
-        if user.missing_certs != None:
-            users_in_missing_training.append(user)
+    for user in api.get_users_with_missing_certs(users):
+        users_in_missing_training.append(user)
 
     return render_to_pdf('app/users/download_user_report_missing_trainings.html', {
         'users': users_in_missing_training,
@@ -767,11 +774,13 @@ def add_training_area(request):
         if form.is_valid():
             new_labcert = form.save()
             messages.success(request, 'Success! {0} added.'.format(new_labcert.cert.name))
+            uApi.add_missing_trainings(area_id, new_labcert.cert)
         else:
             errors = form.errors.get_json_data()
             messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
     else:
         messages.error(request, 'Error! Failed to add Training. This training has already existed.'.format(labcert.cert.name))
+
 
     return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
@@ -802,6 +811,7 @@ def delete_training_in_area(request):
     if labcert == None:
         messages.error(request, 'Error! {0} does not exist in this area.'.format(training.name))
     else:
+        uApi.remove_missing_trainings(area_id, labcert.cert)
         if labcert.delete():
             messages.success(request, 'Success! {0} deleted.'.format(labcert.cert.name))
         else:

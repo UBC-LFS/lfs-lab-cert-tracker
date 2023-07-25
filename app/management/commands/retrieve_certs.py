@@ -50,13 +50,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Find users who have missing certs
         all_users = self.api.get_users()
-        user_list = []
-        for user in api.add_missing_certs(all_users):
-            if user.missing_certs != None and user.is_active:
-                user_list.append(user)
+        user_list = api.get_users_with_missing_certs(all_users) 
 
-
-        for user in user_list:
+        for user in user_list[7:]:
             try:
                 certificates = self.api.get_certificates_for_user(user.username)
                 for cert in certificates:
@@ -83,7 +79,7 @@ class Command(BaseCommand):
                         )
                     
                     # Check user missing certs and try to create certificate if names match
-                    for missing_cert in user.missing_certs:
+                    for missing_cert in user.missing_certs.all():
                         if do_names_match(api_cert.training_name, missing_cert.cert.name):
                             res = api.update_or_create_user_cert(user_id=user.id, cert_id=missing_cert.cert.id, cert_file=None, completion_date=api_cert.completion_date, expiry_date=api_cert.completion_date + timedelta(days=365 * missing_cert.cert.expiry_in_years))
                             print(f"AUTO ADD {missing_cert.cert.name} WITH RESULT: {res}")

@@ -12,7 +12,17 @@
 	<small class="text-danger">for Missing Training Records</small>
 </h3>
 
-<div class="text-primary float-right">
+<div class="search-field mb-2">
+	<form method="GET">
+		<div class="input-field">
+			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
+			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+			<a class="btn btn-sm btn-light" href="{% url 'app:user_report_missing_trainings' %}">Clear</a>
+		</div>
+	</form>
+</div>
+
+<div class="text-primary float-left">
 	<i class="material-icons">cloud_download</i>
 	<a href="{% url 'app:download_user_report_missing_trainings' %}" target="_blank">Download as PDF</a>
 </div>
@@ -32,11 +42,13 @@
 			<tr>
 				<td>{{ user.id }}</td>
 				<td>{{ user.get_full_name }}</td>
-				<td>{{ user.username }}</td>
+				<td>
+					<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
+				</td>
 				<td>{{ user.missing_certs.count }}</td>
 				<td class="text-left">
 					<ul>
-						{% for training in user.missing_certs %}
+						{% for training in user.missing_certs.all %}
 							<li>{{ training.cert }}</li>
 						{% endfor %}
 					</ul>

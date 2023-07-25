@@ -207,6 +207,16 @@ class LabCert(models.Model):
     def __str__(self):
         return self.cert.name
 
+class MissingCert(models.Model):
+    """
+    Keeps track of the certificates users are missing
+    """
+    user = models.ForeignKey(AuthUser, on_delete=models.CASCADE, related_name='missing_certs')
+    cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.username} is missing {self.cert.name}"
+
 class UserInactive(models.Model):
     """ Update date when a user become inactive """
 
