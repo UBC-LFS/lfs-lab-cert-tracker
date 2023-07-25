@@ -58,7 +58,8 @@ class Command(BaseCommand):
 
         for user in user_list:
             try:
-                certificates = self.api.get_certificates_for_user(user.username)
+                print("CALLING API FOR", user.username)
+                certificates = self.api.get_certificates_for_cwls([user.username])
                 for cert in certificates:
                     completion_date_str = cert['certificate']['completionDate']
                     completion_date = date(
