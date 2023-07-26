@@ -107,32 +107,46 @@ class Api:
                missing_cert_obj, created = MissingCert.objects.get_or_create(user=user_lab.user, cert=cert) 
                if created:
                    print(f"CREATED MISSING CERTIFICATE {cert} FOR {user_lab.user}")
+    
+    def try_remove_missing_certificate_for_user(self, user, cert, current_area):
+        has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
+        if has_certificate: # If user already uploaded certificate, we don't need to remove anything
+            return
+
+        other_labs_with_same_cert = [lab_cert.lab for lab_cert in LabCert.objects.filter(cert=cert)]
+        user_other_labs = [user_lab.lab for user_lab in UserLab.objects.filter(user=user).exclude(lab=current_area)] # don't search current area
+
+        # If user has another lab that needs the certificate, keep the certificate as missing
+        for lab in other_labs_with_same_cert:
+            if lab in user_other_labs:
+                # Found a common Lab object, this user does not need the missing cert removed
+                break
+        else: # User has no other lab's that require this certificate
+            try:
+                missing_cert_obj = MissingCert.objects.get(user=user, cert=cert)
+                missing_cert_obj.delete()
+                print(f"Successfully deleted missing certificate {cert} for {user}")
+            except MissingCert.DoesNotExist:
+                print("USER DIDN'T HAVE A MISSING CERT TO DELETE (This should not be possible if Missing Cert maintained properly)")
         
     def remove_missing_trainings(self, area_id, cert):
-        """ Check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
+        """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
 
         users_in_lab = UserLab.objects.filter(lab=area_id)
 
         for user_lab in users_in_lab:
-            has_certificate = UserCert.objects.filter(user=user_lab.user, cert=cert).exists()
-            if has_certificate: # If user already uploaded certificate, we don't need to remove anything
-                continue
+            self.try_remove_missing_certificate_for_user(user_lab.user, cert, area_id)
 
-            other_labs_with_same_cert = [lab_cert.lab for lab_cert in LabCert.objects.filter(cert=cert)]
-            user_other_labs = [user_lab.lab for user_lab in UserLab.objects.filter(user=user_lab.user).exclude(lab=area_id)] # don't search current area
-
-            # If user has another lab that needs the certificate, keep the certificate as missing
-            for lab in other_labs_with_same_cert:
-                if lab in user_other_labs:
-                    # Found a common Lab object, this user does not need the missing cert removed
-                    break
-            else: # User has no other lab's that require this certificate
-                try:
-                    missing_cert_obj = MissingCert.objects.get(user=user_lab.user, cert=cert)
-                    missing_cert_obj.delete()
-                    print(f"Successfully deleted missing Certificate for {user_lab.user}")
-                except MissingCert.DoesNotExist:
-                    print("USER DIDN'T HAVE A MISSING CERT TO DELETE (This should not be possible if Missing Cert maintained properly)")
+    
+    def remove_user_from_area_update_missing(self, area, user):
+        """ Check if each certificate in area is needed by any of user's other areas. If not, remove the missing_cert """
+        user_lab = UserLab.objects.get(lab=area, user=user)
+        certs_in_lab = [labcert.cert for labcert in LabCert.objects.filter(lab=user_lab.lab)]
+        print("USER LAB IS", user_lab)
+        print("CERTS IN LAB IS", certs_in_lab)
+        for cert in certs_in_lab:
+            print("CERT IS", cert)
+            self.try_remove_missing_certificate_for_user(user, cert, area)
 
     # UserCert
 

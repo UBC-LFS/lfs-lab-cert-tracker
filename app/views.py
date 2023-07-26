@@ -931,6 +931,7 @@ def delete_user_in_area(request, area_id):
     if userlab == None:
         messages.error(request, 'Error! A user or an area data does not exist.')
     else:
+        uApi.remove_user_from_area_update_missing(area, user)
         if userlab.delete():
             messages.success(request, 'Success! {0} deleted.'.format(user.get_full_name()))
         else:
