@@ -52,9 +52,10 @@ class Command(BaseCommand):
         all_users = self.api.get_users()
         user_list = api.get_users_with_missing_certs(all_users) 
 
-        for user in user_list[7:]:
+        for user in user_list:
             try:
-                certificates = self.api.get_certificates_for_user(user.username)
+                print("CALLING API FOR", user.username)
+                certificates = self.api.get_certificates_for_cwls([user.username])
                 for cert in certificates:
                     completion_date_str = cert['certificate']['completionDate']
                     completion_date = date(
