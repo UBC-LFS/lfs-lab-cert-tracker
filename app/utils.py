@@ -96,19 +96,31 @@ class Api:
 
         return get_object_or_404(Cert, id=attr)
 
+    def try_add_missing_certificate_for_user(self, user, cert):
+        """ If user does not have the certificate or missing certificate already, create one for them """
+        has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
+        if not has_certificate:
+            missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
+            if created:
+                print(f"CREATED MISSING CERTIFICATE {cert} FOR {user}")
+        
     def add_missing_trainings(self, area_id, cert):
         """ If users in the area don't have the certificate, add a missing_cert for them """
 
         users_in_lab = UserLab.objects.filter(lab=area_id)
 
         for user_lab in users_in_lab:
-            has_certificate = UserCert.objects.filter(user=user_lab.user, cert=cert).exists()
-            if not has_certificate:
-               missing_cert_obj, created = MissingCert.objects.get_or_create(user=user_lab.user, cert=cert) 
-               if created:
-                   print(f"CREATED MISSING CERTIFICATE {cert} FOR {user_lab.user}")
+            self.try_add_missing_certificate_for_user(user_lab.user, cert)
+    
+    def add_missing_certificates_for_added_user(self, user, area_id):
+        """ For users newly added to an area (lab), add missing certificates for them """
+        user_lab = UserLab.objects.get(lab_id=area_id, user=user)
+        certs_in_lab = [labcert.cert for labcert in LabCert.objects.filter(lab=user_lab.lab)]
+        for cert in certs_in_lab:
+            self.try_add_missing_certificate_for_user(user, cert)
     
     def try_remove_missing_certificate_for_user(self, user, cert, current_area):
+        """ Check if users have the certificate already, if not, remove the missing certificate if no other labs the user is in require it"""
         has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
         if has_certificate: # If user already uploaded certificate, we don't need to remove anything
             return
@@ -125,11 +137,11 @@ class Api:
             try:
                 missing_cert_obj = MissingCert.objects.get(user=user, cert=cert)
                 missing_cert_obj.delete()
-                print(f"Successfully deleted missing certificate {cert} for {user}")
+                print(f"DELETED MISSING CERTIFICATE {cert} for {user}")
             except MissingCert.DoesNotExist:
                 print("USER DIDN'T HAVE A MISSING CERT TO DELETE (This should not be possible if Missing Cert maintained properly)")
         
-    def remove_missing_trainings(self, area_id, cert):
+    def remove_missing_trainings_for_deleted_labcert(self, area_id, cert):
         """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
 
         users_in_lab = UserLab.objects.filter(lab=area_id)
@@ -137,15 +149,21 @@ class Api:
         for user_lab in users_in_lab:
             self.try_remove_missing_certificate_for_user(user_lab.user, cert, area_id)
 
+    def remove_missing_trainings_for_users_in_area(self, area):
+        """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
+
+        users_in_lab = UserLab.objects.filter(lab=area)
+        lab_certs = LabCert.objects.filter(lab=area)
+
+        for user_lab in users_in_lab:
+            for lab_cert in lab_certs:
+                self.try_remove_missing_certificate_for_user(user_lab.user, lab_cert.cert, area)
     
     def remove_user_from_area_update_missing(self, area, user):
         """ Check if each certificate in area is needed by any of user's other areas. If not, remove the missing_cert """
         user_lab = UserLab.objects.get(lab=area, user=user)
         certs_in_lab = [labcert.cert for labcert in LabCert.objects.filter(lab=user_lab.lab)]
-        print("USER LAB IS", user_lab)
-        print("CERTS IN LAB IS", certs_in_lab)
         for cert in certs_in_lab:
-            print("CERT IS", cert)
             self.try_remove_missing_certificate_for_user(user, cert, area)
 
     # UserCert

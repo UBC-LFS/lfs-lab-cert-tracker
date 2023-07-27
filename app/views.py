@@ -726,6 +726,8 @@ class AreaDetailsView(View):
                 valid_email = False
                 valid_email_error = None
 
+                uApi.add_missing_certificates_for_added_user(user, area_id)
+
                 try:
                     validate_email(user.email)
                     valid_email = True
@@ -811,7 +813,7 @@ def delete_training_in_area(request):
     if labcert == None:
         messages.error(request, 'Error! {0} does not exist in this area.'.format(training.name))
     else:
-        uApi.remove_missing_trainings(area_id, labcert.cert)
+        uApi.remove_missing_trainings_for_deleted_labcert(area_id, labcert.cert)
         if labcert.delete():
             messages.success(request, 'Success! {0} deleted.'.format(labcert.cert.name))
         else:
@@ -851,6 +853,7 @@ def delete_area(request):
     """ Delete an area """
 
     area = uApi.get_area(request.POST.get('area'))
+    uApi.remove_missing_trainings_for_users_in_area(area)
     if area.delete():
         messages.success(request, 'Success! {0} deleted.'.format(area.name))
     else:
