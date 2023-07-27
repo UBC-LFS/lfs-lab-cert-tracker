@@ -51,10 +51,10 @@
         <td>{{ user.last_name }}</td>
 				<td>{{ user.email }}</td>
 				<td>
-					{% if user.missing_certs|length == 0 %}
+					{% if user.missing_certs.all|length == 0 %}
 						<span class="badge badge-light">NO</span>
 					{% else %}
-						<span class="badge badge-warning">YES ({{ user.missing_certs|length }})</span>
+						<span class="badge badge-warning">YES ({{ user.missing_certs.all|length }})</span>
 					{% endif %}
 				</td>
 				<td>

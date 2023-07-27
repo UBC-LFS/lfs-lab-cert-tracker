@@ -96,6 +96,23 @@ class Api:
 
         return get_object_or_404(Cert, id=attr)
 
+    # UPDATE MISSING CERTS
+    
+    def remove_missing_cert(self, user_id, cert_id):
+        """ Remove missing certificate for user """
+        certs = MissingCert.objects.filter(user_id=user_id, cert=cert_id)
+        if certs.exists():
+            certs.delete()
+    
+    def conditionally_add_missing_cert_for_user(self, user, cert):
+        """ Add missing cert for user if it is required by any of their areas (labs) """
+        certs_user_needs = Cert.objects.filter(labcert__lab__userlab__user=user)
+        print("CERTS IN USER LABS ARE", certs_user_needs)
+        if cert in certs_user_needs:
+            missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
+            if created:
+                print(f"CREATED MISSING CERTIFICATE {cert} FOR {user}")
+
     def try_add_missing_certificate_for_user(self, user, cert):
         """ If user does not have the certificate or missing certificate already, create one for them """
         has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
@@ -106,7 +123,6 @@ class Api:
         
     def add_missing_trainings(self, area_id, cert):
         """ If users in the area don't have the certificate, add a missing_cert for them """
-
         users_in_lab = UserLab.objects.filter(lab=area_id)
 
         for user_lab in users_in_lab:
@@ -143,7 +159,6 @@ class Api:
         
     def remove_missing_trainings_for_deleted_labcert(self, area_id, cert):
         """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
-
         users_in_lab = UserLab.objects.filter(lab=area_id)
 
         for user_lab in users_in_lab:
@@ -151,7 +166,6 @@ class Api:
 
     def remove_missing_trainings_for_users_in_area(self, area):
         """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
-
         users_in_lab = UserLab.objects.filter(lab=area)
         lab_certs = LabCert.objects.filter(lab=area)
 
@@ -238,11 +252,13 @@ class Api:
                         report['updated'].append(lab.name)
             else:
                 created = UserLab.objects.create(user=user, lab=lab, role=role)
+                self.add_missing_certificates_for_added_user(user, lab.id)
                 if created:
                     report['created'].append(lab.name)
 
         for ul in all_userlab:
             if ul.lab.id not in used_areas:
+                self.remove_user_from_area_update_missing(ul.lab, user)
                 deleted = ul.delete()
                 if deleted:
                     report['deleted'].append(ul.lab.name)

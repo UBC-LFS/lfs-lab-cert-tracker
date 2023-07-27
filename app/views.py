@@ -34,7 +34,6 @@ from . import api
 from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert, UserApiCerts
 
 
-# Set 50 users in a page
 NUM_PER_PAGE = 50
 
 uApi = Api()
@@ -367,6 +366,7 @@ class UserTrainingsView(View):
 
             # Whether user's certficiate is created successfully or not
             if result:
+                uApi.remove_missing_cert(user_id, cert['id'])
                 messages.success(request, 'Success! {0} added.'.format(cert['name']))
                 res = { 'user_id': user_id, 'cert_id': result['cert'] }
             else:
@@ -566,6 +566,7 @@ def assign_user_areas(request):
         all_userlab = user.userlab_set.all()
 
         if len(all_userlab) > 0:
+            report = uApi.update_or_create_areas_to_user(user, [])
             if all_userlab.delete():
                 return JsonResponse({ 'status': 'success', 'message': "Success! {0}'s all areas have deleted.".format(user.get_full_name()) })
             else:
@@ -1067,16 +1068,15 @@ def delete_user_training(request, user_id):
     if usercert.exists():
         usercert_obj = usercert.first()
 
-        is_dir_deleted = False
         dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(training_id))
 
+        uApi.conditionally_add_missing_cert_for_user(user, usercert_obj.cert)
         is_deleted = usercert.delete()
 
         if os.path.exists(dirpath) and os.path.isdir(dirpath):
             os.rmdir(dirpath)
-            is_dir_deleted = True
 
-        if is_deleted and is_dir_deleted == True:
+        if is_deleted:
             messages.success(request, 'Success! {0} deleted.'.format(usercert_obj.cert.name))
             return HttpResponseRedirect( reverse('app:user_trainings', args=[user_id]) )
         else:

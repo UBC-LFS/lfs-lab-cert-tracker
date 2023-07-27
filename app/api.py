@@ -20,25 +20,14 @@ def timing_decorator(func):
         return result
     return wrapper
 
-@timing_decorator
-def add_missing_certs(users):
-    """ Add missing certs into users """
-    for user in users:
-        certs = get_missing_certs_query_object(user.id)
-        if len(certs) > 0:
-            user.missing_certs = certs
-        else:
-            user.missing_certs = None
-    return users
-
-# @timing_decorator
 def get_missing_certs(user_id):
     # Get the labs that the user is signed up for
     user = User.objects.get(id=user_id)
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in user.missing_certs.all()]
 
 def get_missing_certs_obj(user_id):
-    # Get the labs that the user is signed up for
+    """ Manually calculate what missing certs a user should have based on the labs they are in """
+
     user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
     lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
 
@@ -99,17 +88,6 @@ def get_user_cert_404(user_id, cert_id):
     if uc.exists():
         return uc.first()
     raise Http404
-
-# @timing_decorator
-def get_missing_certs_query_object(user_id):
-    user_lab_ids = UserLab.objects.filter(user_id=user_id).values_list('lab_id')
-    # print("UESR LAB IDS ARE", user_lab_ids)
-    lab_certs = LabCert.objects.filter(lab_id__in=user_lab_ids).distinct('cert').prefetch_related('cert')
-
-    # From these labs determine which certs are missing or expired
-    user_cert_ids = UserCert.objects.filter(user_id=user_id).values_list('cert_id')
-
-    return lab_certs.exclude(cert_id__in=user_cert_ids)
 
 
 def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
