@@ -22,6 +22,12 @@ from django.core.exceptions import SuspiciousOperation
 from collections import defaultdict
 
 from io import BytesIO
+from django.http import FileResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+
 # from cgi import escape
 from html import escape # >= python 3.8
 from xhtml2pdf import pisa
@@ -34,7 +40,7 @@ from . import api
 from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert, UserApiCerts
 
 
-NUM_PER_PAGE = 50
+NUM_PER_PAGE = 20
 
 uApi = Api()
 
@@ -129,7 +135,7 @@ class AllUsersView(View):
         return render(request, 'app/users/all_users.html', {
             'users': users,
             'total_users': len(user_list),
-            'areas': uApi.add_users_to_areas(areas),
+            'areas': uApi.add_users_to_areas(areas, users),
             'roles': {'LAB_USER': 0, 'PI': 1}
         })
 
@@ -459,7 +465,6 @@ def user_report(request, user_id):
         'user_cert_list': user_cert_list
     })
 
-
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
     context = Context(context_dict)
@@ -482,13 +487,65 @@ def download_user_report_missing_trainings(request):
     users = uApi.get_users()
 
     # Find users who have missing certs
-    users_in_missing_training = []
-    for user in api.get_users_with_missing_certs(users):
-        users_in_missing_training.append(user)
+    users_in_missing_training = list(api.get_users_with_missing_certs(users))
 
-    return render_to_pdf('app/users/download_user_report_missing_trainings.html', {
-        'users': users_in_missing_training,
-    })
+    # Generate PDF using ReportLab
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=0, leftMargin=0, topMargin=0, bottomMargin=0)
+
+    # Header
+    styles = getSampleStyleSheet()
+
+    # Modify the Heading1 style for the main header
+    styles['Heading1'].alignment = 1  # 1 for center alignment
+    styles['Heading1'].fontSize = 16
+
+    # Modify the Heading2 style for the table headers
+    styles['Heading2'].alignment = 1 
+    styles['Heading2'].fontSize = 12 
+
+    header = Paragraph("User Report (Total: {})".format(len(users_in_missing_training)), styles['Heading1'])
+    doc.build([header])
+
+    # Table data
+    data = [[Paragraph('ID', styles['Heading2']), 
+             Paragraph('Full Name', styles['Heading2']),
+             Paragraph('CWL', styles['Heading2']),
+             Paragraph('Number of Missing Trainings', styles['Heading2']),
+             Paragraph('Missing Training Records', styles['Heading2'])]]
+
+    for user in users_in_missing_training:
+        row = [
+            Paragraph(str(user.id), styles['BodyText']),
+            Paragraph(user.get_full_name(), styles['BodyText']),
+            Paragraph(user.username, styles['BodyText']),
+            Paragraph(str(user.missing_certs.count()), styles['BodyText']),
+            Paragraph(', '.join([training.cert.name for training in user.missing_certs.all()]), styles['BodyText'])
+        ]
+        data.append(row)
+
+    # Set column widths
+    col_widths = [doc.width * 0.1, doc.width * 0.3, doc.width * 0.2, doc.width * 0.2, doc.width * 0.2]
+
+    # Table style
+    table_style = TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+    ])
+
+    # Create table
+    table = Table(data, colWidths=col_widths)
+    table.setStyle(table_style)
+
+    # Add table to the document
+    doc.build([header, table])
+
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='user_report_missing_trainings.pdf')
 
 
 @login_required(login_url=settings.LOGIN_URL)

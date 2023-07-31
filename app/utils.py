@@ -66,14 +66,13 @@ class Api:
 
         return get_object_or_404(Lab, id=attr)
 
-
-    def add_users_to_areas(self, areas):
+    def add_users_to_areas(self, areas, users):
         """ Add user info to areas """
 
         for area in areas:
             area.has_lab_users = []
             area.has_pis = []
-            for userlab in area.userlab_set.all():
+            for userlab in UserLab.objects.filter(user__in=users, lab=area):
                 if userlab.role == UserLab.LAB_USER:
                     area.has_lab_users.append(userlab.user.id)
                 elif userlab.role == UserLab.PRINCIPAL_INVESTIGATOR:
