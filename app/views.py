@@ -743,8 +743,26 @@ class AreaDetailsView(View):
         for labcert in area.labcert_set.all():
             required_trainings.append(labcert.cert)
 
+
+        userlab_set = area.userlab_set.all()
+        query = request.GET.get('q')
+        if query:
+            userlab_set = userlab_set.filter(
+                Q(user__username__icontains=query) | Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query)
+            ).order_by('id').distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(userlab_set, NUM_PER_PAGE / 2)
+
+        try:
+            userlabs = paginator.page(page)
+        except PageNotAnInteger:
+            userlabs = paginator.page(1)
+        except EmptyPage:
+            userlabs = paginator.page(paginator.num_pages)
+
         users_in_area = []
-        for userlab in area.userlab_set.all():
+        for userlab in userlabs: 
             user = userlab.user
             if uApi.is_pi_in_area(user.id, area_id): user.is_pi = True
             else: user.is_pi = False
@@ -756,10 +774,12 @@ class AreaDetailsView(View):
             'area': area,
             'required_trainings': required_trainings,
             'users_in_area': users_in_area,
+            'userlabs': userlabs,
+            'total_users': len(userlab_set),
             'is_admin': request.user.is_superuser,
             'is_pi': is_pi,
-            'users_missing_certs': api.get_users_missing_certs(area_id),
-            'users_expired_certs': api.get_users_expired_certs(area_id),
+            'users_missing_certs': api.get_users_missing_certs(area_id, userlabs),
+            'users_expired_certs': api.get_users_expired_certs(area_id, userlabs),
             'user_area_form': UserAreaForm(initial={ 'lab': area.id }),
             'area_training_form': AreaTrainingForm(initial={ 'lab': area.id })
         })
