@@ -44,9 +44,6 @@ NUM_PER_PAGE = 20
 
 uApi = Api()
 
-import time
-from functools import wraps
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])

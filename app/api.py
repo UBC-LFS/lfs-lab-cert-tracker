@@ -8,7 +8,6 @@ from lfs_lab_cert_tracker.models import UserCert, LabCert, UserLab, Cert, Lab, M
 
 
 def get_missing_certs(user_id):
-    # Get the labs that the user is signed up for
     user = User.objects.get(id=user_id)
     return [model_to_dict(missing_user_cert.cert) for missing_user_cert in user.missing_certs.all()]
 
