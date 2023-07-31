@@ -6,19 +6,6 @@ from django.http import Http404
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import UserCert, LabCert, UserLab, Cert, Lab, MissingCert
 
-import time
-from functools import wraps
-
-def timing_decorator(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"The function {func.__name__} took {elapsed_time} seconds to execute.")
-        return result
-    return wrapper
 
 def get_missing_certs(user_id):
     # Get the labs that the user is signed up for

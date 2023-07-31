@@ -106,7 +106,6 @@ class Api:
     def conditionally_add_missing_cert_for_user(self, user, cert):
         """ Add missing cert for user if it is required by any of their areas (labs) """
         certs_user_needs = Cert.objects.filter(labcert__lab__userlab__user=user)
-        print("CERTS IN USER LABS ARE", certs_user_needs)
         if cert in certs_user_needs:
             missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
 

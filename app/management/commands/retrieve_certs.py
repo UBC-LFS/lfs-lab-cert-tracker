@@ -84,6 +84,7 @@ class Command(BaseCommand):
                         if do_names_match(api_cert.training_name, missing_cert.cert.name):
                             res = api.update_or_create_user_cert(user_id=user.id, cert_id=missing_cert.cert.id, cert_file=None, completion_date=api_cert.completion_date, expiry_date=api_cert.completion_date + timedelta(days=365 * missing_cert.cert.expiry_in_years))
                             print(f"AUTO ADD {missing_cert.cert.name} WITH RESULT: {res}")
+                            res2 = self.api.remove_missing_cert(user.id, missing_cert.cert.id)
                             break
 
             except Exception as e:
