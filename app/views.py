@@ -755,7 +755,7 @@ class AreaDetailsView(View):
             ).order_by('id').distinct()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(userlab_set, NUM_PER_PAGE / 2)
+        paginator = Paginator(userlab_set, NUM_PER_PAGE)
 
         try:
             userlabs = paginator.page(page)
@@ -773,6 +773,10 @@ class AreaDetailsView(View):
 
         is_pi = uApi.is_pi_in_area(request.user.id, area_id)
 
+        # Add lab missing cert and lab expired cert data to user
+        api.get_users_missing_certs(area_id, userlabs)
+        api.get_users_expired_certs(area_id, userlabs)
+
         return render(request, 'app/areas/area_details.html', {
             'area': area,
             'required_trainings': required_trainings,
@@ -781,8 +785,6 @@ class AreaDetailsView(View):
             'total_users': len(userlab_set),
             'is_admin': request.user.is_superuser,
             'is_pi': is_pi,
-            'users_missing_certs': api.get_users_missing_certs(area_id, userlabs),
-            'users_expired_certs': api.get_users_expired_certs(area_id, userlabs),
             'user_area_form': UserAreaForm(initial={ 'lab': area.id }),
             'area_training_form': AreaTrainingForm(initial={ 'lab': area.id })
         })

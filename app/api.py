@@ -113,7 +113,7 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
 
 def get_users_missing_certs(lab_id, lab_users=None):
     """
-    Given a lab returns users that are missing certs and the certs they are missing
+    Given a lab returns users that are missing certs and the certs they are missing, also add missing_certs onto the user
     """
     if lab_users is None:
         lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
@@ -123,11 +123,13 @@ def get_users_missing_certs(lab_id, lab_users=None):
         missing_lab_certs = get_missing_lab_certs(lab_user.user_id, lab_id)
         if missing_lab_certs:
             users_missing_certs.append((lab_user, missing_lab_certs))
+            lab_user.user.lab_missing_certs = missing_lab_certs
 
     return [(model_to_dict(user_missing_certs.user), missing_lab_cert) for user_missing_certs, missing_lab_cert in users_missing_certs]
 
 
 def get_users_expired_certs(lab_id, lab_users=None):
+    """ Calculate what certs are expired for users in an area (lab) and add lab_expired_certs property to user"""
     if lab_users is None:
         lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
 
@@ -149,6 +151,7 @@ def get_users_expired_certs(lab_id, lab_users=None):
                 'user': lab_user.user,
                 'expired_certs': expired_certs
             })
+            lab_user.user.lab_expired_certs = expired_certs
 
     return users_expired_certs
 
