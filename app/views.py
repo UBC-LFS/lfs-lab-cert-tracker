@@ -24,7 +24,7 @@ from collections import defaultdict
 from io import BytesIO
 from django.http import FileResponse
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, ListFlowable, ListItem
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
@@ -520,9 +520,12 @@ def download_user_report_missing_trainings(request):
             Paragraph(user.get_full_name(), styles['BodyText']),
             Paragraph(user.username, styles['BodyText']),
             Paragraph(str(user.missing_certs.count()), styles['BodyText']),
-            Paragraph(', '.join([training.cert.name for training in user.missing_certs.all()]), styles['BodyText'])
         ]
+        missing_certs = [ListItem(Paragraph(training.cert.name, styles['BodyText'])) for training in user.missing_certs.all()]
+        certs_list = ListFlowable(missing_certs, bulletType='bullet', leftIndent=10)
+        row.append(certs_list)
         data.append(row)
+
 
     # Set column widths
     col_widths = [doc.width * 0.1, doc.width * 0.3, doc.width * 0.2, doc.width * 0.2, doc.width * 0.2]
