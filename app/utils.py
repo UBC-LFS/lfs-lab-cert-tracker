@@ -109,16 +109,12 @@ class Api:
         print("CERTS IN USER LABS ARE", certs_user_needs)
         if cert in certs_user_needs:
             missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
-            if created:
-                print(f"CREATED MISSING CERTIFICATE {cert} FOR {user}")
 
     def try_add_missing_certificate_for_user(self, user, cert):
         """ If user does not have the certificate or missing certificate already, create one for them """
         has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
         if not has_certificate:
             missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
-            if created:
-                print(f"CREATED MISSING CERTIFICATE {cert} FOR {user}")
         
     def add_missing_trainings(self, area_id, cert):
         """ If users in the area don't have the certificate, add a missing_cert for them """
@@ -152,7 +148,6 @@ class Api:
             try:
                 missing_cert_obj = MissingCert.objects.get(user=user, cert=cert)
                 missing_cert_obj.delete()
-                print(f"DELETED MISSING CERTIFICATE {cert} for {user}")
             except MissingCert.DoesNotExist:
                 print("USER DIDN'T HAVE A MISSING CERT TO DELETE (This should not be possible if Missing Cert maintained properly)")
         

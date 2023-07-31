@@ -47,17 +47,6 @@ uApi = Api()
 import time
 from functools import wraps
 
-def timing_decorator(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"The function {func.__name__} took {elapsed_time} seconds to execute.")
-        return result
-    return wrapper
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
@@ -100,7 +89,6 @@ def index(request):
 class AllUsersView(View):
     """ Display all users """
 
-    @timing_decorator
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
