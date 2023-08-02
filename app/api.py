@@ -100,9 +100,10 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
 def get_users_missing_certs(lab_id, lab_users=None):
     """
     Given a lab returns users that are missing certs and the certs they are missing, also add missing_certs onto the user
+    if lab_users is not specified, filter for userlabs with active users
     """
     if lab_users is None:
-        lab_users = UserLab.objects.filter(lab=lab_id).prefetch_related('user')
+        lab_users = UserLab.objects.filter(user__is_active=True, lab=lab_id).prefetch_related('user')
 
     users_missing_certs = []
     for lab_user in lab_users:

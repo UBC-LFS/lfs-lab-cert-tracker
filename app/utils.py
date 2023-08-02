@@ -26,6 +26,12 @@ class Api:
 
         return User.objects.all().order_by('last_name', 'first_name')
 
+    def get_pi_userlabs(self, user):
+        """ Get the userlabs that this user is a PI in """
+        userlabs = UserLab.objects.filter(user=user, role=UserLab.PRINCIPAL_INVESTIGATOR) 
+        return userlabs
+
+
     def get_user(self, attr, by='id'):
         """ Get a user """
 
@@ -495,7 +501,36 @@ class Notification(Api):
 
         return pis_in_area, required_trainings_in_area
 
+    def get_pis_user_missing_certs_dict(self):
+        """ 
+        Return a list of dictionaries with pi users and a list of users that are missing certificates 
+        """
 
+        pis = {}
+        all_active_users = self.get_users(option='active')
+
+        # This dict keep track of the missing certificates for each lab, so it does not need to be computed for every PI
+        lab_missing_certs_dict = {}
+        for user in all_active_users:
+            pi_userlabs = self.get_pi_userlabs(user)
+            if not pi_userlabs.exists():
+                continue
+
+            # This is a list of dictionaries with the key being the lab and the value being a list of tuples containing the names of those missing certificates
+            users_missing_certificates_in_pi_labs = []
+            for userlab in pi_userlabs:
+                if userlab.lab in lab_missing_certs_dict:
+                    users_missing_certificates_in_pi_labs.append(lab_missing_certs_dict[userlab.lab])
+                else:
+                    dict_to_append = {userlab.lab: [(user[0]['first_name'], user[0]['last_name']) for user in api.get_users_missing_certs(lab_id=userlab.lab.id)]}
+                    users_missing_certificates_in_pi_labs.append(dict_to_append)  
+                    lab_missing_certs_dict[userlab.lab] = dict_to_append
+
+            pis[user] = users_missing_certificates_in_pi_labs
+        
+        return pis
+
+        
     def find_missing_trainings(self):
         """ Find missing trainings of each user """
 
@@ -609,16 +644,16 @@ class Notification(Api):
         msg['To'] = receiver
 
         try:
-        	server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
-        	#server.ehlo()
-        	#server.starttls(context=ssl.create_default_context())
-        	#server.ehlo()
-        	#server.login(sender_email, password)
-        	server.sendmail(sender, receiver, msg.as_string())
+            server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
+            #server.ehlo()
+            #server.starttls(context=ssl.create_default_context())
+            #server.ehlo()
+            #server.login(sender_email, password)
+            server.sendmail(sender, receiver, msg.as_string())
         except Exception as e:
-        	print(e)
+            print("ERROR", e)
         finally:
-        	server.quit()
+            server.quit()
 
 
     def html_template(self, first_name, last_name, message):
@@ -664,6 +699,20 @@ class Notification(Api):
 
         return datetime.strftime('%m/%d/%Y')
 
+    def get_message_lab_users_missing_trainings_new(self, user):
+        """ Get a message for users missing trainings """
+
+        trainings = []
+        for missing_training in user.missing_certs.all():
+            trainings.append('<li>' + missing_training.cert.name + '</li>')
+
+        message = """\
+            <p>You have missing training(s). Please update it.</p>
+            <ul>{0}</ul>
+            <p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
+        """.format(''.join(trainings), settings.SITE_URL, user.id)
+
+        return message
 
     # For missing trainings
     def get_message_lab_users_missing_trainings(self, user_id, missing_trainings):
@@ -681,6 +730,26 @@ class Notification(Api):
 
         return message
 
+
+    def get_message_pis_missing_trainings_new(self, lab_and_users_dict):
+        """
+            Get a message for PIs. For each lab in dict, list out the users missing certificate
+            Example: lab_and_users_dict = {<Lab: Lab68>: [('test', 'user1'), ('test', 'user16'), ...], <Lab: Lab51>: [...]}
+        """
+
+        message = ""
+        for dict in lab_and_users_dict:
+            for lab, users in dict.items():
+                lab_users_list = []
+                for first_name, last_name in users:
+                    lab_users_list.append('<li>' + first_name + ' ' + last_name + '</li>')
+
+                message += """\
+                    <p>The following users have missing training(s) in {1}.</p>
+                    <ul>{0}</ul>
+                """.format( ''.join(lab_users_list), lab.name )
+
+        return message
 
     def get_message_pis_missing_trainings(self, lab_users):
         """ Get a message for PIs """

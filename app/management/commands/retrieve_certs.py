@@ -49,8 +49,8 @@ class Command(BaseCommand):
         
     def handle(self, *args, **options):
         # Find users who have missing certs
-        all_users = self.api.get_users()
-        user_list = api.get_users_with_missing_certs(all_users) 
+        all_users = self.api.get_users(option='active')
+        user_list = api.get_users_with_missing_certs(all_users)
 
         for user in user_list:
             try:

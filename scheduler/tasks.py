@@ -3,12 +3,37 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.utils import Api, Notification
+import app.api as App_api
 
 DAYS30 = 30
 DAYS14 = 14
 
 api = Api()
 notification = Notification()
+
+def send_missing_trainings_new():
+    ''' Send an email to active users who have missing trainings '''
+    print('send_missing_trainings NEW')
+
+    users_missing_trainings = App_api.get_users_with_missing_certs(api.get_users(option='active'))
+    pis_dict = notification.get_pis_user_missing_certs_dict()
+
+    for user in users_missing_trainings:
+        receiver = notification.get_receiver(user)
+        message = notification.get_message_lab_users_missing_trainings_new(user)
+        template = notification.html_template(user.first_name, user.last_name, message)
+
+        notification.send_email(receiver, template)
+        print( 'User: Sent it to {0}'.format(receiver) )
+    
+    for user, lab_users_missing_dict in pis_dict.items():
+        receiver = notification.get_receiver(user)
+        message = notification.get_message_pis_missing_trainings_new(lab_users_missing_dict)
+        template = notification.html_template(user.first_name, user.last_name, message)
+
+        notification.send_email(receiver, template)
+        print( 'Supervisor: Sent it to {0}'.format(receiver) )
+
 
 def send_missing_trainings():
     ''' Send an email to users who have missing trainings twice per month '''
@@ -114,7 +139,7 @@ def run():
     scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
 
     # 1st Monday, 3rd Monday at 10:00 AM
-    scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
+    scheduler.add_job(send_missing_trainings_new, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
 
     # 1st Monday, 3rd Monday at 10:30 AM
     scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=30)
