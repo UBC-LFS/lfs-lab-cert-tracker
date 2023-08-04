@@ -87,6 +87,16 @@ class Command(BaseCommand):
                             res2 = self.api.remove_missing_cert(user.id, missing_cert.cert.id)
                             break
 
+                    # Check for user expired certs and try to add upated certificate
+                    user_expired_certs = api.get_expired_usercerts(user.id)
+                    for existing_cert in user_expired_certs:
+                        if do_names_match(api_cert.training_name, existing_cert.cert.name):
+                            if existing_cert.completion_date < api_cert.completion_date:
+                                created = api.update_or_create_user_cert(user_id=user.id, cert_id=existing_cert.cert.id, cert_file=None, completion_date=api_cert.completion_date, expiry_date=api_cert.completion_date + timedelta(days=365 * missing_cert.cert.expiry_in_years))
+                                if created:
+                                    print(f"AUTO ADD NEWER CERT {existing_cert.cert.name} FOR {user.username}")
+                                    break
+
             except Exception as e:
                 # Handle any exceptions that occurred during the API request
                 print(f"An error occurred for user {user.username}: {str(e)}")

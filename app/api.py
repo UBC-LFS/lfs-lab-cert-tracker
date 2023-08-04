@@ -42,6 +42,15 @@ def get_expired_certs(user_id):
             expired_user_certs.append(uc)
     return [model_to_dict(uc.cert) for uc in expired_user_certs]
 
+def get_expired_usercerts(user_id):
+    """ Same as get_expired_certs, but returns the user cert objects"""
+    user_certs = get_user_certs_without_duplicates(get_user_404(user_id))
+    expired_user_certs = []
+    now = datetime.now()
+    for uc in user_certs:
+        if is_user_cert_expired(uc):
+            expired_user_certs.append(uc)
+    return expired_user_certs
 
 def get_user_labs(user_id, is_principal_investigator=None):
     if is_principal_investigator:
@@ -117,7 +126,8 @@ def get_users_expired_certs(lab_id, lab_users=None):
 
     users_expired_certs = []
     for lab_user in lab_users:
-        user_certs = UserCert.objects.filter(user=lab_user.user_id).prefetch_related('cert')
+        user_certs = get_user_certs_without_duplicates(lab_user.user)
+
         required_certs = LabCert.objects.filter(lab=lab_id).prefetch_related('cert')
 
         user_cert_ids = set(user_certs.values_list('cert_id', flat=True))

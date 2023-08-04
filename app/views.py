@@ -1136,8 +1136,8 @@ def delete_user_training(request, user_id):
     if usercert.exists():
         usercert_obj = usercert.first()
 
-        file_path = usercert_obj.cert_file.path
-        if os.path.exists(file_path) and os.path.isfile(file_path):
+        if usercert_obj.cert_file:
+            file_path = usercert_obj.cert_file.path
             os.remove(file_path)
 
         dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(usercert_obj.cert.id))
