@@ -11,7 +11,7 @@ import requests
 import json
 from email.mime.text import MIMEText
 
-from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert, UserApiCerts
+from lfs_lab_cert_tracker.models import UserInactive, Lab, UserLab, Cert, UserCert, LabCert, UserApiCerts, MissingCert
 from app import api
 
 
@@ -25,6 +25,12 @@ class Api:
             return User.objects.filter(is_active=True)
 
         return User.objects.all().order_by('last_name', 'first_name')
+
+    def get_pi_userlabs(self, user):
+        """ Get the userlabs that this user is a PI in """
+        userlabs = UserLab.objects.filter(user=user, role=UserLab.PRINCIPAL_INVESTIGATOR) 
+        return userlabs
+
 
     def get_user(self, attr, by='id'):
         """ Get a user """
@@ -66,14 +72,13 @@ class Api:
 
         return get_object_or_404(Lab, id=attr)
 
-
-    def add_users_to_areas(self, areas):
+    def add_users_to_areas(self, areas, users):
         """ Add user info to areas """
 
         for area in areas:
             area.has_lab_users = []
             area.has_pis = []
-            for userlab in area.userlab_set.all():
+            for userlab in UserLab.objects.filter(user__in=users, lab=area):
                 if userlab.role == UserLab.LAB_USER:
                     area.has_lab_users.append(userlab.user.id)
                 elif userlab.role == UserLab.PRINCIPAL_INVESTIGATOR:
@@ -96,6 +101,87 @@ class Api:
 
         return get_object_or_404(Cert, id=attr)
 
+    # UPDATE MISSING CERTS
+    
+    def remove_missing_cert(self, user_id, cert_id):
+        """ Remove missing certificate for user """
+        certs = MissingCert.objects.filter(user_id=user_id, cert=cert_id)
+        if certs.exists():
+            certs.delete()
+    
+    def conditionally_add_missing_cert_for_user(self, user, user_cert):
+        """ Add missing cert for user if they don't have any more certs and it is required by any of their areas (labs) """
+        other_user_certs = UserCert.objects.filter(user=user, cert=user_cert.cert).exclude(id=user_cert.id)
+        if other_user_certs.exists():
+            return False
+        
+        certs_user_needs = Cert.objects.filter(labcert__lab__userlab__user=user)
+        if user_cert.cert in certs_user_needs:
+            missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=user_cert.cert) 
+
+    def try_add_missing_certificate_for_user(self, user, cert):
+        """ If user does not have the certificate or missing certificate already, create one for them """
+        has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
+        if not has_certificate:
+            missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
+        
+    def add_missing_trainings(self, area_id, cert):
+        """ If users in the area don't have the certificate, add a missing_cert for them """
+        users_in_lab = UserLab.objects.filter(lab=area_id)
+
+        for user_lab in users_in_lab:
+            self.try_add_missing_certificate_for_user(user_lab.user, cert)
+    
+    def add_missing_certificates_for_added_user(self, user, area_id):
+        """ For users newly added to an area (lab), add missing certificates for them """
+        user_lab = UserLab.objects.get(lab_id=area_id, user=user)
+        certs_in_lab = [labcert.cert for labcert in LabCert.objects.filter(lab=user_lab.lab)]
+        for cert in certs_in_lab:
+            self.try_add_missing_certificate_for_user(user, cert)
+    
+    def try_remove_missing_certificate_for_user(self, user, cert, current_area):
+        """ Check if users have the certificate already, if not, remove the missing certificate if no other labs the user is in require it"""
+        has_certificate = UserCert.objects.filter(user=user, cert=cert).exists()
+        if has_certificate: # If user already uploaded certificate, we don't need to remove anything
+            return
+
+        other_labs_with_same_cert = [lab_cert.lab for lab_cert in LabCert.objects.filter(cert=cert)]
+        user_other_labs = [user_lab.lab for user_lab in UserLab.objects.filter(user=user).exclude(lab=current_area)] # don't search current area
+
+        # If user has another lab that needs the certificate, keep the certificate as missing
+        for lab in other_labs_with_same_cert:
+            if lab in user_other_labs:
+                # Found a common Lab object, this user does not need the missing cert removed
+                break
+        else: # User has no other lab's that require this certificate
+            try:
+                missing_cert_obj = MissingCert.objects.get(user=user, cert=cert)
+                missing_cert_obj.delete()
+            except MissingCert.DoesNotExist:
+                print("USER DIDN'T HAVE A MISSING CERT TO DELETE (This should not be possible if Missing Cert maintained properly)")
+        
+    def remove_missing_trainings_for_deleted_labcert(self, area_id, cert):
+        """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
+        users_in_lab = UserLab.objects.filter(lab=area_id)
+
+        for user_lab in users_in_lab:
+            self.try_remove_missing_certificate_for_user(user_lab.user, cert, area_id)
+
+    def remove_missing_trainings_for_users_in_area(self, area):
+        """ For all users check if certificate is needed by any of user's other areas. If not, remove the missing_cert """
+        users_in_lab = UserLab.objects.filter(lab=area)
+        lab_certs = LabCert.objects.filter(lab=area)
+
+        for user_lab in users_in_lab:
+            for lab_cert in lab_certs:
+                self.try_remove_missing_certificate_for_user(user_lab.user, lab_cert.cert, area)
+    
+    def remove_user_from_area_update_missing(self, area, user):
+        """ Check if each certificate in area is needed by any of user's other areas. If not, remove the missing_cert """
+        user_lab = UserLab.objects.get(lab=area, user=user)
+        certs_in_lab = [labcert.cert for labcert in LabCert.objects.filter(lab=user_lab.lab)]
+        for cert in certs_in_lab:
+            self.try_remove_missing_certificate_for_user(user, cert, area)
 
     # UserCert
 
@@ -169,11 +255,13 @@ class Api:
                         report['updated'].append(lab.name)
             else:
                 created = UserLab.objects.create(user=user, lab=lab, role=role)
+                self.add_missing_certificates_for_added_user(user, lab.id)
                 if created:
                     report['created'].append(lab.name)
 
         for ul in all_userlab:
             if ul.lab.id not in used_areas:
+                self.remove_user_from_area_update_missing(ul.lab, user)
                 deleted = ul.delete()
                 if deleted:
                     report['deleted'].append(ul.lab.name)
@@ -417,7 +505,36 @@ class Notification(Api):
 
         return pis_in_area, required_trainings_in_area
 
+    def get_pis_user_missing_certs_dict(self):
+        """ 
+        Return a list of dictionaries with pi users and a list of users that are missing certificates 
+        """
 
+        pis = {}
+        all_active_users = self.get_users(option='active')
+
+        # This dict keep track of the missing certificates for each lab, so it does not need to be computed for every PI
+        lab_missing_certs_dict = {}
+        for user in all_active_users:
+            pi_userlabs = self.get_pi_userlabs(user)
+            if not pi_userlabs.exists():
+                continue
+
+            # This is a list of dictionaries with the key being the lab and the value being a list of tuples containing the names of those missing certificates
+            users_missing_certificates_in_pi_labs = []
+            for userlab in pi_userlabs:
+                if userlab.lab in lab_missing_certs_dict:
+                    users_missing_certificates_in_pi_labs.append(lab_missing_certs_dict[userlab.lab])
+                else:
+                    dict_to_append = {userlab.lab: [(user[0]['first_name'], user[0]['last_name']) for user in api.get_users_missing_certs(lab_id=userlab.lab.id)]}
+                    users_missing_certificates_in_pi_labs.append(dict_to_append)  
+                    lab_missing_certs_dict[userlab.lab] = dict_to_append
+
+            pis[user] = users_missing_certificates_in_pi_labs
+        
+        return pis
+
+        
     def find_missing_trainings(self):
         """ Find missing trainings of each user """
 
@@ -470,7 +587,7 @@ class Notification(Api):
             if user.usercert_set.count() > 0:
                 lab_user = { 'id': user.id, 'trainings': [] }
 
-                for usercert in user.usercert_set.all():
+                for usercert in api.get_user_certs_without_duplicates(user):
                     if usercert.completion_date != usercert.expiry_date:
 
                         if type == 'before':
@@ -531,16 +648,16 @@ class Notification(Api):
         msg['To'] = receiver
 
         try:
-        	server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
-        	#server.ehlo()
-        	#server.starttls(context=ssl.create_default_context())
-        	#server.ehlo()
-        	#server.login(sender_email, password)
-        	server.sendmail(sender, receiver, msg.as_string())
+            server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
+            #server.ehlo()
+            #server.starttls(context=ssl.create_default_context())
+            #server.ehlo()
+            #server.login(sender_email, password)
+            server.sendmail(sender, receiver, msg.as_string())
         except Exception as e:
-        	print(e)
+            print("ERROR", e)
         finally:
-        	server.quit()
+            server.quit()
 
 
     def html_template(self, first_name, last_name, message):
@@ -586,6 +703,20 @@ class Notification(Api):
 
         return datetime.strftime('%m/%d/%Y')
 
+    def get_message_lab_users_missing_trainings_new(self, user):
+        """ Get a message for users missing trainings """
+
+        trainings = []
+        for missing_training in user.missing_certs.all():
+            trainings.append('<li>' + missing_training.cert.name + '</li>')
+
+        message = """\
+            <p>You have missing training(s). Please update it.</p>
+            <ul>{0}</ul>
+            <p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
+        """.format(''.join(trainings), settings.SITE_URL, user.id)
+
+        return message
 
     # For missing trainings
     def get_message_lab_users_missing_trainings(self, user_id, missing_trainings):
@@ -603,6 +734,26 @@ class Notification(Api):
 
         return message
 
+
+    def get_message_pis_missing_trainings_new(self, lab_and_users_dict):
+        """
+            Get a message for PIs. For each lab in dict, list out the users missing certificate
+            Example: lab_and_users_dict = {<Lab: Lab68>: [('test', 'user1'), ('test', 'user16'), ...], <Lab: Lab51>: [...]}
+        """
+
+        message = ""
+        for dict in lab_and_users_dict:
+            for lab, users in dict.items():
+                lab_users_list = []
+                for first_name, last_name in users:
+                    lab_users_list.append('<li>' + first_name + ' ' + last_name + '</li>')
+
+                message += """\
+                    <p>The following users have missing training(s) in {1}.</p>
+                    <ul>{0}</ul>
+                """.format( ''.join(lab_users_list), lab.name )
+
+        return message
 
     def get_message_pis_missing_trainings(self, lab_users):
         """ Get a message for PIs """

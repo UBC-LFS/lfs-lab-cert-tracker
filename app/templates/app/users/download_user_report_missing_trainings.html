@@ -36,7 +36,7 @@ table.printable td {
         <td style="width:10%">{{ user.missing_certs.count }}</td>
         <td style="width:53%; text-align:left">
           <ul>
-            {% for training in user.missing_certs %}
+            {% for training in user.missing_certs.all %}
               <li>{{ training.cert }}</li>
             {% endfor %}
           </ul>

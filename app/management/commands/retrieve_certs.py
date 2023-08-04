@@ -49,12 +49,8 @@ class Command(BaseCommand):
         
     def handle(self, *args, **options):
         # Find users who have missing certs
-        all_users = self.api.get_users()
-        user_list = []
-        for user in api.add_missing_certs(all_users):
-            if user.missing_certs != None and user.is_active:
-                user_list.append(user)
-
+        all_users = self.api.get_users(option='active')
+        user_list = api.get_users_with_missing_certs(all_users)
 
         for user in user_list:
             try:
@@ -84,11 +80,22 @@ class Command(BaseCommand):
                         )
                     
                     # Check user missing certs and try to create certificate if names match
-                    for missing_cert in user.missing_certs:
+                    for missing_cert in user.missing_certs.all():
                         if do_names_match(api_cert.training_name, missing_cert.cert.name):
                             res = api.update_or_create_user_cert(user_id=user.id, cert_id=missing_cert.cert.id, cert_file=None, completion_date=api_cert.completion_date, expiry_date=api_cert.completion_date + timedelta(days=365 * missing_cert.cert.expiry_in_years))
                             print(f"AUTO ADD {missing_cert.cert.name} WITH RESULT: {res}")
+                            res2 = self.api.remove_missing_cert(user.id, missing_cert.cert.id)
                             break
+
+                    # Check for user expired certs and try to add upated certificate
+                    user_expired_certs = api.get_expired_usercerts(user.id)
+                    for existing_cert in user_expired_certs:
+                        if do_names_match(api_cert.training_name, existing_cert.cert.name):
+                            if existing_cert.completion_date < api_cert.completion_date:
+                                created = api.update_or_create_user_cert(user_id=user.id, cert_id=existing_cert.cert.id, cert_file=None, completion_date=api_cert.completion_date, expiry_date=api_cert.completion_date + timedelta(days=365 * missing_cert.cert.expiry_in_years))
+                                if created:
+                                    print(f"AUTO ADD NEWER CERT {existing_cert.cert.name} FOR {user.username}")
+                                    break
 
             except Exception as e:
                 # Handle any exceptions that occurred during the API request

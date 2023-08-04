@@ -16,11 +16,11 @@
 		<ol class="breadcrumb">
 			<li class="breadcrumb-item">
 				{% if request.GET.p == 'account' %}
-					<a href="{% url 'app:user_details' user_id=user_cert.user.id %}">
+					<a href="{% url 'app:user_details' user_id=app_user.id %}">
 						<i class="material-icons">home</i> {{ app_user.get_full_name }}'s Account
 					</a>
 				{% elif request.GET.p == 'training' %}
-					<a href="{% url 'app:user_trainings' user_id=user_cert.user.id %}">{{ app_user.get_full_name }}'s Training Record</a>
+					<a href="{% url 'app:user_trainings' user_id=app_user.id %}">{{ app_user.get_full_name }}'s Training Record</a>
 				{% endif %}
 			</li>
 			<li class="breadcrumb-item active" aria-current="page">Training Details</li>
@@ -33,11 +33,11 @@
 		<ol class="breadcrumb">
 			<li class="breadcrumb-item">
 				{% if request.GET.p == 'account' %}
-					<a href="{% url 'app:user_details' user_id=user_cert.user.id %}">
+					<a href="{% url 'app:user_details' user_id=app_user.id %}">
 						<i class="material-icons">home</i> My Account
 					</a>
 				{% elif request.GET.p == 'training' %}
-					<a href="{% url 'app:user_trainings' user_id=user_cert.user.id %}">My Training Record</a>
+					<a href="{% url 'app:user_trainings' user_id=app_user.id %}">My Training Record</a>
 				{% endif %}
 			</li>
 			<li class="breadcrumb-item active" aria-current="page">Training Details</li>
@@ -45,6 +45,8 @@
 	</nav>
 
 {% endif %}
+
+{% for user_cert in user_certs %}
 
 <div class="row">
 	<div class="col-md-10 offset-md-1">
@@ -108,7 +110,7 @@
 					{% csrf_token %}
 
 					<input type="hidden" name="user" value="{{ user_cert.user.id }}" />
-					<input type="hidden" name="training" value="{{ user_cert.cert.id }}" />
+					<input type="hidden" name="user_cert_id" value="{{ user_cert.id }}" />
 					<input class="btn btn-danger ml-2" type="submit" value="Delete" />
 				</form>
 			{% endif %}
@@ -116,5 +118,7 @@
 
 	</div>
 </div>
+
+{% endfor %}
 
 {% endblock %}

@@ -22,6 +22,12 @@ from django.core.exceptions import SuspiciousOperation
 from collections import defaultdict
 
 from io import BytesIO
+from django.http import FileResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, ListFlowable, ListItem
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+
 # from cgi import escape
 from html import escape # >= python 3.8
 from xhtml2pdf import pisa
@@ -34,11 +40,9 @@ from . import api
 from lfs_lab_cert_tracker.models import UserInactive, Lab, Cert, UserLab, UserCert, UserApiCerts
 
 
-# Set 50 users in a page
-NUM_PER_PAGE = 50
+NUM_PER_PAGE = 20
 
 uApi = Api()
-
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -89,7 +93,6 @@ class AllUsersView(View):
         if request.session.get('next'):
             del request.session['next']
 
-        user_list = uApi.get_users()
 
         # Pagination enables
         query = request.GET.get('q')
@@ -97,6 +100,8 @@ class AllUsersView(View):
             user_list = User.objects.filter(
                 Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
             ).order_by('id').distinct()
+        else:
+            user_list = uApi.get_users()
 
         page = request.GET.get('page', 1)
         paginator = Paginator(user_list, NUM_PER_PAGE)
@@ -109,14 +114,13 @@ class AllUsersView(View):
             users = paginator.page(paginator.num_pages)
 
         users = uApi.add_inactive_users(users)
-        users = api.add_missing_certs(users)
 
         areas = uApi.get_areas()
 
         return render(request, 'app/users/all_users.html', {
             'users': users,
             'total_users': len(user_list),
-            'areas': uApi.add_users_to_areas(areas),
+            'areas': uApi.add_users_to_areas(areas, users),
             'roles': {'LAB_USER': 0, 'PI': 1}
         })
 
@@ -183,27 +187,21 @@ class UserCertificatesView(View):
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class UserReportMissingTrainingsView(View):
-    """ Display an user report for missing trainings """
+    """ Display a user report for missing trainings """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        all_users = uApi.get_users()
-
-        # Find users who have missing certs
-        user_list = []
-        for user in api.add_missing_certs(all_users):
-            if user.missing_certs != None:
-                user_list.append(user)
-
-        #user_list = users_in_missing_training.copy()
+        user_list = uApi.get_users()
 
         # Pagination enables
         query = request.GET.get('q')
         if query:
-            user_list = User.objects.filter(
+            user_list = user_list.filter(
                 Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
             ).order_by('id').distinct()
+
+        user_list = api.get_users_with_missing_certs(user_list)
 
         page = request.GET.get('page', 1)
         paginator = Paginator(user_list, NUM_PER_PAGE)
@@ -287,7 +285,7 @@ class UserDetailsView(View):
             'app_user': uApi.get_user(kwargs['user_id']),
             'user_lab_list': api.get_user_labs(user_id),
             'pi_user_lab_list': api.get_user_labs(user_id, is_principal_investigator=True),
-            'user_certs': api.get_user_certs_404(user_id),
+            'user_certs': api.get_user_certs_without_duplicates(api.get_user_404(user_id)),
             'missing_cert_list': api.get_missing_certs(user_id),
             'expired_cert_list': api.get_expired_certs(user_id),
             'welcome_message': uApi.welcome_message(),
@@ -359,10 +357,11 @@ class UserTrainingsView(View):
 
             # Whether user's certficiate is created successfully or not
             if result:
+                uApi.remove_missing_cert(user_id, cert['id'])
                 messages.success(request, 'Success! {0} added.'.format(cert['name']))
                 res = { 'user_id': user_id, 'cert_id': result['cert'] }
             else:
-                messages.error(request, "Error! Failed to add a training.")
+                messages.error(request, "Error! Failed to add a training. Check if your training already exists")
         else:
             errors_data = form.errors.get_json_data()
             error_message = 'Please check your inputs.'
@@ -400,14 +399,15 @@ class UserTrainingDetailsView(View):
         if request.user.id != user_id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
 
-        user_cert = api.get_user_cert_404(user_id, training_id)
+        user_certs = api.get_user_certs_specific_404(user_id, training_id)
         no_expiry_date = False
+        user_cert = user_certs.first()
         if user_cert.completion_date == user_cert.expiry_date:
             no_expiry_date = True
 
         return render(request, 'app/trainings/user_training_details.html', {
             'app_user': uApi.get_user(user_id),
-            'user_cert': user_cert,
+            'user_certs': user_certs,
             'no_expiry_date': no_expiry_date,
             'viewing': viewing
         })
@@ -451,7 +451,6 @@ def user_report(request, user_id):
         'user_cert_list': user_cert_list
     })
 
-
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
     context = Context(context_dict)
@@ -474,14 +473,68 @@ def download_user_report_missing_trainings(request):
     users = uApi.get_users()
 
     # Find users who have missing certs
-    users_in_missing_training = []
-    for user in api.add_missing_certs(users):
-        if user.missing_certs != None:
-            users_in_missing_training.append(user)
+    users_in_missing_training = list(api.get_users_with_missing_certs(users))
 
-    return render_to_pdf('app/users/download_user_report_missing_trainings.html', {
-        'users': users_in_missing_training,
-    })
+    # Generate PDF using ReportLab
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=0, leftMargin=0, topMargin=0, bottomMargin=0)
+
+    # Header
+    styles = getSampleStyleSheet()
+
+    # Modify the Heading1 style for the main header
+    styles['Heading1'].alignment = 1  # 1 for center alignment
+    styles['Heading1'].fontSize = 16
+
+    # Modify the Heading2 style for the table headers
+    styles['Heading2'].alignment = 1 
+    styles['Heading2'].fontSize = 12 
+
+    header = Paragraph("User Report (Total: {})".format(len(users_in_missing_training)), styles['Heading1'])
+    doc.build([header])
+
+    # Table data
+    data = [[Paragraph('ID', styles['Heading2']), 
+             Paragraph('Full Name', styles['Heading2']),
+             Paragraph('CWL', styles['Heading2']),
+             Paragraph('Number of Missing Trainings', styles['Heading2']),
+             Paragraph('Missing Training Records', styles['Heading2'])]]
+
+    for user in users_in_missing_training:
+        row = [
+            Paragraph(str(user.id), styles['BodyText']),
+            Paragraph(user.get_full_name(), styles['BodyText']),
+            Paragraph(user.username, styles['BodyText']),
+            Paragraph(str(user.missing_certs.count()), styles['BodyText']),
+        ]
+        missing_certs = [ListItem(Paragraph(training.cert.name, styles['BodyText'])) for training in user.missing_certs.all()]
+        certs_list = ListFlowable(missing_certs, bulletType='bullet', leftIndent=10)
+        row.append(certs_list)
+        data.append(row)
+
+
+    # Set column widths
+    col_widths = [doc.width * 0.1, doc.width * 0.3, doc.width * 0.2, doc.width * 0.2, doc.width * 0.2]
+
+    # Table style
+    table_style = TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+    ])
+
+    # Create table
+    table = Table(data, colWidths=col_widths)
+    table.setStyle(table_style)
+
+    # Add table to the document
+    doc.build([header, table])
+
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename='user_report_missing_trainings.pdf')
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -559,6 +612,7 @@ def assign_user_areas(request):
         all_userlab = user.userlab_set.all()
 
         if len(all_userlab) > 0:
+            report = uApi.update_or_create_areas_to_user(user, [])
             if all_userlab.delete():
                 return JsonResponse({ 'status': 'success', 'message': "Success! {0}'s all areas have deleted.".format(user.get_full_name()) })
             else:
@@ -678,8 +732,26 @@ class AreaDetailsView(View):
         for labcert in area.labcert_set.all():
             required_trainings.append(labcert.cert)
 
+
+        userlab_set = area.userlab_set.all()
+        query = request.GET.get('q')
+        if query:
+            userlab_set = userlab_set.filter(
+                Q(user__username__icontains=query) | Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query)
+            ).order_by('id').distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(userlab_set, NUM_PER_PAGE)
+
+        try:
+            userlabs = paginator.page(page)
+        except PageNotAnInteger:
+            userlabs = paginator.page(1)
+        except EmptyPage:
+            userlabs = paginator.page(paginator.num_pages)
+
         users_in_area = []
-        for userlab in area.userlab_set.all():
+        for userlab in userlabs: 
             user = userlab.user
             if uApi.is_pi_in_area(user.id, area_id): user.is_pi = True
             else: user.is_pi = False
@@ -687,14 +759,18 @@ class AreaDetailsView(View):
 
         is_pi = uApi.is_pi_in_area(request.user.id, area_id)
 
+        # Add lab missing cert and lab expired cert data to user
+        api.get_users_missing_certs(area_id, userlabs)
+        api.get_users_expired_certs(area_id, userlabs)
+
         return render(request, 'app/areas/area_details.html', {
             'area': area,
             'required_trainings': required_trainings,
             'users_in_area': users_in_area,
+            'userlabs': userlabs,
+            'total_users': len(userlab_set),
             'is_admin': request.user.is_superuser,
             'is_pi': is_pi,
-            'users_missing_certs': api.get_users_missing_certs(area_id),
-            'users_expired_certs': api.get_users_expired_certs(area_id),
             'user_area_form': UserAreaForm(initial={ 'lab': area.id }),
             'area_training_form': AreaTrainingForm(initial={ 'lab': area.id })
         })
@@ -718,6 +794,8 @@ class AreaDetailsView(View):
                 userlab = UserLab.objects.create(user_id=user.id, lab_id=area_id, role=role)
                 valid_email = False
                 valid_email_error = None
+
+                uApi.add_missing_certificates_for_added_user(user, area_id)
 
                 try:
                     validate_email(user.email)
@@ -767,11 +845,13 @@ def add_training_area(request):
         if form.is_valid():
             new_labcert = form.save()
             messages.success(request, 'Success! {0} added.'.format(new_labcert.cert.name))
+            uApi.add_missing_trainings(area_id, new_labcert.cert)
         else:
             errors = form.errors.get_json_data()
             messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
     else:
         messages.error(request, 'Error! Failed to add Training. This training has already existed.'.format(labcert.cert.name))
+
 
     return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
@@ -802,6 +882,7 @@ def delete_training_in_area(request):
     if labcert == None:
         messages.error(request, 'Error! {0} does not exist in this area.'.format(training.name))
     else:
+        uApi.remove_missing_trainings_for_deleted_labcert(area_id, labcert.cert)
         if labcert.delete():
             messages.success(request, 'Success! {0} deleted.'.format(labcert.cert.name))
         else:
@@ -841,6 +922,7 @@ def delete_area(request):
     """ Delete an area """
 
     area = uApi.get_area(request.POST.get('area'))
+    uApi.remove_missing_trainings_for_users_in_area(area)
     if area.delete():
         messages.success(request, 'Success! {0} deleted.'.format(area.name))
     else:
@@ -921,6 +1003,7 @@ def delete_user_in_area(request, area_id):
     if userlab == None:
         messages.error(request, 'Error! A user or an area data does not exist.')
     else:
+        uApi.remove_user_from_area_update_missing(area, user)
         if userlab.delete():
             messages.success(request, 'Success! {0} deleted.'.format(user.get_full_name()))
         else:
@@ -1041,36 +1124,42 @@ def delete_user_training(request, user_id):
     """ Delete user's training record """
 
     user_id = request.POST.get('user', None)
-    training_id = request.POST.get('training', None)
+    user_cert_id = request.POST.get('user_cert_id', None)
 
     # If inputs are invalid, raise a 400 error
-    uApi.check_input_fields(request, ['user', 'training'])
-
+    uApi.check_input_fields(request, ['user', 'user_cert_id'])
 
     user = uApi.get_user(user_id)
-    usercert = user.usercert_set.filter(cert_id=training_id)
+    usercert = user.usercert_set.filter(id=user_cert_id)
+    print("USER CERT IS", usercert)
 
     if usercert.exists():
         usercert_obj = usercert.first()
 
-        is_dir_deleted = False
-        dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(training_id))
+        if usercert_obj.cert_file:
+            file_path = usercert_obj.cert_file.path
+            os.remove(file_path)
 
+        dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(usercert_obj.cert.id))
+        uApi.conditionally_add_missing_cert_for_user(user, usercert_obj)
         is_deleted = usercert.delete()
 
         if os.path.exists(dirpath) and os.path.isdir(dirpath):
-            os.rmdir(dirpath)
-            is_dir_deleted = True
+            try:
+                os.rmdir(dirpath)
+            except OSError:
+                # Directory not empty, do not delete
+                pass
 
-        if is_deleted and is_dir_deleted == True:
+        if is_deleted:
             messages.success(request, 'Success! {0} deleted.'.format(usercert_obj.cert.name))
             return HttpResponseRedirect( reverse('app:user_trainings', args=[user_id]) )
         else:
             messages.error(request, 'Error! Failed to delete a {0} training record of {1}.'.format(usercert_obj.cert.name, usercert_obj.user.get_full_name()))
-    else:
         messages.error(request, 'Error! Form is invalid.')
 
     return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))
+
 
 
 @login_required(login_url=settings.LOGIN_URL)

@@ -92,7 +92,7 @@ class UserCert(models.Model):
     expiry_date = models.DateField()
 
     class Meta:
-        unique_together = (('user', 'cert'))
+        unique_together = (('user', 'cert', 'completion_date', 'expiry_date'))
 
     def save(self, *args, **kwargs):
         """ Reduce a size and quality of the image """
@@ -187,7 +187,8 @@ def send_notification(sender, created, **kwargs):
             print(e)
 
         if valid_email:
-            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
+            pass
+            # send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
 
 
 post_save.connect(send_notification, sender=UserLab)
@@ -206,6 +207,16 @@ class LabCert(models.Model):
 
     def __str__(self):
         return self.cert.name
+
+class MissingCert(models.Model):
+    """
+    Keeps track of the certificates users are missing
+    """
+    user = models.ForeignKey(AuthUser, on_delete=models.CASCADE, related_name='missing_certs')
+    cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.username} is missing {self.cert.name}"
 
 class UserInactive(models.Model):
     """ Update date when a user become inactive """

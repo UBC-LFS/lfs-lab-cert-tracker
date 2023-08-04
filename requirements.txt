@@ -5,3 +5,4 @@ whitenoise>=6.2.0
 apscheduler>=3.9.1
 wheel>=0.40.0
 xhtml2pdf>=0.2.8
+reportlab>=3.6.12
