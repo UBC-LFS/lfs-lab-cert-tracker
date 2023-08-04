@@ -34,7 +34,7 @@ def is_user_cert_expired(cert):
 
 
 def get_expired_certs(user_id):
-    user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
+    user_certs = get_user_certs_without_duplicates(get_user_404(user_id))
     expired_user_certs = []
     now = datetime.now()
     for uc in user_certs:
@@ -51,12 +51,6 @@ def get_user_labs(user_id, is_principal_investigator=None):
     return [model_to_dict(user_lab.lab) for user_lab in user_labs]
 
 
-def get_user_certs_404(user_id):
-    """ Get all certs of an user """
-    user = get_user_404(user_id)
-    return user.usercert_set.all()
-
-
 def get_cert(cert_id):
     """ Find a certificate by id """
 
@@ -67,32 +61,33 @@ def get_cert(cert_id):
         return None
 
 
-def get_user_cert_404(user_id, cert_id):
-    """ Get a cert of an user """
+def get_user_certs_specific_404(user_id, cert_id):
+    """ Get the user certs with containing a specified cert of an user """
     user = get_user_404(user_id)
     uc = user.usercert_set.filter(cert_id=cert_id)
     if uc.exists():
-        return uc.first()
+        return uc.order_by('-expiry_date')
     raise Http404
 
+
+def get_user_certs_without_duplicates(user):
+    user_certs = user.usercert_set.order_by('user_id', 'cert_id', '-expiry_date').distinct('user_id', 'cert_id')
+    return user_certs
 
 def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
     user_cert, created = UserCert.objects.get_or_create(
         user_id=user_id,
         cert_id=cert_id,
+        completion_date=completion_date,
+        expiry_date=expiry_date,
         defaults={
             'cert_file': cert_file,
             'uploaded_date': datetime.now(),
-            'completion_date': completion_date,
-            'expiry_date': expiry_date
         }
     )
+
     if not created:
-        user_cert.cert_file = cert_file
-        user_cert.uploaded_date = datetime.now()
-        user_cert.completion_date = completion_date
-        user_cert.expiry_date = expiry_date
-        user_cert.save()
+        return False
 
     return model_to_dict(user_cert)
 
@@ -151,7 +146,8 @@ def get_missing_lab_certs(user_id, lab_id):
 
 
 def get_user_certs(user_id):
-    user_certs = UserCert.objects.filter(user_id=user_id).prefetch_related('cert')
+    # Don't return duplicates, only the one with the latest expiry date
+    user_certs = get_user_certs_without_duplicates(get_user_404(user_id))
     res = []
     for user_cert in user_certs:
         dict_user_cert = model_to_dict(user_cert)

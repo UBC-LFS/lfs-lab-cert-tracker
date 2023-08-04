@@ -285,7 +285,7 @@ class UserDetailsView(View):
             'app_user': uApi.get_user(kwargs['user_id']),
             'user_lab_list': api.get_user_labs(user_id),
             'pi_user_lab_list': api.get_user_labs(user_id, is_principal_investigator=True),
-            'user_certs': api.get_user_certs_404(user_id),
+            'user_certs': api.get_user_certs_without_duplicates(api.get_user_404(user_id)),
             'missing_cert_list': api.get_missing_certs(user_id),
             'expired_cert_list': api.get_expired_certs(user_id),
             'welcome_message': uApi.welcome_message(),
@@ -361,7 +361,7 @@ class UserTrainingsView(View):
                 messages.success(request, 'Success! {0} added.'.format(cert['name']))
                 res = { 'user_id': user_id, 'cert_id': result['cert'] }
             else:
-                messages.error(request, "Error! Failed to add a training.")
+                messages.error(request, "Error! Failed to add a training. Check if your training already exists")
         else:
             errors_data = form.errors.get_json_data()
             error_message = 'Please check your inputs.'
@@ -399,14 +399,15 @@ class UserTrainingDetailsView(View):
         if request.user.id != user_id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
 
-        user_cert = api.get_user_cert_404(user_id, training_id)
+        user_certs = api.get_user_certs_specific_404(user_id, training_id)
         no_expiry_date = False
+        user_cert = user_certs.first()
         if user_cert.completion_date == user_cert.expiry_date:
             no_expiry_date = True
 
         return render(request, 'app/trainings/user_training_details.html', {
             'app_user': uApi.get_user(user_id),
-            'user_cert': user_cert,
+            'user_certs': user_certs,
             'no_expiry_date': no_expiry_date,
             'viewing': viewing
         })
@@ -1123,35 +1124,42 @@ def delete_user_training(request, user_id):
     """ Delete user's training record """
 
     user_id = request.POST.get('user', None)
-    training_id = request.POST.get('training', None)
+    user_cert_id = request.POST.get('user_cert_id', None)
 
     # If inputs are invalid, raise a 400 error
-    uApi.check_input_fields(request, ['user', 'training'])
-
+    uApi.check_input_fields(request, ['user', 'user_cert_id'])
 
     user = uApi.get_user(user_id)
-    usercert = user.usercert_set.filter(cert_id=training_id)
+    usercert = user.usercert_set.filter(id=user_cert_id)
+    print("USER CERT IS", usercert)
 
     if usercert.exists():
         usercert_obj = usercert.first()
 
-        dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(training_id))
+        file_path = usercert_obj.cert_file.path
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            os.remove(file_path)
 
-        uApi.conditionally_add_missing_cert_for_user(user, usercert_obj.cert)
+        dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(usercert_obj.cert.id))
+        uApi.conditionally_add_missing_cert_for_user(user, usercert_obj)
         is_deleted = usercert.delete()
 
         if os.path.exists(dirpath) and os.path.isdir(dirpath):
-            os.rmdir(dirpath)
+            try:
+                os.rmdir(dirpath)
+            except OSError:
+                # Directory not empty, do not delete
+                pass
 
         if is_deleted:
             messages.success(request, 'Success! {0} deleted.'.format(usercert_obj.cert.name))
             return HttpResponseRedirect( reverse('app:user_trainings', args=[user_id]) )
         else:
             messages.error(request, 'Error! Failed to delete a {0} training record of {1}.'.format(usercert_obj.cert.name, usercert_obj.user.get_full_name()))
-    else:
         messages.error(request, 'Error! Form is invalid.')
 
     return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))
+
 
 
 @login_required(login_url=settings.LOGIN_URL)

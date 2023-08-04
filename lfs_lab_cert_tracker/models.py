@@ -92,7 +92,7 @@ class UserCert(models.Model):
     expiry_date = models.DateField()
 
     class Meta:
-        unique_together = (('user', 'cert'))
+        unique_together = (('user', 'cert', 'completion_date', 'expiry_date'))
 
     def save(self, *args, **kwargs):
         """ Reduce a size and quality of the image """
@@ -187,7 +187,8 @@ def send_notification(sender, created, **kwargs):
             print(e)
 
         if valid_email:
-            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
+            pass
+            # send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
 
 
 post_save.connect(send_notification, sender=UserLab)

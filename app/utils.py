@@ -109,11 +109,15 @@ class Api:
         if certs.exists():
             certs.delete()
     
-    def conditionally_add_missing_cert_for_user(self, user, cert):
-        """ Add missing cert for user if it is required by any of their areas (labs) """
+    def conditionally_add_missing_cert_for_user(self, user, user_cert):
+        """ Add missing cert for user if they don't have any more certs and it is required by any of their areas (labs) """
+        other_user_certs = UserCert.objects.filter(user=user, cert=user_cert.cert).exclude(id=user_cert.id)
+        if other_user_certs.exists():
+            return False
+        
         certs_user_needs = Cert.objects.filter(labcert__lab__userlab__user=user)
-        if cert in certs_user_needs:
-            missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=cert) 
+        if user_cert.cert in certs_user_needs:
+            missing_cert_obj, created = MissingCert.objects.get_or_create(user=user, cert=user_cert.cert) 
 
     def try_add_missing_certificate_for_user(self, user, cert):
         """ If user does not have the certificate or missing certificate already, create one for them """
@@ -583,7 +587,7 @@ class Notification(Api):
             if user.usercert_set.count() > 0:
                 lab_user = { 'id': user.id, 'trainings': [] }
 
-                for usercert in user.usercert_set.all():
+                for usercert in api.get_user_certs_without_duplicates(user):
                     if usercert.completion_date != usercert.expiry_date:
 
                         if type == 'before':
