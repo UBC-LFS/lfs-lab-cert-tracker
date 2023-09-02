@@ -36,8 +36,8 @@
 				<td>{{ user.missing_certs.count }}</td>
 				<td class="text-left">
 					<ul>
-						{% for training in user.missing_certs %}
-							<li>{{ training.cert }}</li>
+						{% for missing_cert in user.missing_certs %}
+							<li>{{ missing_cert.name }}</li>
 						{% endfor %}
 					</ul>
 				</td>

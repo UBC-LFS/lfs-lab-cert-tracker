@@ -91,6 +91,23 @@
 				<i class="material-icons">notification_important</i> Missing Training Records
 			</h5>
 			<div class="text-secondary">
+				{% if missing_certs %}
+					<ul>
+						{% for missing_cert in missing_certs %}
+							<li>{{ missing_cert.name }}</li>
+						{% endfor %}
+					</ul>
+				{% else %}
+					{{ app_user.first_name }} is not missing any training records
+				{% endif %}
+			</div>
+		</div>
+
+		<div class="box border-red mt-5">
+			<h5 class="text-danger">
+				<i class="material-icons">notification_important</i> Missing Training Records (to be deleted)
+			</h5>
+			<div class="text-secondary">
 				{% if missing_cert_list %}
 					<ul>
 						{% for missing_cert in missing_cert_list %}

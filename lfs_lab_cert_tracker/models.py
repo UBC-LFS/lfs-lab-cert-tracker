@@ -127,9 +127,12 @@ class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
     """
+    
     LAB_USER = 0
     PRINCIPAL_INVESTIGATOR = 1
+    
     ROLE_CHOICES = [ (LAB_USER, "User"), (PRINCIPAL_INVESTIGATOR, "Supervisor") ]
+    
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField(choices=ROLE_CHOICES)
@@ -173,7 +176,8 @@ def send_notification(sender, created, **kwargs):
             print(e)
 
         if valid_email:
-            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
+            pass
+            #send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
 
 
 post_save.connect(send_notification, sender=UserLab)

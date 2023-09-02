@@ -17,15 +17,15 @@ LOGIN_URL = reverse('accounts:local_login')
 ContentType='application/x-www-form-urlencoded'
 
 DATA = [
-    'lfs_lab_cert_tracker/fixtures/certs.json',
-    'lfs_lab_cert_tracker/fixtures/labs.json',
-    'lfs_lab_cert_tracker/fixtures/users.json',
-    'lfs_lab_cert_tracker/fixtures/user_certs.json',
-    'lfs_lab_cert_tracker/fixtures/user_labs.json',
-    'lfs_lab_cert_tracker/fixtures/lab_certs.json'
+    'app/fixtures/certs.json',
+    'app/fixtures/labs.json',
+    'app/fixtures/users.json',
+    'app/fixtures/user_certs.json',
+    'app/fixtures/user_labs.json',
+    'app/fixtures/lab_certs.json'
 ]
 
-USERS = [ 'testadmin', 'testpi1', 'testuser1']
+USERS = ['testadmin', 'testpi1', 'testuser1']
 PASSWORD = 'password'
 
 ALL_USERS_QUERY = '?page=1&q=user'

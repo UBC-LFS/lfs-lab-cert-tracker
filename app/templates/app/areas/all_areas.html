@@ -24,12 +24,13 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-lg">
+<table class="table table-bordered table-striped table-hover table-responsive-lg text-center">
   <thead>
     <tr>
 			<th>ID</th>
-      <th>Name</th>
-			<th>Number of<br />Users</th>
+      <th>Area Name</th>
+			<th>Number of <br /> Required Trainings</th>
+			<th>Number of <br /> Users</th>
 			<th>Actions</th>
     </tr>
   </thead>
@@ -37,9 +38,10 @@
 		{% for area in areas %}
 			<tr>
 				<td>{{ area.id }}</td>
-				<td>
+				<td class="text-left">
 					<a href="{% url 'app:area_details' area_id=area.id %}">{{ area.name }}</a>
 				</td>
+				<td>{{ area.num_certs }}</td>
 				<td>{{ area.num_users }}</td>
 				<td>
 					{% if request.user.is_superuser %}

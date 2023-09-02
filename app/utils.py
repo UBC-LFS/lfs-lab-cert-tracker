@@ -37,8 +37,8 @@ class Api:
 
         return User.objects.filter(is_superuser=True)
 
-    def add_inactive_users(self, users):
-        """ Add inactive status into users """
+    """def add_inactive_users(self, users):
+        ''' Add inactive status into users '''
 
         for user in users:
             user_inactive = UserInactive.objects.filter(user_id=user.id)
@@ -46,7 +46,7 @@ class Api:
                 user.inactive = user_inactive.first()
             else:
                 user.inactive = None
-        return users
+        return users"""
 
 
     # Areas
@@ -65,8 +65,8 @@ class Api:
         return get_object_or_404(Lab, id=attr)
 
 
-    def add_users_to_areas(self, areas):
-        """ Add user info to areas """
+    """def add_users_to_areas(self, areas):
+        ''' Add user info to areas '''
 
         for area in areas:
             area.has_lab_users = []
@@ -77,7 +77,7 @@ class Api:
                 elif userlab.role == UserLab.PRINCIPAL_INVESTIGATOR:
                     area.has_pis.append(userlab.user.id)
 
-        return areas
+        return areas"""
 
 
     # Trainings
@@ -479,17 +479,17 @@ class Notification(Api):
         msg['To'] = receiver
 
         try:
-        	server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
-        	#server.ehlo()
-        	#server.starttls(context=ssl.create_default_context())
-        	#server.ehlo()
-        	#server.login(sender_email, password)
-        	server.sendmail(sender, receiver, msg.as_string())
+            server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
+            #server.ehlo()
+            #server.starttls(context=ssl.create_default_context())
+            #server.ehlo()
+            #server.login(sender_email, password)
+            server.sendmail(sender, receiver, msg.as_string())
         except Exception as e:
-        	print(e)
+            print(e)
         finally:
-        	server.quit()
-
+            server.quit()
+    
 
     def html_template(self, first_name, last_name, message):
         """ Get a base of html template """
