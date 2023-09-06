@@ -124,19 +124,24 @@ class AreaTrainingForm(forms.ModelForm):
 class UserTrainingForm(forms.ModelForm):
     """ Add user's training records """
 
-    date = datetime.now()
+    """date = datetime.now()
     completion_date = forms.DateField(
         initial=dt.date.today,
         widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20))
-    )
+    )"""
     class Meta:
         model = UserCert
-        fields = ['user', 'cert', 'cert_file']
+        fields = ['user', 'cert', 'cert_file', 'completion_date']
         labels = {
             'cert': 'Training',
-            'cert_file': ''
+            'cert_file': '',
+            'completion_date': 'Completion Date'
         }
-        widgets = { 'user': forms.HiddenInput() }
+        widgets = {
+            'user': forms.HiddenInput(),
+            'cert': forms.Select(attrs={ 'class': 'form-control' }),
+            'completion_date': forms.widgets.DateInput(attrs={ 'type': 'date', 'class': 'form-control' }),
+        }
 
 
 # for testing

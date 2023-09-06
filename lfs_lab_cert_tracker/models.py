@@ -79,7 +79,10 @@ class UserCert(models.Model):
     expiry_date = models.DateField()
 
     class Meta:
-        unique_together = (('user', 'cert'))
+        unique_together = (('user', 'cert', 'completion_date'))
+
+    def filename(self):
+        return os.path.basename(self.cert_file.name)
 
     def save(self, *args, **kwargs):
         """ Reduce a size and quality of the image """

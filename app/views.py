@@ -24,7 +24,7 @@ from io import BytesIO
 # from cgi import escape
 from html import escape # >= python 3.8
 from xhtml2pdf import pisa
-from datetime import datetime
+from datetime import datetime, date
 
 from .accesses import *
 from .forms import *
@@ -274,56 +274,62 @@ class UserTrainingsView(View):
 
     form_class = UserTrainingForm
 
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        user_id = kwargs.get('user_id', None)
+        if not user_id:
+            raise SuspiciousOperation
+        
+        self.user = uApi.get_user(user_id)
+        return setup
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        user_id = kwargs['user_id']
-        app_user = uApi.get_user(user_id)
 
         viewing = {}
-        if request.user.id != user_id and request.session.get('next'):
+        if request.user.id != self.user.id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
 
         return render(request, 'app/trainings/user_trainings.html', {
-            'app_user': app_user,
-            'user_cert_list': api.get_user_certs(user_id),
-            'missing_cert_list': api.get_missing_certs(user_id),
-            'expired_cert_list': api.get_expired_certs(user_id),
-            'form': self.form_class(initial={ 'user': user_id }),
-            'viewing': viewing
+            'app_user': self.user,
+            'user_cert_list': api.get_user_certs(self.user.id),
+            'missing_certs': get_user_missing_certs(self.user.id),
+            'expired_cert_list': api.get_expired_certs(self.user.id),
+            'form': self.form_class(initial={ 'user': self.user.id }),
+            'viewing': viewing,
+
+            'missing_cert_list': api.get_missing_certs(self.user.id)
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-
         # Add a training record
-        user_id = request.POST.get('user')
+
         form = self.form_class(request.POST, request.FILES)
 
-        # Whether form is valid or not
         if form.is_valid():
-            data = request.POST
-            files = request.FILES
-            cert = api.get_cert(data['cert'])
+            data = form.cleaned_data
 
-            year = int(data['completion_date_year'])
-            month = int(data['completion_date_month'])
-            day = int(data['completion_date_day'])
+            completion_date = data['completion_date']
+            expiry_year = completion_date.year + int(data['cert'].expiry_in_years)
+            expiry_date = date(year=expiry_year, month=completion_date.month, day=completion_date.day)
 
-            completion_date = datetime(year=year, month=month, day=day)
-
-            # Calculate a expiry year
-            expiry_year = year + int(cert['expiry_in_years'])
-            expiry_date = datetime(year=expiry_year, month=month, day=day)
-
-            result = api.update_or_create_user_cert(data['user'], data['cert'], files['cert_file'], completion_date, expiry_date)
-
-            # Whether user's certficiate is created successfully or not
-            if result:
-                messages.success(request, 'Success! {0} added.'.format(cert['name']))
-                res = { 'user_id': user_id, 'cert_id': result['cert'] }
+            user_cert = UserCert.objects.create(
+                user_id = self.user.id,
+                cert_id = data['cert'].id,
+                cert_file = request.FILES['cert_file'],
+                uploaded_date = date.today(),
+                completion_date = completion_date,
+                expiry_date = expiry_date
+            )
+            
+            if user_cert:
+                messages.success(request, 'Success! {0} added.'.format(user_cert.cert.name))
             else:
                 messages.error(request, "Error! Failed to add a training.")
-        else:
+        else:            
+            print(form.errors)
             errors_data = form.errors.get_json_data()
             error_message = 'Please check your inputs.'
 
@@ -344,33 +350,72 @@ class UserTrainingsView(View):
 
             messages.error(request, "Error! Failed to add your training. {0}".format(error_message))
 
-        return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))
+        return HttpResponseRedirect(reverse('app:user_trainings', args=[self.user.id]))
 
 
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserTrainingDetailsView(View):
     """ Display details of a training record of a user """
 
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        user_id = kwargs.get('user_id', None)
+        training_id = kwargs.get('training_id', None)
+
+        if not user_id or not training_id:
+            raise SuspiciousOperation
+
+        user = uApi.get_user(user_id)
+        self.user = user
+        self.user_certs = user.usercert_set.filter(cert_id=training_id)
+        return setup
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        user_id = kwargs['user_id']
-        training_id = kwargs['training_id']
-
+        
         viewing = {}
-        if request.user.id != user_id and request.session.get('next'):
+        if request.user.id != self.user.id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
-
-        user_cert = api.get_user_cert_404(user_id, training_id)
-        no_expiry_date = False
-        if user_cert.completion_date == user_cert.expiry_date:
-            no_expiry_date = True
-
+        
         return render(request, 'app/trainings/user_training_details.html', {
-            'app_user': uApi.get_user(user_id),
-            'user_cert': user_cert,
-            'no_expiry_date': no_expiry_date,
+            'app_user': self.user,
+            'latest_user_cert': self.user_certs.first(),
+            'user_certs': self.user_certs[1:],
+            #'user_cert': user_cert,
             'viewing': viewing
         })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        training_id = request.POST.get('training', None)
+
+        if not training_id:
+            raise SuspiciousOperation
+
+        user_cert = self.user.usercert_set.filter(cert_id=training_id)
+
+        if user_cert.exists():
+            user_cert_obj = user_cert.first()
+            cert_name = user_cert_obj.cert.name
+
+            user_cert_obj.delete()
+
+            dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(self.user.id), 'certificates', str(training_id))
+            print(dirpath)
+            if os.path.exists(dirpath) and os.path.isdir(dirpath):
+                try:
+                    os.rmdir(dirpath)
+                except OSError:
+                    # Directory not empty, do not delete
+                    pass
+            
+            messages.success(request, 'Success! {0} deleted.'.format(cert_name))
+            return HttpResponseRedirect( reverse('app:user_trainings', args=[self.user.id]) )
+        else:
+            messages.error(request, 'Error! Form is invalid.')
+
+        return HttpResponseRedirect(reverse('app:user_trainings', args=[self.user.id]))
 
 
 # Users - functions
@@ -1010,12 +1055,12 @@ def delete_training(request):
     return redirect('app:all_trainings')
 
 
-@login_required(login_url=settings.LOGIN_URL)
+"""@login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_loggedin_user_admin
 @require_http_methods(['POST'])
 def delete_user_training(request, user_id):
-    """ Delete user's training record """
+    ''' Delete user's training record '''
 
     user_id = request.POST.get('user', None)
     training_id = request.POST.get('training', None)
@@ -1047,7 +1092,7 @@ def delete_user_training(request, user_id):
     else:
         messages.error(request, 'Error! Form is invalid.')
 
-    return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))
+    return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))"""
 
 
 @login_required(login_url=settings.LOGIN_URL)

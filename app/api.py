@@ -69,13 +69,13 @@ def get_cert(cert_id):
         return None
 
 
-def get_user_cert_404(user_id, cert_id):
-    """ Get a cert of an user """
+"""def get_user_cert_404(user_id, cert_id):
+    ''' Get a cert of an user '''
     user = get_user_404(user_id)
     uc = user.usercert_set.filter(cert_id=cert_id)
     if uc.exists():
         return uc.first()
-    raise Http404
+    raise Http404"""
 
 
 def get_missing_certs_query_object(user_id):
@@ -88,7 +88,7 @@ def get_missing_certs_query_object(user_id):
     return lab_certs.exclude(cert_id__in=user_cert_ids)
 
 
-def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
+"""def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, expiry_date):
     user_cert, created = UserCert.objects.get_or_create(
         user_id=user_id,
         cert_id=cert_id,
@@ -106,7 +106,7 @@ def update_or_create_user_cert(user_id, cert_id, cert_file, completion_date, exp
         user_cert.expiry_date = expiry_date
         user_cert.save()
 
-    return model_to_dict(user_cert)
+    return model_to_dict(user_cert)"""
 
 
 def get_users_missing_certs(lab_id):

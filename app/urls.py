@@ -4,7 +4,8 @@ from . import views
 app_name = 'app'
 
 urlpatterns = [
-# Users - classes
+
+    # Users - classes
     path('users/report/missing-trainings/', views.UserReportMissingTrainingsView.as_view(), name='user_report_missing_trainings'),
     path('users/new/', views.NewUserView.as_view(), name='new_user'),
     path('users/all/', views.AllUsersView.as_view(), name='all_users'),
@@ -46,7 +47,7 @@ urlpatterns = [
     # Trainings - apis
     path('api/trainings/edit/', views.edit_training, name='edit_training'),
     path('api/trainings/delete/', views.delete_training, name='delete_training'),
-    path('api/users/<int:user_id>/training/delete/', views.delete_user_training, name='delete_user_training'),
+    #path('api/users/<int:user_id>/training/delete/', views.delete_user_training, name='delete_user_training'),
 
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
