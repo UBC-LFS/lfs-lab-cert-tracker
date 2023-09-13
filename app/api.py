@@ -1,11 +1,37 @@
-from datetime import datetime
+from datetime import datetime, date
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 from django.http import Http404
 
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import UserCert, LabCert, UserLab, Cert, Lab
+from lfs_lab_cert_tracker.models import *
 
+
+
+
+# User
+def get_users(self, option=None):
+    """ Get all users """
+    if option == 'active':
+        return User.objects.filter(is_active=True).order_by('last_name', 'first_name')
+    return User.objects.all().order_by('last_name', 'first_name')
+
+
+def get_user_certs(user):
+    return user.usercert_set.all().distinct('cert__name')
+
+def get_user_missing_certs(user_id):
+    required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
+    certs = Cert.objects.filter(usercert__user_id=user_id).distinct()
+    return required_certs.difference(certs).order_by('name')
+
+def get_user_expired_certs(user_id):
+    return Cert.objects.filter( Q(usercert__user_id=user_id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
+
+
+
+
+#--------------------------------------
 
 def add_missing_certs(users):
     """ Add missing certs into users """

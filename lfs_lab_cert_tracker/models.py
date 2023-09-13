@@ -77,9 +77,11 @@ class UserCert(models.Model):
     uploaded_date = models.DateField()
     completion_date = models.DateField()
     expiry_date = models.DateField()
+    by_api = models.BooleanField(default=False)
 
     class Meta:
         unique_together = (('user', 'cert', 'completion_date'))
+        ordering = ['cert']
 
     def filename(self):
         return os.path.basename(self.cert_file.name)

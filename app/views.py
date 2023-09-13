@@ -19,6 +19,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from io import BytesIO
 # from cgi import escape
@@ -34,7 +35,7 @@ from lfs_lab_cert_tracker.models import *
 
 
 # Set 50 users in a page
-NUM_PER_PAGE = 50
+NUM_PER_PAGE = 20
 
 uApi = Api()
 
@@ -77,8 +78,8 @@ def index(request):
 
 # Users - classes
 
-@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
-class AllUsersView(View):
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllUsersView(LoginRequiredMixin, View):
     """ Display all users """
 
     @method_decorator(require_GET)
@@ -88,7 +89,7 @@ class AllUsersView(View):
         if request.session.get('next'):
             del request.session['next']
 
-        user_list = uApi.get_users()
+        user_list = get_users()
 
         # Pagination enables
         query = request.GET.get('q')
@@ -157,7 +158,7 @@ class UserReportMissingTrainingsView(View):
 
         # Find users who have missing certs
         user_list = []
-        for user in User.objects.all():
+        for user in api.get_users('active'):
             missing_certs = get_user_missing_certs(user.id)
             if len(missing_certs) > 0: 
                 user.missing_certs = missing_certs
@@ -175,8 +176,33 @@ class UserReportMissingTrainingsView(View):
 
         return render(request, 'app/users/user_report_missing_trainings.html', {
             'total_users': len(user_list),
-            'users': users
+            'users': users,
+            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings')
         })
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def download_user_report_missing_trainings(request):
+    print('download_user_report_missing_trainings')
+
+    # Find users who have missing certs
+    result = 'ID,CWL,First Name,Last Name,Number of Missing Trainings,Missing Trainings\n'
+    for user in User.objects.filter():
+        certs = ''
+        missing_certs = get_user_missing_certs(user.id)
+        if len(missing_certs) > 0:
+            for i, cert in enumerate(missing_certs):
+                certs += cert.name
+                if i < len(missing_certs) - 1:
+                    certs += '\n'
+
+        result += '{0},{1},{2},{3},{4},"{5}"\n'.format(user.id, user.username, user.first_name, user.last_name, len(missing_certs), certs)
+
+    return JsonResponse({ 'status': 'success', 'data': result })
 
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
@@ -187,6 +213,10 @@ class NewUserView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        
+        # TODO
+        tasks.check_user_certs_by_api()
+
         return render(request, 'app/users/new_user.html', {
             'user_form': self.form_class(),
             'last_ten_users': User.objects.all().order_by('-date_joined')[:15]
@@ -222,15 +252,29 @@ class NewUserView(View):
         return redirect('app:new_user')
 
 
+from django.db.models import F
+
+from scheduler import tasks
+from .functions import *
+
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserDetailsView(View):
     """ View user details """
 
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        user_id = kwargs.get('user_id', None)
+        if not user_id:
+            raise SuspiciousOperation
+        
+        self.user = uApi.get_user(user_id)
+        return setup
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        user_id = kwargs['user_id']
 
-        if request.user.id != user_id:
+        if request.user.id != self.user.id:
 
             # Add next string to session
             if request.GET.get('next'):
@@ -238,20 +282,24 @@ class UserDetailsView(View):
                 request.session['next'] = next[1]
 
         viewing = {}
-        if request.user.id != user_id and request.session.get('next'):
+        if request.user.id != self.user.id and request.session.get('next'):
             viewing = uApi.get_viewing(request.session.get('next'))
 
         return render(request, 'app/users/user_details.html', {
-            'app_user': uApi.get_user(kwargs['user_id']),
-            'user_lab_list': api.get_user_labs(user_id),
-            'pi_user_lab_list': api.get_user_labs(user_id, is_principal_investigator=True),
-            'user_certs': api.get_user_certs_404(user_id),
-            'missing_certs': get_user_missing_certs(user_id),
-            'expired_cert_list': api.get_expired_certs(user_id),
+            'app_user': self.user,
+            'user_lab_list': api.get_user_labs(self.user.id),
+            'pi_user_lab_list': api.get_user_labs(self.user.id, is_principal_investigator=True),
+
+            'user_certs': get_user_certs(self.user),
+            'missing_certs': get_user_missing_certs(self.user.id),
+            'expired_certs': get_user_expired_certs(self.user.id),
+            
             'welcome_message': uApi.welcome_message(),
             'viewing': viewing,
 
-            'missing_cert_list': api.get_missing_certs(user_id),
+            'user_cert_list': api.get_user_certs_404(self.user.id),
+            'missing_cert_list': api.get_missing_certs(self.user.id),
+            'expired_cert_list': api.get_expired_certs(self.user.id)
         })
 
 
@@ -293,13 +341,18 @@ class UserTrainingsView(View):
 
         return render(request, 'app/trainings/user_trainings.html', {
             'app_user': self.user,
-            'user_cert_list': api.get_user_certs(self.user.id),
+            'user_certs': get_user_certs(self.user),
+
             'missing_certs': get_user_missing_certs(self.user.id),
-            'expired_cert_list': api.get_expired_certs(self.user.id),
+            'expired_certs': get_user_expired_certs(self.user.id),
+
+            
             'form': self.form_class(initial={ 'user': self.user.id }),
             'viewing': viewing,
 
-            'missing_cert_list': api.get_missing_certs(self.user.id)
+            'user_cert_list': api.get_user_certs(self.user.id),
+            'missing_cert_list': api.get_missing_certs(self.user.id),
+            'expired_cert_list': api.get_expired_certs(self.user.id),
         })
 
     @method_decorator(require_POST)
@@ -328,8 +381,7 @@ class UserTrainingsView(View):
                 messages.success(request, 'Success! {0} added.'.format(user_cert.cert.name))
             else:
                 messages.error(request, "Error! Failed to add a training.")
-        else:            
-            print(form.errors)
+        else:
             errors_data = form.errors.get_json_data()
             error_message = 'Please check your inputs.'
 
@@ -368,7 +420,9 @@ class UserTrainingDetailsView(View):
 
         user = uApi.get_user(user_id)
         self.user = user
-        self.user_certs = user.usercert_set.filter(cert_id=training_id)
+        self.user_certs = user.usercert_set.filter(cert_id=training_id).order_by('-completion_date')
+        self.training_id = training_id
+
         return setup
 
     @method_decorator(require_GET)
@@ -382,18 +436,17 @@ class UserTrainingDetailsView(View):
             'app_user': self.user,
             'latest_user_cert': self.user_certs.first(),
             'user_certs': self.user_certs[1:],
-            #'user_cert': user_cert,
             'viewing': viewing
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        training_id = request.POST.get('training', None)
+        user_cert_id = request.POST.get('user_cert', None)
 
-        if not training_id:
+        if not user_cert_id:
             raise SuspiciousOperation
 
-        user_cert = self.user.usercert_set.filter(cert_id=training_id)
+        user_cert = self.user.usercert_set.filter(id=user_cert_id)
 
         if user_cert.exists():
             user_cert_obj = user_cert.first()
@@ -401,17 +454,16 @@ class UserTrainingDetailsView(View):
 
             user_cert_obj.delete()
 
-            dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(self.user.id), 'certificates', str(training_id))
-            print(dirpath)
-            if os.path.exists(dirpath) and os.path.isdir(dirpath):
+            dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(self.user.id), 'certificates', str(self.training_id))
+            if os.path.exists(dirpath) and os.path.isdir(dirpath) and len(os.listdir(dirpath)) == 0:
                 try:
                     os.rmdir(dirpath)
                 except OSError:
-                    # Directory not empty, do not delete
-                    pass
+                    print('OSError: failed to remove a dir - ', dirpath)
             
             messages.success(request, 'Success! {0} deleted.'.format(cert_name))
-            return HttpResponseRedirect( reverse('app:user_trainings', args=[self.user.id]) )
+            if self.user.usercert_set.filter(cert_id=self.training_id).count() > 0:
+                return HttpResponseRedirect( request.POST.get('next') )
         else:
             messages.error(request, 'Error! Form is invalid.')
 
@@ -467,26 +519,6 @@ def render_to_pdf(template_src, context_dict):
     if not pdf.err:
         return HttpResponse(response.getvalue(), content_type='application/pdf')
     return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_admin_only
-@require_http_methods(['GET'])
-def download_user_report_missing_trainings(request):
-    """Download a user report for missing trainings """
-
-    users = uApi.get_users()
-
-    # Find users who have missing certs
-    users_in_missing_training = []
-    for user in api.add_missing_certs(users):
-        if user.missing_certs != None:
-            users_in_missing_training.append(user)
-
-    return render_to_pdf('app/users/download_user_report_missing_trainings.html', {
-        'users': users_in_missing_training,
-    })
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -669,6 +701,17 @@ class AllAreasView(View):
 class AreaDetailsView(View):
     """ Display all areas """
 
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        area_id = kwargs.get('area_id', None)
+        if not area_id:
+            raise SuspiciousOperation
+        
+        self.area = uApi.get_area(area_id)
+
+        return setup
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
@@ -676,49 +719,61 @@ class AreaDetailsView(View):
         if request.session.get('next'):
             del request.session['next']
 
-        area_id = kwargs['area_id']
-
-        area = uApi.get_area(area_id)
-
         required_trainings = []
-        for labcert in area.labcert_set.all():
+        for labcert in self.area.labcert_set.all():
             required_trainings.append(labcert.cert)
 
         users_in_area = []
-        for userlab in area.userlab_set.all():
+        for userlab in self.area.userlab_set.all():
             user = userlab.user
-            if uApi.is_pi_in_area(user.id, area_id): 
+            if uApi.is_pi_in_area(user.id, self.area.id): 
                 user.is_pi = True
             else: 
                 user.is_pi = False
             
             users_in_area.append(user)
 
-        is_pi = uApi.is_pi_in_area(request.user.id, area_id)
+        is_pi = uApi.is_pi_in_area(request.user.id, self.area.id)
 
-        # Get user's missing certs in this lab
-        """users_missing_certs = []
-        user_labs = UserLab.objects.filter(lab=area_id)
-        if user_labs.exists():
-            for user_lab in user_labs:
-                missing_certs = LabCert.objects.filter(lab_id=area_id, cert__missingcert__user_id=user_lab.user.id)
-                if missing_certs.exists():
-                    users_missing_certs.append({
-                        'user': user_lab.user, 
-                        'missing_certs': missing_certs
-                    })"""
+        required_certs = Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
+
+        # Get users' missing certs in this lab
+        users_missing_certs = []
+        users_expired_certs = []
+        for user_lab in self.area.userlab_set.all():
+            #required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
+            certs = Cert.objects.filter(usercert__user_id=user_lab.user.id).distinct()
+            missing_certs = required_certs.difference(certs)
+            if len(missing_certs) > 0:
+                users_missing_certs.append({
+                    'user': user_lab.user, 
+                    'missing_certs': missing_certs.order_by('name')
+                })
+            #& Q(userlab__lab_id=self.area.id)
+            filtered_certs = certs.filter( Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) )
+            expired_certs = required_certs.intersection(filtered_certs)
+            if len(expired_certs) > 0:
+                users_expired_certs.append({
+                    'user': user_lab.user, 
+                    'expired_certs': expired_certs.order_by('name')
+                })
         
         return render(request, 'app/areas/area_details.html', {
-            'area': area,
-            'required_trainings': required_trainings,
-            'users_in_area': users_in_area,
+            'area': self.area,
             'is_admin': request.user.is_superuser,
             'is_pi': is_pi,
-            #'users_missing_certs2': users_missing_certs,
-            'users_missing_certs': api.get_users_missing_certs(area_id),
-            'users_expired_certs': api.get_users_expired_certs(area_id),
-            'user_area_form': UserAreaForm(initial={ 'lab': area.id }),
-            'area_training_form': AreaTrainingForm(initial={ 'lab': area.id })
+            'required_certs': required_certs,
+            'users_in_area': users_in_area,
+            
+            'users_missing_certs2': users_missing_certs,
+            'users_expired_certs2': users_expired_certs,
+
+            'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
+            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id }),
+
+            'required_trainings': required_trainings,
+            'users_missing_certs': api.get_users_missing_certs(self.area.id),
+            'users_expired_certs': api.get_users_expired_certs(self.area.id),
         })
 
     @method_decorator(require_POST)
@@ -978,9 +1033,13 @@ class AllTrainingsView(View):
         except EmptyPage:
             trainings = paginator.page(paginator.num_pages)
 
+        for training in trainings:
+            training.num_users = training.usercert_set.count()
+            print(training.id, training.usercert_set.count())
+
         return render(request, 'app/trainings/all_trainings.html', {
-            'trainings': trainings,
             'total_trainings': len(training_list),
+            'trainings': trainings,
             'form': self.form_class()
         })
 
@@ -1055,6 +1114,31 @@ def delete_training(request):
     return redirect('app:all_trainings')
 
 
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_loggedin_user_pi_admin
+@require_http_methods(['GET'])
+def download_user_cert(request, user_id, cert_id, filename):
+    path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
+    return serve(request, path, document_root=settings.MEDIA_ROOT)
+
+
+# Helper functions
+
+def get_user_certs(user):
+    return user.usercert_set.all().distinct('cert__name')
+
+def get_user_missing_certs(user_id):
+    required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
+    certs = Cert.objects.filter(usercert__user_id=user_id).distinct()
+    return required_certs.difference(certs).order_by('name')
+
+def get_user_expired_certs(user_id):
+    return Cert.objects.filter( Q(usercert__user_id=user_id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
+
+
+
 """@login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_loggedin_user_admin
@@ -1095,18 +1179,22 @@ def delete_user_training(request, user_id):
     return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))"""
 
 
-@login_required(login_url=settings.LOGIN_URL)
+
+"""@login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_loggedin_user_pi_admin
+@access_admin_only
 @require_http_methods(['GET'])
-def download_user_cert(request, user_id, cert_id, filename):
-    path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
-    return serve(request, path, document_root=settings.MEDIA_ROOT)
+def download_user_report_missing_trainings(request):
+    ''' Download a user report for missing trainings '''
 
+    users = uApi.get_users()
 
-# Helper functions
+    # Find users who have missing certs
+    users_in_missing_training = []
+    for user in api.add_missing_certs(users):
+        if user.missing_certs != None:
+            users_in_missing_training.append(user)
 
-def get_user_missing_certs(user_id):
-    required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
-    certs = Cert.objects.filter(usercert__user_id=user_id).distinct()
-    return required_certs.difference(certs)
+    return render_to_pdf('app/users/download_user_report_missing_trainings.html', {
+        'users': users_in_missing_training,
+    })"""

@@ -29,6 +29,7 @@
 			<th>ID</th>
       <th>Name</th>
 			<th>Expiry in year</th>
+			<th>Number of <br /> Users</th>
 			<th>Actions</th>
     </tr>
   </thead>
@@ -44,6 +45,7 @@
 						{{ cert.expiry_in_years }} years
 					{% endif %}
 				</td>
+				<td>{{ cert.num_users }}</td>
 				<td>
 					{% if request.user.is_superuser %}
 						<div class="btn-toolbar">

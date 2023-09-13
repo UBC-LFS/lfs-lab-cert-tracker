@@ -1489,7 +1489,7 @@ class UserTrainingTest(TestCase):
         self.assertIsNotNone(res.context['viewing'], {})"""
 
 
-    def test_upload_training_by_myself(self):
+    """def test_upload_training_by_myself(self):
         print('\n- Test: upload a training - by myself')
         self.login(USERS[2], PASSWORD)
 
@@ -1518,11 +1518,11 @@ class UserTrainingTest(TestCase):
         self.assertTrue(training1.exists())
         self.assertEqual(training1.first().cert.name, 'Preventing and Addressing Workplace Bullying and Harassment Training')
         self.assertEqual(training1.first().cert_file.name, 'users/11/certificates/2/joss-woodhead-3wFRlwS91yk-unsplash.jpg')
-        training1.delete()
+        training1.delete()"""
 
 
-    def test_upload_training_by_myself_same_cert(self):
-        print('\n- Test: upload a training - by myself - duplicated')
+    def test_upload_training_by_myself_same_cert_different_completion_date(self):
+        print('\n- Test: upload a training - by myself - same cert - different completion date')
         self.login(USERS[2], PASSWORD)
 
         user_id = 11
@@ -1531,42 +1531,106 @@ class UserTrainingTest(TestCase):
         user = self.api.get_user(user_id)
         user.usercert_set.all()
 
-        data = {
+        data1 = {
             'user': user.id,
-            'cert': 1,
             'cert': training_id,
             'cert_file': SimpleUploadedFile(name='joss-woodhead-3wFRlwS91yk-unsplash.jpg', content=open(self.testing_image, 'rb').read(), content_type='image/jpeg'),
             'completion_date': '2020-01-15'
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
-        self.assertEqual(res.status_code, 302)
-        messages = self.messages(res)
-        self.assertEqual(messages[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
-        self.assertRedirects(res, res.url)
+        res1 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data1, format='multipart')
+        self.assertEqual(res1.status_code, 302)
+        messages1 = self.messages(res1)
+        self.assertEqual(messages1[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
+        self.assertEqual(res1.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertRedirects(res1, res1.url)
 
         user1 = self.api.get_user(user_id)
-        training1 = user1.usercert_set.filter(cert_id=training_id)
-        self.assertTrue(training1.exists())
-        self.assertEqual(training1.first().cert.name, 'Preventing and Addressing Workplace Bullying and Harassment Training')
-        self.assertEqual(training1.first().cert_file.name, 'users/11/certificates/2/joss-woodhead-3wFRlwS91yk-unsplash.jpg')
-        training1.delete()
+        user_certs1 = user1.usercert_set.filter(cert_id=training_id)
+        self.assertTrue(user_certs1.exists())
+        self.assertEqual(user_certs1.first().cert.name, 'Preventing and Addressing Workplace Bullying and Harassment Training')
+        self.assertEqual(user_certs1.first().cert_file.name, 'users/11/certificates/2/joss-woodhead-3wFRlwS91yk-unsplash.jpg')
+        
 
         data2 = {
             'user': user.id,
-            'cert': 1,
+            'cert': training_id,
+            'cert_file': SimpleUploadedFile(name='karsten-wurth-9qvZSH_NOQs-unsplash.jpg', content=open(self.testing_image2, 'rb').read(), content_type='image/jpeg'),
+            'completion_date': '2020-02-15'
+        }
+
+        res2 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data2, format='multipart')
+        self.assertEqual(res2.status_code, 302)
+        messages2 = self.messages(res2)
+        self.assertEqual(messages2[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
+        self.assertEqual(res2.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertRedirects(res2, res2.url)
+
+        user2 = self.api.get_user(user_id)
+        user_certs2 = user2.usercert_set.filter(cert_id=training_id)
+
+        cert_names = []
+        cert_paths = []
+        for user_cert in user_certs2:
+            cert_names.append(user_cert.cert.name)
+            cert_paths.append(user_cert.cert_file.name)
+
+        self.assertTrue(user_certs2.exists())
+        self.assertEqual(user_certs2.count(), 2)
+        self.assertEqual(cert_names, ['Preventing and Addressing Workplace Bullying and Harassment Training', 'Preventing and Addressing Workplace Bullying and Harassment Training'])
+        self.assertEqual(cert_paths, ['users/11/certificates/2/joss-woodhead-3wFRlwS91yk-unsplash.jpg', 'users/11/certificates/2/karsten-wurth-9qvZSH_NOQs-unsplash.jpg'])
+        
+        user_certs1.delete()
+        user_certs2.delete()
+
+
+    def test_upload_training_by_myself_same_cert_same_completion_date(self):
+        print('\n- Test: upload a training - by myself - same cert - same completion date')
+        self.login(USERS[2], PASSWORD)
+
+        user_id = 11
+        training_id = 2
+
+        user = self.api.get_user(user_id)
+        user.usercert_set.all()
+
+        data1 = {
+            'user': user.id,
+            'cert': training_id,
+            'cert_file': SimpleUploadedFile(name='joss-woodhead-3wFRlwS91yk-unsplash.jpg', content=open(self.testing_image, 'rb').read(), content_type='image/jpeg'),
+            'completion_date': '2020-01-15'
+        }
+
+        res1 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data1, format='multipart')
+        self.assertEqual(res1.status_code, 302)
+        messages1 = self.messages(res1)
+        self.assertEqual(messages1[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
+        self.assertEqual(res1.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertRedirects(res1, res1.url)
+
+        user1 = self.api.get_user(user_id)
+        user_certs1 = user1.usercert_set.filter(cert_id=training_id)
+        self.assertTrue(user_certs1.exists())
+        self.assertEqual(user_certs1.first().cert.name, 'Preventing and Addressing Workplace Bullying and Harassment Training')
+        self.assertEqual(user_certs1.first().cert_file.name, 'users/11/certificates/2/joss-woodhead-3wFRlwS91yk-unsplash.jpg')
+
+        data2 = {
+            'user': user.id,
+            'cert': training_id,
             'cert_file': SimpleUploadedFile(name='karsten-wurth-9qvZSH_NOQs-unsplash.jpg', content=open(self.testing_image2, 'rb').read(), content_type='image/jpeg'),
             'completion_date': '2020-01-15'
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user.id]), data=data, format='multipart')
-        self.assertEqual(res.status_code, 302)
-        messages = self.messages(res)
-        self.assertEqual(messages[0], 'Error! Failed to add your training. The certificate already exists. If you wish to update a new training, please delete your old training first.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user.id]))
-        self.assertRedirects(res, res.url)
-
+        res2 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data2, format='multipart')
+        self.assertEqual(res2.status_code, 302)
+        
+        messages2 = self.messages(res2)
+        self.assertEqual(messages2[0], 'Error! Failed to add your training. The certificate already exists. If you wish to update a new training, please delete your old training first.')
+        self.assertEqual(res2.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertRedirects(res2, res2.url)
+        
+        user_certs1.delete()
+        
 
     """def test_view_user_trainings_by_wrong_pi(self):
         print("\n- Test: view user's trainings - by wrong pi")

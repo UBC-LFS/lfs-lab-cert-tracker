@@ -6,33 +6,39 @@
 	{% include 'app/subpages/_admin_menu.html' %}
 {% endif %}
 
+<div id="download-csv-message" class="container"></div>
+
 <h3 class="my-5">
 	User Report
-	<small class="text-secondary">Total: {{ total_users }}</small><br />
+	<small class="text-secondary">Total: {{ total_users }}</small> <br />
 	<small class="text-danger">for Missing Training Records</small>
 </h3>
 
 <div class="text-primary float-right">
 	<i class="material-icons">cloud_download</i>
-	<a href="{% url 'app:download_user_report_missing_trainings' %}" target="_blank">Download as PDF</a>
+	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
+		Download All as CSV
+	</button>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-lg text-center font-size-sm">
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm">
 	<thead>
 		<tr>
 			<th>ID</th>
-			<th>Full Name</th>
 			<th>CWL</th>
+			<th>First Name</th>
+			<th>Last Name</th>
 			<th>Number of <br />Missing Trainings</th>
-			<th>Missing Training Records</th>
+			<th>Missing Trainings</th>
 		</tr>
 	</thead>
 	<tbody>
 		{% for user in users %}
 			<tr>
 				<td>{{ user.id }}</td>
-				<td>{{ user.get_full_name }}</td>
 				<td>{{ user.username }}</td>
+				<td>{{ user.first_name }}</td>
+				<td>{{ user.last_name }}</td>
 				<td>{{ user.missing_certs.count }}</td>
 				<td class="text-left">
 					<ul>
@@ -55,4 +61,10 @@
 
 {% include 'app/subpages/_pagination.html' with data=users %}
 
+{% endblock %}
+
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/download_user_report_missing_trainings.js' %}"></script>
 {% endblock %}

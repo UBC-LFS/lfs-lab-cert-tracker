@@ -55,6 +55,28 @@
 		<i class="material-icons">verified_user</i> Training Record
 	</h5>
 	<div class="text-secondary">
+		{% if user_certs %}
+			<ul>
+				{% for user_cert in user_certs %}
+					<li>
+						<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.cert.id %}?p=training">
+							{{ user_cert.cert.name }}
+						</a>
+					</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			You do not have any training records
+		{% endif %}
+	</div>
+</div>
+
+
+<div class="box border-green mt-3">
+	<h5 class="text-success">
+		<i class="material-icons">verified_user</i> Training Record (to be deleted)
+	</h5>
+	<div class="text-secondary">
 		{% if user_cert_list %}
 			<ul>
 				{% for user_cert in user_cert_list %}
