@@ -188,7 +188,7 @@ def download_user_report_missing_trainings(request):
 
     # Find users who have missing certs
     result = 'ID,CWL,First Name,Last Name,Number of Missing Trainings,Missing Trainings\n'
-    for user in User.objects.filter():
+    for user in get_users('active'):
         certs = ''
         missing_certs = get_user_missing_certs(user.id)
         if len(missing_certs) > 0:
@@ -197,7 +197,7 @@ def download_user_report_missing_trainings(request):
                 if i < len(missing_certs) - 1:
                     certs += '\n'
 
-        result += '{0},{1},{2},{3},{4},"{5}"\n'.format(user.id, user.username, user.first_name, user.last_name, len(missing_certs), certs)
+            result += '{0},{1},{2},{3},{4},"{5}"\n'.format(user.id, user.username, user.first_name, user.last_name, len(missing_certs), certs)
 
     return JsonResponse({ 'status': 'success', 'data': result })
 
@@ -210,10 +210,6 @@ class NewUserView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        
-        # TODO
-        tasks.check_user_certs_by_api()
-
         return render(request, 'app/users/new_user.html', {
             'user_form': self.form_class(),
             'last_ten_users': User.objects.all().order_by('-date_joined')[:15]
@@ -233,7 +229,7 @@ class NewUserView(View):
                          email_error = e
 
                     if email_error is None:
-                        sent = send_notification(user)
+                        sent = send_info_email(user)
                         if sent:
                             messages.success(request, 'Success! {0} created and sent an email.'.format(user.get_full_name()))
                         else:
@@ -276,11 +272,28 @@ class UserDetailsView(View):
         if request.user.id != self.user.id and request.session.get('next'):
             viewing = get_viewing(request.session.get('next'))
 
+        check = []
+        user_certs = []
+        for uc in self.user.usercert_set.all().order_by('cert__name'):
+            if uc.cert.id not in check:
+                by_api = False
+                user_cert = UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id, by_api=True)
+                if user_cert.exists():
+                    by_api = True
+                
+                user_certs.append({
+                    'cert_id': uc.cert.id, 
+                    'cert_name': uc.cert.name,
+                    'by_api': by_api,
+                    'num_certs': UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id).count()
+                })
+                check.append(uc.cert.id)
+                
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
             'user_labs_pi': get_user_labs(self.user, is_pi=True),
-            'user_certs': get_user_certs(self.user),
+            'user_certs': user_certs,
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user.id),
             'welcome_message': welcome_message(),
@@ -387,7 +400,8 @@ class UserTrainingsView(View):
                 cert_file = request.FILES['cert_file'],
                 uploaded_date = date.today(),
                 completion_date = completion_date,
-                expiry_date = expiry_date
+                expiry_date = expiry_date,
+                by_api = False
             )
             
             if user_cert:
@@ -728,7 +742,7 @@ class AreaDetailsView(View):
             'required_certs': required_certs,
             'users_in_area': users_in_area,
             'users_missing_certs': users_missing_certs,
-            'users_expired_certs2': users_expired_certs,
+            'users_expired_certs': users_expired_certs,
             'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
             'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id })
         })

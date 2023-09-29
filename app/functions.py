@@ -28,7 +28,6 @@ def get_user_by_username(username):
 # UserCert
 
 def get_user_certs(user):
-    # TODO: check latest cert
     return user.usercert_set.all().distinct('cert__name')
 
 def get_user_missing_certs(user_id):
@@ -184,7 +183,7 @@ def welcome_message():
     '''
 
 
-def send_notification(user):
+def send_info_email(user):
     """ Send an email when adding a user to a lab and creating new users """
 
     title = 'You are added to LFS TRMS'

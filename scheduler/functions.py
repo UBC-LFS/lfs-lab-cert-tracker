@@ -107,25 +107,6 @@ def find_cert(certs, training_name):
     return best if max_count / len(d1.keys()) > 0.70 else None
 
 
-def find_cert2(certs, training_name):
-    #training_name = training_name.replace('Online', '')
-    #training_name = training_name.replace('(no longer required)', '')
-    #training_name = training_name.strip().lower().split(' ')
-    training_name = training_name.strip().lower()
-
-    for cert in certs:
-        found = True
-        for word in cert.name.lower().strip().split(' '):
-            if found and word.isalnum() and training_name.find(word) < 0:
-                found = False
-        
-        if found:
-            return cert
-    
-    return None
-
-
-
 # Email Notification
 
 def get_areas_in_user():
