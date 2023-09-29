@@ -36,8 +36,6 @@ from lfs_lab_cert_tracker.models import *
 # Set 20 users in a page
 NUM_PER_PAGE = 20
 
-from scheduler import tasks
-
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

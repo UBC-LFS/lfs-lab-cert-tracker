@@ -124,7 +124,6 @@ def check_user_certs_by_api():
     i = 1
     while has_next:
         users = paginator.page(i)
-        print([user.username for user in users])
 
         usernames = []
         for user in users:
