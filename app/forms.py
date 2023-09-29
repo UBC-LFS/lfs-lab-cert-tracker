@@ -54,6 +54,12 @@ class AreaForm(forms.ModelForm):
     class Meta:
         model = Lab
         fields = ['name']
+        labels = {
+            'name': 'Area Name'
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={ 'class': 'form-control' })
+        }
         help_texts = {
             'name': '(Maximum characters: 256)'
         }
@@ -73,6 +79,13 @@ class TrainingForm(forms.ModelForm):
     class Meta:
         model = Cert
         fields = ['name', 'expiry_in_years']
+        labels = {
+            'name': 'Training Name'
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={ 'class': 'form-control' }),
+            'expiry_in_years': forms.TextInput(attrs={ 'class': 'form-control' })
+        }
         help_texts = {
             'name': '(Maximum characters: 256)',
             'expiry_in_years': '(0 means "NO Expiry Date")'
@@ -90,7 +103,8 @@ class UserAreaForm(forms.ModelForm):
         fields = ['user', 'lab', 'role']
         labels = { 'user': 'CWL' }
         widgets = {
-            'user': forms.TextInput(),
+            'user': forms.TextInput(attrs={ 'class': 'form-control' }),
+            'role': forms.Select(attrs={ 'class': 'form-control' }),
             'lab': forms.HiddenInput()
         }
 
@@ -118,7 +132,10 @@ class AreaTrainingForm(forms.ModelForm):
         model = LabCert
         fields = ['lab', 'cert']
         labels = { 'cert': 'Training' }
-        widgets = { 'lab': forms.HiddenInput() }
+        widgets = { 
+            'cert': forms.Select(attrs={ 'class': 'form-control' }),
+            'lab': forms.HiddenInput() 
+        }
 
 
 class UserTrainingForm(forms.ModelForm):
@@ -134,7 +151,7 @@ class UserTrainingForm(forms.ModelForm):
         fields = ['user', 'cert', 'cert_file', 'completion_date']
         labels = {
             'cert': 'Training',
-            'cert_file': '',
+            'cert_file': 'Certificate File',
             'completion_date': 'Completion Date'
         }
         widgets = {

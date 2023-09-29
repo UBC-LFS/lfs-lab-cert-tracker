@@ -9,7 +9,7 @@ from django.views.static import serve
 from django.template.loader import get_template
 from django.template import Context
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.db.models import Q
+from django.db.models import Q, F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.urls import reverse
@@ -22,22 +22,21 @@ from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from io import BytesIO
-# from cgi import escape
-from html import escape # >= python 3.8
+# from cgi import escape # < python 3.8
+from html import escape 
 from xhtml2pdf import pisa
 from datetime import datetime, date
 
 from .accesses import *
 from .forms import *
-from .utils import Api
-from . import api
+from .functions import *
+
 from lfs_lab_cert_tracker.models import *
 
-
-# Set 50 users in a page
+# Set 20 users in a page
 NUM_PER_PAGE = 20
 
-uApi = Api()
+from scheduler import tasks
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -99,7 +98,7 @@ class AllUsersView(LoginRequiredMixin, View):
             ).order_by('id').distinct()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(user_list, 20)
+        paginator = Paginator(user_list, NUM_PER_PAGE)
 
         try:
             users = paginator.page(page)
@@ -135,7 +134,7 @@ class AllUsersView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
 
         # Edit a user
-        user = uApi.get_user(request.POST.get('user'))
+        user = get_user_by_id(request.POST.get('user'))
         form = UserForm(request.POST, instance=user)
         if form.is_valid():
             if form.save():
@@ -143,8 +142,7 @@ class AllUsersView(LoginRequiredMixin, View):
             else:
                 messages.error(request, 'Error! Failed to update {0}.'.format(user.get_full_name()))
         else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return HttpResponseRedirect( request.POST.get('next') )
 
@@ -158,7 +156,7 @@ class UserReportMissingTrainingsView(View):
 
         # Find users who have missing certs
         user_list = []
-        for user in api.get_users('active'):
+        for user in get_users('active'):
             missing_certs = get_user_missing_certs(user.id)
             if len(missing_certs) > 0: 
                 user.missing_certs = missing_certs
@@ -187,7 +185,6 @@ class UserReportMissingTrainingsView(View):
 @access_admin_only
 @require_http_methods(['GET'])
 def download_user_report_missing_trainings(request):
-    print('download_user_report_missing_trainings')
 
     # Find users who have missing certs
     result = 'ID,CWL,First Name,Last Name,Number of Missing Trainings,Missing Trainings\n'
@@ -236,7 +233,7 @@ class NewUserView(View):
                          email_error = e
 
                     if email_error is None:
-                        sent = uApi.send_notification(user)
+                        sent = send_notification(user)
                         if sent:
                             messages.success(request, 'Success! {0} created and sent an email.'.format(user.get_full_name()))
                         else:
@@ -246,16 +243,10 @@ class NewUserView(View):
             else:
                 messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.get_full_name()))
         else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ) )
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return redirect('app:new_user')
 
-
-from django.db.models import F
-
-from scheduler import tasks
-from .functions import *
 
 @method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
 class UserDetailsView(View):
@@ -268,7 +259,7 @@ class UserDetailsView(View):
         if not user_id:
             raise SuspiciousOperation
         
-        self.user = uApi.get_user(user_id)
+        self.user = get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
@@ -283,36 +274,65 @@ class UserDetailsView(View):
 
         viewing = {}
         if request.user.id != self.user.id and request.session.get('next'):
-            viewing = uApi.get_viewing(request.session.get('next'))
+            viewing = get_viewing(request.session.get('next'))
 
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
-            'user_lab_list': api.get_user_labs(self.user.id),
-            'pi_user_lab_list': api.get_user_labs(self.user.id, is_principal_investigator=True),
-
+            'user_labs': get_user_labs(self.user),
+            'user_labs_pi': get_user_labs(self.user, is_pi=True),
             'user_certs': get_user_certs(self.user),
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user.id),
-            
-            'welcome_message': uApi.welcome_message(),
-            'viewing': viewing,
-
-            'user_cert_list': api.get_user_certs_404(self.user.id),
-            'missing_cert_list': api.get_missing_certs(self.user.id),
-            'expired_cert_list': api.get_expired_certs(self.user.id)
+            'welcome_message': welcome_message(),
+            'viewing': viewing
         })
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_loggedin_user_pi_admin
+@require_http_methods(['GET'])
+def user_report(request, user_id):
+    user = get_user_by_id(user_id)
+
+    user_labs = get_user_labs(user)
+    missing_certs = get_user_missing_certs(user)
+    expired_certs = get_user_expired_certs(user)
+    for user_lab in user_labs:
+        required_certs = required_certs_in_lab(user_lab.lab.id)
+        missing_certs_in_lab = required_certs.intersection(missing_certs)
+        expired_certs_in_lab = required_certs.intersection(expired_certs)
+        
+        user_lab.required_certs = required_certs
+        user_lab.missing_expired_certs = missing_certs_in_lab.union(expired_certs_in_lab)
+    
+    return render_to_pdf('app/users/user_report.html', {
+        'app_user': user,
+        'user_labs': user_labs,
+        'user_certs': get_user_certs(user)
+    })
 
 
 @method_decorator([never_cache, login_required, access_loggedin_user_admin], name='dispatch')
 class UserAreasView(View):
     """ Display user's areas """
 
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        user_id = kwargs.get('user_id', None)
+        if not user_id:
+            raise SuspiciousOperation
+        
+        self.user = get_user_by_id(user_id)
+        return setup
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
         return render(request, 'app/areas/user_areas.html', {
-            'user_lab_list': api.get_user_labs(request.user.id),
-            'pi_user_lab_list': api.get_user_labs(request.user.id, is_principal_investigator=True)
+            'user_labs': get_user_labs(self.user),
+            'user_labs_pi': get_user_labs(self.user, is_pi=True)
         })
 
 
@@ -329,7 +349,7 @@ class UserTrainingsView(View):
         if not user_id:
             raise SuspiciousOperation
         
-        self.user = uApi.get_user(user_id)
+        self.user = get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
@@ -337,22 +357,15 @@ class UserTrainingsView(View):
 
         viewing = {}
         if request.user.id != self.user.id and request.session.get('next'):
-            viewing = uApi.get_viewing(request.session.get('next'))
+            viewing = get_viewing(request.session.get('next'))
 
         return render(request, 'app/trainings/user_trainings.html', {
             'app_user': self.user,
             'user_certs': get_user_certs(self.user),
-
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user.id),
-
-            
             'form': self.form_class(initial={ 'user': self.user.id }),
-            'viewing': viewing,
-
-            'user_cert_list': api.get_user_certs(self.user.id),
-            'missing_cert_list': api.get_missing_certs(self.user.id),
-            'expired_cert_list': api.get_expired_certs(self.user.id),
+            'viewing': viewing
         })
 
     @method_decorator(require_POST)
@@ -418,7 +431,7 @@ class UserTrainingDetailsView(View):
         if not user_id or not training_id:
             raise SuspiciousOperation
 
-        user = uApi.get_user(user_id)
+        user = get_user_by_id(user_id)
         self.user = user
         self.user_certs = user.usercert_set.filter(cert_id=training_id).order_by('-completion_date')
         self.training_id = training_id
@@ -430,7 +443,7 @@ class UserTrainingDetailsView(View):
         
         viewing = {}
         if request.user.id != self.user.id and request.session.get('next'):
-            viewing = uApi.get_viewing(request.session.get('next'))
+            viewing = get_viewing(request.session.get('next'))
         
         return render(request, 'app/trainings/user_training_details.html', {
             'app_user': self.user,
@@ -474,61 +487,12 @@ class UserTrainingDetailsView(View):
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_loggedin_user_pi_admin
-@require_http_methods(['GET'])
-def user_report(request, user_id):
-    """ Download user's report as PDF """
-
-    app_user = uApi.get_user(user_id)
-
-    missing_cert_list = api.get_missing_certs(user_id)
-    user_cert_list = api.get_user_certs(user_id)
-    user_cert_ids = set([uc['id'] for uc in user_cert_list])
-    expired_cert_ids = set([ec['id'] for ec in api.get_expired_certs(user_id)])
-
-    user_lab_list = api.get_user_labs(user_id)
-    user_labs = []
-    for user_lab in user_lab_list:
-        lab_certs = api.get_lab_certs(user_lab['id'])
-        missing_lab_certs = []
-        for lc in lab_certs:
-            if lc['id'] not in user_cert_ids or lc['id'] in expired_cert_ids:
-                missing_lab_certs.append(lc)
-        user_labs.append((user_lab, lab_certs, missing_lab_certs))
-
-    for uc in user_cert_list:
-        no_expiry_date = False
-        if uc['completion_date'] == uc['expiry_date']:
-            no_expiry_date = True
-        uc['no_expiry_date'] = no_expiry_date
-
-    return render_to_pdf('app/users/user_report.html', {
-        'app_user': app_user,
-        'user_labs': user_labs,
-        'user_cert_list': user_cert_list
-    })
-
-
-def render_to_pdf(template_src, context_dict):
-    template = get_template(template_src)
-    context = Context(context_dict)
-    html  = template.render(context_dict)
-    response = BytesIO()
-
-    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), response)
-    if not pdf.err:
-        return HttpResponse(response.getvalue(), content_type='application/pdf')
-    return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
 def delete_user(request):
     """ Delete a user """
 
-    user = uApi.get_user(request.POST.get('user'))
+    user = get_user_by_id(request.POST.get('user'))
     if user.delete():
         messages.success(request, 'Success! {0} deleted.'.format(user.get_full_name()))
     else:
@@ -544,7 +508,7 @@ def delete_user(request):
 def switch_admin(request):
     """ Switch a user to Admin or not Admin """
 
-    user = uApi.get_user(request.POST.get('user'))
+    user = get_user_by_id(request.POST.get('user'))
 
     user.is_superuser = not user.is_superuser
     user.save(update_fields=['is_superuser'])
@@ -564,7 +528,7 @@ def switch_admin(request):
 def switch_inactive(request):
     """ Switch a user to Active or Inactive """
 
-    user = uApi.get_user(request.POST.get('user'))
+    user = get_user_by_id(request.POST.get('user'))
 
     if user.is_active:
         UserInactive.objects.create(user_id=user.id, inactive_date=datetime.now())
@@ -589,7 +553,7 @@ def switch_inactive(request):
 def assign_user_areas(request):
     """ Assign user's areas """
 
-    user = uApi.get_user(request.POST.get('user'))
+    user = get_user_by_id(request.POST.get('user'))
 
     # delete all or not
     if len(request.POST.getlist('areas[]')) == 0:
@@ -605,10 +569,9 @@ def assign_user_areas(request):
 
     else:
         areas = request.POST.getlist('areas[]')
-        user = uApi.get_user(request.POST.get('user'))
         all_userlab = user.userlab_set.all()
 
-        report = uApi.update_or_create_areas_to_user(user, areas)
+        report = update_or_create_areas_to_user(user, areas)
         message = ''
 
         if len(report['updated']) > 0:
@@ -651,7 +614,7 @@ class AllAreasView(View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        area_list = uApi.get_areas()
+        area_list = Lab.objects.all()
 
         # Pagination enables
         query = request.GET.get('q')
@@ -691,8 +654,7 @@ class AllAreasView(View):
             else:
                 messages.error(request, 'Error! Failed to create {0}.'.format(lab.name))
         else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return redirect('app:all_areas')
 
@@ -708,7 +670,7 @@ class AreaDetailsView(View):
         if not area_id:
             raise SuspiciousOperation
         
-        self.area = uApi.get_area(area_id)
+        self.area = get_lab_by_id(area_id)
 
         return setup
 
@@ -726,14 +688,14 @@ class AreaDetailsView(View):
         users_in_area = []
         for userlab in self.area.userlab_set.all():
             user = userlab.user
-            if uApi.is_pi_in_area(user.id, self.area.id): 
+            if is_pi_in_area(user.id, self.area.id): 
                 user.is_pi = True
             else: 
                 user.is_pi = False
             
             users_in_area.append(user)
 
-        is_pi = uApi.is_pi_in_area(request.user.id, self.area.id)
+        is_pi = is_pi_in_area(request.user.id, self.area.id)
 
         required_certs = Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
 
@@ -741,7 +703,7 @@ class AreaDetailsView(View):
         users_missing_certs = []
         users_expired_certs = []
         for user_lab in self.area.userlab_set.all():
-            #required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
+            #required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()            
             certs = Cert.objects.filter(usercert__user_id=user_lab.user.id).distinct()
             missing_certs = required_certs.difference(certs)
             if len(missing_certs) > 0:
@@ -749,13 +711,14 @@ class AreaDetailsView(View):
                     'user': user_lab.user, 
                     'missing_certs': missing_certs.order_by('name')
                 })
-            #& Q(userlab__lab_id=self.area.id)
-            filtered_certs = certs.filter( Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) )
-            expired_certs = required_certs.intersection(filtered_certs)
-            if len(expired_certs) > 0:
+            #filtered_certs = certs.filter( Q(usercert__user_id=user_lab.user.id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
+            expired_certs = get_user_expired_certs(user_lab.user.id)
+            expired_certs_in_lab = required_certs.intersection(expired_certs)
+
+            if len(expired_certs_in_lab) > 0:
                 users_expired_certs.append({
                     'user': user_lab.user, 
-                    'expired_certs': expired_certs.order_by('name')
+                    'expired_certs': expired_certs_in_lab.order_by('name')
                 })
         
         return render(request, 'app/areas/area_details.html', {
@@ -764,35 +727,35 @@ class AreaDetailsView(View):
             'is_pi': is_pi,
             'required_certs': required_certs,
             'users_in_area': users_in_area,
-            
-            'users_missing_certs2': users_missing_certs,
+            'users_missing_certs': users_missing_certs,
             'users_expired_certs2': users_expired_certs,
-
             'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
-            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id }),
-
-            'required_trainings': required_trainings,
-            'users_missing_certs': api.get_users_missing_certs(self.area.id),
-            'users_expired_certs': api.get_users_expired_certs(self.area.id),
+            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id })
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         """ Add a user to an area """
 
-        username = request.POST.get('user')
-        role = request.POST.get('role')
-        area_id = request.POST.get('lab')
+        username = request.POST.get('user', None)
+        role = request.POST.get('role', None)
+        area_id = request.POST.get('lab', None)
 
-        found_user = User.objects.filter(username=username)
+        if not area_id:
+            messages.error(request, 'Error! Something went wrong. Area is required.')
+            return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+
+        if not role:
+            messages.error(request, 'Error! Something went wrong. Role is required.')
+            return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+
+        user = get_user_by_username(username)
 
         # Check whether a user exists or not
-        if found_user.exists():
-            user = found_user.first()
-            found_userlab = UserLab.objects.filter( Q(user_id=user.id) & Q(lab_id=area_id) )
-
-            if found_userlab.exists() == False:
-                userlab = UserLab.objects.create(user_id=user.id, lab_id=area_id, role=role)
+        if user:
+            user_lab = UserLab.objects.filter( Q(user_id=user.id) & Q(lab_id=area_id) )
+            if not user_lab.exists():
+                UserLab.objects.create(user_id=user.id, lab_id=area_id, role=role)
                 valid_email = False
                 valid_email_error = None
 
@@ -807,9 +770,9 @@ class AreaDetailsView(View):
                 else:
                     messages.warning(request, 'Warning! Added {0} successfully, but failed to send an email. ({1} is invalid) {2}'.format(user.get_full_name(), user.email, valid_email_error))
             else:
-                messages.error(request, 'Error! Failed to add {0}. CWL already exists in this area.'.format(user.username))
+                messages.error(request, 'Error! Failed to add {0}. CWL already exists in this Area.'.format(user.username))
         else:
-            messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the area.'.format(username))
+            messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the Area.'.format(username))
 
         return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
@@ -826,29 +789,26 @@ def add_training_area(request):
     area_id = request.POST.get('lab', None)
     training_id = request.POST.get('cert', None)
 
-    if area_id == None:
+    if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return redirect('app:all_areas')
+        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    if training_id == None:
+    if not training_id:
         messages.error(request, 'Error! Something went wrong. Training is required.')
         return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    area = uApi.get_area(area_id)
-    training = uApi.get_training(training_id)
+    lab_cert = LabCert.objects.filter( Q(lab_id=area_id) & Q(cert_id=training_id) )
 
-    labcert = uApi.get_labcert(request.POST.get('lab'), request.POST.get('cert'))
-
-    if labcert == None:
-        form = AreaTrainingForm(request.POST, instance=labcert)
-        if form.is_valid():
-            new_labcert = form.save()
-            messages.success(request, 'Success! {0} added.'.format(new_labcert.cert.name))
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
+    if lab_cert.exists():
+        lab_cert_obj = lab_cert.first()
+        messages.error(request, 'Error! Failed to add Training. This training has already existed in this Area.'.format(lab_cert_obj.cert.name))
     else:
-        messages.error(request, 'Error! Failed to add Training. This training has already existed.'.format(labcert.cert.name))
+        form = AreaTrainingForm(request.POST)
+        if form.is_valid():
+            new_lab_cert = form.save()
+            messages.success(request, 'Success! {0} added.'.format(new_lab_cert.cert.name))
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
     return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
@@ -863,26 +823,24 @@ def delete_training_in_area(request):
     area_id = request.POST.get('area', None)
     training_id = request.POST.get('training', None)
 
-    if area_id == None:
+    if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return redirect('app:all_areas')
+        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    if training_id == None:
+    if not training_id:
         messages.error(request, 'Error! Something went wrong. Training is required.')
         return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    area = uApi.get_area(area_id)
-    training = uApi.get_training(training_id)
-
-    labcert = uApi.get_labcert(area_id, training_id)
-
-    if labcert == None:
-        messages.error(request, 'Error! {0} does not exist in this area.'.format(training.name))
-    else:
-        if labcert.delete():
-            messages.success(request, 'Success! {0} deleted.'.format(labcert.cert.name))
+    lab_cert = LabCert.objects.filter( Q(lab_id=area_id) & Q(cert_id=training_id) )
+    if lab_cert.exists():
+        lab_cert_obj = lab_cert.first()
+        if lab_cert_obj.delete():
+            messages.success(request, 'Success! {0} deleted.'.format(lab_cert_obj.cert.name))
         else:
-            messages.error(request, 'Error! Failed to delete {0}.'.format(labcert.cert.name))
+            messages.error(request, 'Error! Failed to delete {0}.'.format(lab_cert_obj.cert.name))
+    else:
+        training = get_cert_by_id(training_id)
+        messages.error(request, 'Error! {0} does not exist in this Area.'.format(training.name))
 
     return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
@@ -894,8 +852,7 @@ def delete_training_in_area(request):
 def edit_area(request):
     """ Update the name of area """
 
-    area = uApi.get_area(request.POST.get('area'))
-
+    area = get_lab_by_id(request.POST.get('area'))
     form = AreaForm(request.POST, instance=area)
     if form.is_valid():
         updated_area = form.save()
@@ -904,8 +861,7 @@ def edit_area(request):
         else:
             messages.error(request, 'Error! Failed to update {0}.'.format(area.name))
     else:
-        errors = form.errors.get_json_data()
-        messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
+        messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
     return redirect('app:all_areas')
 
@@ -917,7 +873,7 @@ def edit_area(request):
 def delete_area(request):
     """ Delete an area """
 
-    area = uApi.get_area(request.POST.get('area'))
+    area = get_lab_by_id(request.POST.get('area'))
     if area.delete():
         messages.success(request, 'Success! {0} deleted.'.format(area.name))
     else:
@@ -936,39 +892,39 @@ def switch_user_role_in_area(request, area_id):
     user_id = request.POST.get('user', None)
     area_id = request.POST.get('area', None)
 
-    if user_id == None:
+    if not user_id:
         messages.error(request, 'Error! Something went wrong. User is required.')
         return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    if area_id == None:
+    if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return redirect('app:all_areas')
+        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    user = uApi.get_user(user_id)
-    area = uApi.get_area(area_id)
+    user = get_user_by_id(user_id)
+    user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
 
-    userlab = uApi.get_userlab(user_id, area_id)
+    if user_lab.exists():
+        user_lab_obj = user_lab.first()
 
-    if userlab == None:
-        messages.error(request, 'Error! A user or an area data does not exist.')
-    else:
         role = ''
-        prev_role = userlab.role
+        prev_role = user_lab_obj.role
 
-        if userlab.role == UserLab.LAB_USER:
-            userlab.role = UserLab.PRINCIPAL_INVESTIGATOR
+        if user_lab_obj.role == UserLab.LAB_USER:
+            user_lab_obj.role = UserLab.PRINCIPAL_INVESTIGATOR
             role = 'Supervisor'
         else:
-            userlab.role = UserLab.LAB_USER
+            user_lab_obj.role = UserLab.LAB_USER
             role = 'User'
 
-        userlab.save(update_fields=['role'])
+        user_lab_obj.save(update_fields=['role'])
 
-        if userlab.role != prev_role:
+        if user_lab_obj.role != prev_role:
             messages.success(request, 'Success! {0} is now a {1}.'.format(user.get_full_name(), role))
         else:
             messages.error(request, 'Error! Failed to switch a role of {0}.'.format(user.get_full_name()))
-
+    else:
+        messages.error(request, 'Error! A user or an area data does not exist.')
+    
     return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
 
@@ -982,27 +938,25 @@ def delete_user_in_area(request, area_id):
     user_id = request.POST.get('user', None)
     area_id = request.POST.get('area', None)
 
-    if user_id == None:
+    if not user_id:
         messages.error(request, 'Error! Something went wrong. User is required.')
         return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    if area_id == None:
+    if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return redirect('app:all_areas')
+        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
-    user = uApi.get_user(user_id)
-    area = uApi.get_area(area_id)
-
-    userlab = uApi.get_userlab(user_id, area_id)
-
-    if userlab == None:
-        messages.error(request, 'Error! A user or an area data does not exist.')
-    else:
-        if userlab.delete():
+    user = get_user_by_id(user_id)
+    user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
+    if user_lab.exists():
+        user_lab_obj = user_lab.first()
+        if user_lab_obj.delete():
             messages.success(request, 'Success! {0} deleted.'.format(user.get_full_name()))
         else:
             messages.error(request, 'Error! Failed to delete {0}.'.format(user.get_full_name()))
-
+    else:
+        messages.error(request, 'Error! A user or an area data does not exist.')
+        
     return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
 
 
@@ -1016,7 +970,7 @@ class AllTrainingsView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        training_list = uApi.get_trainings()
+        training_list = Cert.objects.all()
 
         # Pagination enables
         query = request.GET.get('q')
@@ -1032,10 +986,9 @@ class AllTrainingsView(View):
             trainings = paginator.page(1)
         except EmptyPage:
             trainings = paginator.page(paginator.num_pages)
-
-        for training in trainings:
-            training.num_users = training.usercert_set.count()
-            print(training.id, training.usercert_set.count())
+        
+        for cert in trainings:
+            cert.num_users = cert.usercert_set.count()
 
         return render(request, 'app/trainings/all_trainings.html', {
             'total_trainings': len(training_list),
@@ -1046,7 +999,6 @@ class AllTrainingsView(View):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-
         # Create a new training
 
         form = self.form_class(request.POST)
@@ -1057,8 +1009,7 @@ class AllTrainingsView(View):
             else:
                 messages.error(request, 'Error! Failed to create {0}. This training has already existed.'.format(cert.name))
         else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'Error! Form is invalid. {0}'.format(uApi.get_error_messages(errors)))
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return redirect('app:all_trainings')
 
@@ -1072,27 +1023,26 @@ class AllTrainingsView(View):
 def edit_training(request):
     """ Edit a training """
 
-    training = uApi.get_training( request.POST.get('training') )
+    training = get_cert_by_id( request.POST.get('training') )
     new_expiry_in_years = int(request.POST.get('expiry_in_years')) - training.expiry_in_years
 
     form = TrainingForm(request.POST, instance=training)
     if form.is_valid():
         updated_training = form.save()
-        usercerts = UserCert.objects.filter(cert_id=training.id)
+        user_certs = UserCert.objects.filter(cert_id=training.id)
 
         objs = []
-        if usercerts.count() > 0 and new_expiry_in_years != 0:
-            for usercert in usercerts:
-                usercert.expiry_date = datetime(usercert.expiry_date.year + new_expiry_in_years, usercert.expiry_date.month, usercert.expiry_date.day)
-                objs.append(usercert)
+        if user_certs.count() > 0 and new_expiry_in_years != 0:
+            for user_cert in user_certs:
+                user_cert.expiry_date = date(user_cert.expiry_date.year + new_expiry_in_years, user_cert.expiry_date.month, user_cert.expiry_date.day)
+                objs.append(user_cert)
 
             UserCert.objects.bulk_update(objs, ['expiry_date'])
             messages.success(request, 'Success! {0} training and {1} user training record(s) updated'.format(updated_training.name, len(objs)))
         else:
             messages.success(request, 'Success! {0} training updated'.format(updated_training.name))
     else:
-        errors = form.errors.get_json_data()
-        messages.error(request, 'An error occurred. Form is invalid. {0}'.format( uApi.get_error_messages(errors) ))
+        messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
     return redirect('app:all_trainings')
 
@@ -1104,7 +1054,7 @@ def edit_training(request):
 def delete_training(request):
     """ Delete a training """
 
-    training = uApi.get_training(request.POST.get('training'))
+    training = get_cert_by_id(request.POST.get('training'))
 
     if training.delete():
         messages.success(request, 'Success! {0} deleted.'.format(training.name))
@@ -1126,75 +1076,13 @@ def download_user_cert(request, user_id, cert_id, filename):
 
 # Helper functions
 
-def get_user_certs(user):
-    return user.usercert_set.all().distinct('cert__name')
+def render_to_pdf(template_src, context_dict):
+    template = get_template(template_src)
+    context = Context(context_dict)
+    html  = template.render(context_dict)
+    response = BytesIO()
 
-def get_user_missing_certs(user_id):
-    required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
-    certs = Cert.objects.filter(usercert__user_id=user_id).distinct()
-    return required_certs.difference(certs).order_by('name')
-
-def get_user_expired_certs(user_id):
-    return Cert.objects.filter( Q(usercert__user_id=user_id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
-
-
-
-"""@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_loggedin_user_admin
-@require_http_methods(['POST'])
-def delete_user_training(request, user_id):
-    ''' Delete user's training record '''
-
-    user_id = request.POST.get('user', None)
-    training_id = request.POST.get('training', None)
-
-    # If inputs are invalid, raise a 400 error
-    uApi.check_input_fields(request, ['user', 'training'])
-
-
-    user = uApi.get_user(user_id)
-    usercert = user.usercert_set.filter(cert_id=training_id)
-
-    if usercert.exists():
-        usercert_obj = usercert.first()
-
-        is_dir_deleted = False
-        dirpath = os.path.join(settings.MEDIA_ROOT, 'users', str(user_id), 'certificates', str(training_id))
-
-        is_deleted = usercert.delete()
-
-        if os.path.exists(dirpath) and os.path.isdir(dirpath):
-            os.rmdir(dirpath)
-            is_dir_deleted = True
-
-        if is_deleted and is_dir_deleted == True:
-            messages.success(request, 'Success! {0} deleted.'.format(usercert_obj.cert.name))
-            return HttpResponseRedirect( reverse('app:user_trainings', args=[user_id]) )
-        else:
-            messages.error(request, 'Error! Failed to delete a {0} training record of {1}.'.format(usercert_obj.cert.name, usercert_obj.user.get_full_name()))
-    else:
-        messages.error(request, 'Error! Form is invalid.')
-
-    return HttpResponseRedirect(reverse('app:user_trainings', args=[user_id]))"""
-
-
-
-"""@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_admin_only
-@require_http_methods(['GET'])
-def download_user_report_missing_trainings(request):
-    ''' Download a user report for missing trainings '''
-
-    users = uApi.get_users()
-
-    # Find users who have missing certs
-    users_in_missing_training = []
-    for user in api.add_missing_certs(users):
-        if user.missing_certs != None:
-            users_in_missing_training.append(user)
-
-    return render_to_pdf('app/users/download_user_report_missing_trainings.html', {
-        'users': users_in_missing_training,
-    })"""
+    pdf = pisa.pisaDocument(BytesIO(html.encode("utf-8")), response)
+    if not pdf.err:
+        return HttpResponse(response.getvalue(), content_type='application/pdf')
+    return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))

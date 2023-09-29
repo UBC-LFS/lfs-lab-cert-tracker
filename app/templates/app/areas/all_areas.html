@@ -11,7 +11,7 @@
 
 <h3 class="title">
 	All Areas
-	<small class="text-secondary">Total: {{ total_areas }}</small>
+	<small class="text-secondary">(Total: {{ total_areas }})</small>
 </h3>
 
 <div class="search-field mb-2">
@@ -24,14 +24,14 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-lg text-center">
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-vertical-middle">
   <thead>
     <tr>
 			<th>ID</th>
       <th>Area Name</th>
 			<th>Number of <br /> Required Trainings</th>
 			<th>Number of <br /> Users</th>
-			<th>Actions</th>
+			<th style="width:140px;">Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -101,13 +101,13 @@
 {% if request.user.is_superuser %}
 
 	<div class="row">
-		<div class="col-md-6">
+		<div class="col-md-8">
 			<h4 class="text-info mt-5 mb-3">New Area</h4>
 
 			<form action="" method="post">
 				{% csrf_token %}
 
-				<table class="form-table">{{ form.as_table}}</table>
+				<table class="form-table-width">{{ form.as_table}}</table>
 				<input class="btn btn-primary mt-3" type="submit" value="Create Area" />
 			</form>
 		</div>

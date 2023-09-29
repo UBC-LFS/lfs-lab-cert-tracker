@@ -53,6 +53,7 @@
 <div class="box border-green mt-3">
 	<h5 class="text-success">
 		<i class="material-icons">verified_user</i> Training Record
+		<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 	</h5>
 	<div class="text-secondary">
 		{% if user_certs %}
@@ -72,32 +73,11 @@
 </div>
 
 
-<div class="box border-green mt-3">
-	<h5 class="text-success">
-		<i class="material-icons">verified_user</i> Training Record (to be deleted)
-	</h5>
-	<div class="text-secondary">
-		{% if user_cert_list %}
-			<ul>
-				{% for user_cert in user_cert_list %}
-					<li>
-						<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.id %}?p=training">
-							{{ user_cert.name }}
-						</a>
-					</li>
-				{% endfor %}
-			</ul>
-		{% else %}
-			You do not have any training records
-		{% endif %}
-	</div>
-</div>
-
-
 {% if missing_certs %}
 	<div class="box border-red mt-5">
 		<h5 class="text-danger">
 			<i class="material-icons">notification_important</i> Missing Training Record
+			<small class="text-secondary">(Total: {{ missing_certs|length }})</small>
 		</h5>
 		<div class="text-secondary">
 			<ul>
@@ -109,37 +89,21 @@
 	</div>
 {% endif %}
 
-
-{% if missing_cert_list %}
-	<div class="box border-red mt-5">
-		<h5 class="text-danger">
-			<i class="material-icons">notification_important</i> Missing Training Record (to be deleted)
-		</h5>
-		<div class="text-secondary">
-			<ul>
-				{% for missing_cert in missing_cert_list %}
-					<li>{{ missing_cert.name }}</li>
-				{% endfor %}
-			</ul>
-		</div>
-	</div>
-{% endif %}
-
-{% if expired_cert_list %}
+{% if expired_certs %}
 	<div class="box border-gray mt-5">
 		<h5 class="text-secondary">
 			<i class="material-icons">warning</i> Expired Training Record
+			<small class="text-secondary">(Total: {{ expired_certs|length }})</small>
 		</h5>
 		<div class="text-secondary">
 			<ul>
-				{% for expired_cert in expired_cert_list %}
+				{% for expired_cert in expired_certs %}
 					<li>{{ expired_cert.name }}</li>
 				{% endfor %}
 			</ul>
 		</div>
 	</div>
 {% endif %}
-
 
 <h4 class="title text-info">Add Training Record</h4>
 
@@ -154,10 +118,9 @@
 <form id="add_user_cert_form" action="" method="post" enctype="multipart/form-data">
 	{% csrf_token %}
 
-	<table>{{ form.as_table }}</table>
+	<table class="form-table">{{ form.as_table }}</table>
 
 	<input class="btn btn-primary mt-3" type="submit" value="Add Training Record" />
 </form>
-
 
 {% endblock %}

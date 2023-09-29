@@ -283,7 +283,10 @@ i.material-icons {
   background-color: #ffecb3;
 }
 
-
+.table-vertical-middle tr th,
+.table-vertical-middle tr td {
+  vertical-align: middle;
+}
 
 .custom-table {
   width: 100%;
@@ -310,7 +313,6 @@ i.material-icons {
   background-color: #fff;
 }
 
-
 .viewing-message {
   position: fixed;
   bottom: 10px;
@@ -328,43 +330,8 @@ i.material-icons {
   color: #6c757d;
 }
 
-.form-table {
-  width: 100%;
-}
 
-.form-table tr th {
-  vertical-align: top;
-}
 
-.form-table tr th label {
-  margin-top: 7px;
-}
-
-.form-table tr td {
-  padding-bottom: 15px;
-}
-
-.form-table tr td input {
-  width: 100%;
-  height: calc(2.25rem + 2px);
-  padding: .375rem .75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #495057;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid #ced4da;
-  border-radius: .25rem;
-  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-
-.form-table tr td input:focus {
-  color: #495057;
-  background-color: #fff;
-  border-color: #80bdff;
-  outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
 
 /* Utils */
 
@@ -383,6 +350,35 @@ i.material-icons {
   margin-right: auto;
   margin-left: auto;
 }
+
+.form-table-width {
+  width: 100%
+}
+
+.form-table-width tr th {
+  width: 18%;
+}
+
+.form-table-width tr td {
+  width: 82%;
+}
+
+.form-table-width tr:nth-child(2) td input {
+  margin-top: 20px;
+}
+
+.form-table-width br {
+  display: none;
+}
+
+.form-table tr td {
+  margin: 10px 0 10px 10px;
+}
+
+.form-table tr td:nth-child(2) {
+  display: inline-block;
+}
+
 
 
 /* Responsive design */

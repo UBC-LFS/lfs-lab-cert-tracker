@@ -1,6 +1,6 @@
 from django.core.exceptions import PermissionDenied
 
-from .utils import Api
+from .functions import *
 
 def access_admin_only(view_func):
     """ Access an admin only """
@@ -20,8 +20,7 @@ def access_pi_admin(view_func):
     """
 
     def wrap(request, *args, **kwargs):
-        api = Api()
-        if request.user.is_superuser is True or api.is_pi_in_area(request.user.id, kwargs['area_id']):
+        if request.user.is_superuser or is_pi_in_area(request.user.id, kwargs['area_id']):
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied
@@ -36,9 +35,8 @@ def access_loggedin_user_pi_admin(view_func):
     """
 
     def wrap(request, *args, **kwargs):
-        api = Api()
         user_id = kwargs['user_id']
-        if request.user.id == user_id or request.user.is_superuser is True or user_id in api.get_users_in_area_by_pi(request.user.id):
+        if request.user.id == user_id or request.user.is_superuser or user_id in get_users_in_area_by_pi(request.user.id):
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied

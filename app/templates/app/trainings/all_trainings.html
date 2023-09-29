@@ -10,7 +10,7 @@
 
 <h3 class="title">
 	All Trainings
-	<small class="text-secondary">Total: {{ total_trainings }}</small>
+	<small class="text-secondary">(Total: {{ total_trainings }})</small>
 </h3>
 
 <div class="search-field mb-2">
@@ -23,21 +23,21 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-lg">
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-vertical-middle">
   <thead>
     <tr>
 			<th>ID</th>
-      <th>Name</th>
+      <th>Training Name</th>
 			<th>Expiry in year</th>
-			<th>Number of <br /> Users</th>
-			<th>Actions</th>
+			<th># of Users <br /> with this Training</th>
+			<th style="width:140px;">Actions</th>
     </tr>
   </thead>
   <tbody>
 		{% for cert in trainings %}
 			<tr>
 				<td>{{ cert.id }}</td>
-				<td>{{ cert.name }}</td>
+				<td class="text-left">{{ cert.name }}</td>
 				<td>
 					{% if cert.expiry_in_years == 0 %}
 						None
@@ -99,7 +99,7 @@
 		{% empty %}
 
 			<tr>
-				<td colspan="4">No trainings found</td>
+				<td colspan="100%">No trainings found</td>
 			</tr>
 
 		{% endfor %}
@@ -110,20 +110,18 @@
 
 
 {% if request.user.is_superuser %}
-
 	<div class="row">
-		<div class="col-md-6">
+		<div class="col-md-8">
 			<h4 class="text-info mt-5 mb-3">Create Training</h4>
 
 			<form action="" method="POST">
 				{% csrf_token %}
 
-				<table class="form-table">{{ form.as_table }}</table>
+				<table class="form-table-width">{{ form.as_table }}</table>
 				<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
 			</form>
 		</div>
 	</div>
-
 {% endif %}
 
 {% endblock %}

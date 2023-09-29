@@ -68,6 +68,7 @@
 		<div class="box border-green mt-3">
 			<h5 class="text-success">
 				<i class="material-icons">verified_user</i> Training Records
+				<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
 				<ul>
@@ -86,30 +87,10 @@
 			</div>
 		</div>
 
-		<div class="box border-green mt-3">
-			<h5 class="text-success">
-				<i class="material-icons">verified_user</i> Training Records (to be deleted)
-			</h5>
-			<div class="text-secondary">
-				<ul>
-					{% for user_cert in user_cert_list %}
-						<li>
-							<a href="{% url 'app:user_training_details' user_id=user_cert.user.id training_id=user_cert.cert.id %}?p=account">
-								{{ user_cert.cert.name }}
-							</a>
-						</li>
-					{% empty %}
-						<li>
-							{{ app_user.first_name }} does not have any training records
-						</li>
-					{% endfor %}
-				</ul>
-			</div>
-		</div>
-
 		<div class="box border-red mt-5">
 			<h5 class="text-danger">
 				<i class="material-icons">notification_important</i> Missing Training Records
+				<small class="text-secondary">(Total: {{ missing_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
 				{% if missing_certs %}
@@ -124,48 +105,15 @@
 			</div>
 		</div>
 
-		<div class="box border-red mt-5">
-			<h5 class="text-danger">
-				<i class="material-icons">notification_important</i> Missing Training Records (to be deleted)
-			</h5>
-			<div class="text-secondary">
-				{% if missing_cert_list %}
-					<ul>
-						{% for missing_cert in missing_cert_list %}
-							<li>{{ missing_cert.name }}</li>
-						{% endfor %}
-					</ul>
-				{% else %}
-					{{ app_user.first_name }} is not missing any training records
-				{% endif %}
-			</div>
-		</div>
-
 		<div class="box border-gray my-5">
 			<h5 class="text-secondary">
 				<i class="material-icons">warning</i> Expired Training Records
+				<small class="text-secondary">(Total: {{ expired_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
 				{% if expired_certs %}
 					<ul>
 						{% for expired_cert in expired_certs %}
-							<li>{{ expired_cert.name }}</li>
-						{% endfor %}
-					</ul>
-				{% else %}
-					{{ app_user.first_name }} does not have any expired training records
-				{% endif %}
-			</div>
-		</div>
-
-		<div class="box border-gray my-5">
-			<h5 class="text-secondary">
-				<i class="material-icons">warning</i> Expired Training Records (to be deleted)
-			</h5>
-			<div class="text-secondary">
-				{% if expired_cert_list %}
-					<ul>
-						{% for expired_cert in expired_cert_list %}
 							<li>{{ expired_cert.name }}</li>
 						{% endfor %}
 					</ul>
@@ -187,11 +135,14 @@
 		</div>
 
 		<div class="mt-5">
-			<h6>Other Work Area(s)</h6>
-			{% if user_lab_list %}
+			<h6>
+				Other Work Area(s)
+				<small class="text-secondary">(Total: {{ user_labs|length }})</small>
+			</h6>
+			{% if user_labs %}
 				<ul class="text-secondary">
-					{% for user_lab in user_lab_list %}
-						<li>{{ user_lab.name }}</li>
+					{% for user_lab in user_labs %}
+						<li>{{ user_lab.lab.name }}</li>
 					{% endfor %}
 				</ul>
 			{% else %}
@@ -200,12 +151,15 @@
 		</div>
 
 		<div class="mt-4">
-			<h6>Main Work Area(s)</h6>
-			{% if pi_user_lab_list %}
+			<h6>
+				Main Work Area(s)
+				<small class="text-secondary">(Total: {{ user_labs_pi|length }})</small>
+			</h6>
+			{% if user_labs_pi %}
 				<ul class="text-secondary">
-					{% for pi_user_lab in pi_user_lab_list %}
+					{% for user_lab in user_labs_pi %}
 						<li>
-							<a href="{% url 'app:area_details' area_id=pi_user_lab.id %}">{{ pi_user_lab.name }}</a>
+							<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}">{{ user_lab.lab.name }}</a>
 						</li>
 					{% endfor %}
 				</ul>
@@ -215,8 +169,8 @@
 		</div>
 
 		<div class="card bg-light-gray mt-5 p-3">
-			<h5>
-				<i class="material-icons">info</i> Note
+			<h5 class="text-info">
+				<i class="material-icons">info</i> NOTE
 			</h5>
 			<p class="text-dark">
 				Please go to

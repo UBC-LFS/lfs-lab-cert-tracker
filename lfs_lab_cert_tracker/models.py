@@ -81,7 +81,6 @@ class UserCert(models.Model):
 
     class Meta:
         unique_together = (('user', 'cert', 'completion_date'))
-        ordering = ['cert']
 
     def filename(self):
         return os.path.basename(self.cert_file.name)
@@ -181,9 +180,7 @@ def send_notification(sender, created, **kwargs):
             print(e)
 
         if valid_email:
-            pass
-            #send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
-
+            send_mail(title, message, settings.EMAIL_FROM, [ obj.user.email ], fail_silently=False, html_message=message)
 
 post_save.connect(send_notification, sender=UserLab)
 
@@ -197,7 +194,6 @@ class LabCert(models.Model):
 
     class Meta:
         unique_together = (('lab', 'cert'))
-        #ordering = ['cert']
 
     def __str__(self):
         return self.cert.name

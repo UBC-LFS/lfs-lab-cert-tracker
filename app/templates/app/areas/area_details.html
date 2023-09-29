@@ -19,20 +19,19 @@
 	</ol>
 </nav>
 
-
 {% include 'app/subpages/_return_message.html' with data=messages %}
-
 
 <h2 class="title">Area: {{ area.name }}</h2>
 
 <div class="card border-primary">
 	<div class="card-header bg-primary text-white">
 		Required Training Records
+		<small>(Total: {{ required_certs|length }})</small>
 	</div>
 
 	<div class="card-body">
 			<div class="card-text">
-				<table class="table table-borderless table-striped table-hover table-responsive-md">
+				<table class="table table-borderless table-striped table-hover table-responsive-md table-sm">
 					<tbody>
 						{% for cert in required_certs %}
 					    <tr>
@@ -52,45 +51,7 @@
 					    </tr>
 						{% empty %}
 							<tr>
-								<td colspan="100%">There are no required trainings in this area.</td>
-							</tr>
-						{% endfor %}
-					</tbody>
-				</table>
-			</div>
-	</div>
-</div>
-
-<div class="card border-primary">
-	<div class="card-header bg-primary text-white">
-		Required Training Records (to be deleted)
-	</div>
-
-	<div class="card-body">
-			<div class="card-text">
-				<table class="table table-borderless table-striped table-hover table-responsive-md">
-					<tbody>
-						{% for training in required_trainings %}
-					    <tr>
-								<td>{{ forloop.counter }}.</td>
-								<td>{{ training.name }}</td>
-								<td>
-									{% if is_admin %}
-
-										<form class="d-inline float-right" action="{% url 'app:delete_training_in_area' %}" method="post" onsubmit="return confirm('Are you sure to remove {{ training.name }}?');">
-											{% csrf_token %}
-
-											<input type="hidden" name="area" value="{{ area.id }}" />
-											<input type="hidden" name="training" value="{{ training.id }}" />
-											<input class="btn btn-danger btn-sm" type="submit" value="Remove" />
-										</form>
-
-									{% endif %}
-								</td>
-					    </tr>
-						{% empty %}
-							<tr>
-								<td colspan="100%">There are no required training records in this area.</td>
+								<td colspan="100%">There are no required trainings in this Area.</td>
 							</tr>
 						{% endfor %}
 					</tbody>
@@ -100,9 +61,12 @@
 </div>
 
 <section class="mt-5">
-	<h4>Users in Area</h4>
+	<h4 class="text-primary">
+		Users in Area
+		<small class="text-secondary">(Total: {{ users_in_area|length }})</small>
+	</h4>
 
-	<table class="table table-bordered table-striped table-hover table-responsive-md text-center"
+	<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-sm table-vertical-middle"
 	  data-toggle="table"
 	  data-sortable="true"
 	  data-classes=""
@@ -159,189 +123,104 @@
 						{% endif %}
 					</td>
 				</tr>
-			{% empty %}
-				<tr>
-					<td>No users found</td>
-				</tr>
 			{% endfor %}
 		</tbody>
 	</table>
 </section>
 
 <section class="mt-5">
-	<h4>Users: Missing Training Records</h4>
+	<h4 class="text-danger">
+		Users: Missing Training Records
+		<small class="text-secondary">(Total: {{ users_missing_certs|length }})</small>
+	</h4>
+	<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-sm table-vertical-middle"
+		data-toggle="table"
+	  data-sortable="true"
+	  data-classes=""
+	  data-pagination="true"
+	  data-search="true"
+	  data-page-size="10"
+	  data-page-list="[20, 30, 50, 100, all]"
+	>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>CWL</th>
+				<th data-sortable="true">First Name</th>
+				<th data-sortable="true">Last Name</th>
+				<th>Missing Training Records</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for user_missing_cert in users_missing_certs %}
+			<tr>
+				<td>{{ forloop.counter }}</td>
+				<td>
+					<a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+						{{ user_missing_cert.user.username }}
+					</a>
+				</td>
+				<td>{{ user_missing_cert.user.first_name }}</td>
+				<td>{{ user_missing_cert.user.last_name }}</td>
+				<td class="text-left">
+					<ul>
+						{% for cert in user_missing_cert.missing_certs %}
+							<li>{{ cert.name }}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+</section>
 
-	{% if users_missing_certs2 %}
-		<table class="table table-bordered table-striped table-hover table-responsive-md text-center"
-			data-toggle="table"
-		  data-sortable="true"
-		  data-classes=""
-		  data-pagination="true"
-		  data-search="true"
-		  data-page-size="10"
-		  data-page-list="[20, 30, 50, 100, all]"
-		>
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>CWL</th>
-					<th data-sortable="true">First Name</th>
-					<th data-sortable="true">Last Name</th>
-					<th>Missing Trainings</th>
-				</tr>
-			</thead>
-			<tbody>
-			{% for user_missing_cert in users_missing_certs2 %}
+<section class="mt-5">
+	<h4>
+		Users: Expired Training Records
+		<small class="text-secondary">(Total: {{ users_expired_certs|length }})</small>
+	</h4>
+	<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-sm table-vertical-middle"
+		data-toggle="table"
+		data-sortable="true"
+		data-classes=""
+		data-pagination="true"
+		data-search="true"
+		data-page-size="10"
+		data-page-list="[20, 30, 50, 100, all]"
+	>
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>CWL</th>
+				<th data-sortable="true">First Name</th>
+				<th data-sortable="true">Last Name</th>
+				<th>Expired Training Records</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for user_expired_cert in users_expired_certs %}
 				<tr>
 					<td>{{ forloop.counter }}</td>
 					<td>
-						<a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-							{{ user_missing_cert.user.username }}
+						<a href="{% url 'app:user_details' user_id=user_expired_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+							{{ user_expired_cert.user.username }}
 						</a>
 					</td>
-					<td>{{ user_missing_cert.user.first_name }}</td>
-					<td>{{ user_missing_cert.user.last_name }}</td>
+					<td>{{ user_expired_cert.user.first_name }}</td>
+					<td>{{ user_expired_cert.user.last_name }}</td>
 					<td class="text-left">
 						<ul>
-							{% for cert in user_missing_cert.missing_certs %}
+							{% for cert in user_expired_cert.expired_certs %}
 								<li>{{ cert.name }}</li>
 							{% endfor %}
 						</ul>
 					</td>
 				</tr>
 			{% endfor %}
-			</tbody>
-		</table>
-	{% else %}
-		<div>No users found</div>
-	{% endif %}
-</section>
-
-<section class="mt-5">
-	<h4>Users: Expired Training Records</h4>
-	{% if users_expired_certs2 %}
-		<table class="table table-bordered table-striped table-hover table-responsive-md text-center"
-			data-toggle="table"
-			data-sortable="true"
-			data-classes=""
-			data-pagination="true"
-			data-search="true"
-			data-page-size="10"
-			data-page-list="[20, 30, 50, 100, all]"
-		>
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>CWL</th>
-					<th data-sortable="true">First Name</th>
-					<th data-sortable="true">Last Name</th>
-					<th>Expired Trainings</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for user_expired_cert in users_expired_certs2 %}
-					<tr>
-						<td>{{ forloop.counter }}</td>
-						<td>
-							<a href="{% url 'app:user_details' user_id=user_expired_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-								{{ user_expired_cert.user.username }}
-							</a>
-						</td>
-						<td>{{ user_expired_cert.user.first_name }}</td>
-						<td>{{ user_expired_cert.user.last_name }}</td>
-						<td class="text-left">
-							<ul>
-								{% for cert in user_expired_cert.expired_certs %}
-									<li>{{ cert.name }}</li>
-								{% endfor %}
-							</ul>
-						</td>
-					</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	{% else %}
-		<div>No users found</div>
-	{% endif %}
-</section>
-
-
-<hr>
-
-
-
-
-{% if users_missing_certs %}
- (to be deleted)
-	<table class="table table-striped table-hover table-responsive-md">
-		<thead>
-			<tr>
-				<th>#</th>
-				<th>CWL</th>
-				<th>Missing</th>
-			</tr>
-		</thead>
-		<tbody>
-		{% for user_missing_certs in users_missing_certs %}
-			<tr>
-				<td>{{ forloop.counter }}</td>
-				<td>
-					<a href="{% url 'app:user_details' user_id=user_missing_certs.0.id %}?next={% url 'app:area_details' area_id=area.id %}">
-						{{ user_missing_certs.0.username }}
-					</a>
-				</td>
-				<td>
-					<ul>
-						{% for missing_cert in user_missing_certs.1 %}
-							<li>{{ missing_cert.name }}</li>
-						{% endfor %}
-					</ul>
-				</td>
-			</tr>
-		{% endfor %}
 		</tbody>
 	</table>
-{% else %}
-	<div>No users found</div>
-{% endif %}
-
-<h5 class="mt-5">Users: Expired Training Records (to be deleted)</h5>
-{% if users_expired_certs %}
-	<table class="table table-striped table-hover table-responsive-md">
-		<thead>
-			<tr>
-				<th>#</th>
-				<th>CWL</th>
-				<th>Expired</th>
-			</tr>
-		</thead>
-		<tbody>
-
-		{% for user_expired_certs in users_expired_certs %}
-			<tr>
-				<td>{{ forloop.counter }}</td>
-				<td>
-					<a href="{% url 'app:user_details' user_id=user_expired_certs.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-						{{ user_expired_certs.user.username }}
-					</a>
-				</td>
-				<td>
-					<ul>
-						{% for expired_cert in user_expired_certs.expired_certs %}
-							<li>{{ expired_cert.name }}</li>
-						{% endfor %}
-					</ul>
-				</td>
-			</tr>
-		{% endfor %}
-		</tbody>
-	</table>
-{% else %}
-	<div>No users found</div>
-{% endif %}
-
-
-<hr />
+</section>
 
 {% if is_admin or is_pi %}
 

@@ -12,52 +12,57 @@ table, th, td {
 <h5>CWL: {{app_user.username}}</h5>
 
 <table>
-	<tr>
-		<th>Registered In</th>
-		<th>Required Training Records</th>
-		<th>Missing/Expired Training Records</th>
-	</tr>
-	{% for ul in user_labs %}
+	<thead>
 		<tr>
-			<td>{{ ul.0.name }}</td>
-			<td>
-				<ul>
-				{% for cert in ul.1 %}
-					<li>{{ cert.name }}</li>
-				{% endfor %}
-				<ul>
-			</td>
-			<td>
-				<ul>
-				{% for cert in ul.2 %}
-					<li>{{ cert.name }}</li>
-				{% endfor %}
-				<ul>
-			</td>
+			<th>Registered In</th>
+			<th>Required Training Records</th>
+			<th>Missing/Expired Training Records</th>
 		</tr>
-	{% empty %}
-		<tr>
-			<td colspan="3">No registered areas found</td>
-		</tr>
-	{% endfor %}
+	</thead>
+	<tbody>
+		{% for ul in user_labs %}
+			<tr>
+				<td>{{ ul.lab.name }}</td>
+				<td>
+					<ul>
+						{% for cert in ul.required_certs %}
+							<li>{{ cert.name }}</li>
+						{% endfor %}
+					<ul>
+				</td>
+				<td>
+					{% for cert in ul.missing_expired_certs %}
+						<li>{{ cert.name }}</li>
+					{% endfor %}
+				</td>
+			</tr>
+		{% empty %}
+			<tr>
+				<td colspan="3">No registered areas found</td>
+			</tr>
+		{% endfor %}
+	</tbody>
 </table>
 
 <h5>Has Training Records</h5>
 
-	<table>
+<table>
+	<thead>
 		<tr>
 			<th>Name</th>
 			<th>Uploaded On</th>
 			<th>Completion Date</th>
 			<th>Expiry Date</th>
 		</tr>
-		{% for uc in user_cert_list %}
+	</thead>
+	<tbody>
+		{% for uc in user_certs %}
 			<tr>
-				<td>{{ uc.name }}</td>
+				<td>{{ uc.cert.name }}</td>
 				<td>{{ uc.uploaded_date }}</td>
 				<td>{{ uc.completion_date }}</td>
 				<td>
-					{% if uc.no_expiry_date %}
+					{% if uc.completion_date == uc.expiry_date %}
 						No expiry date
 					{% else %}
 						{{ uc.expiry_date }}
@@ -69,4 +74,5 @@ table, th, td {
 				<td colspan="4">No training records found</td>
 			</tr>
 		{% endfor %}
-	</table>
+	</tbody>
+</table>

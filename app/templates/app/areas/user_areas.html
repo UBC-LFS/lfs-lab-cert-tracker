@@ -19,24 +19,27 @@
 
 <div class="row">
 	<div class="col-md-10 offset-md-1">
+		<h3 class="title">
+			My Work Area(s)
+			<small class="text-secondary">(Total: {{ user_labs|length }})</small>
+		</h3>
+		<ul>
+			{% for user_lab in user_labs %}
+				<li>{{ user_lab.lab.name }}</li>
+			{% empty %}
+				<li>You are not in work area(s)</li>
+			{% endfor %}
+		</ul>
 
-		<h3 class="title">My Work Area(s)</h3>
-		{% if user_lab_list %}
+		{% if user_labs_pi %}
+			<h3 class="title">
+				Main Work Area(s)
+				<small class="text-secondary">(Total: {{ user_labs_pi|length }})</small>
+			</h3>
 			<ul>
-				{% for user_lab in user_lab_list %}
-					<li>{{ user_lab.name }}</li>
-				{% endfor %}
-			</ul>
-		{% else %}
-			<p>You are not in work area(s)</p>
-		{% endif %}
-
-		{% if pi_user_lab_list %}
-			<h3 class="title">Main Work Area(s)</h3>
-			<ul>
-				{% for pi_user_lab in pi_user_lab_list %}
+				{% for user_lab in user_labs_pi %}
 				<li>
-					<a href="{% url 'app:area_details' area_id=pi_user_lab.id %}">{{ pi_user_lab.name }}</a>
+					<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}">{{ user_lab.lab.name }}</a>
 				</li>
 				{% endfor %}
 			</ul>
