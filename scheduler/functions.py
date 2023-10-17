@@ -25,9 +25,11 @@ def pull_by_api(headers, certs, usernames):
     body = { 'requestIdentifiers': [{ 'identifierType': 'CWL', 'identifier': username } for username in usernames] }
     next_url = get_next_url(1)
     hasNextPage = True
+
     while hasNextPage:
         res = requests.post(next_url, json=body, headers=headers)
-        if res.status_code == 500:
+        if res.status_code != 200:
+            print('Error occurred:', res.status_code)
             break
 
         json = res.json()

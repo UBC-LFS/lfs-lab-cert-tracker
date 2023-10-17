@@ -108,7 +108,6 @@ def send_after_expiry_date():
     print('Done: send after expiry date')
 
 
-
 def check_user_certs_by_api():
     headers = { 
         'X-Client-Id': settings.LFS_LAB_CERT_TRACKER_CLIENT_ID, 
@@ -116,26 +115,24 @@ def check_user_certs_by_api():
     }
 
     certs = get_certs()
-    user_list = get_users('active')
-    paginator = Paginator(user_list, 50)
+    users = get_users('active')
+    usernames = []
+    for user in users:
+        missing_certs = get_user_missing_certs(user.id)
+        expired_certs = get_user_expired_certs(user.id)
+        if len(missing_certs) > 0 or len(expired_certs) > 0:
+            usernames.append(user.username)
+
+    paginator = Paginator(usernames, 20)
 
     data = []
     has_next = True
     i = 1
     while has_next:
-        users = paginator.page(i)
-
-        usernames = []
-        for user in users:
-            missing_certs = get_user_missing_certs(user.id)
-            if len(missing_certs) > 0:
-                usernames.append(user.username)
-        
-        if len(usernames) > 0:
-            items = pull_by_api(headers, certs, usernames)
-            data += items
-        
-        has_next = users.has_next()
+        sub_usernames = paginator.page(i)
+        items = pull_by_api(headers, certs, sub_usernames)
+        data += items
+        has_next = sub_usernames.has_next()
         i += 1
 
     UserCert.objects.bulk_create(data)
