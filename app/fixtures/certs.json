@@ -11,7 +11,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 2,
     "fields": {
-      "name": "Preventing and Addressing Workplace Bullying and Harassment Training",
+      "name": "Preventing and Addressing Workplace Bullying and Harassment",
       "expiry_in_years": 0
     }
   },
@@ -27,7 +27,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 4,
     "fields": {
-      "name": "Active Shooter Preparedness Workshop",
+      "name": "Active Shooter Preparedness Online Training",
       "expiry_in_years": 0
     }
   },
@@ -35,7 +35,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 5,
     "fields": {
-      "name": "Privacy and Information Security Fundamentals Training (or Part 1)",
+      "name": "Privacy & Information Security - Fundamentals Part 1 Online",
       "expiry_in_years": 0
     }
   },
@@ -75,7 +75,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 10,
     "fields": {
-      "name": "Anesthesia of the Laboratory Rodent",
+      "name": "Introduction to Anesthesia of the Laboratory Rodent Rat Lab (UBC)",
       "expiry_in_years": 0
     }
   },
@@ -83,7 +83,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 11,
     "fields": {
-      "name": "General Principles of Rodent Surgery",
+      "name": "Introduction to Aseptic Techniques in Rodent Surgery Online",
       "expiry_in_years": 0
     }
   },
@@ -107,7 +107,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 14,
     "fields": {
-      "name": "Introduction to Lab Safety Course",
+      "name": "Introduction to Laboratory Safety",
       "expiry_in_years": 5
     }
   },
@@ -131,7 +131,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 17,
     "fields": {
-      "name": "Radiation Safety Course",
+      "name": "General Radiation Safety for Authorized Users",
       "expiry_in_years": 5
     }
   },
@@ -139,7 +139,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 18,
     "fields": {
-      "name": "Laser Safety Course",
+      "name": "Introduction to LASER Safety",
       "expiry_in_years": 5
     }
   },
@@ -147,7 +147,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 19,
     "fields": {
-      "name": "WHMIS Course",
+      "name": "General Audience WHMIS",
       "expiry_in_years": 5
     }
   },
@@ -155,7 +155,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 20,
     "fields": {
-      "name": "Biosafety for Permit Holders",
+      "name": "Biosafety for Permit Holders/Biosafety Refresher for Permit Holders",
       "expiry_in_years": 5
     }
   },
@@ -179,7 +179,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 23,
     "fields": {
-      "name": "Transportation of Dangerous Goods Class 6.2 (Biological materials) Shipping Course for air",
+      "name": "Transportation of Dangerous Goods Class 6.2 - Infectious Substances",
       "expiry_in_years": 2
     }
   },
@@ -195,7 +195,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 25,
     "fields": {
-      "name": "Transportation of Dangerous Goods by air",
+      "name": "Transportation of Dangerous Goods by Ground and Air",
       "expiry_in_years": 2
     }
   },
@@ -205,6 +205,118 @@
     "fields": {
       "name": "Transportation of Dangerous Goods by ground",
       "expiry_in_years": 3
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 27,
+    "fields": {
+      "name": "Privacy & Information Security - Fundamentals Part 2 Online",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 28,
+    "fields": {
+      "name": "Chemical Safety/Chemical Safety Refresher",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 29,
+    "fields": {
+      "name": "Supporting Mental Health in the Workplace for Managers and Supervisors\u200b (Self Paced)",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 30,
+    "fields": {
+      "name": "UBC Go Forward COVID-19 Safety Planning Training (Vancouver) - no longer required",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 31,
+    "fields": {
+      "name": "Introduction to Anesthesia of the Laboratory Rodent Online",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 32,
+    "fields": {
+      "name": "Biosafety for Study Team Members/Biosafety Refresher for Study Team Members",
+      "expiry_in_years": 5
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 33,
+    "fields": {
+      "name": "Preventing COVID-19 Infection in the Workplace (no longer required)",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 34,
+    "fields": {
+      "name": "Introduction to Working with Rodents in Research - Mouse (UBC)",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 35,
+    "fields": {
+      "name": "Introduction to Working with Rodents in Research - Rat (UBC)",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 36,
+    "fields": {
+      "name": "Introduction to Working with Rodents in Research Online",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 37,
+    "fields": {
+      "name": "JOHSC Fundamentals - Part 1 (Online)",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 38,
+    "fields": {
+      "name": "JOHSC Fundamentals - Part 2",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 39,
+    "fields": {
+      "name": "Office Ergonomics Representative Training",
+      "expiry_in_years": 0
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.cert",
+    "pk": 40,
+    "fields": {
+      "name": "Remote Work. Home Office Ergonomics. Orientation",
+      "expiry_in_years": 0
     }
   }
 ]

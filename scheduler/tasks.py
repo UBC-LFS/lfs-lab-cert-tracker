@@ -157,6 +157,6 @@ def run():
     scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=11, minute=30)
 
     # Monday ~ Sunday at 3:00 AM
-    scheduler.add_job(check_user_certs_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
+    scheduler.add_job(check_user_certs_by_api, 'cron', day_of_week='mon-sun', hour=14, minute=40)
 
     scheduler.start()
