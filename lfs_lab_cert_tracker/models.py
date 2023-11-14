@@ -14,7 +14,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
 
-
 class Lab(models.Model):
     """ Lab Model """
 
@@ -66,6 +65,7 @@ class UserCert(models.Model):
 
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
+
     cert_file = models.FileField(
         max_length=256,
         upload_to=create_user_cert_disk_path,

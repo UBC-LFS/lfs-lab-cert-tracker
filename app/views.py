@@ -33,6 +33,8 @@ from .functions import *
 
 from lfs_lab_cert_tracker.models import *
 
+from scheduler import tasks
+
 # Set 20 users in a page
 NUM_PER_PAGE = 20
 
@@ -144,6 +146,38 @@ class AllUsersView(LoginRequiredMixin, View):
 
         return HttpResponseRedirect( request.POST.get('next') )
 
+@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
+class APIUpdates(View):
+    """ Displays all the API updates made """
+    
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        tasks.check_user_certs_by_api()
+
+        # Get the user's fullname using their CWL
+        def getName(cwl):
+            allUsers = User.objects.all()
+            for user in allUsers:
+                if (str(user.username) == str(cwl)):
+                    return user.get_full_name()
+            return ""
+        
+        usersToDisplay = []
+
+        # pull data from database
+        usercert = UserCert.objects.all()
+
+        for user in usercert:
+            if (user.by_api):
+                # get user's fullname
+                user.full_name = getName(user.user)
+                usersToDisplay.append(user)
+                
+        return render(request, 'app/subpages/_api_updates.html', {
+            "total_users": len(usersToDisplay),
+            "users": usersToDisplay
+        })
 
 @method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
 class UserReportMissingTrainingsView(View):
@@ -151,6 +185,8 @@ class UserReportMissingTrainingsView(View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+
+        tasks.check_user_certs_by_api()
 
         # Find users who have missing certs
         user_list = []
@@ -305,6 +341,8 @@ class UserDetailsView(View):
 @require_http_methods(['GET'])
 def user_report(request, user_id):
     user = get_user_by_id(user_id)
+
+
 
     user_labs = get_user_labs(user)
     missing_certs = get_user_missing_certs(user)
