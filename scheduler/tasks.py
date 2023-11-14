@@ -117,15 +117,18 @@ def check_user_certs_by_api():
     certs = get_certs()
     users = get_users('active')
     usernames = []
+
     for user in users:
+        print(user)
         missing_certs = get_user_missing_certs(user.id)
         expired_certs = get_user_expired_certs(user.id)
         if len(missing_certs) > 0 or len(expired_certs) > 0:
             usernames.append(user.username)
 
-    paginator = Paginator(usernames, 20)
+    paginator = Paginator(usernames, 10)
 
     data = []
+
     has_next = True
     i = 1
     while has_next:
@@ -157,6 +160,6 @@ def run():
     scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=11, minute=30)
 
     # Monday ~ Sunday at 3:00 AM
-    scheduler.add_job(check_user_certs_by_api, 'cron', day_of_week='mon-sun', hour=14, minute=40)
+    scheduler.add_job(check_user_certs_by_api, 'cron', day_of_week='mon-sun', hour=12, minute=7)
 
     scheduler.start()
