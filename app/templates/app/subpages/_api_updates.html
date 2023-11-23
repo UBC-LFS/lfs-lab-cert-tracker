@@ -36,13 +36,13 @@
         <th>Expiry Date</th>
         <th>Cert ID</th>
         <th>User ID</th>
-        <th>By API</th>
+        <!-- <th>By API</th> -->
     </tr>
   </thead>
   <tbody>
     {% for user in users %}
       <tr>
-		<td>{{user.id}}</td>
+		<td><i class="material-icons text-primary">done</i> {{user.id}}</td>
 		<td>{{user.user}}</td>
 		<td>{{user.full_name}}</td>
 		<td>{{user.uploaded_date}}</td>
@@ -50,7 +50,7 @@
 		<td>{{user.expiry_date}}</td>
 		<td>{{user.cert_id}}</td>
 		<td>{{user.user_id}}</td>
-		<td>{{user.by_api}}</td>
+		<!-- <td>{{user.by_api}}</td> -->
       </tr>
 
 		{% empty %}
@@ -64,11 +64,5 @@
 </table>
 
 {% include 'app/subpages/_pagination.html' with data=users %}
-
-{% endblock %}
-
-{% block js %}
-	{% load static %}
-  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/user_areas.js' %}"></script>
 
 {% endblock %}

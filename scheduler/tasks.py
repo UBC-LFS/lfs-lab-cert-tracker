@@ -119,7 +119,6 @@ def check_user_certs_by_api():
     usernames = []
 
     for user in users:
-        print(user)
         missing_certs = get_user_missing_certs(user.id)
         expired_certs = get_user_expired_certs(user.id)
         if len(missing_certs) > 0 or len(expired_certs) > 0:
