@@ -178,11 +178,16 @@ class APIUpdates(View):
                 user.full_name = getName(user.user)
                 usersToDisplay.append(user)
 
+        # Search bar
         query = request.GET.get('q')
+
         if query:
-            usersToDisplay = usersToDisplay.filter(
-                Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
-            ).order_by('id').distinct()
+            usersToDisplay = []
+            # filters out users
+            for user in usercert:
+                if (user.by_api and (query.lower() in str(user.user).lower() or query.lower() in str(getName(user.user).lower()))):
+                    usersToDisplay.append(user)
+
 
         page = request.GET.get('page', 1)
         paginator = Paginator(usersToDisplay, NUM_PER_PAGE)
