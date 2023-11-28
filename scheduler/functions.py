@@ -19,7 +19,7 @@ def get_next_url(curr_page):
     return '{0}?page={1}&pageSize={2}'.format(settings.LFS_LAB_CERT_TRACKER_API_URL, curr_page, 50)
 
 
-def pull_by_api(headers, certs, usernames):
+def pull_by_api(headers, certs, usernames, validation):
     data = []
     
     body = { 'requestIdentifiers': [{ 'identifierType': 'CWL', 'identifier': username } for username in usernames] }
@@ -43,16 +43,20 @@ def pull_by_api(headers, certs, usernames):
                 continue
 
             username = item['requestedIdentifier']['identifier']
-            training_name = item['certificate']['trainingName']
+            training_name = item['certificate']['trainingName'].strip()
             completion_date = item['certificate']['completionDate'].split('T')[0].split('-')
 
-            if len(completion_date) == 3:
+            if item['certificate']['status'] == 'active' and len(completion_date) == 3:
                 completion_date = date(year=int(completion_date[0]), month=int(completion_date[1]), day=int(completion_date[2]))
                 user = get_user_by_username(username)
                 cert = find_cert(certs, training_name)
+
                 if user and cert:
                     user_certs = user.usercert_set.filter(cert_id=cert.id, completion_date=completion_date)
-                    if not user_certs.exists():
+                    form = '{0}_{1}_{2}'.format(user.id, cert.id, completion_date)
+
+                    if not user_certs.exists() and form not in validation:
+                        validation.append(form)                        
                         data.append(UserCert(
                             user = user,
                             cert = cert,
@@ -63,18 +67,36 @@ def pull_by_api(headers, certs, usernames):
                             by_api = True
                         ))
             else:
-                print('Warning: len(competion date) == 3', username, training_name)
+                print('Warning: completion date is wrong, or status is not active:', username, training_name)
         
         hasNextPage = json['hasNextPage']
         next_url = get_next_url(int(json['page']) + 1)
     
-    return data
+    return data, validation
+
+
+def find_cert(certs, training_name):
+    if training_name == 'Chemical Safety' or training_name == 'Chemical Safety Refresher':
+        training_name = 'Chemical Safety/Chemical Safety Refresher'
+    elif training_name == 'Biosafety for Study Team Members' or training_name == 'Biosafety Refresher for Study Team Members':
+        training_name = 'Biosafety for Study Team Members/Biosafety Refresher for Study Team Members'
+    elif training_name == 'Biosafety for Permit Holders' or training_name == 'Biosafety Refresher for Permit Holders':
+        training_name = 'Biosafety for Permit Holders/Biosafety Refresher for Permit Holders'
+    elif training_name == 'Transportation of Dangerous Goods by Ground and Air_ April 2020- March 7 2022':
+        training_name = 'Transportation of Dangerous Goods by Ground and Air'
+    elif training_name == "Remote Work. Home Office Ergonomics. Orientation":
+        training_name = "Home Office Ergo"
+
+    cert = Cert.objects.filter(name=training_name)    
+    return cert.first() if cert.exists() else None
+
 
 
 def remove_special_chars(s):
     return re.findall(r'\b(?:[A-Za-z]\w*|\d+)\b', s.strip().lower())
 
-def find_cert(certs, training_name):
+
+def find_cert_temp(certs, training_name):
     training_name = training_name.replace('Online', '')
     training_name = training_name.replace('Self Paced', '')
     training_name = training_name.replace('no longer required', '')
@@ -106,7 +128,7 @@ def find_cert(certs, training_name):
             best = cert
             max_count = count
         
-    return best if max_count / len(d1.keys()) > 0.70 else None
+    return best if max_count / len(d1.keys()) > 0.90 else None
 
 
 # Email Notification

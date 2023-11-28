@@ -71,7 +71,7 @@
 				<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
-				<ul>
+				<ul class="ml-minus-20">
 					{% for user_cert in user_certs %}
 						<li>
 							<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.cert_id %}?p=account">
@@ -83,7 +83,7 @@
 							{% endif %}
 
 							{% if user_cert.by_api %}
-								<span class="badge badge-warning">CANVAS CATALOG</span>
+								<span class="badge badge-warning font-size-xs">CANVAS</span>
 							{% endif %}
 						</li>
 					{% empty %}
@@ -102,7 +102,7 @@
 			</h5>
 			<div class="text-secondary">
 				{% if missing_certs %}
-					<ul>
+					<ul class="ml-minus-20">
 						{% for missing_cert in missing_certs %}
 							<li>{{ missing_cert.name }}</li>
 						{% endfor %}
@@ -120,7 +120,7 @@
 			</h5>
 			<div class="text-secondary">
 				{% if expired_certs %}
-					<ul>
+					<ul class="ml-minus-20">
 						{% for expired_cert in expired_certs %}
 							<li>{{ expired_cert.name }}</li>
 						{% endfor %}
@@ -134,68 +134,72 @@
 	</div>
 
 	<div class="col-md-4">
-		<div>
-			<h5 class="text-primary">
-				<i class="material-icons">cloud_download</i>
-				Report
-			</h5>
-			<a href="{% url 'app:user_report' user_id=app_user.id  %}" target="_blank">Download as PDF</a>
-		</div>
 
-		<div class="mt-5">
-			<h6>
-				Other Work Area(s)
-				<small class="text-secondary">(Total: {{ user_labs|length }})</small>
-			</h6>
-			{% if user_labs %}
-				<ul class="text-secondary">
-					{% for user_lab in user_labs %}
-						<li>{{ user_lab.lab.name }}</li>
-					{% endfor %}
+		<div class="pl-4">
+			<div>
+				<h5 class="text-primary">
+					<i class="material-icons">cloud_download</i>
+					Report
+				</h5>
+				<a href="{% url 'app:user_report' user_id=app_user.id  %}" target="_blank">Download as PDF</a>
+			</div>
+
+			<div class="mt-5">
+				<h6>
+					Other Work Area(s)
+					<small class="text-secondary">(Total: {{ user_labs|length }})</small>
+				</h6>
+				{% if user_labs %}
+					<ul class="text-secondary">
+						{% for user_lab in user_labs %}
+							<li>{{ user_lab.lab.name }}</li>
+						{% endfor %}
+					</ul>
+				{% else %}
+					<p class="text-secondary">{{ app_user.first_name }} is not in any areas</p>
+				{% endif %}
+			</div>
+
+			<div class="mt-4">
+				<h6>
+					Main Work Area(s)
+					<small class="text-secondary">(Total: {{ user_labs_pi|length }})</small>
+				</h6>
+				{% if user_labs_pi %}
+					<ul class="text-secondary">
+						{% for user_lab in user_labs_pi %}
+							<li>
+								<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}">{{ user_lab.lab.name }}</a>
+							</li>
+						{% endfor %}
+					</ul>
+				{% else %}
+					<p class="text-secondary">{{ app_user.first_name }} is not a Supervisor in any areas</p>
+				{% endif %}
+			</div>
+
+			<div class="card bg-light-gray mt-5 p-3">
+				<h5 class="text-info">
+					<i class="material-icons">info</i> NOTE
+				</h5>
+				<ul class="mb-0 ml-minus-20">
+					<li>
+						Please go to
+						<a href="{% url 'app:user_trainings' user_id=app_user.id %}">
+							{% if request.user.id == app_user.id %}
+								My
+							{% else %}
+								{{ app_user.get_full_name }}'s
+							{% endif %}
+							Training Record</a>
+						if you would like to add your training records (upload your certificates).
+					</li>
+					<li>
+						This badge <span class="badge badge-warning font-size-xs">CANVAS</span> indicates that this Training information has been added automatically from <a href="https://login.cpe.ubc.ca/">UBC Canvas Catalog</a>
+					</li>
 				</ul>
-			{% else %}
-				<p class="text-secondary">{{ app_user.first_name }} is not in any areas</p>
-			{% endif %}
-		</div>
+			</div>
 
-		<div class="mt-4">
-			<h6>
-				Main Work Area(s)
-				<small class="text-secondary">(Total: {{ user_labs_pi|length }})</small>
-			</h6>
-			{% if user_labs_pi %}
-				<ul class="text-secondary">
-					{% for user_lab in user_labs_pi %}
-						<li>
-							<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}">{{ user_lab.lab.name }}</a>
-						</li>
-					{% endfor %}
-				</ul>
-			{% else %}
-				<p class="text-secondary">{{ app_user.first_name }} is not a Supervisor in any areas</p>
-			{% endif %}
-		</div>
-
-		<div class="card bg-light-gray mt-5 p-3">
-			<h5 class="text-info">
-				<i class="material-icons">info</i> NOTE
-			</h5>
-			<ul class="mb-0">
-				<li>
-					Please go to
-					<a href="{% url 'app:user_trainings' user_id=app_user.id %}">
-						{% if request.user.id == app_user.id %}
-							My
-						{% else %}
-							{{ app_user.get_full_name }}'s
-						{% endif %}
-						Training Record</a>
-					if you would like to add your training records (upload your certificates).
-				</li>
-				<li>
-					This badge <span class="badge badge-warning">CANVAS CATALOG</span> indicates that this Training information has been added automatically from <a href="https://login.cpe.ubc.ca/">UBC Canvas Catalog</a>
-				</li>
-			</ul>
 		</div>
 
 	</div>

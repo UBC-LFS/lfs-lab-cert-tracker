@@ -33,6 +33,7 @@ from .functions import *
 
 from lfs_lab_cert_tracker.models import *
 
+
 # Set 20 users in a page
 NUM_PER_PAGE = 20
 
@@ -41,12 +42,17 @@ NUM_PER_PAGE = 20
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def index(request):
-    full_name = request.META[settings.SHIB_ATTR_MAP['full_name']] if settings.SHIB_ATTR_MAP['full_name'] in request.META else None
-    last_name = request.META[settings.SHIB_ATTR_MAP['last_name']] if settings.SHIB_ATTR_MAP['last_name'] in request.META else None
-    email = request.META[settings.SHIB_ATTR_MAP['email']] if settings.SHIB_ATTR_MAP['email'] in request.META else None
-    username = request.META[settings.SHIB_ATTR_MAP['username']] if settings.SHIB_ATTR_MAP['username'] in request.META else None
+    # full_name = request.META[settings.SHIB_ATTR_MAP['full_name']] if settings.SHIB_ATTR_MAP['full_name'] in request.META else None
+    # last_name = request.META[settings.SHIB_ATTR_MAP['last_name']] if settings.SHIB_ATTR_MAP['last_name'] in request.META else None
+    # email = request.META[settings.SHIB_ATTR_MAP['email']] if settings.SHIB_ATTR_MAP['email'] in request.META else None
+    # username = request.META[settings.SHIB_ATTR_MAP['username']] if settings.SHIB_ATTR_MAP['username'] in request.META else None
 
-    if not username:
+    full_name = get_data(request.META, 'full_name')
+    last_name = get_data(request.META, 'last_name')
+    email = get_data(request.META, 'email')
+    username = get_data(request.META, 'username')
+
+    if not request.user or not username:
         raise SuspiciousOperation
 
     first_name = None
@@ -293,7 +299,7 @@ class UserDetailsView(View):
             'user_labs_pi': get_user_labs(self.user, is_pi=True),
             'user_certs': user_certs,
             'missing_certs': get_user_missing_certs(self.user.id),
-            'expired_certs': get_user_expired_certs(self.user.id),
+            'expired_certs': get_user_expired_certs(self.user),
             'welcome_message': welcome_message(),
             'viewing': viewing
         })
@@ -307,7 +313,7 @@ def user_report(request, user_id):
     user = get_user_by_id(user_id)
 
     user_labs = get_user_labs(user)
-    missing_certs = get_user_missing_certs(user)
+    missing_certs = get_user_missing_certs(user.id)
     expired_certs = get_user_expired_certs(user)
     for user_lab in user_labs:
         required_certs = required_certs_in_lab(user_lab.lab.id)
@@ -374,7 +380,7 @@ class UserTrainingsView(View):
             'app_user': self.user,
             'user_certs': get_user_certs(self.user),
             'missing_certs': get_user_missing_certs(self.user.id),
-            'expired_certs': get_user_expired_certs(self.user.id),
+            'expired_certs': get_user_expired_certs(self.user),
             'form': self.form_class(initial={ 'user': self.user.id }),
             'viewing': viewing
         })
@@ -715,7 +721,6 @@ class AreaDetailsView(View):
         users_missing_certs = []
         users_expired_certs = []
         for user_lab in self.area.userlab_set.all():
-            #required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()            
             certs = Cert.objects.filter(usercert__user_id=user_lab.user.id).distinct()
             missing_certs = required_certs.difference(certs)
             if len(missing_certs) > 0:
@@ -723,8 +728,7 @@ class AreaDetailsView(View):
                     'user': user_lab.user, 
                     'missing_certs': missing_certs.order_by('name')
                 })
-            #filtered_certs = certs.filter( Q(usercert__user_id=user_lab.user.id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
-            expired_certs = get_user_expired_certs(user_lab.user.id)
+            expired_certs = get_user_expired_certs(user_lab.user)            
             expired_certs_in_lab = required_certs.intersection(expired_certs)
 
             if len(expired_certs_in_lab) > 0:
@@ -1086,7 +1090,77 @@ def download_user_cert(request, user_id, cert_id, filename):
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
 
+
+# Admin Menu
+
+@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
+class APIUpdates(View):
+    """ Displays all the API updates made """
+    
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        # tasks.check_user_certs_by_api()
+
+        # Get the user's fullname using their CWL
+        def getName(cwl):
+            allUsers = User.objects.all()
+            for user in allUsers:
+                if (str(user.username) == str(cwl)):
+                    return user.get_full_name()
+            return ""
+        
+        # if session has next value, delete it
+        if request.session.get('next'):
+            del request.session['next']
+
+        usersToDisplay = []
+
+        # pull data from database
+        usercert = UserCert.objects.all()
+
+        for user in usercert:
+            if (user.by_api):
+                # get user's fullname
+                user.full_name = getName(user.user)
+                usersToDisplay.append(user)
+
+        # Search bar
+        query = request.GET.get('q')
+
+        if query:
+            usersToDisplay = []
+            # filters out users
+            for user in usercert:
+                if (user.by_api and (query.lower() in str(user.user).lower() or query.lower() in str(getName(user.user).lower()))):
+                    usersToDisplay.append(user)
+
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(usersToDisplay, NUM_PER_PAGE)
+
+        try:
+            usersToDisplay = paginator.page(page)
+        except PageNotAnInteger:
+            usersToDisplay = paginator.page(1)
+        except EmptyPage:
+            usersToDisplay = paginator.page(paginator.num_pages)
+                
+        return render(request, 'app/admin/api_updates.html', {
+            "total_users": len(usersToDisplay),
+            "users": usersToDisplay
+        })
+
+
 # Helper functions
+
+
+def get_data(meta, field):
+    data = settings.SHIB_ATTR_MAP[field]
+    if data in meta:
+        return meta[data]
+    return None
+
 
 def render_to_pdf(template_src, context_dict):
     template = get_template(template_src)
@@ -1098,3 +1172,4 @@ def render_to_pdf(template_src, context_dict):
     if not pdf.err:
         return HttpResponse(response.getvalue(), content_type='application/pdf')
     return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
+

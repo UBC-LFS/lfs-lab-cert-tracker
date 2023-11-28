@@ -1,0 +1,66 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'app/subpages/_admin_menu.html' %}
+{% endif %}
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+<h3 class="my-5">
+	API Updates
+	<small class="text-secondary">(Total: {{ total_users }})</small>
+</h3>
+
+<div class="search-field mb-2">
+	<form method="GET">
+		<div class="input-field">
+			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
+			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+			<a class="btn btn-sm btn-light" href="{% url 'app:all_users' %}">Clear</a>
+		</div>
+	</form>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm table-vertical-middle">
+  <thead>
+    <tr>
+      <th>ID</th>
+  		<th>CWL</th>
+  		<th>Full Name</th>
+      <th>Upload Date</th>
+      <th>Completion Date</th>
+      <th>Expiry Date</th>
+      <th>Cert ID</th>
+      <th>User ID</th>
+      <!-- <th>By API</th> -->
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+    		<td><i class="material-icons text-primary">done</i> {{user.id}}</td>
+    		<td>{{user.user}}</td>
+    		<td>{{user.full_name}}</td>
+    		<td>{{user.uploaded_date}}</td>
+    		<td>{{user.completion_date}}</td>
+    		<td>{{user.expiry_date}}</td>
+    		<td>{{user.cert_id}}</td>
+    		<td>{{user.user_id}}</td>
+    		<!-- <td>{{user.by_api}}</td> -->
+      </tr>
+
+		{% empty %}
+
+			<tr>
+				<td colspan="10">No users found</td>
+			</tr>
+
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'app/subpages/_pagination.html' with data=users %}
+
+{% endblock %}

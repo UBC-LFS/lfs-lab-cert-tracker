@@ -51,5 +51,7 @@ urlpatterns = [
 
     path('media/users/<int:user_id>/certificates/<int:cert_id>/<str:filename>/', views.download_user_cert),
 
-     path('', views.index, name='index')
+    path('api-updates/', views.APIUpdates.as_view(), name='api_updates'),
+
+    path('', views.index, name='index')
 ]

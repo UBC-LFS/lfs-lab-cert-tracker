@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, F
+from django.db.models import Q, F, Max
 from django.core.mail import send_mail
 from django.urls import resolve
 
@@ -35,8 +35,9 @@ def get_user_missing_certs(user_id):
     certs = Cert.objects.filter(usercert__user_id=user_id).distinct()
     return required_certs.difference(certs).order_by('name')
 
-def get_user_expired_certs(user_id):
-    return Cert.objects.filter( Q(usercert__user_id=user_id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
+def get_user_expired_certs(user):
+    usercerts_with_max_expiry_date = user.usercert_set.values('cert_id').annotate(max_expiry_date=Max('expiry_date')).filter( Q(max_expiry_date__lt=date.today()) & ~Q(completion_date=F('expiry_date')) )
+    return Cert.objects.filter(id__in=[item['cert_id'] for item in usercerts_with_max_expiry_date])
 
 
 # UserLab
@@ -246,32 +247,3 @@ def get_expiry_date(completion_date, cert):
     #print('get_expiry_date', completion_date, cert.expiry_in_years)
     expiry_year = completion_date.year + int(cert.expiry_in_years)
     return date(year=expiry_year, month=completion_date.month, day=completion_date.day)
-
-
-
-"""
-def get_cert_by_id(cert_id):
-    cert = Cert.objects.filter(id=cert_id)
-    return cert.first() if cert.exists() else None
-
-def get_cert_by_id_404(cert_id):
-    return get_object_or_404(Cert, id=cert_id)
-
-def get_cert_by_name(cert_name):
-    cert = Cert.objects.filter(name=cert_name)
-    return cert.first() if cert.exists() else None
-
-def get_user_certs(user):
-    return user.usercert_set.all().distinct('cert__name')
-
-def get_user_missing_certs(user_id):
-    required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
-    certs = Cert.objects.filter(usercert__user_id=user_id).distinct()
-    return required_certs.difference(certs).order_by('name')
-
-def get_user_expired_certs(user_id):
-    return Cert.objects.filter( Q(usercert__user_id=user_id) & Q(usercert__expiry_date__lt=date.today()) & ~Q(usercert__completion_date=F('usercert__expiry_date')) ).distinct()
-    
-    
-"""
-

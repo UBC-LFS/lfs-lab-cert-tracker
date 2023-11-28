@@ -10,9 +10,7 @@ body {
   flex-direction: column;
 }
 
-header {
-  width: 100%;
-}
+header { width: 100%; }
 
 main {
   flex: 1 0 auto;
@@ -34,13 +32,9 @@ footer .footer-content {
   align-items: center;
 }
 
-footer .column {
-  flex: 50%;
-}
+footer .column { flex: 50%; }
 
-footer .footer-content a {
-  color: #fff;
-}
+footer .footer-content a { color: #fff; }
 
 
 .lfs-logo {
@@ -53,13 +47,9 @@ footer .footer-content a {
   margin-top: 55px;
 }
 
-.accounts-login .login-title {
-  margin-bottom: 80px;
-}
+.accounts-login .login-title { margin-bottom: 80px; }
 
-header {
-  background-color: #283593;
-}
+header { background-color: #002145; }
 
 header .navbar-brand,
 header .navbar-text,
@@ -72,73 +62,49 @@ header .navbar-brand > img {
   height: 45px;
 }
 
-header .navbar-brand .brand-shorthand  {
-  display: none;
-}
+header .navbar-brand .brand-shorthand  { display: none; }
 
 header .navbar-toggler {
   background-color: #fff;
   border-radius: 4px;
 }
 
-header .container .logout-btn {
-  display: inline-block;
-}
+header .container .logout-btn { display: inline-block; }
 
-header .container .logout-btn:hover {
-  text-decoration: underline;
-}
+header .container .logout-btn:hover { text-decoration: underline; }
 
 .title,
-.card {
-  margin-top: 40px;
-}
+.card { margin-top: 40px; }
 
-.search-field {
-  float: right;
-}
+.search-field { float: right; }
 
-.search-field .input-field input {
-  vertical-align: middle;
-}
+.search-field .input-field input { vertical-align: middle; }
 
-.search-field .input-field .search-field-text::placeholder {
-  font-size: 15px;
-}
+.search-field .input-field .search-field-text::placeholder { font-size: 15px; }
 
-.list-form {
-  display: inline-block;
-}
+.list-form { display: inline-block; }
 
-tr.inactive {
-  background-color: rgba(0,0,0,.075);
-}
+tr.inactive { background-color: rgba(0,0,0,.075); }
 
-#add_user_cert_form #id_cert {
-  width: 100%;
-}
+#add_user_cert_form #id_cert { width: 100%; }
 
 .errorlist {
   color: maroon;
   font-weight: bold;
 }
 
-.btn-inactive {
-  background-color: #ccc;
-}
+.btn-inactive { background-color: #ccc; }
 
 .btn-xs {
   padding: .1em .3em;
   font-size: 0.75rem;
 }
 
-.font-size-sm {
-  font-size: 0.8rem;
-}
+.font-size-sm { font-size: 0.8rem; }
 
-.color-blue {
-  color: #007bff;
-}
+.font-size-xs { font-size: 0.7rem; }
+
+.color-blue { color: #007bff; }
 
 i.material-icons {
   vertical-align: middle !important;
@@ -215,6 +181,7 @@ i.material-icons {
   padding: 40px;
 }
 
+.ml-minus-20 { margin-left: -20px; }
 
 
 /* admin menu */

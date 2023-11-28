@@ -117,26 +117,32 @@ def check_user_certs_by_api():
     certs = get_certs()
     users = get_users('active')
     usernames = []
+
     for user in users:
         missing_certs = get_user_missing_certs(user.id)
-        expired_certs = get_user_expired_certs(user.id)
+        expired_certs = get_user_expired_certs(user)
         if len(missing_certs) > 0 or len(expired_certs) > 0:
             usernames.append(user.username)
 
-    paginator = Paginator(usernames, 20)
+    if len(usernames) > 0:
+        paginator = Paginator(usernames, 15)
 
-    data = []
-    has_next = True
-    i = 1
-    while has_next:
-        sub_usernames = paginator.page(i)
-        items = pull_by_api(headers, certs, sub_usernames)
-        data += items
-        has_next = sub_usernames.has_next()
-        i += 1
+        validation = []
+        data = []
+        has_next = True
+        i = 1
+        while has_next:
+            sub_usernames = paginator.page(i)
+            items, v = pull_by_api(headers, certs, sub_usernames, validation)
+            data += items
+            validation = v
+            has_next = sub_usernames.has_next()
+            i += 1
 
-    UserCert.objects.bulk_create(data)
-    print('Updated the number of user certs:', len(data))
+        UserCert.objects.bulk_create(data)
+        print('Updated the number of user certs:', len(data))
+    else:
+        print('API Calls: No users found to update')
 
 
 def run():

@@ -91,7 +91,7 @@
 					<td>Canvas Catalog</td>
 					<td>
 						{% if latest_user_cert.by_api %}
-							<span class="badge badge-warning">YES</span>
+							<span class="badge badge-warning font-size-xs">YES</span>
 						{% endif %}
 					</td>
 				</tr>
@@ -105,7 +105,7 @@
 
 					<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 					<input type="hidden" name="user_cert" value="{{ latest_user_cert.id }}" />
-					<input class="btn btn-danger ml-2" type="submit" value="Delete Training" />
+					<input class="btn btn-danger btn-sm ml-2" type="submit" value="Delete Training" />
 				</form>
 			{% endif %}
 		{% endif %}
@@ -117,7 +117,7 @@
 			<h5 class="text-info">
 				<i class="material-icons">info</i> NOTE
 			</h5>
-			<p class="mb-0">If a <strong>Canvas Catalog</strong> field is <span class="badge badge-warning">YES</span>, this Training information has been added automatically from <a href="https://login.cpe.ubc.ca/">UBC Canvas Catalog</a>, and you cannot view the certificate file in the TRMS website.</p>
+			<p class="mb-0">If a <strong>Canvas Catalog</strong> field is <span class="badge badge-warning font-size-xs">YES</span>, this Training information has been added automatically from <a href="https://login.cpe.ubc.ca/">UBC Canvas Catalog</a>, and you cannot view the certificate file in the TRMS website.</p>
 		</div>
 
 	</div>
@@ -162,7 +162,7 @@
 					</td>
 					<td>
 						{% if user_cert.by_api %}
-							<span class="badge badge-warning">YES</span>
+							<span class="badge badge-warning font-size-xs">YES</span>
 						{% endif %}
 					</td>
 					<td>
