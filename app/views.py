@@ -187,6 +187,10 @@ class APIUpdates(View):
                     usersToDisplay.append(user)
 
 
+        # Ascending vs descending sort
+        
+
+
         page = request.GET.get('page', 1)
         paginator = Paginator(usersToDisplay, NUM_PER_PAGE)
 

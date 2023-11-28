@@ -20,7 +20,7 @@
 		<div class="input-field">
 			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
 			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
-			<a class="btn btn-sm btn-light" href="{% url 'app:all_users' %}">Clear</a>
+			<a class="btn btn-sm btn-light" href="{% url 'app:api_updates' %}">Clear</a>
 		</div>
 	</form>
 </div>
@@ -31,15 +31,15 @@
         <th>ID</th>
 		<th>CWL</th>
 		<th>Full Name</th>
-        <th>Upload Date</th>
-        <th>Completion Date</th>
-        <th>Expiry Date</th>
+        <th>Upload Date <button onclick="sort('uploadDate')">Sort</button></th>
+        <th>Completion Date <button onclick="sort('completionDate')">Sort</button></th>
+        <th>Expiry Date <button onclick="sort('expiryDate')">Sort</button></th>
         <th>Cert ID</th>
         <th>User ID</th>
         <!-- <th>By API</th> -->
     </tr>
   </thead>
-  <tbody>
+  <tbody id="tableRows">
     {% for user in users %}
       <tr>
 		<td><i class="material-icons text-primary">done</i> {{user.id}}</td>
@@ -64,5 +64,25 @@
 </table>
 
 {% include 'app/subpages/_pagination.html' with data=users %}
+
+<!-- do this in Python!!! -->
+<!-- <script>
+	function sort(columnName) {
+		tableRows = document.getElementById("tableRows").rows;
+		for (let i=0; i < tableRows.length; i++) {
+			row = tableRows[i].cells;
+			if (columnName == "uploadDate") {
+				column = row[3];
+			}
+			if (columnName == "completionDate") {
+				column = row[4];
+			}
+			if (columnName == "expiryDate") {
+				column = row[5];
+			}
+			console.log(column);
+		}
+	}
+</script> -->
 
 {% endblock %}
