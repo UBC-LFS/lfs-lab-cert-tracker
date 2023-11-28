@@ -153,8 +153,6 @@ class APIUpdates(View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        # tasks.check_user_certs_by_api()
-
         # Get the user's fullname using their CWL
         def getName(cwl):
             allUsers = User.objects.all()
@@ -211,7 +209,7 @@ class UserReportMissingTrainingsView(View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        tasks.check_user_certs_by_api()
+        # tasks.check_user_certs_by_api()
 
         # Find users who have missing certs
         user_list = []
