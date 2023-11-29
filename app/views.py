@@ -34,6 +34,7 @@ from .functions import *
 from lfs_lab_cert_tracker.models import *
 
 from scheduler import tasks
+from datetime import datetime
 
 # Set 20 users in a page
 NUM_PER_PAGE = 20
@@ -161,6 +162,17 @@ class APIUpdates(View):
                     return user.get_full_name()
             return ""
         
+        def sortAscending(user1, user2, name):
+            if (name == "uploadDate"):
+                return user1.uploaded_date > user2.uploaded_date                
+            if (name == "completionData"):
+                return user1.completion_date > user2.completion_date
+            if (name == "expiryDate"):
+                return user1.expiry_date > user2.expiry_date
+            
+            # default
+            return user1, user2
+
         # if session has next value, delete it
         if request.session.get('next'):
             del request.session['next']
@@ -186,10 +198,34 @@ class APIUpdates(View):
                 if (user.by_api and (query.lower() in str(user.user).lower() or query.lower() in str(getName(user.user).lower()))):
                     usersToDisplay.append(user)
 
-
         # Ascending vs descending sort
-        
+        # sort ascending first, then reverse array if we want descending
+        sort = request.GET.get('sort')
+        if sort:
+            if ("uploadDate" in sort):
+                sortType = "uploadDate"
 
+            if ("completionData" in sort):
+                sortType = "completionData"
+
+            if ("expiryDate" in sort):
+                sortType = "expiryDate"
+
+            for user in range(len(usersToDisplay)):
+                sorted = False
+                for user2 in range(0, len(usersToDisplay) - user - 1):
+                    if sortAscending(usersToDisplay[user2], usersToDisplay[user2 + 1], sortType):
+                        sorted = True
+                        usersToDisplay[user2], usersToDisplay[user2 + 1] = usersToDisplay[user2 + 1], usersToDisplay[user2]
+                if not sorted:
+                    break
+
+            # if descending in sort, reverse list
+            if ("Descending" in sort):
+                usersToDisplay = usersToDisplay[::-1]
+
+        # need this before the pagination forms, because the usersToDisplay array will shorten
+        totalUsers = len(usersToDisplay)
 
         page = request.GET.get('page', 1)
         paginator = Paginator(usersToDisplay, NUM_PER_PAGE)
@@ -202,7 +238,7 @@ class APIUpdates(View):
             usersToDisplay = paginator.page(paginator.num_pages)
                 
         return render(request, 'app/subpages/_api_updates.html', {
-            "total_users": len(usersToDisplay),
+            "total_users": totalUsers,
             "users": usersToDisplay
         })
 

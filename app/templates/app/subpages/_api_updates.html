@@ -31,9 +31,36 @@
         <th>ID</th>
 		<th>CWL</th>
 		<th>Full Name</th>
-        <th>Upload Date <button onclick="sort('uploadDate')">Sort</button></th>
-        <th>Completion Date <button onclick="sort('completionDate')">Sort</button></th>
-        <th>Expiry Date <button onclick="sort('expiryDate')">Sort</button></th>
+        <th>Upload Date 
+			<form method="GET">
+				<input type="hidden" name="sort" value="uploadDateAscending">
+				<button type="submit">Ascending</button>
+			</form>
+			<form method="GET">
+				<input type="hidden" name="sort" value="uploadDateDescending">
+				<button type="submit">Descending</button>
+			</form>
+		</th>
+        <th>Completion Date
+			<form method="GET">
+				<input type="hidden" name="sort" value="completionDataAscending">
+				<button type="submit">Ascending</button>
+			</form>
+			<form method="GET">
+				<input type="hidden" name="sort" value="completionDataDescending">
+				<button type="submit">Descending</button>
+			</form>
+		</th>
+        <th>Expiry Date
+			<form method="GET">
+				<input type="hidden" name="sort" value="expiryDateAscending">
+				<button type="submit">Ascending</button>
+			</form>
+			<form method="GET">
+				<input type="hidden" name="sort" value="expiryDateDescending">
+				<button type="submit">Descending</button>
+			</form>
+		</th>
         <th>Cert ID</th>
         <th>User ID</th>
         <!-- <th>By API</th> -->
