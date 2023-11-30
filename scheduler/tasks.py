@@ -1,5 +1,5 @@
 from django.conf import settings
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.core.paginator import Paginator
 
@@ -56,8 +56,8 @@ def send_before_expiry_date_user_pi():
     target_day = datetime.now() + timedelta(days=DAYS30)
 
     lab_users, pis = find_expired_trainings(target_day.date(), TYPE)
-
-    # to Lab users
+    
+    #to Lab users
     if len(lab_users) > 0:
         send_email_to_lab_users(lab_users, DAYS30, TYPE)
 
@@ -90,12 +90,12 @@ def send_after_expiry_date():
 
     TYPE = 'after'
 
-    target_day = datetime.now()
+    target_day = date.today()
     # target_day = datetime(2020, 1, 1) # for testing
 
     admins = get_admins()
-    lab_users, pis = find_expired_trainings(target_day.date(), TYPE)
-
+    lab_users, pis = find_expired_trainings(target_day, TYPE)
+    
     if len(lab_users) > 0:
         send_email_to_lab_users(lab_users, DAYS14, TYPE)
 

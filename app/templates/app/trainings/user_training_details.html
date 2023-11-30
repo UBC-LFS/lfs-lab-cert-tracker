@@ -58,7 +58,7 @@
 		<table class="table table-borderless table-sm table-responsive-lg">
 			<tbody>
 				<tr>
-					<td>Training Name</td>
+					<td><strong>Training Name</strong></td>
 					<td>
 						{% if latest_user_cert.by_api %}
 							{{ latest_user_cert.cert.name }}
@@ -70,15 +70,15 @@
 					</td>
 				</tr>
 				<tr>
-					<td>Uploaded on</td>
+					<td><strong>Uploaded on</strong></td>
 					<td>{{ latest_user_cert.uploaded_date }}</td>
 				</tr>
 				<tr>
-					<td>Completion Date</td>
+					<td><strong>Completion Date</strong></td>
 					<td>{{ latest_user_cert.completion_date }}</td>
 				</tr>
 				<tr>
-					<td>Expiry Date</td>
+					<td><strong>Expiry Date</strong></td>
 					<td>
 						{% if latest_user_cert.completion_date == latest_user_cert.expiry_date %}
 							No expiry date
@@ -88,7 +88,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td>Canvas Catalog</td>
+					<td><strong>Canvas Catalog</strong></td>
 					<td>
 						{% if latest_user_cert.by_api %}
 							<span class="badge badge-warning font-size-xs">YES</span>
@@ -126,7 +126,7 @@
 <div class="mt-5">
 	<h4 class="text-info mb-3">Training History</h4>
 
-	<table class="table table-bordered table-hover text-center table-responsive-md table-vertical-middle">
+	<table class="table table-bordered table-hover text-center table-responsive-lg table-vertical-middle">
 		<thead>
 			<tr>
 				<th>#</th>
@@ -193,17 +193,17 @@
 	{% if request.user.id == app_user.id %}
 
 		{% if request.GET.p == 'account' %}
-			<a class="btn btn-secondary d-inline" href="{% url 'app:user_details' request.user.id %}">Back to My Account</a>
+			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_details' request.user.id %}">Back to My Account</a>
 		{% elif request.GET.p == 'training' %}
-			<a class="btn btn-secondary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to My Training Record</a>
+			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to My Training Record</a>
 		{% endif %}
 
 	{% else %}
 
 		{% if request.GET.p == 'account' %}
-			<a class="btn btn-secondary d-inline" href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
+			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
 		{% elif request.GET.p == 'training' %}
-			<a class="btn btn-secondary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
+			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
 		{% endif %}
 
 	{% endif %}

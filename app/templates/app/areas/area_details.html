@@ -31,7 +31,7 @@
 
 	<div class="card-body">
 			<div class="card-text">
-				<table class="table table-borderless table-striped table-hover table-responsive-md table-sm">
+				<table class="table table-borderless table-striped table-hover table-responsive-lg table-sm">
 					<tbody>
 						{% for cert in required_certs %}
 					    <tr>
@@ -44,6 +44,8 @@
 
 											<input type="hidden" name="area" value="{{ area.id }}" />
 											<input type="hidden" name="training" value="{{ cert.id }}" />
+											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
 											<input class="btn btn-danger btn-sm" type="submit" value="Remove" />
 										</form>
 									{% endif %}
@@ -60,82 +62,30 @@
 	</div>
 </div>
 
-<section class="mt-5">
-	<h4 class="text-primary">
-		Users in Area
-		<small class="text-secondary">(Total: {{ users_in_area|length }})</small>
-	</h4>
+<nav class="mt-5">
+  <div class="nav nav-tabs">
+    <a class="nav-item nav-link {% if current_tab == 'users_in_area' %}active{% endif %}" href="{% url 'app:area_details' area_id=area.id %}?t=users_in_area">
+			Users in Area
+		</a>
+    <a class="nav-item nav-link {% if current_tab == 'users_missing_records' %}active{% endif %}" href="{% url 'app:area_details' area_id=area.id %}?t=users_missing_records">
+			Users: Missing Training Records
+		</a>
+    <a class="nav-item nav-link {% if current_tab == 'users_expired_records' %}active{% endif %}" href="{% url 'app:area_details' area_id=area.id %}?t=users_expired_records">
+			Users: Expired Training Records
+		</a>
+  </div>
+</nav>
 
-	<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-sm table-vertical-middle"
-	  data-toggle="table"
-	  data-sortable="true"
-	  data-classes=""
-	  data-pagination="true"
-	  data-search="true"
-	  data-page-size="10"
-	  data-page-list="[20, 30, 50, 100, all]"
-	>
-		<thead>
-	    <tr>
-				<th>#</th>
-	      <th>CWL</th>
-				<th data-sortable="true">First Name</th>
-				<th data-sortable="true">Last Name</th>
-				<th data-sortable="true">Supervisor?</th>
-				<th>Actions</th>
-	    </tr>
-	  </thead>
-		<tbody>
-			{% for user in users_in_area %}
-				<tr>
-					<td>{{ forloop.counter }}</td>
-					<td>
-						<a href="{% url 'app:user_details' user_id=user.id %}?next={% url 'app:area_details' area_id=area.id %}">{{ user.username }}</a>
+{% if current_tab == 'users_in_area' %}
 
-						{% if not user.is_active %}
-							<span class="badge badge-secondary">Inactive</span>
-						{% endif %}
-					</td>
-					<td>{{ user.first_name }}</td>
-					<td>{{ user.last_name }}</td>
-					<td>
-						{% if user.is_pi %}
-							<span class="badge badge-success">Supervisor</span>
-						{% endif %}
-					</td>
-					<td>
-						{% if is_admin or is_pi %}
-							<form class="list-form" action="{% url 'app:switch_user_role_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
-								{% csrf_token %}
+	<section class="mt-5">
+		<h4>
+			Users in Area
+			<small class="text-secondary">(Total: {{ users_in_area|length }})</small>
+		</h4>
 
-								<input type="hidden" name="user" value="{{ user.id }}" />
-								<input type="hidden" name="area" value="{{ area.id }}" />
-								<input class="btn btn-info btn-sm" type="submit" value="Switch Role" />
-							</form>
-
-							<form class="list-form" action="{% url 'app:delete_user_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to remove User - {{user.username}}?');">
-								{% csrf_token %}
-
-								<input type="hidden" name="user" value="{{ user.id }}" />
-								<input type="hidden" name="area" value="{{ area.id }}" />
-								<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
-							</form>
-						{% endif %}
-					</td>
-				</tr>
-			{% endfor %}
-		</tbody>
-	</table>
-</section>
-
-<section class="mt-5">
-	<h4 class="text-danger">
-		Users: Missing Training Records
-		<small class="text-secondary">(Total: {{ users_missing_certs|length }})</small>
-	</h4>
-	{% if users_missing_certs %}
-		<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-sm table-vertical-middle"
-			data-toggle="table"
+		<table class="table table-bordered table-striped table-hover table-responsive-lg text-center table-vertical-middle"
+		  data-toggle="table"
 		  data-sortable="true"
 		  data-classes=""
 		  data-pagination="true"
@@ -144,88 +94,167 @@
 		  data-page-list="[20, 30, 50, 100, all]"
 		>
 			<thead>
-				<tr>
+		    <tr>
 					<th>#</th>
-					<th>CWL</th>
+		      <th>CWL</th>
 					<th data-sortable="true">First Name</th>
 					<th data-sortable="true">Last Name</th>
-					<th>Missing Training Records</th>
-				</tr>
-			</thead>
+					<th data-sortable="true">Supervisor?</th>
+					<th>Actions</th>
+		    </tr>
+		  </thead>
 			<tbody>
-			{% for user_missing_cert in users_missing_certs %}
-				<tr>
-					<td>{{ forloop.counter }}</td>
-					<td>
-						<a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-							{{ user_missing_cert.user.username }}
-						</a>
-					</td>
-					<td>{{ user_missing_cert.user.first_name }}</td>
-					<td>{{ user_missing_cert.user.last_name }}</td>
-					<td class="text-left">
-						<ul>
-							{% for cert in user_missing_cert.missing_certs %}
-								<li>{{ cert.name }}</li>
-							{% endfor %}
-						</ul>
-					</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-		</table>
-	{% endif %}
-</section>
-
-<section class="mt-5">
-	<h4>
-		Users: Expired Training Records
-		<small class="text-secondary">(Total: {{ users_expired_certs|length }})</small>
-	</h4>
-
-	{% if users_expired_certs %}
-		<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-sm table-vertical-middle"
-			data-toggle="table"
-			data-sortable="true"
-			data-classes=""
-			data-pagination="true"
-			data-search="true"
-			data-page-size="10"
-			data-page-list="[20, 30, 50, 100, all]"
-		>
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>CWL</th>
-					<th data-sortable="true">First Name</th>
-					<th data-sortable="true">Last Name</th>
-					<th>Expired Training Records</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for user_expired_cert in users_expired_certs %}
+				{% for user in users_in_area %}
 					<tr>
 						<td>{{ forloop.counter }}</td>
 						<td>
-							<a href="{% url 'app:user_details' user_id=user_expired_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-								{{ user_expired_cert.user.username }}
+							<a href="{% url 'app:user_details' user_id=user.id %}?next={% url 'app:area_details' area_id=area.id %}">{{ user.username }}</a>
+
+							{% if not user.is_active %}
+								<span class="badge badge-secondary">Inactive</span>
+							{% endif %}
+						</td>
+						<td>{{ user.first_name }}</td>
+						<td>{{ user.last_name }}</td>
+						<td>
+							{% if user.is_pi %}
+								<span class="badge badge-success">Supervisor</span>
+							{% endif %}
+						</td>
+						<td>
+							{% if is_admin or is_pi %}
+								<form class="list-form" action="{% url 'app:switch_user_role_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
+									{% csrf_token %}
+
+									<input type="hidden" name="user" value="{{ user.id }}" />
+									<input type="hidden" name="area" value="{{ area.id }}" />
+									<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+									<input class="btn btn-info btn-sm" type="submit" value="Switch Role" />
+								</form>
+
+								<form class="list-form" action="{% url 'app:delete_user_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to remove User - {{user.username}}?');">
+									{% csrf_token %}
+
+									<input type="hidden" name="user" value="{{ user.id }}" />
+									<input type="hidden" name="area" value="{{ area.id }}" />
+									<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+									
+									<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
+								</form>
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</section>
+
+{% elif current_tab == 'users_missing_records' %}
+
+	<section class="mt-5">
+		<h4>
+			Users: Missing Training Records
+			<small class="text-secondary">(Total: {{ users_missing_certs|length }})</small>
+		</h4>
+		{% if users_missing_certs %}
+			<table class="table table-bordered table-striped table-hover table-responsive-lg text-center table-vertical-middle"
+				data-toggle="table"
+			  data-sortable="true"
+			  data-classes=""
+			  data-pagination="true"
+			  data-search="true"
+			  data-page-size="10"
+			  data-page-list="[20, 30, 50, 100, all]"
+			>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>CWL</th>
+						<th data-sortable="true">First Name</th>
+						<th data-sortable="true">Last Name</th>
+						<th>Missing Training Records</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for user_missing_cert in users_missing_certs %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td>
+							<a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+								{{ user_missing_cert.user.username }}
 							</a>
 						</td>
-						<td>{{ user_expired_cert.user.first_name }}</td>
-						<td>{{ user_expired_cert.user.last_name }}</td>
+						<td>{{ user_missing_cert.user.first_name }}</td>
+						<td>{{ user_missing_cert.user.last_name }}</td>
 						<td class="text-left">
 							<ul>
-								{% for cert in user_expired_cert.expired_certs %}
+								{% for cert in user_missing_cert.missing_certs %}
 									<li>{{ cert.name }}</li>
 								{% endfor %}
 							</ul>
 						</td>
 					</tr>
 				{% endfor %}
-			</tbody>
-		</table>
-	{% endif %}
-</section>
+				</tbody>
+			</table>
+		{% endif %}
+	</section>
+
+{% elif current_tab == 'users_expired_records' %}
+
+	<section class="mt-5">
+		<h4>
+			Users: Expired Training Records
+			<small class="text-secondary">(Total: {{ users_expired_certs|length }})</small>
+		</h4>
+
+		{% if users_expired_certs %}
+			<table class="table table-bordered table-striped table-hover table-responsive-lg text-center table-vertical-middle"
+				data-toggle="table"
+				data-sortable="true"
+				data-classes=""
+				data-pagination="true"
+				data-search="true"
+				data-page-size="10"
+				data-page-list="[20, 30, 50, 100, all]"
+			>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>CWL</th>
+						<th data-sortable="true">First Name</th>
+						<th data-sortable="true">Last Name</th>
+						<th>Expired Training Records</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for user_expired_cert in users_expired_certs %}
+						<tr>
+							<td>{{ forloop.counter }}</td>
+							<td>
+								<a href="{% url 'app:user_details' user_id=user_expired_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+									{{ user_expired_cert.user.username }}
+								</a>
+							</td>
+							<td>{{ user_expired_cert.user.first_name }}</td>
+							<td>{{ user_expired_cert.user.last_name }}</td>
+							<td class="text-left">
+								<ul>
+									{% for cert in user_expired_cert.expired_certs %}
+										<li>{{ cert.name }}</li>
+									{% endfor %}
+								</ul>
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		{% endif %}
+	</section>
+
+{% endif %}
+
 
 {% if is_admin or is_pi %}
 
@@ -236,6 +265,7 @@
 
 		<table class="form-table">{{ user_area_form.as_table }}</table>
 
+		<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 		<input class="btn btn-primary mt-3" type="submit" value="ADD" />
 	</form>
 
@@ -250,6 +280,7 @@
 
 		<table class="form-table">{{ area_training_form.as_table }}</table>
 
+		<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 		<input class="btn btn-primary mt-3" type="submit" value="ADD" />
 	</form>
 

@@ -232,27 +232,27 @@ def find_expired_trainings(target_day, type):
 
     lab_users = []
     pis = {}
-
     for user in get_users('active'):
         if user.usercert_set.count() > 0:
             lab_user = { 'id': user.id, 'trainings': [] }
+            
+            user_certs = []
+            if type == 'before':
+                user_certs_with_max_expiry_date = user.usercert_set.values('cert_id').annotate(max_expiry_date=Max('expiry_date')).filter( Q(max_expiry_date=target_day) & ~Q(completion_date=F('expiry_date')) )
+            elif type == 'after':
+                user_certs_with_max_expiry_date = user.usercert_set.values('cert_id').annotate(max_expiry_date=Max('expiry_date')).filter( Q(max_expiry_date__lt=target_day) & ~Q(completion_date=F('expiry_date')) )
+            
+            for uc in user_certs_with_max_expiry_date:
+                user_cert = UserCert.objects.filter(user_id=user.id, cert_id=uc['cert_id'], expiry_date=uc['max_expiry_date'])
+                user_certs.append(user_cert.first())
 
-            for usercert in user.usercert_set.all():
-                if usercert.completion_date != usercert.expiry_date:
-
-                    if type == 'before':
-                        if usercert.expiry_date == target_day:
-                            lab_user, pis = help_find_expired_trainings(user, usercert, lab_user, pis)
-
-                    elif type == 'after':
-                        if usercert.expiry_date < target_day:
-                            lab_user, pis = help_find_expired_trainings(user, usercert, lab_user, pis)
+            for user_cert in user_certs:
+                lab_user, pis = help_find_expired_trainings(user, user_cert, lab_user, pis)
 
             if len(lab_user['trainings']) > 0:
                 lab_users.append(lab_user)
 
     return lab_users, pis
-
 
 def help_find_expired_trainings(user, usercert, lab_user, pis):
     """ Help to find expired trainings  """
@@ -275,8 +275,11 @@ def help_find_expired_trainings(user, usercert, lab_user, pis):
             # Insert PIs in this work area
             if userlab.lab.id in pis_in_area.keys():
                 for pi in pis_in_area[ userlab.lab.id ]:
-                    if pi not in pis.keys(): pis[pi] = dict()
-                    if user.id not in pis[pi]: pis[pi][user.id] = []
+                    if pi not in pis.keys(): 
+                        pis[pi] = dict()
+                    
+                    if user.id not in pis[pi]: 
+                        pis[pi][user.id] = []
 
                     pis[pi][user.id].append(info)
 

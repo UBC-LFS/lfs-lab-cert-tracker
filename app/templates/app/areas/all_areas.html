@@ -39,7 +39,7 @@
 			<tr>
 				<td>{{ area.id }}</td>
 				<td class="text-left">
-					<a href="{% url 'app:area_details' area_id=area.id %}">{{ area.name }}</a>
+					<a href="{% url 'app:area_details' area_id=area.id %}?t=users_in_area">{{ area.name }}</a>
 				</td>
 				<td>{{ area.num_certs }}</td>
 				<td>{{ area.num_users }}</td>

@@ -60,9 +60,17 @@
 			<ul>
 				{% for user_cert in user_certs %}
 					<li>
-						<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.cert.id %}?p=training">
-							{{ user_cert.cert.name }}
+						<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.cert_id %}?p=training">
+							{{ user_cert.cert_name }}
 						</a>
+
+						{% if user_cert.num_certs > 1 %}
+							<span class="text-secondary">(Total: {{ user_cert.num_certs }})</span>
+						{% endif %}
+
+						{% if user_cert.by_api %}
+							<span class="badge badge-warning font-size-xs">CANVAS</span>
+						{% endif %}
 					</li>
 				{% endfor %}
 			</ul>

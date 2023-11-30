@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect
 from django.views.static import serve
 from django.template.loader import get_template
 from django.template import Context
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.db.models import Q, F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -20,6 +20,7 @@ from django.views.decorators.http import require_http_methods, require_GET, requ
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 from io import BytesIO
 # from cgi import escape # < python 3.8
@@ -151,8 +152,8 @@ class AllUsersView(LoginRequiredMixin, View):
         return HttpResponseRedirect( request.POST.get('next') )
 
 
-@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
-class UserReportMissingTrainingsView(View):
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class UserReportMissingTrainingsView(LoginRequiredMixin, View):
     """ Display an user report for missing trainings """
 
     @method_decorator(require_GET)
@@ -206,8 +207,8 @@ def download_user_report_missing_trainings(request):
     return JsonResponse({ 'status': 'success', 'data': result })
 
 
-@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
-class NewUserView(View):
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class NewUserView(LoginRequiredMixin, View):
     """ Create a new user """
 
     form_class = UserForm
@@ -248,8 +249,8 @@ class NewUserView(View):
         return redirect('app:new_user')
 
 
-@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
-class UserDetailsView(View):
+@method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
+class UserDetailsView(LoginRequiredMixin, View):
     """ View user details """
 
     def setup(self, request, *args, **kwargs):
@@ -330,8 +331,8 @@ def user_report(request, user_id):
     })
 
 
-@method_decorator([never_cache, login_required, access_loggedin_user_admin], name='dispatch')
-class UserAreasView(View):
+@method_decorator([never_cache, access_loggedin_user_admin], name='dispatch')
+class UserAreasView(LoginRequiredMixin, View):
     """ Display user's areas """
 
     def setup(self, request, *args, **kwargs):
@@ -353,8 +354,8 @@ class UserAreasView(View):
         })
 
 
-@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingsView(View):
+@method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
+class UserTrainingsView(LoginRequiredMixin, View):
     """ Display all training records of a user """
 
     form_class = UserTrainingForm
@@ -376,9 +377,27 @@ class UserTrainingsView(View):
         if request.user.id != self.user.id and request.session.get('next'):
             viewing = get_viewing(request.session.get('next'))
 
+        check = []
+        user_certs = []
+        for uc in self.user.usercert_set.all().order_by('cert__name'):
+            if uc.cert.id not in check:
+                by_api = False
+                user_cert = UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id, by_api=True)
+                if user_cert.exists():
+                    by_api = True
+                
+                user_certs.append({
+                    'cert_id': uc.cert.id, 
+                    'cert_name': uc.cert.name,
+                    'by_api': by_api,
+                    'num_certs': UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id).count()
+                })
+                check.append(uc.cert.id)
+
         return render(request, 'app/trainings/user_trainings.html', {
             'app_user': self.user,
-            'user_certs': get_user_certs(self.user),
+            #'user_certs': get_user_certs(self.user),
+            'user_certs': user_certs,
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user),
             'form': self.form_class(initial={ 'user': self.user.id }),
@@ -436,8 +455,8 @@ class UserTrainingsView(View):
         return HttpResponseRedirect(reverse('app:user_trainings', args=[self.user.id]))
 
 
-@method_decorator([never_cache, login_required, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingDetailsView(View):
+@method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
+class UserTrainingDetailsView(LoginRequiredMixin, View):
     """ Display details of a training record of a user """
 
     def setup(self, request, *args, **kwargs):
@@ -623,8 +642,8 @@ def read_welcome_message(request, user_id):
 
 # Areas - classes
 
-@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
-class AllAreasView(View):
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllAreasView(LoginRequiredMixin, View):
     """ Display all areas """
 
     form_class = AreaForm
@@ -677,8 +696,8 @@ class AllAreasView(View):
         return redirect('app:all_areas')
 
 
-@method_decorator([never_cache, login_required, access_pi_admin], name='dispatch')
-class AreaDetailsView(View):
+@method_decorator([never_cache, access_pi_admin], name='dispatch')
+class AreaDetailsView(LoginRequiredMixin, View):
     """ Display all areas """
 
     def setup(self, request, *args, **kwargs):
@@ -690,6 +709,11 @@ class AreaDetailsView(View):
         
         self.area = get_lab_by_id(area_id)
 
+        tab = request.GET.get('t', None)
+        if not tab:
+            raise Http404
+        
+        self.tab = tab
         return setup
 
     @method_decorator(require_GET)
@@ -699,54 +723,59 @@ class AreaDetailsView(View):
         if request.session.get('next'):
             del request.session['next']
 
-        required_trainings = []
-        for labcert in self.area.labcert_set.all():
-            required_trainings.append(labcert.cert)
-
-        users_in_area = []
-        for userlab in self.area.userlab_set.all():
-            user = userlab.user
-            if is_pi_in_area(user.id, self.area.id): 
-                user.is_pi = True
-            else: 
-                user.is_pi = False
-            
-            users_in_area.append(user)
-
-        is_pi = is_pi_in_area(request.user.id, self.area.id)
+        # required_trainings = []
+        # for labcert in self.area.labcert_set.all():
+        #     required_trainings.append(labcert.cert)
+        # is_pi = is_pi_in_area(request.user.id, self.area.id)
 
         required_certs = Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
 
-        # Get users' missing certs in this lab
+        users_in_area = []
         users_missing_certs = []
         users_expired_certs = []
-        for user_lab in self.area.userlab_set.all():
-            certs = Cert.objects.filter(usercert__user_id=user_lab.user.id).distinct()
-            missing_certs = required_certs.difference(certs)
-            if len(missing_certs) > 0:
-                users_missing_certs.append({
-                    'user': user_lab.user, 
-                    'missing_certs': missing_certs.order_by('name')
-                })
-            expired_certs = get_user_expired_certs(user_lab.user)            
-            expired_certs_in_lab = required_certs.intersection(expired_certs)
 
-            if len(expired_certs_in_lab) > 0:
-                users_expired_certs.append({
-                    'user': user_lab.user, 
-                    'expired_certs': expired_certs_in_lab.order_by('name')
-                })
+        if self.tab == 'users_in_area':
+            for userlab in self.area.userlab_set.all():
+                user = userlab.user
+                if is_pi_in_area(user.id, self.area.id): 
+                    user.is_pi = True
+                else: 
+                    user.is_pi = False
+                
+                users_in_area.append(user)
+
+        elif self.tab == 'users_missing_records':
+            for user_lab in self.area.userlab_set.all():
+                certs = Cert.objects.filter(usercert__user_id=user_lab.user.id).distinct()
+                missing_certs = required_certs.difference(certs)
+                if len(missing_certs) > 0:
+                    users_missing_certs.append({
+                        'user': user_lab.user, 
+                        'missing_certs': missing_certs.order_by('name')
+                    })
+
+        elif self.tab == 'users_expired_records':
+            for user_lab in self.area.userlab_set.all():
+                expired_certs = get_user_expired_certs(user_lab.user)            
+                expired_certs_in_lab = required_certs.intersection(expired_certs)
+
+                if len(expired_certs_in_lab) > 0:
+                    users_expired_certs.append({
+                        'user': user_lab.user, 
+                        'expired_certs': expired_certs_in_lab.order_by('name')
+                    })
         
         return render(request, 'app/areas/area_details.html', {
             'area': self.area,
             'is_admin': request.user.is_superuser,
-            'is_pi': is_pi,
+            'is_pi': is_pi_in_area(request.user.id, self.area.id),
             'required_certs': required_certs,
+            'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
+            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id }),
             'users_in_area': users_in_area,
             'users_missing_certs': users_missing_certs,
             'users_expired_certs': users_expired_certs,
-            'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
-            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id })
+            'current_tab': self.tab
         })
 
     @method_decorator(require_POST)
@@ -759,11 +788,11 @@ class AreaDetailsView(View):
 
         if not area_id:
             messages.error(request, 'Error! Something went wrong. Area is required.')
-            return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+            return HttpResponseRedirect(request.POST.get('next'))
 
         if not role:
             messages.error(request, 'Error! Something went wrong. Role is required.')
-            return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+            return HttpResponseRedirect(request.POST.get('next'))
 
         user = get_user_by_username(username)
 
@@ -790,7 +819,7 @@ class AreaDetailsView(View):
         else:
             messages.error(request, 'Error! Failed to add {0}. CWL does not exist in TRMS. Please go to a Users page then create the user by inputting the details before adding the user in the Area.'.format(username))
 
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
 
 # Areas - functions
@@ -807,11 +836,11 @@ def add_training_area(request):
 
     if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     if not training_id:
         messages.error(request, 'Error! Something went wrong. Training is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     lab_cert = LabCert.objects.filter( Q(lab_id=area_id) & Q(cert_id=training_id) )
 
@@ -826,7 +855,7 @@ def add_training_area(request):
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
-    return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -841,11 +870,11 @@ def delete_training_in_area(request):
 
     if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     if not training_id:
         messages.error(request, 'Error! Something went wrong. Training is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     lab_cert = LabCert.objects.filter( Q(lab_id=area_id) & Q(cert_id=training_id) )
     if lab_cert.exists():
@@ -858,7 +887,7 @@ def delete_training_in_area(request):
         training = get_cert_by_id(training_id)
         messages.error(request, 'Error! {0} does not exist in this Area.'.format(training.name))
 
-    return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -910,11 +939,11 @@ def switch_user_role_in_area(request, area_id):
 
     if not user_id:
         messages.error(request, 'Error! Something went wrong. User is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     user = get_user_by_id(user_id)
     user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
@@ -941,7 +970,7 @@ def switch_user_role_in_area(request, area_id):
     else:
         messages.error(request, 'Error! A user or an area data does not exist.')
     
-    return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -956,11 +985,11 @@ def delete_user_in_area(request, area_id):
 
     if not user_id:
         messages.error(request, 'Error! Something went wrong. User is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     if not area_id:
         messages.error(request, 'Error! Something went wrong. Area is required.')
-        return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
     user = get_user_by_id(user_id)
     user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
@@ -973,13 +1002,13 @@ def delete_user_in_area(request, area_id):
     else:
         messages.error(request, 'Error! A user or an area data does not exist.')
         
-    return HttpResponseRedirect(reverse('app:area_details', args=[area_id]))
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 # Trainings - classes
 
-@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
-class AllTrainingsView(View):
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllTrainingsView(LoginRequiredMixin, View):
     """ Display all training records of a user """
 
     form_class = TrainingForm
@@ -1093,8 +1122,8 @@ def download_user_cert(request, user_id, cert_id, filename):
 
 # Admin Menu
 
-@method_decorator([never_cache, login_required, access_admin_only], name='dispatch')
-class APIUpdates(View):
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class APIUpdates(LoginRequiredMixin, View):
     """ Displays all the API updates made """
     
     @method_decorator(require_GET)
