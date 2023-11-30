@@ -30,6 +30,25 @@ def get_user_by_username(username):
 def get_user_certs(user):
     return user.usercert_set.all().distinct('cert__name')
 
+def get_user_certs_with_info(user):
+    check = []
+    user_certs = []
+    for uc in user.usercert_set.all().order_by('cert__name'):
+        if uc.cert.id not in check:
+            by_api = False
+            user_cert = UserCert.objects.filter(user_id=user.id, cert_id=uc.cert.id, by_api=True)
+            if user_cert.exists():
+                by_api = True
+            
+            user_certs.append({
+                'cert_id': uc.cert.id, 
+                'cert_name': uc.cert.name,
+                'by_api': by_api,
+                'num_certs': UserCert.objects.filter(user_id=user.id, cert_id=uc.cert.id).count()
+            })
+            check.append(uc.cert.id)
+    return user_certs
+
 def get_user_missing_certs(user_id):
     required_certs = Cert.objects.filter(labcert__lab__userlab__user_id=user_id).distinct()
     certs = Cert.objects.filter(usercert__user_id=user_id).distinct()

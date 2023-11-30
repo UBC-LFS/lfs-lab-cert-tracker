@@ -271,29 +271,12 @@ class UserDetailsView(LoginRequiredMixin, View):
         viewing = {}
         if request.user.id != self.user.id and request.session.get('next'):
             viewing = get_viewing(request.session.get('next'))
-
-        check = []
-        user_certs = []
-        for uc in self.user.usercert_set.all().order_by('cert__name'):
-            if uc.cert.id not in check:
-                by_api = False
-                user_cert = UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id, by_api=True)
-                if user_cert.exists():
-                    by_api = True
-                
-                user_certs.append({
-                    'cert_id': uc.cert.id, 
-                    'cert_name': uc.cert.name,
-                    'by_api': by_api,
-                    'num_certs': UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id).count()
-                })
-                check.append(uc.cert.id)
                 
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
             'user_labs_pi': get_user_labs(self.user, is_pi=True),
-            'user_certs': user_certs,
+            'user_certs': get_user_certs_with_info(self.user),
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user),
             'welcome_message': welcome_message(),
@@ -372,27 +355,9 @@ class UserTrainingsView(LoginRequiredMixin, View):
         if request.user.id != self.user.id and request.session.get('next'):
             viewing = get_viewing(request.session.get('next'))
 
-        check = []
-        user_certs = []
-        for uc in self.user.usercert_set.all().order_by('cert__name'):
-            if uc.cert.id not in check:
-                by_api = False
-                user_cert = UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id, by_api=True)
-                if user_cert.exists():
-                    by_api = True
-                
-                user_certs.append({
-                    'cert_id': uc.cert.id, 
-                    'cert_name': uc.cert.name,
-                    'by_api': by_api,
-                    'num_certs': UserCert.objects.filter(user_id=self.user.id, cert_id=uc.cert.id).count()
-                })
-                check.append(uc.cert.id)
-
         return render(request, 'app/trainings/user_trainings.html', {
             'app_user': self.user,
-            #'user_certs': get_user_certs(self.user),
-            'user_certs': user_certs,
+            'user_certs': get_user_certs_with_info(self.user),
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user),
             'form': self.form_class(initial={ 'user': self.user.id }),
