@@ -43,11 +43,6 @@ NUM_PER_PAGE = 20
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @require_http_methods(['GET'])
 def index(request):
-    # full_name = request.META[settings.SHIB_ATTR_MAP['full_name']] if settings.SHIB_ATTR_MAP['full_name'] in request.META else None
-    # last_name = request.META[settings.SHIB_ATTR_MAP['last_name']] if settings.SHIB_ATTR_MAP['last_name'] in request.META else None
-    # email = request.META[settings.SHIB_ATTR_MAP['email']] if settings.SHIB_ATTR_MAP['email'] in request.META else None
-    # username = request.META[settings.SHIB_ATTR_MAP['username']] if settings.SHIB_ATTR_MAP['username'] in request.META else None
-
     full_name = get_data(request.META, 'full_name')
     last_name = get_data(request.META, 'last_name')
     email = get_data(request.META, 'email')
@@ -756,7 +751,7 @@ class AreaDetailsView(LoginRequiredMixin, View):
 
         elif self.tab == 'users_expired_records':
             for user_lab in self.area.userlab_set.all():
-                expired_certs = get_user_expired_certs(user_lab.user)            
+                expired_certs = get_user_expired_certs(user_lab.user)
                 expired_certs_in_lab = required_certs.intersection(expired_certs)
 
                 if len(expired_certs_in_lab) > 0:
