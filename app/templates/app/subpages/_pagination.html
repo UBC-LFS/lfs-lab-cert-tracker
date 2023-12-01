@@ -4,10 +4,10 @@
 
       {% if data.has_previous %}
         <li class="page-item">
-          <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">First</a>
+          <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">First</a>
         </li>
         <li class="page-item">
-          <a class="page-link" href="?page={{ data.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&laquo;</a>
+          <a class="page-link" href="?page={{ data.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&laquo;</a>
         </li>
       {% else %}
         <li class="page-item disabled">
@@ -26,7 +26,7 @@
         {% else %}
           <li class="page-item">
             {% if i|add:"-3" <= data.number and data.number <= i|add:"3" %}
-              <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ i }}</a>
+              <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ i }}</a>
             {% endif %}
           </li>
         {% endif %}
@@ -34,10 +34,10 @@
 
       {% if data.has_next %}
         <li class="page-item">
-          <a class="page-link" href="?page={{ data.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">&raquo;</a>
+          <a class="page-link" href="?page={{ data.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">&raquo;</a>
         </li>
         <li class="page-item">
-          <a class="page-link" href="?page={{ data.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Last</a>
+          <a class="page-link" href="?page={{ data.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Last</a>
         </li>
       {% else %}
         <li class="page-item disabled">
