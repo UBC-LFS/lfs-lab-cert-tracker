@@ -187,7 +187,8 @@ class APIUpdates(View):
                 # get user's fullname
                 user.full_name = getName(user.user)
                 usersToDisplay.append(user)
-
+                user.certStr = str(user.cert) # convert certname into a string
+                
         # Search bar
         query = request.GET.get('q')
 
@@ -195,7 +196,13 @@ class APIUpdates(View):
             usersToDisplay = []
             # filters out users
             for user in usercert:
-                if (user.by_api and (query.lower() in str(user.user).lower() or query.lower() in str(getName(user.user).lower()))):
+                if (user.by_api and 
+                    # filters
+                    (query.lower() in str(user.user).lower() or 
+                     query.lower() in str(getName(user.user).lower()) or 
+                     query.lower() in str(user.cert).lower())
+                    ):
+                    
                     usersToDisplay.append(user)
 
         # Ascending vs descending sort
