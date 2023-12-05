@@ -165,10 +165,10 @@ class APIUpdates(View):
         def sortAscending(user1, user2, name):
             if (name == "uploadDate"):
                 return user1.uploaded_date > user2.uploaded_date                
-            if (name == "completionData"):
-                return user1.completion_date > user2.completion_date
-            if (name == "expiryDate"):
-                return user1.expiry_date > user2.expiry_date
+            # if (name == "completionData"):
+            #     return user1.completion_date > user2.completion_date
+            # if (name == "expiryDate"):
+            #     return user1.expiry_date > user2.expiry_date
             
             # default
             return user1, user2
@@ -182,17 +182,41 @@ class APIUpdates(View):
         # pull data from database
         usercert = UserCert.objects.all()
 
+        
         for user in usercert:
-            if (user.by_api):
+            # only displays users if data is from the API today
+            if (user.by_api and user.uploaded_date == date.today()):
                 # get user's fullname
                 user.full_name = getName(user.user)
                 usersToDisplay.append(user)
-                user.certStr = str(user.cert) # convert certname into a string
-                
+
         # Search bar
         query = request.GET.get('q')
+        dateFrom = request.GET.get('dateFrom')
+        dateTo = request.GET.get('dateTo')
 
-        if query:
+        if query or dateFrom or dateTo:
+            # If query is None
+            if not query:
+                query = ""
+
+            # If both date ranges are defined, convert them to dates
+            if dateFrom and dateTo:
+                dateFrom = datetime.strptime(request.GET.get('dateFrom'), "%Y-%m-%d").date()
+                dateTo = datetime.strptime(request.GET.get('dateTo'), "%Y-%m-%d").date()
+            # If only dateFrom is defined, set dateTo to today
+            elif dateFrom:
+                dateFrom = datetime.strptime(request.GET.get('dateFrom'), "%Y-%m-%d").date()
+                dateTo = date.today()
+            # If only dateTo is defined, set dateFrom to today
+            elif dateTo:
+                dateTo = datetime.strptime(request.GET.get('dateTo'), "%Y-%m-%d").date()
+                dateFrom = date.today()
+            # If neither are defined, set both to today
+            else:
+                dateTo = date.today()
+                dateFrom = date.today()
+
             usersToDisplay = []
             # filters out users
             for user in usercert:
@@ -200,10 +224,14 @@ class APIUpdates(View):
                     # filters
                     (query.lower() in str(user.user).lower() or 
                      query.lower() in str(getName(user.user).lower()) or 
-                     query.lower() in str(user.cert).lower())
+                     query.lower() in str(user.cert).lower()
+                    ) and
+                    # date
+                    (dateFrom <= user.uploaded_date and dateTo >= user.uploaded_date)
                     ):
                     
                     usersToDisplay.append(user)
+
 
         # Ascending vs descending sort
         # sort ascending first, then reverse array if we want descending
@@ -256,7 +284,7 @@ class UserReportMissingTrainingsView(View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        # tasks.check_user_certs_by_api()
+        tasks.check_user_certs_by_api()
 
         # Find users who have missing certs
         user_list = []

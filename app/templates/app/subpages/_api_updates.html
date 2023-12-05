@@ -42,8 +42,14 @@
 <div class="search-field mb-2">
 	<form method="GET">
 		<div class="input-field">
-			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL, Name, or Certificate">
-			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
+			<label for="dateFrom">From:</label>
+			<input type="date" style="margin-right: 15px;" id="dateFrom" name="dateFrom" value="{{ request.GET.dateFrom }}">
+			<label for="dateTo">To:</label>
+			<input type="date" style="margin-right: 15px;" id="dateTo" name="dateTo" value="{{ request.GET.dateTo }}">
+			
+			<label for="q">Search:</label>
+			<input class="search-field-text" style="margin-right: 15px;" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL, Name, or Certificate">
+			<button class="btn btn-secondary btn-sm" type="submit">Filter</button>
 			<a class="btn btn-sm btn-light" href="{% url 'app:api_updates' %}">Clear</a>
 		</div>
 	</form>
@@ -52,22 +58,23 @@
 <table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm table-vertical-middle">
   <thead>
     <tr>
-        <th>ID</th>
+        <!-- <th>ID</th> -->
 		<!-- <th>CWL</th> -->
 		<th>User</th>
 		<!-- <th>Full Name</th> -->
-        <th>Upload Date 
-			<a class="tableSort" href="?sort=uploadDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11165;</a>
-			<a class="tableSort" href="?sort=uploadDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11167;</a>
+
+		<th>Upload Date 
+			<a class="tableSort" href="?sort=uploadDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}">&#11165;</a>
+			<a class="tableSort" href="?sort=uploadDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}">&#11167;</a>
 		</th>
-        <th>Completion Date
+        <!-- <th>Completion Date
 			<a class="tableSort" href="?sort=completionDataAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11165;</a>
 			<a class="tableSort" href="?sort=completionDataDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11167;</a>
 		</th>
         <th>Expiry Date
 			<a class="tableSort" href="?sort=expiryDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11165;</a>
 			<a class="tableSort" href="?sort=expiryDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11167;</a>
-		</th>
+		</th> -->
         <th>Certificate</th>
         <!-- <th>User ID</th> -->
         <!-- <th>By API</th> -->
@@ -76,19 +83,15 @@
   <tbody id="tableRows">
     {% for user in users %}
       <tr>
-		<td>{{user.id}}</td>
+		<!-- <td>{{user.id}}</td> -->
 		<td><a href="/app/users/{{user.user_id}}/">{{user.user_id}}, {{user.full_name}}<br />({{user.user}})</a></td>
 		<!-- <td>{{user.full_name}}</td> -->
 		<td>{{user.uploaded_date}}</td>
-		<td>{{user.completion_date}}</td>
-		<td>{{user.expiry_date}}</td>
+		<!-- <td>{{user.completion_date}}</td>
+		<td>{{user.expiry_date}}</td> -->
 		<!-- <td><a href="">{{user.cert_id}}</a></td> -->
 		<td><a href="/app/users/{{user.user_id}}/training-record/{{user.cert_id}}/?p=account">
-			{% if user.certStr|length > 40 %}
-				{{user.certStr|truncatechars:40}}
-			{% else %}
-				{{user.certStr}}
-			{% endif %}
+			{{user.cert}}
 		</a></td>
 		<!-- <td>users/{{user.user_id}}/training-record/{{user.cert_id}}/</td> -->
 
