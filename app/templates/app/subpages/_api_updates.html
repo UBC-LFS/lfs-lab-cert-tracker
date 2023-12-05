@@ -58,45 +58,22 @@
 <table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm table-vertical-middle">
   <thead>
     <tr>
-        <!-- <th>ID</th> -->
-		<!-- <th>CWL</th> -->
 		<th>User</th>
-		<!-- <th>Full Name</th> -->
-
 		<th>Upload Date 
 			<a class="tableSort" href="?sort=uploadDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}">&#11165;</a>
 			<a class="tableSort" href="?sort=uploadDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}">&#11167;</a>
 		</th>
-        <!-- <th>Completion Date
-			<a class="tableSort" href="?sort=completionDataAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11165;</a>
-			<a class="tableSort" href="?sort=completionDataDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11167;</a>
-		</th>
-        <th>Expiry Date
-			<a class="tableSort" href="?sort=expiryDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11165;</a>
-			<a class="tableSort" href="?sort=expiryDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}">&#11167;</a>
-		</th> -->
         <th>Certificate</th>
-        <!-- <th>User ID</th> -->
-        <!-- <th>By API</th> -->
     </tr>
   </thead>
   <tbody id="tableRows">
     {% for user in users %}
       <tr>
-		<!-- <td>{{user.id}}</td> -->
 		<td><a href="/app/users/{{user.user_id}}/">{{user.user_id}}, {{user.full_name}}<br />({{user.user}})</a></td>
-		<!-- <td>{{user.full_name}}</td> -->
 		<td>{{user.uploaded_date}}</td>
-		<!-- <td>{{user.completion_date}}</td>
-		<td>{{user.expiry_date}}</td> -->
-		<!-- <td><a href="">{{user.cert_id}}</a></td> -->
 		<td><a href="/app/users/{{user.user_id}}/training-record/{{user.cert_id}}/?p=account">
 			{{user.cert}}
 		</a></td>
-		<!-- <td>users/{{user.user_id}}/training-record/{{user.cert_id}}/</td> -->
-
-		<!-- <td>{{user.user_id}}</td> -->
-		<!-- <td>{{user.by_api}}</td> -->
       </tr>
 
 		{% empty %}

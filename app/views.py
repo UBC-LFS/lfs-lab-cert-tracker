@@ -164,12 +164,7 @@ class APIUpdates(View):
         
         def sortAscending(user1, user2, name):
             if (name == "uploadDate"):
-                return user1.uploaded_date > user2.uploaded_date                
-            # if (name == "completionData"):
-            #     return user1.completion_date > user2.completion_date
-            # if (name == "expiryDate"):
-            #     return user1.expiry_date > user2.expiry_date
-            
+                return user1.uploaded_date > user2.uploaded_date
             # default
             return user1, user2
 
