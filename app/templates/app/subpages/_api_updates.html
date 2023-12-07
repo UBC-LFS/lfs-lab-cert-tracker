@@ -73,7 +73,7 @@
   <tbody id="tableRows">
     {% for user in users %}
       <tr>
-		<td><a href="/app/users/{{user.user_id}}/">{{user.user_id}}, {{user.full_name}}<br />({{user.user}})</a></td>
+		<td><a href="/app/users/{{user.user_id}}/">{{user.full_name}}<br />({{user.user}})</a></td>
 		<td>{{user.uploaded_date}}</td>
 		<td><a href="/app/users/{{user.user_id}}/training-record/{{user.cert_id}}/?p=account">
 			{{user.cert}}

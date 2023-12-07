@@ -222,6 +222,7 @@ class APIUpdates(View):
                     (dateFrom <= user.uploaded_date and dateTo >= user.uploaded_date)
                     ):
                     
+                    user.full_name = getName(user.user)
                     usersToDisplay.append(user)
 
         else:
