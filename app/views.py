@@ -187,13 +187,17 @@ class APIUpdates(View):
 
         # Search bar
         query = request.GET.get('q')
+        qCert = request.GET.get('qCert')
         dateFrom = request.GET.get('dateFrom')
         dateTo = request.GET.get('dateTo')
 
-        if query or dateFrom or dateTo:
+        if query or qCert or dateFrom or dateTo:
             # If query is None
             if not query:
                 query = ""
+                    
+            if not qCert:
+                qCert = ""
 
             # If both date ranges are defined, convert them to dates
             if dateFrom and dateTo:
@@ -218,9 +222,9 @@ class APIUpdates(View):
                 if (user.by_api and 
                     # filters
                     (query.lower() in str(user.user).lower() or 
-                     query.lower() in str(getName(user.user).lower()) or 
-                     query.lower() in str(user.cert).lower()
+                     query.lower() in str(getName(user.user).lower()) 
                     ) and
+                    (qCert.lower() in str(user.cert).lower()) and
                     # date
                     (dateFrom <= user.uploaded_date and dateTo >= user.uploaded_date)
                     ):

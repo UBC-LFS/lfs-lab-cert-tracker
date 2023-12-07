@@ -47,8 +47,12 @@
 			<label for="dateTo">To:</label>
 			<input type="date" style="margin-right: 15px;" id="dateTo" name="dateTo" value="{{ request.GET.dateTo }}">
 			
-			<label for="q">Search:</label>
-			<input class="search-field-text" style="margin-right: 15px;" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL, Name, or Certificate">
+			<label for="q">Search User:</label>
+			<input class="search-field-text" style="margin-right: 15px;" type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by CWL or Name">
+
+			<label for="qCert">Search Certificate:</label>
+			<input class="search-field-text" style="margin-right: 15px;" type="text" name="qCert" value="{{ request.GET.qCert }}" placeholder="Search by Certificate">
+
 			<button class="btn btn-secondary btn-sm" type="submit">Filter</button>
 			<a class="btn btn-sm btn-light" href="{% url 'app:api_updates' %}">Clear</a>
 		</div>
@@ -60,8 +64,8 @@
     <tr>
 		<th>User</th>
 		<th>Upload Date 
-			<a class="tableSort" href="?sort=uploadDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}">&#11165;</a>
-			<a class="tableSort" href="?sort=uploadDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}">&#11167;</a>
+			<a class="tableSort" href="?sort=uploadDateAscending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}{% if request.GET.qCert%}&qCert={{ request.GET.qCert}}{% endif %}">&#11165;</a>
+			<a class="tableSort" href="?sort=uploadDateDescending{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.page %}&page={{ request.GET.page }}{% endif %}{% if request.GET.dateFrom %}&dateFrom={{ request.GET.dateFrom }}{% endif %}{% if request.GET.dateTo %}&dateTo={{ request.GET.dateTo }}{% endif %}{% if request.GET.qCert%}&qCert={{ request.GET.qCert}}{% endif %}">&#11167;</a>
 		</th>
         <th>Certificate</th>
     </tr>
