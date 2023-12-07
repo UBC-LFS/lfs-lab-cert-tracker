@@ -172,20 +172,12 @@ class APIUpdates(View):
         if request.session.get('next'):
             del request.session['next']
 
-        usersToDisplay = []
-
         # pull data from database
         usercert = UserCert.objects.all()
 
-        
-        for user in usercert:
-            # only displays users if data is from the API today
-            if (user.by_api and user.uploaded_date == date.today()):
-                # get user's fullname
-                user.full_name = getName(user.user)
-                usersToDisplay.append(user)
+        usersToDisplay = []
 
-        # Search bar
+        # Get filters
         query = request.GET.get('q')
         qCert = request.GET.get('qCert')
         dateFrom = request.GET.get('dateFrom')
@@ -216,6 +208,7 @@ class APIUpdates(View):
                 dateTo = date.today()
                 dateFrom = date.today()
 
+
             usersToDisplay = []
             # filters out users
             for user in usercert:
@@ -231,6 +224,13 @@ class APIUpdates(View):
                     
                     usersToDisplay.append(user)
 
+        else:
+            for user in usercert:
+                # only displays users if data is from the API today
+                if (user.by_api and user.uploaded_date == date.today()):
+                    # get user's fullname
+                    user.full_name = getName(user.user)
+                    usersToDisplay.append(user)
 
         # Ascending vs descending sort
         # sort ascending first, then reverse array if we want descending
