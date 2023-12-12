@@ -19,6 +19,11 @@ def get_next_url(curr_page):
     return '{0}?page={1}&pageSize={2}'.format(settings.LFS_LAB_CERT_TRACKER_API_URL, curr_page, 50)
 
 
+def get_expiry_date(completion_date, cert):
+    expiry_year = completion_date.year + int(cert.expiry_in_years)
+    return date(year=expiry_year, month=completion_date.month, day=completion_date.day)
+
+
 def pull_by_api(headers, certs, usernames, validation):
     data = []
     
@@ -92,7 +97,7 @@ def find_cert(certs, training_name):
 
 
 
-def remove_special_chars(s):
+"""def remove_special_chars(s):
     return re.findall(r'\b(?:[A-Za-z]\w*|\d+)\b', s.strip().lower())
 
 
@@ -128,7 +133,7 @@ def find_cert_temp(certs, training_name):
             best = cert
             max_count = count
         
-    return best if max_count / len(d1.keys()) > 0.90 else None
+    return best if max_count / len(d1.keys()) > 0.90 else None"""
 
 
 # Email Notification

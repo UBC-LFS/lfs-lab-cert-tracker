@@ -232,21 +232,45 @@ def send_info_email(user):
     return sent
 
 
+
+
+def add_next_str_to_session(request, curr_user):
+    if request.user.id != curr_user.id and request.GET.get('next'):
+        next = request.get_full_path().split('next=')
+        request.session['next'] = next[1]
+
+    viewing = {}
+    if request.user.id != curr_user.id and request.session.get('next'):
+        viewing = get_viewing(request.session.get('next'))
+    return viewing
+
+
 def get_viewing(next):
     """ Get viewing information for going back to the previous page """
 
     split_query = next.split('?')
     res = resolve(split_query[0])
 
-    if res.url_name == 'all_users':
+    viewing = {}
+    if res.url_name == 'all_users' or res.url_name == 'api_updates':
         query = ''
-        if len(split_query) > 1: query = split_query[1]
-
-        viewing = { 'page': 'all_users', 'query': query }
+        if len(split_query) > 1: 
+            query = split_query[1]
+        
+        viewing = { 
+            'page': res.url_name, 
+            'query': query,
+            'name': make_capital(res.url_name),
+            'route': os.path.join(settings.SITE_URL, res.route)
+        }
 
     elif res.url_name == 'area_details':
         id = res.kwargs['area_id']
-        viewing = { 'page': 'area_details', 'id': id, 'name': get_lab_by_id(id).name }
+        viewing = { 
+            'page': 'area_details', 
+            'id': id, 
+            'name': get_lab_by_id(id).name 
+        }
 
     return viewing
 
@@ -262,7 +286,16 @@ def get_error_messages(errors):
         messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
     return messages.strip()
 
-def get_expiry_date(completion_date, cert):
-    #print('get_expiry_date', completion_date, cert.expiry_in_years)
+def make_capital(name):
+    sp = name.split('_')
+    first = sp[0].capitalize()
+    second = sp[1].capitalize()
+    if first == 'Api':
+        first = 'API'
+
+    return '{0} {1}'.format(first, second)
+    
+
+"""def get_expiry_date(completion_date, cert):
     expiry_year = completion_date.year + int(cert.expiry_in_years)
-    return date(year=expiry_year, month=completion_date.month, day=completion_date.day)
+    return date(year=expiry_year, month=completion_date.month, day=completion_date.day)"""

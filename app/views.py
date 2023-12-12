@@ -259,19 +259,7 @@ class UserDetailsView(LoginRequiredMixin, View):
         return setup
 
     @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-
-        if request.user.id != self.user.id:
-
-            # Add next string to session
-            if request.GET.get('next'):
-                next = request.get_full_path().split('next=')
-                request.session['next'] = next[1]
-
-        viewing = {}
-        if request.user.id != self.user.id and request.session.get('next'):
-            viewing = get_viewing(request.session.get('next'))
-                
+    def get(self, request, *args, **kwargs):                
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
@@ -280,7 +268,7 @@ class UserDetailsView(LoginRequiredMixin, View):
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user),
             'welcome_message': welcome_message(),
-            'viewing': viewing
+            'viewing': add_next_str_to_session(request, self.user)
         })
 
 
@@ -437,16 +425,11 @@ class UserTrainingDetailsView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        
-        viewing = {}
-        if request.user.id != self.user.id and request.session.get('next'):
-            viewing = get_viewing(request.session.get('next'))
-        
         return render(request, 'app/trainings/user_training_details.html', {
             'app_user': self.user,
             'latest_user_cert': self.user_certs.first(),
             'user_certs': self.user_certs[1:],
-            'viewing': viewing
+            'viewing': add_next_str_to_session(request, self.user)
         })
 
     @method_decorator(require_POST)
@@ -1088,56 +1071,48 @@ class APIUpdates(LoginRequiredMixin, View):
     
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
-        # tasks.check_user_certs_by_api()
-
-        # Get the user's fullname using their CWL
-        def getName(cwl):
-            allUsers = User.objects.all()
-            for user in allUsers:
-                if (str(user.username) == str(cwl)):
-                    return user.get_full_name()
-            return ""
         
         # if session has next value, delete it
         if request.session.get('next'):
             del request.session['next']
 
-        usersToDisplay = []
+        user_cert_list = UserCert.objects.filter(by_api=True).order_by('uploaded_date', 'user__last_name', 'user__first_name')
 
-        # pull data from database
-        usercert = UserCert.objects.all()
+        date_from_q = request.GET.get('date_from')
+        date_to_q = request.GET.get('date_to')        
+        username_name_q = request.GET.get('q')
+        training_q = request.GET.get('training')
 
-        for user in usercert:
-            if (user.by_api):
-                # get user's fullname
-                user.full_name = getName(user.user)
-                usersToDisplay.append(user)
-
-        # Search bar
-        query = request.GET.get('q')
-
-        if query:
-            usersToDisplay = []
-            # filters out users
-            for user in usercert:
-                if (user.by_api and (query.lower() in str(user.user).lower() or query.lower() in str(getName(user.user).lower()))):
-                    usersToDisplay.append(user)
-
+        if bool(date_from_q) and bool(date_to_q):
+            user_cert_list = user_cert_list.filter( Q(uploaded_date__gte=date_from_q) & Q(uploaded_date__lte=date_to_q) )
+        elif bool(date_from_q):
+            user_cert_list = user_cert_list.filter(uploaded_date=date_from_q)
+        elif bool(date_to_q):
+            user_cert_list = user_cert_list.filter(uploaded_date=date_to_q)
+        else:
+            user_cert_list = user_cert_list.filter(uploaded_date=date.today())
+        
+        if bool(username_name_q):
+            user_cert_list = user_cert_list.filter(
+                Q(username__icontains=username_name_q) | Q(first_name__icontains=username_name_q) | Q(last_name__icontains=username_name_q)
+            )
+        if bool(training_q):
+            user_cert_list = user_cert_list.filter(cert__name__icontains=training_q)
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(usersToDisplay, NUM_PER_PAGE)
+        paginator = Paginator(user_cert_list, NUM_PER_PAGE)
 
         try:
-            usersToDisplay = paginator.page(page)
+            user_certs = paginator.page(page)
         except PageNotAnInteger:
-            usersToDisplay = paginator.page(1)
+            user_certs = paginator.page(1)
         except EmptyPage:
-            usersToDisplay = paginator.page(paginator.num_pages)
-                
+            user_certs = paginator.page(paginator.num_pages)
+
+
         return render(request, 'app/admin/api_updates.html', {
-            "total_users": len(usersToDisplay),
-            "users": usersToDisplay
+            "total_user_certs": len(user_cert_list),
+            "user_certs": user_certs
         })
 
 

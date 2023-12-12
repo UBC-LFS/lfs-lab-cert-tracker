@@ -80,7 +80,7 @@ header .container .logout-btn:hover { text-decoration: underline; }
 
 .search-field .input-field input { vertical-align: middle; }
 
-.search-field .input-field .search-field-text::placeholder { font-size: 15px; }
+.search-field .input-field .search-field-text::placeholder { font-size: 14px; }
 
 .list-form { display: inline-block; }
 
