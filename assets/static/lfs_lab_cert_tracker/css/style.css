@@ -346,14 +346,12 @@ i.material-icons {
   display: inline-block;
 }
 
-.custom-table,
-.custom-table th,
-.custom-table td {
+.stats-table,
+.stats-table th,
+.stats-table td {
   border: 1px solid #ccc;
   border-collapse: collapse;
 }
-
-
 
 
 /* Responsive design */

@@ -1076,10 +1076,11 @@ class APIUpdates(LoginRequiredMixin, View):
         if request.session.get('next'):
             del request.session['next']
 
+        today = date.today()
+
         user_cert_list = UserCert.objects.filter(by_api=True).order_by('uploaded_date', 'user__last_name', 'user__first_name')
 
         stats = []
-        today = date.today()
         for i in range(6, 0, -1):
             d = today - timedelta(i)
             stats.append({
@@ -1094,12 +1095,16 @@ class APIUpdates(LoginRequiredMixin, View):
 
         if bool(date_from_q) and bool(date_to_q):
             user_cert_list = user_cert_list.filter( Q(uploaded_date__gte=date_from_q) & Q(uploaded_date__lte=date_to_q) )
+            today = '{0} ~ {1}'.format(date_from_q, date_to_q)
         elif bool(date_from_q):
             user_cert_list = user_cert_list.filter(uploaded_date=date_from_q)
+            today = date_from_q
         elif bool(date_to_q):
             user_cert_list = user_cert_list.filter(uploaded_date=date_to_q)
+            today = date_to_q
         else:
             user_cert_list = user_cert_list.filter(uploaded_date=today)
+            today = convert_date_to_str(today)
         
         if bool(username_name_q):
             user_cert_list = user_cert_list.filter(
