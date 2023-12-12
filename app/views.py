@@ -1094,7 +1094,7 @@ class APIUpdates(LoginRequiredMixin, View):
         
         if bool(username_name_q):
             user_cert_list = user_cert_list.filter(
-                Q(username__icontains=username_name_q) | Q(first_name__icontains=username_name_q) | Q(last_name__icontains=username_name_q)
+                Q(user__username__icontains=username_name_q) | Q(user__first_name__icontains=username_name_q) | Q(user__last_name__icontains=username_name_q)
             )
         if bool(training_q):
             user_cert_list = user_cert_list.filter(cert__name__icontains=training_q)

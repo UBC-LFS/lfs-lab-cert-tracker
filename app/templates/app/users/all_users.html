@@ -20,7 +20,7 @@
 <div class="search-field mb-2">
 	<form method="GET">
 		<div class="input-field">
-			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="User's CWL or Full Name">
+			<input class="search-field-text" type="text" name="q" value="{{ request.GET.q }}" placeholder="User's CWL or Name">
 			<button class="btn btn-primary btn-sm" type="submit">Search</button>
 			<a class="btn btn-secondary btn-sm" href="{% url 'app:all_users' %}">Clear</a>
 		</div>
