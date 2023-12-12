@@ -8,14 +8,30 @@
 
 {% include 'app/subpages/_return_message.html' with data=messages %}
 
+<div class="mt-4" style="float:right;">
+	<h5 class="text-info text-center">Summary</h5>
+	<table class="table-sm font-size-sm text-center table-vertical-middle custom-table">
+		<tr>
+			{% for st in stats %}
+				<td>{{ st.date }}</td>
+			{% endfor %}
+		</tr>
+		<tr>
+			{% for st in stats %}
+				<td>{{ st.count }}</td>
+			{% endfor %}
+		</tr>
+	</table>
+</div>
+
 <h3 class="mt-5">
 	API Updates
-	<small class="text-secondary">(Total: {{ total_user_certs }})</small>
+	<small class="text-secondary">({{ today }} | Total: {{ total_user_certs }})</small>
 </h3>
 
 {% include 'app/subpages/_search_note.html' with data=user_certs %}
 
-<div class="search-field mb-3">
+<div class="search-field mt-4 mb-3">
 	<form method="GET">
 		<div class="input-field">
 			<label for="date_from">From:</label>

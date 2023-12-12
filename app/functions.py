@@ -296,6 +296,9 @@ def make_capital(name):
     return '{0} {1}'.format(first, second)
     
 
+def convert_date_to_str(date):
+    return date.strftime('%Y-%m-%d')
+
 """def get_expiry_date(completion_date, cert):
     expiry_year = completion_date.year + int(cert.expiry_in_years)
     return date(year=expiry_year, month=completion_date.month, day=completion_date.day)"""

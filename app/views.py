@@ -26,7 +26,7 @@ from io import BytesIO
 # from cgi import escape # < python 3.8
 from html import escape 
 from xhtml2pdf import pisa
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from .accesses import *
 from .forms import *
@@ -1078,6 +1078,15 @@ class APIUpdates(LoginRequiredMixin, View):
 
         user_cert_list = UserCert.objects.filter(by_api=True).order_by('uploaded_date', 'user__last_name', 'user__first_name')
 
+        stats = []
+        today = date.today()
+        for i in range(6, 0, -1):
+            d = today - timedelta(i)
+            stats.append({
+                'date': convert_date_to_str(d),
+                'count': user_cert_list.filter(uploaded_date=d).count()
+            })
+        
         date_from_q = request.GET.get('date_from')
         date_to_q = request.GET.get('date_to')        
         username_name_q = request.GET.get('q')
@@ -1090,7 +1099,7 @@ class APIUpdates(LoginRequiredMixin, View):
         elif bool(date_to_q):
             user_cert_list = user_cert_list.filter(uploaded_date=date_to_q)
         else:
-            user_cert_list = user_cert_list.filter(uploaded_date=date.today())
+            user_cert_list = user_cert_list.filter(uploaded_date=today)
         
         if bool(username_name_q):
             user_cert_list = user_cert_list.filter(
@@ -1109,10 +1118,11 @@ class APIUpdates(LoginRequiredMixin, View):
         except EmptyPage:
             user_certs = paginator.page(paginator.num_pages)
 
-
         return render(request, 'app/admin/api_updates.html', {
             "total_user_certs": len(user_cert_list),
-            "user_certs": user_certs
+            "user_certs": user_certs,
+            "today": today,
+            "stats": stats
         })
 
 
