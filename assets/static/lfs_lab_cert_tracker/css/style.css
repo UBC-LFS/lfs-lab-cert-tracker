@@ -354,6 +354,25 @@ i.material-icons {
 }
 
 
+.pin-note {
+  background-color: #EEEEEE;
+  font-size: 0.9rem;
+}
+
+.pin-note .title {
+  color: #fff;
+  background-color: #00BFA5;
+  text-transform: uppercase;
+  padding: 12px 1rem 6px;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.pin-note .body {
+  padding: 1rem 1.5rem;
+}
+
+
 /* Responsive design */
 
 @media (max-width: 575.98px) {
