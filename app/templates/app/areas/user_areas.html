@@ -39,7 +39,7 @@
 			<ul>
 				{% for user_lab in user_labs_pi %}
 				<li>
-					<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}">{{ user_lab.lab.name }}</a>
+					<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}?t=users_in_area">{{ user_lab.lab.name }}</a>
 				</li>
 				{% endfor %}
 			</ul>
