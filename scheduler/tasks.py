@@ -125,7 +125,7 @@ def check_user_certs_by_api():
             usernames.append(user.username)
 
     if len(usernames) > 0:
-        paginator = Paginator(usernames, 15)
+        paginator = Paginator(usernames, 5)
 
         validation = []
         data = []
