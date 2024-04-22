@@ -53,5 +53,8 @@ urlpatterns = [
 
     path('api-updates/', views.APIUpdates.as_view(), name='api_updates'),
 
+    path('key-request/', views.KeyRequest.as_view(), name='key_request'),
+
+
     path('', views.index, name='index')
 ]

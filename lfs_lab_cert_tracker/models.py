@@ -203,3 +203,22 @@ class UserInactive(models.Model):
 
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     inactive_date = models.DateField(null=True)
+
+
+class KeyRequest(models.Model):
+    """ To request key access """
+
+    firstName = models.CharField(max_length=256)
+    lastName = models.CharField(max_length=256)
+    cwl = models.CharField(max_length=256)
+    ubcEmail = models.EmailField()
+    lfsRole = models.CharField(max_length=256)
+    ubc_affiliation = models.CharField()
+    supervisor_first_name = models.CharField(max_length=256)
+    supervisor_last_name = models.CharField(max_length=256)
+    supervisor_email = models.EmailField()
+    after_hours_access = models.CharField()
+    building_name = models.CharField()
+    room_numbers = models.CharField(max_length=256)
+    additional_comments = models.CharField()
+    requirement_to_proceed = models.BooleanField(default=None, blank=True, null=True)

@@ -1143,6 +1143,37 @@ class APIUpdates(LoginRequiredMixin, View):
 
 # Helper functions
 
+@method_decorator(require_POST, name='post')
+class KeyRequest(LoginRequiredMixin, View):
+    """ Displays key request form """
+
+    form_class = KeyRequestForm
+
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        print("aaa")
+        form_class = KeyRequestForm(request.POST)
+        if form_class.is_valid():
+            print("sss")
+            if form_class.save():
+                messages.success(request, 'Success!')
+            else:
+                messages.error(request, 'Error!')
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form_class.errors.get_json_data())))
+        
+        return render(request, 'app/users/key_request.html', {
+            'key_form': form_class
+        })
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'app/users/key_request.html', {
+            'key_form': self.form_class
+        })
+    
+
 
 def get_data(meta, field):
     data = settings.SHIB_ATTR_MAP[field]

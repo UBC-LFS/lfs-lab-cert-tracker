@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User as AuthUser
-from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
+from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert, KeyRequest
 from datetime import datetime
 import datetime as dt
 
@@ -230,3 +230,55 @@ class UserLabForm(forms.ModelForm):
         fields = ['user', 'role']
         labels = { 'user': 'CWL' }
         widgets = { 'user': forms.TextInput() }
+
+class KeyRequestForm(forms.ModelForm):
+    """ To request key access """
+    class Meta:
+        model = KeyRequest
+        fields = ['firstName', 'lastName', 'cwl', 'ubcEmail', 'lfsRole', 'ubc_affiliation', 'supervisor_first_name', 'supervisor_last_name', 'supervisor_email', 'after_hours_access', 'building_name', 'room_numbers', 'additional_comments', 'requirement_to_proceed']
+
+        labels = { 
+            'firstName': 'First Name',
+            'lastName': 'Last Name', 
+            'cwl': 'UBC CWL User name', 
+            'ubcEmail': 'Applicant UBC Email', 
+            'lfsRole': 'Applicant Role in LFS', 
+            'ubc_affiliation': 'Applicant UBC Affliation', 
+            'building_name': 'Building Name'
+        }
+
+        help_texts = {
+            'after_hours_access': 'Regular building hours are from 7:30AM- 5PM Monday to Friday. If after hours access is required, please be sure to request entrance access.',
+            'building_name': 'This is the building you are requesting access to. We do not issue access to buildings not the list above. For Main and South Campus Greenhouses, contact UBC Plant Care Services plantcare.ubc.ca/contact-us',
+            'room_numbers': 'A comma separated list. Use "entrance" for entrances. *** FNH 190 Pilot Plant Users *** Complete the FNH 190 Orientation and the code of conduct form before filling in this form.',
+            'requirement_to_proceed': 'I understand this request will not be processed until all my required training certificates have been uploaded to https://training-report.landfood.ubc.ca. -- For undergraduate students who need access to FNH labs, please contact your supervisor.'
+        }
+
+        UBC_AFFILIATION_CHOICES = [
+            ('employee', 'I have a UBC employee ID'),
+            ('undergrad', 'I am an undergraduate student with a UBC student number'),
+            ('grad', 'I am a graduate student with a UBC student number'),
+            ('none', 'I do not have a UBC Card. Apply at ubccard.ubc.ca. Access cannot be granted without one.'),
+        ]
+
+        SUPERVISOR_BUILDING_CHOICES = [
+            ('MCM', 'MCM'),
+            ('FNH', 'FNH'),
+            ('WESB', 'WESB'),
+            ('UBC_Farm', 'UBC Farm'),
+        ]
+
+        AFTER_HOURS_ACCESS_CHOICES = [
+            ('Yes', 'Yes, I will need after hours access'),
+            ('No', 'No, I will not need after hours access')
+        ]
+
+        widgets = {
+            "ubc_affiliation": forms.RadioSelect(choices=UBC_AFFILIATION_CHOICES),
+            "after_hours_access": forms.RadioSelect(choices=SUPERVISOR_BUILDING_CHOICES),
+            "building_name": forms.RadioSelect(choices=AFTER_HOURS_ACCESS_CHOICES),
+            "additional_comments": forms.Textarea(attrs={"cols": 80, "rows": 20}),
+            "requirement_to_proceed": forms.CheckboxInput(),  # Use CheckboxInput for BooleanField
+        }
+
+        additional_comments = forms.CharField(required=False, widget=forms.Textarea(attrs={"cols": 80, "rows": 20}))

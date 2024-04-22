@@ -1,0 +1,61 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'app/subpages/_admin_menu.html' %}
+{% endif %}
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+<h3 class="my-5">
+    Key Access Request
+</h3>
+
+<p style="color: red; font-weight: bold;">This form is for requesting access to the Faculty of Land and Food systems areas only. We do not process key requests for all of UBC.</p>
+
+<p style="color: #349966;">Please note the following:</p>
+
+<ol style="color: #349966;">
+    <li>Key, card access, and alarm code requests will NOT be processed unless all required training completion certificates have been uploaded to <a href="https://training-report.landfood.ubc.ca/">https://training-report.landfood.ubc.ca/</a></li>
+    <li>Key requisition is valid for thirty days from date of application.</li>
+    <li>A refundable deposit is required for each key.</li>
+    <li>UBC Key Desk may require few weeks from the date they receive the key requisition to provide the requested key(s). They will send email notices to the email address which you entered when you first requested a key at UBC even if it was many years ago. Please check that email.</li>
+    <li>UBC Card initial setup will require the user to bring in the card to be programmed. This step can be omitted if you are registered as a UBC student as students are automatically added into the system.</li>
+    <li>Applicant should take note of the expiry date for key request to each space. It is the applicant’s responsibility to renew access request if needed.</li>
+    <li>Greenhouse access is managed by Plant Care Services, please contact Melina Biron: <a href="mailto:melina.biron@ubc.ca">melina.biron@ubc.ca</a></li>
+</ol>
+
+<form action="" method="post">
+    {% csrf_token %}
+
+    {% for field in key_form.visible_fields  %}
+    
+    <!-- makes all labels inline -->
+    {% if field.field.widget.input_type == 'text' or field.field.widget.input_type == 'email' %}
+        <div style="display: inline-block; margin-right: 100px;" class="field-wrapper">
+        {% else %}
+        <div style="display: block;" class="field-wrapper">
+        {% endif %}
+            <label for="{{ field.id_for_label }}">
+                {{ field.label }}: <span class="text-danger">*</span>
+            </label>
+
+            {% if field.help_text %}
+                <div class="help">{{ field.help_text|safe }}</div>
+            {% endif %}
+
+            {{ field }}
+
+            <!-- Adds "i agree" next to the requirements to proceed checkbox -->
+            {% if field.id_for_label == "id_requirement_to_proceed" %}
+                <p style="display: inline;">I agree</p>
+            {% endif %}
+
+        </div>
+    {% endfor %}
+
+    <input class="btn btn-primary mt-3" type="submit" value="Submit" />
+</form>
+
+{% endblock %}
