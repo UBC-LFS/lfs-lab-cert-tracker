@@ -1140,22 +1140,73 @@ class APIUpdates(LoginRequiredMixin, View):
             "users": usersToDisplay
         })
 
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class KeyRequestsView(LoginRequiredMixin, View):
+    """ Displays all the API updates made """
+    
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        # Get the user's fullname using their CWL
+        def getName(cwl):
+            allUsers = User.objects.all()
+            for user in allUsers:
+                if (str(user.username) == str(cwl)):
+                    return user.get_full_name()
+            return ""
+        
+        # if session has next value, delete it
+        if request.session.get('next'):
+            del request.session['next']
+
+        usersToDisplay = []
+
+        # pull data from database
+        key_requests = KeyRequest.objects.all()  # Fetch all key requests
+
+        for user in key_requests:
+            # get user's fullname
+            user.full_name = getName(user.cwl)
+            usersToDisplay.append(user)
+
+        # Search bar
+        query = request.GET.get('q')
+
+        if query:
+            usersToDisplay = []
+            # filters out users
+            for user in key_requests:
+                if (query.lower() in str(user.cwl).lower() or query.lower() in str(getName(user.cwl).lower())):
+                    usersToDisplay.append(user)
+
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(usersToDisplay, NUM_PER_PAGE)
+
+        try:
+            usersToDisplay = paginator.page(page)
+        except PageNotAnInteger:
+            usersToDisplay = paginator.page(1)
+        except EmptyPage:
+            usersToDisplay = paginator.page(paginator.num_pages)
+                
+        return render(request, 'app/admin/key_requests.html', {
+            "total_users": len(usersToDisplay),
+            "users": usersToDisplay
+        })
 
 # Helper functions
 
 @method_decorator(require_POST, name='post')
-class KeyRequest(LoginRequiredMixin, View):
+class KeyRequestView(LoginRequiredMixin, View):
     """ Displays key request form """
 
     form_class = KeyRequestForm
 
-
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        print("aaa")
         form_class = KeyRequestForm(request.POST)
         if form_class.is_valid():
-            print("sss")
             if form_class.save():
                 messages.success(request, 'Success!')
             else:
@@ -1164,13 +1215,15 @@ class KeyRequest(LoginRequiredMixin, View):
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form_class.errors.get_json_data())))
         
         return render(request, 'app/users/key_request.html', {
-            'key_form': form_class
+            'key_form': form_class,
+            'missing_certs': len(get_user_missing_certs(request.user.id)),
         })
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/users/key_request.html', {
-            'key_form': self.form_class
+            'key_form': self.form_class,
+            'missing_certs': len(get_user_missing_certs(request.user.id)),
         })
     
 
