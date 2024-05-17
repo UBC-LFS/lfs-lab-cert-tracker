@@ -323,14 +323,14 @@ i.material-icons {
 }
 
 .form-table-width tr th {
-  width: 18%;
+  width: 25%;
 }
 
 .form-table-width tr td {
-  width: 82%;
+  width: 75%;
 }
 
-.form-table-width tr:nth-child(2) td input {
+.form-table-width tr:not(:nth-child(1)) td input {
   margin-top: 20px;
 }
 

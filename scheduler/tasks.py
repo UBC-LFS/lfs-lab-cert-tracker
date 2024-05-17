@@ -117,13 +117,13 @@ def check_user_certs_by_api():
     certs = get_certs()
     users = get_users('active')
     usernames = []
-
+    
     for user in users:
         missing_certs = get_user_missing_certs(user.id)
         expired_certs = get_user_expired_certs(user)
         if len(missing_certs) > 0 or len(expired_certs) > 0:
             usernames.append(user.username)
-
+    
     if len(usernames) > 0:
         paginator = Paginator(usernames, 5)
 

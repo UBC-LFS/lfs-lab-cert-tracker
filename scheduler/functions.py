@@ -43,19 +43,23 @@ def pull_by_api(headers, certs, usernames, validation):
             break
         
         for item in json['pageItems']:
-            if 'requestedIdentifier' not in item.keys() or 'certificate' not in item.keys() or 'identifier' not in item['requestedIdentifier'].keys() or 'trainingName' not in item['certificate'].keys() or 'completionDate' not in item['certificate'].keys():
+            if 'requestedIdentifier' not in item.keys() or 'certificate' not in item.keys() or 'identifier' not in item['requestedIdentifier'].keys() or 'trainingName' not in item['certificate'].keys() or 'trainingId' not in item['certificate'].keys() or 'completionDate' not in item['certificate'].keys():
                 print('Warning: no requestedIdentifier, certificate, identifier, trainingName or completionDate')
                 continue
 
             username = item['requestedIdentifier']['identifier']
             training_name = item['certificate']['trainingName'].strip()
+            training_id = item['certificate']['trainingId']
             completion_date = item['certificate']['completionDate'].split('T')[0].split('-')
 
             if item['certificate']['status'] == 'active' and len(completion_date) == 3:
                 completion_date = date(year=int(completion_date[0]), month=int(completion_date[1]), day=int(completion_date[2]))
                 user = get_user_by_username(username)
-                cert = find_cert(certs, training_name)
-
+                
+                cert = find_cert_by_unique_id(certs, training_id)
+                #print(training_name, training_id, ' ===== ', cert)
+                #cert = find_cert(certs, training_name)
+                
                 if user and cert:
                     user_certs = user.usercert_set.filter(cert_id=cert.id, completion_date=completion_date)
                     form = '{0}_{1}_{2}'.format(user.id, cert.id, completion_date)
@@ -80,6 +84,20 @@ def pull_by_api(headers, certs, usernames, validation):
     return data, validation
 
 
+def find_cert_by_unique_id(certs, unique_id):
+    training = None
+    
+    cert_obj = Cert.objects.filter(unique_id__icontains=unique_id)
+    if cert_obj.exists():
+        for cert in cert_obj:
+            ids = cert.unique_id.split('/')
+            if str(unique_id) in ids:
+                training = cert
+                break
+
+    return training
+
+
 def find_cert(certs, training_name):
     if training_name == 'Chemical Safety' or training_name == 'Chemical Safety Refresher':
         training_name = 'Chemical Safety/Chemical Safety Refresher'
@@ -94,46 +112,6 @@ def find_cert(certs, training_name):
 
     cert = Cert.objects.filter(name=training_name)    
     return cert.first() if cert.exists() else None
-
-
-
-"""def remove_special_chars(s):
-    return re.findall(r'\b(?:[A-Za-z]\w*|\d+)\b', s.strip().lower())
-
-
-def find_cert_temp(certs, training_name):
-    training_name = training_name.replace('Online', '')
-    training_name = training_name.replace('Self Paced', '')
-    training_name = training_name.replace('no longer required', '')
-    
-    d1 = {}
-    l1 = remove_special_chars(training_name)
-    for word in l1:
-        if word in ['and','for','of','in','or','to','by']:
-            continue
-        if word in d1.keys(): d1[word] += 1
-        else: d1[word] = 1
-    
-    best = None
-    max_count = 0
-    for cert in certs:
-        d2 = {}
-        l2 = remove_special_chars(cert.name)
-        for word in l2:
-            if word in ['and','for','of','in','or','to','by']:
-                continue
-            if word in d2.keys(): d2[word] += 1
-            else: d2[word] = 1   
-        
-        count = 0
-        for k, v in d1.items():
-            if k in d2.keys() and d2[k] == v:
-                count += 1
-        if count > max_count:
-            best = cert
-            max_count = count
-        
-    return best if max_count / len(d1.keys()) > 0.90 else None"""
 
 
 # Email Notification

@@ -593,7 +593,6 @@ class AllAreasView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
         area_list = Lab.objects.all()
 
         # Pagination enables
@@ -665,11 +664,6 @@ class AreaDetailsView(LoginRequiredMixin, View):
         # if session has next value, delete it
         if request.session.get('next'):
             del request.session['next']
-
-        # required_trainings = []
-        # for labcert in self.area.labcert_set.all():
-        #     required_trainings.append(labcert.cert)
-        # is_pi = is_pi_in_area(request.user.id, self.area.id)
 
         required_certs = Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
 
