@@ -14,6 +14,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
 
+from app.utils import *
+
 
 class Lab(models.Model):
     """ Lab Model """
@@ -31,7 +33,7 @@ class Cert(models.Model):
 
     name = models.CharField(max_length=256, unique=True)
     expiry_in_years = models.IntegerField(default=0)
-    unique_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    unique_id = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         ordering = ['name']
@@ -128,6 +130,7 @@ def cert_file_delete(sender, instance, **kwargs):
         if os.path.isfile(instance.cert_file.path):
             os.remove(instance.cert_file.path)
 
+
 class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
@@ -145,6 +148,79 @@ class UserLab(models.Model):
     class Meta:
         unique_together = (('user', 'lab'))
         ordering = ['user']
+
+
+class AccessRequest(models.Model):
+    user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)    
+    
+    role = models.CharField(max_length=100, null=True, blank=True)
+    affliation = models.CharField(max_length=1, choices=AFFLIATIONS, default='4')
+    employee_number = models.CharField(max_length=7, null=True, blank=True)
+    student_number = models.CharField(max_length=8, null=True, blank=True)
+
+    supervisor_first_name = models.CharField(max_length=150)
+    supervisor_last_name = models.CharField(max_length=150)
+    supervisor_email = models.CharField(max_length=254)
+
+    after_hours_access = models.CharField(max_length=1, choices=AFTER_HOUR_ACCESS)
+    working_alone = models.BooleanField(default=False)
+    building_name = models.CharField(max_length=1, choices=BUILD_NAMES)
+    room_numbers = models.CharField(max_length=254)
+
+    comment = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['lab', 'user']
+
+    def get_fields(self):
+        fields = []
+
+        renamed_fields = {
+            'role': 'Applicant Role in LFS',
+            'affliation': 'Applicant UBC Affliation',
+            'supervisor_first_name': "Supervisor's First Name",
+            'supervisor_last_name': "Supervisor's Last Name",
+            'supervisor_email': "Supervisor's Email",
+            'after_hours_access': 'After hours access',
+            'working_alone': 'Working alone and/or in isolation',
+            'room_numbers': 'Room Numbers that I need access to',
+            'comment': 'Additional Comments'
+        }
+
+        choices_fields = ['affliation', 'after_hours_access', 'building_name']
+
+        for field in self._meta.fields:
+            if field.name == 'id' or field.name == 'user' or field.name == 'lab':
+                continue
+
+            name = []
+            val = getattr(self, field.name)
+
+            if field.name in renamed_fields.keys():
+                name.append(renamed_fields[field.name])
+            else:
+                name = [sp.capitalize() for sp in field.name.split('_')]
+            
+            if field.name in choices_fields:
+                val = getattr(self, 'get_{0}_display'.format(field.name))()
+
+            fields.append( (' '.join(name), val) )
+        return fields
+
+
+class AccessRequestStatus(models.Model):
+    access_request = models.ForeignKey(AccessRequest, on_delete=models.CASCADE)
+    status = models.CharField(max_length=1, choices=ACCESS_REQUEST_STATUS, default='0')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['pk']
 
 
 # Send an email when adding a user to a lab

@@ -63,3 +63,13 @@ def access_loggedin_user_admin(view_func):
         else:
             raise PermissionDenied
     return wrap
+
+def access_loggedin_user_only(view_func):
+    """ Access for a logged-in user only """
+
+    def wrap(request, *args, **kwargs):
+        if request.user.id == kwargs['user_id']:
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+    return wrap

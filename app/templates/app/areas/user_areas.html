@@ -1,6 +1,7 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
-
 {% block content %}
+
+{% load template_utils %}
 
 {% if request.user.is_superuser %}
 	{% include 'app/subpages/_admin_menu.html' %}
@@ -13,40 +14,104 @@
 				<i class="material-icons">home</i> My Account
 			</a>
 		</li>
-		<li class="breadcrumb-item active" aria-current="page">My Work Area(s)</li>
+		<li class="breadcrumb-item active" aria-current="page">My Work Area</li>
 	</ol>
 </nav>
 
-<div class="row">
-	<div class="col-md-10 offset-md-1">
-		<h3 class="title">
-			My Work Area(s)
-			<small class="text-secondary">(Total: {{ user_labs|length }})</small>
-		</h3>
-		<ul>
-			{% for user_lab in user_labs %}
-				<li>{{ user_lab.lab.name }}</li>
-			{% empty %}
-				<li>You are not in work area(s)</li>
-			{% endfor %}
-		</ul>
+{% include 'app/subpages/_return_message.html' with data=messages %}
 
-		{% if user_labs_pi %}
-			<h3 class="title">
-				Main Work Area(s)
-				<small class="text-secondary">(Total: {{ user_labs_pi|length }})</small>
-			</h3>
-			<ul>
-				{% for user_lab in user_labs_pi %}
-				<li>
-					<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}?t=users_in_area">{{ user_lab.lab.name }}</a>
-				</li>
-				{% endfor %}
-			</ul>
-		{% endif %}
+<h3 class="title">
+	My Work Area
+	<small class="text-secondary">(Total: {{ user_labs|length }})</small>
+</h3>
 
-		<a class="btn btn-secondary mt-5" href="{% url 'app:user_details' request.user.id %}">Back to My Account</a>
-	</div>
-</div>
+<table class="table table-bordered table-hover table-striped table-vertical-middle text-center mt-5">
+	<thead>
+		<tr>
+			<th>Area Name</th>
+			<th>Supervisor?</th>
+			<th>Missing Training Records</th>
+			<th>Access Request</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for ul in user_labs %}
+			<tr>
+				<td>
+					{% if ul.role|is_user_lab_supervisor %}
+						<a href="{% url 'app:area_details' area_id=ul.lab.id %}?t=users_in_area">{{ ul.lab.name }}</a>
+					{% else %}
+						{{ ul.lab.name }}
+					{% endif %}
+
+					<br />
+
+					<button class="btn btn-info btn-xs font-size-xs" type="button" data-toggle="modal" data-target="#required-certs-modal-{{ ul.id }}">Required Trainings</button>
+
+					<div class="modal fade" id="required-certs-modal-{{ ul.id }}" tabindex="-1" role="dialog" aria-labelledby="required-certs-modal-label-{{ ul.id }}" aria-hidden="true">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="required-certs-modal-label-{{ ul.id }}">Required Training Records</h5>
+								</div>
+								<div class="modal-body text-left">
+									<ul>
+										{% for cert in ul.required_certs %}
+											<li>{{ cert.name }}</li>
+										{% endfor %}
+									<ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</td>
+				<td>
+					{% if ul.role|is_user_lab_supervisor %}
+						<span class="badge badge-warning">YES</span>
+					{% endif %}
+				</td>
+				<td class="text-left">
+					{% for cert in ul.missing_certs %}
+						<li>{{ cert.name }}</li>
+					{% empty %}
+						No
+					{% endfor %}
+				</td>
+				<td>
+					{% if ul.access_request %}
+
+						<button class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#view-access-request-modal-{{ ul.id }}">View</button> <br />
+						<small class="text-secondary">{{ ul.access_request.created_at }}</small>
+
+						<div class="modal fade" id="view-access-request-modal-{{ ul.id }}" tabindex="-1" role="dialog" aria-labelledby="view-access-request-modal-label-{{ ul.id }}" aria-hidden="true">
+							<div class="modal-dialog modal-lg">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="view-access-request-modal-label-{{ ul.id }}">View Access Request Details</h5>
+									</div>
+									<div class="modal-body text-left">
+										<table class="table table-borderless table-striped table-hover table-left-bold">
+											{% for name, value in ul.access_request.get_fields %}
+												<tr width="100%">
+													<td width="40%">{{ name }}</td>
+													<td width="60%">{{ value }}</td>
+												</tr>
+											{% endfor %}
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+
+					{% else %}
+						{% if ul.missing_certs|length == 0 %}
+							<a href="{% url 'app:access_request' user_id=ul.user.id area_id=ul.lab.id %}">Request</a>
+						{% endif %}
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
 
 {% endblock %}

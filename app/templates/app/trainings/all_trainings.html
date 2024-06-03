@@ -72,7 +72,7 @@
 													<div class="mb-3">
 														<label class="font-weight-bold">
 															Name:
-															<i class="material-icons text-danger font-size-xs p-0">emergency</i>
+															{% include 'app/icons/asterisk.html' %}
 														</label>
 														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" required />
 														<small class="text-muted">(Maximum characters: 256)</small>
@@ -81,7 +81,7 @@
 													<div class="mb-3">
 														<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">
 															Expiry in Years:
-															<i class="material-icons text-danger font-size-xs">emergency</i>
+															{% include 'app/icons/asterisk.html' %}
 														</label>
 														<input id="id_expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
 														<small class="text-muted">(0 means "NO Expiry Date")</small>
@@ -140,7 +140,7 @@
 								<label for="{{ field.id_for_label }}">
 									{{ field.label }}
 									{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
-										<i class="material-icons text-danger font-size-xs">emergency</i>
+										{% include 'app/icons/asterisk.html' %}
 									{% endif %}
 								</label>
 							</th>

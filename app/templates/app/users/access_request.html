@@ -1,0 +1,97 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+{% block content %}
+
+{% if request.user.is_superuser %}
+	{% include 'app/subpages/_admin_menu.html' %}
+{% endif %}
+
+<nav aria-label="breadcrumb">
+	<ol class="breadcrumb">
+		<li class="breadcrumb-item">
+			<a href="{% url 'app:user_areas' user_id=request.user.id %}">
+				<i class="material-icons">home</i> My Work Area
+			</a>
+		</li>
+		<li class="breadcrumb-item active" aria-current="page">Access Request</li>
+	</ol>
+</nav>
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+<h3 class="title">
+  Access Request <br />
+  <small class="text-secondary">- {{ lab.name }}</small>
+</h3>
+
+<section class="mt-4">
+  <h5 class="text-danger">
+    This form is for requesting access to the Faculty of Land and Food systems areas only. <br />
+    We do not process key requests for all of UBC.
+  </h5>
+
+  <div class="card bg-light-gray my-4 p-3">
+    <h5 class="text-info">
+      <i class="material-icons">info</i> Please note the following:
+    </h5>
+    <ol class="list-line-height-2">
+      <li>Key, card access, and alarm code requests will NOT be processed unless all required training completion certificates have been uploaded to <a href="{% url 'app:user_trainings' user_id=request.user.id %}">My Training Record</a>.</li>
+      <li>Key requisition is valid for thirty days from date of application.</li>
+      <li>A refundable deposit is required for each key.</li>
+      <li>UBC Key Desk may require few weeks from the date they receive the key requisition to provide the requested key(s). They will send email notices to the email address which you entered when you first requested a key at UBC even if it was many years ago. Please check that email.</li>
+      <li>UBC Card initial setup will require the user to bring in the card to be programmed. This step can be omitted if you are registered as a UBC student as students are automatically added into the system.</li>
+      <li>Applicant should take note of the expiry date for key request to each space. It is the applicant’s responsibility to renew access request if needed.</li>
+      <li>Greenhouse access is managed by Plant Care Services, please contact Melina Biron: <a href="mailto:melina.biron@ubc.ca">melina.biron@ubc.ca</a></li>
+    </ol>
+  </div>
+
+  <div class="border bg-light pt-3 pb-2 mb-3">
+    <ul>
+      <li>All required fields must be filled. ({% include 'app/icons/asterisk.html' %}: This field is required)</li>
+    </ul>
+  </div>
+
+  <form action="" method="post">
+    {% csrf_token %}
+
+    <table class="table table-borderless table-left-bold">
+      {% for user in basic_info %}
+        <tr width="100%">
+          <td width="35%">
+            {{ user.0 }}
+            {% include 'app/icons/asterisk.html' %}
+          </td>
+          <td width="65%">{{ user.1 }}</td>
+        </tr>
+      {% endfor %}
+
+      {% for field in form.visible_fields %}
+        <tr width="100%" {% if field.name == 'employee_number' or  field.name == 'student_number' or field.name == 'working_alone' %}style="display:none;"{% endif %}>
+          <td width="35%">
+            {{ field.label }}
+            {% if field.name != 'role' and field.name != 'comment' %}
+              {% include 'app/icons/asterisk.html' %}
+            {% endif %}
+            {% if field.help_text %}
+              <div class="help">{{ field.help_text|safe }}</div>
+            {% endif %}
+          </td>
+          <td width="65%">{{ field }}</td>
+        </tr>
+      {% endfor %}
+
+      {% for field in form.hidden_fields %}
+        {{ field }}
+      {% endfor %}
+    </table>
+
+    <input class="btn btn-primary mt-3" type="submit" value="Confirm Submit" />
+  </form>
+
+</section>
+
+{% endblock %}
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/access_request.js' %}"></script>
+{% endblock %}

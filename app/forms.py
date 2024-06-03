@@ -1,8 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User as AuthUser
-from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
-from datetime import datetime
-import datetime as dt
+from lfs_lab_cert_tracker.models import *
+
 
 class UserForm(forms.ModelForm):
     """ Create a new user """
@@ -145,11 +144,6 @@ class AreaTrainingForm(forms.ModelForm):
 class UserTrainingForm(forms.ModelForm):
     """ Add user's training records """
 
-    """date = datetime.now()
-    completion_date = forms.DateField(
-        initial=dt.date.today,
-        widget=forms.SelectDateWidget(years=range(date.year - 20, date.year + 20))
-    )"""
     class Meta:
         model = UserCert
         fields = ['user', 'cert', 'cert_file', 'completion_date']
@@ -162,4 +156,48 @@ class UserTrainingForm(forms.ModelForm):
             'user': forms.HiddenInput(),
             'cert': forms.Select(attrs={ 'class': 'form-control' }),
             'completion_date': forms.widgets.DateInput(attrs={ 'type': 'date', 'class': 'form-control' }),
+        }
+
+
+class AccessRequestForm(forms.ModelForm):    
+    class Meta:
+        model = AccessRequest
+        exclude = ['created_at', 'updated_at']
+        labels = {
+            'role': 'Applicant Role in LFS',
+            'affliation': 'Applicant UBC Affliation',
+            'employee_number': 'UBC Employee ID',
+            'student_number': 'UBC Student Number',
+            'supervisor_first_name': "Supervisor's First Name",
+            'supervisor_last_name': "Supervisor's Last Name",
+            'supervisor_email': "Supervisor's Email",
+            'after_hours_access': 'After hours access',
+            'working_alone': 'Working alone and/or in isolation',
+            'building_name': 'Building Name',
+            'room_numbers': 'Room Numbers that I need access to',
+            'comment': 'Additional Comments'
+        }
+        widgets = {
+            'user': forms.HiddenInput(),
+            'lab': forms.HiddenInput(),
+            'role': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'affliation': forms.RadioSelect(),
+            'employee_number': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'student_number': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'supervisor_first_name': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'supervisor_last_name': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'supervisor_email': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'after_hours_access': forms.RadioSelect(),
+            'building_name': forms.RadioSelect(),
+            'room_numbers': forms.TextInput(attrs={ 'class': 'form-control-sm' }),
+            'comment': forms.Textarea(attrs={ 'class':'form-control-sm', 'rows': 3 })
+        }
+        help_texts = {
+            'employee_number': 'Maximum characters: 7',
+            'student_number': 'Maximum characters: 8',
+            'after_hours_access': 'Regular building hours are from 7:30AM- 5PM Monday to Friday. If after hours access is required, please be sure to request entrance access.',
+            'building_name': 'This is the building you are requesting access to. We do not issue access to buildings not the list above. For Main and South Campus Greenhouses, contact UBC Plant Care Services plantcare.ubc.ca/contact-us',
+            'room_numbers': 'A comma separated list. Use "entrance" for entrances. *** FNH 190 Pilot Plant Users *** Complete the FNH 190 Orientation and the code of conduct form before filling in this form.',
+            
+
         }

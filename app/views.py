@@ -1,5 +1,4 @@
 import os
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
@@ -24,7 +23,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from io import BytesIO
 # from cgi import escape # < python 3.8
-from html import escape 
+from html import escape
 from xhtml2pdf import pisa
 from datetime import datetime, date, timedelta
 
@@ -60,15 +59,15 @@ def index(request):
     if not request.user.first_name and first_name:
         request.user.first_name = first_name
         update_fields.append('first_name')
-    
+
     if not request.user.last_name and last_name:
         request.user.last_name = last_name
         update_fields.append('last_name')
-        
+
     if not request.user.email and email:
         request.user.email = email
         update_fields.append('email')
-    
+
     if len(update_fields) > 0:
         request.user.save(update_fields=update_fields)
 
@@ -78,7 +77,7 @@ def index(request):
 # Users - classes
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllUsersView(LoginRequiredMixin, View):
+class AllUsers(LoginRequiredMixin, View):
     """ Display all users """
 
     @method_decorator(require_GET)
@@ -124,9 +123,9 @@ class AllUsersView(LoginRequiredMixin, View):
             'total_users': len(user_list),
             'users': users,
             'areas': areas,
-            'roles': { 
-                'LAB_USER': UserLab.LAB_USER, 
-                'PI': UserLab.PRINCIPAL_INVESTIGATOR 
+            'roles': {
+                'LAB_USER': UserLab.LAB_USER,
+                'PI': UserLab.PRINCIPAL_INVESTIGATOR
             }
         })
 
@@ -148,7 +147,7 @@ class AllUsersView(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class UserReportMissingTrainingsView(LoginRequiredMixin, View):
+class UserReportMissingTrainings(LoginRequiredMixin, View):
     """ Display an user report for missing trainings """
 
     @method_decorator(require_GET)
@@ -158,7 +157,7 @@ class UserReportMissingTrainingsView(LoginRequiredMixin, View):
         user_list = []
         for user in get_users('active'):
             missing_certs = get_user_missing_certs(user.id)
-            if len(missing_certs) > 0: 
+            if len(missing_certs) > 0:
                 user.missing_certs = missing_certs
                 user_list.append(user)
 
@@ -203,7 +202,7 @@ def download_user_report_missing_trainings(request):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class NewUserView(LoginRequiredMixin, View):
+class NewUser(LoginRequiredMixin, View):
     """ Create a new user """
 
     form_class = UserForm
@@ -245,7 +244,7 @@ class NewUserView(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
-class UserDetailsView(LoginRequiredMixin, View):
+class UserDetails(LoginRequiredMixin, View):
     """ View user details """
 
     def setup(self, request, *args, **kwargs):
@@ -254,12 +253,12 @@ class UserDetailsView(LoginRequiredMixin, View):
         user_id = kwargs.get('user_id', None)
         if not user_id:
             raise SuspiciousOperation
-        
+
         self.user = get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):                
+    def get(self, request, *args, **kwargs):
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
@@ -286,10 +285,10 @@ def user_report(request, user_id):
         required_certs = required_certs_in_lab(user_lab.lab.id)
         missing_certs_in_lab = required_certs.intersection(missing_certs)
         expired_certs_in_lab = required_certs.intersection(expired_certs)
-        
+
         user_lab.required_certs = required_certs
         user_lab.missing_expired_certs = missing_certs_in_lab.union(expired_certs_in_lab)
-    
+
     return render_to_pdf('app/users/user_report.html', {
         'app_user': user,
         'user_labs': user_labs,
@@ -298,7 +297,7 @@ def user_report(request, user_id):
 
 
 @method_decorator([never_cache, access_loggedin_user_admin], name='dispatch')
-class UserAreasView(LoginRequiredMixin, View):
+class UserAreas(LoginRequiredMixin, View):
     """ Display user's areas """
 
     def setup(self, request, *args, **kwargs):
@@ -307,21 +306,84 @@ class UserAreasView(LoginRequiredMixin, View):
         user_id = kwargs.get('user_id', None)
         if not user_id:
             raise SuspiciousOperation
-        
+
         self.user = get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        for ul in get_user_missing_certs_by_labs(self.user):
+            if ul.access_request:
+                print(ul.id, ul.access_request.role)
 
         return render(request, 'app/areas/user_areas.html', {
-            'user_labs': get_user_labs(self.user),
-            'user_labs_pi': get_user_labs(self.user, is_pi=True)
+            'user_labs': get_user_missing_certs_by_labs(self.user)
+            #'user_labs_pi': get_user_labs(self.user, is_pi=True)
         })
 
 
+@method_decorator([never_cache, access_loggedin_user_only], name='dispatch')
+class AccessRequest(LoginRequiredMixin, View):
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        user_id = kwargs.get('user_id', None)
+        area_id = kwargs.get('area_id', None)
+        if not user_id or not area_id:
+            raise SuspiciousOperation
+
+        self.user = get_user_by_id(user_id)
+        self.lab = get_lab_by_id(area_id)
+        return setup
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'app/users/access_request.html', {
+            'lab': self.lab,
+            'form': AccessRequestForm(initial={ 'user': self.user.id, 'lab': self.lab.id }),
+            'basic_info': [
+                ('Applicant First Name', self.user.first_name),
+                ('Applicant Last Name', self.user.last_name),
+                ('UBC CWL User Name', self.user.username),
+                ('Applicant UBC Email', self.user.email)
+            ]
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form = AccessRequestForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            if data['affliation'] == '1' and not data['employee_number']:
+                messages.error(request, 'An error occurred. Form is invalid. <strong>UBC Employee ID</strong> is required.')
+                return HttpResponseRedirect(request.get_full_path())
+
+            if (data['affliation'] == '2' or data['affliation'] == '3') and not data['student_number']:
+                messages.error(request, 'An error occurred. Form is invalid. <strong>UBC Student Number</strong> is required.')
+                return HttpResponseRedirect(request.get_full_path())
+
+            if data['after_hours_access'] == '0' and not data['working_alone']:
+                messages.error(request, 'An error occurred. Form is invalid. <strong>Working alone and/or in isolation</strong> is required.')
+                return HttpResponseRedirect(request.get_full_path())
+
+            if form.save():
+                messages.success(request, "{0}'s Access Request has been submitted successfully".format(self.user.get_full_name()))
+            else:
+                messages.error(request, 'An error occurred while saving your Access Request. Please try again.')
+
+            return HttpResponseRedirect(reverse('app:user_areas', args=[self.user.id]))
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(errors)))
+        
+        return HttpResponseRedirect(request.get_full_path())
+
+        
+
+
+
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingsView(LoginRequiredMixin, View):
+class UserTrainings(LoginRequiredMixin, View):
     """ Display all training records of a user """
 
     form_class = UserTrainingForm
@@ -332,7 +394,7 @@ class UserTrainingsView(LoginRequiredMixin, View):
         user_id = kwargs.get('user_id', None)
         if not user_id:
             raise SuspiciousOperation
-        
+
         self.user = get_user_by_id(user_id)
         return setup
 
@@ -374,7 +436,7 @@ class UserTrainingsView(LoginRequiredMixin, View):
                 expiry_date = expiry_date,
                 by_api = False
             )
-            
+
             if user_cert:
                 messages.success(request, 'Success! {0} added.'.format(user_cert.cert.name))
             else:
@@ -404,7 +466,7 @@ class UserTrainingsView(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingDetailsView(LoginRequiredMixin, View):
+class UserTrainingDetails(LoginRequiredMixin, View):
     """ Display details of a training record of a user """
 
     def setup(self, request, *args, **kwargs):
@@ -453,7 +515,7 @@ class UserTrainingDetailsView(LoginRequiredMixin, View):
                     os.rmdir(dirpath)
                 except OSError:
                     print('OSError: failed to remove a dir - ', dirpath)
-            
+
             messages.success(request, 'Success! {0} deleted.'.format(cert_name))
             if self.user.usercert_set.filter(cert_id=self.training_id).count() > 0:
                 return HttpResponseRedirect( request.POST.get('next') )
@@ -586,7 +648,7 @@ def read_welcome_message(request, user_id):
 # Areas - classes
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllAreasView(LoginRequiredMixin, View):
+class AllAreas(LoginRequiredMixin, View):
     """ Display all areas """
 
     form_class = AreaForm
@@ -639,7 +701,7 @@ class AllAreasView(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_pi_admin], name='dispatch')
-class AreaDetailsView(LoginRequiredMixin, View):
+class AreaDetails(LoginRequiredMixin, View):
     """ Display all areas """
 
     def setup(self, request, *args, **kwargs):
@@ -648,13 +710,13 @@ class AreaDetailsView(LoginRequiredMixin, View):
         area_id = kwargs.get('area_id', None)
         if not area_id:
             raise SuspiciousOperation
-        
+
         self.area = get_lab_by_id(area_id)
 
         tab = request.GET.get('t', None)
         if not tab:
             raise Http404
-        
+
         self.tab = tab
         return setup
 
@@ -674,11 +736,11 @@ class AreaDetailsView(LoginRequiredMixin, View):
         if self.tab == 'users_in_area':
             for userlab in self.area.userlab_set.all():
                 user = userlab.user
-                if is_pi_in_area(user.id, self.area.id): 
+                if is_pi_in_area(user.id, self.area.id):
                     user.is_pi = True
-                else: 
+                else:
                     user.is_pi = False
-                
+
                 users_in_area.append(user)
 
         elif self.tab == 'users_missing_records':
@@ -687,7 +749,7 @@ class AreaDetailsView(LoginRequiredMixin, View):
                 missing_certs = required_certs.difference(certs)
                 if len(missing_certs) > 0:
                     users_missing_certs.append({
-                        'user': user_lab.user, 
+                        'user': user_lab.user,
                         'missing_certs': missing_certs.order_by('name')
                     })
 
@@ -698,10 +760,10 @@ class AreaDetailsView(LoginRequiredMixin, View):
 
                 if len(expired_certs_in_lab) > 0:
                     users_expired_certs.append({
-                        'user': user_lab.user, 
+                        'user': user_lab.user,
                         'expired_certs': expired_certs_in_lab.order_by('name')
                     })
-        
+
         return render(request, 'app/areas/area_details.html', {
             'area': self.area,
             'is_admin': request.user.is_superuser,
@@ -906,7 +968,7 @@ def switch_user_role_in_area(request, area_id):
             messages.error(request, 'Error! Failed to switch a role of {0}.'.format(user.get_full_name()))
     else:
         messages.error(request, 'Error! A user or an area data does not exist.')
-    
+
     return HttpResponseRedirect(request.POST.get('next'))
 
 
@@ -938,14 +1000,14 @@ def delete_user_in_area(request, area_id):
             messages.error(request, 'Error! Failed to delete {0}.'.format(user.get_full_name()))
     else:
         messages.error(request, 'Error! A user or an area data does not exist.')
-        
+
     return HttpResponseRedirect(request.POST.get('next'))
 
 
 # Trainings - classes
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllTrainingsView(LoginRequiredMixin, View):
+class AllTrainings(LoginRequiredMixin, View):
     """ Display all training records of a user """
 
     form_class = TrainingForm
@@ -968,7 +1030,7 @@ class AllTrainingsView(LoginRequiredMixin, View):
             trainings = paginator.page(1)
         except EmptyPage:
             trainings = paginator.page(paginator.num_pages)
-        
+
         for cert in trainings:
             cert.num_users = cert.usercert_set.count()
 
@@ -1062,10 +1124,10 @@ def download_user_cert(request, user_id, cert_id, filename):
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class APIUpdates(LoginRequiredMixin, View):
     """ Displays all the API updates made """
-    
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        
+
         # if session has next value, delete it
         if request.session.get('next'):
             del request.session['next']
@@ -1081,9 +1143,9 @@ class APIUpdates(LoginRequiredMixin, View):
                 'date': convert_date_to_str(d),
                 'count': user_cert_list.filter(uploaded_date=d).count()
             })
-        
+
         date_from_q = request.GET.get('date_from')
-        date_to_q = request.GET.get('date_to')        
+        date_to_q = request.GET.get('date_to')
         username_name_q = request.GET.get('q')
         training_q = request.GET.get('training')
 
@@ -1099,7 +1161,7 @@ class APIUpdates(LoginRequiredMixin, View):
         else:
             user_cert_list = user_cert_list.filter(uploaded_date=today)
             today = convert_date_to_str(today)
-        
+
         if bool(username_name_q):
             user_cert_list = user_cert_list.filter(
                 Q(user__username__icontains=username_name_q) | Q(user__first_name__icontains=username_name_q) | Q(user__last_name__icontains=username_name_q)
@@ -1145,4 +1207,3 @@ def render_to_pdf(template_src, context_dict):
     if not pdf.err:
         return HttpResponse(response.getvalue(), content_type='application/pdf')
     return HttpResponse('Encountered errors <pre>%s</pre>' % escape(html))
-

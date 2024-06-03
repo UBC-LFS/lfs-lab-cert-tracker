@@ -184,6 +184,12 @@ i.material-icons {
 .ml-minus-20 { margin-left: -20px; }
 
 
+form .help {
+  color: #474d52;
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
 /* admin menu */
 
 .admin-menu {
@@ -318,6 +324,10 @@ i.material-icons {
   margin-left: auto;
 }
 
+.table-left-bold tr td:nth-child(1) {
+  font-weight: bold;
+}
+
 .form-table-width {
   width: 100%
 }
@@ -370,6 +380,26 @@ i.material-icons {
 
 .pin-note .body {
   padding: 1rem 1.5rem;
+}
+
+.list-line-height-2 li {
+  margin-bottom: 15px;
+}
+
+.form-control-sm {
+  width: 100%;
+  height: auto;
+  border: 1px solid #ced4da;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.form-control-sm:focus {
+  color: #495057;
+  background-color: #fff;
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25);
 }
 
 

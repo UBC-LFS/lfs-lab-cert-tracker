@@ -11,7 +11,6 @@
 	{% include 'app/subpages/_viewing_info.html' with data=viewing %}
 {% endif %}
 
-
 {% if request.session.is_first_time %}
 
 	<div class="modal fade" id="welcome-modal" tabindex="-1" role="dialog" aria-labelledby="welcome-modal-label" aria-hidden="true">
@@ -29,7 +28,7 @@
 				<div class="modal-footer">
 					Click the <span class="text text-success ml-1">Close</span> button to close this window
 					<button id="close-welcome-modal" class="btn btn-success ml-3" type="button" data-url="{% url 'app:read_welcome_message' user_id=app_user.id %}" data-token="{{ csrf_token }}">Close</button>
-			</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -211,38 +210,38 @@
 	{% block js %}
 	<script type="text/javascript">
 
-		$(document).ready(function() {
-		  $('#welcome-modal').modal('show');
+	$(document).ready(function() {
+	  $('#welcome-modal').modal('show');
 
-			$('#close-welcome-modal').on('click', function() {
-				$('#welcome-modal').modal('hide');
+		$('#close-welcome-modal').on('click', function() {
+			$('#welcome-modal').modal('hide');
 
-				$.ajax({
-		      method: 'POST',
-		      url: $(this).data('url'),
-		      data: {
-						read_welcome_message: true,
-						csrfmiddlewaretoken: $(this).data('token')
-					},
-		      dataType: 'json',
-		      success: function(res) {
-						let message = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
-								res.message +
-								'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-							'</div>';
+			$.ajax({
+	      method: 'POST',
+	      url: $(this).data('url'),
+	      data: {
+					read_welcome_message: true,
+					csrfmiddlewaretoken: $(this).data('token')
+				},
+	      dataType: 'json',
+	      success: function(res) {
+					let message = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+							res.message +
+							'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+						'</div>';
 
-						$('#welcome-message-alert').html(message);
-					},
-					error: function(err) {
-						const message = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
-		                          'Error: ' + err.statusText + ' (' + err.status + '). ' +
-		                          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-		                        '</div>';
-		        $('#welcome-message-alert').html(message);
-					}
-				});
+					$('#welcome-message-alert').html(message);
+				},
+				error: function(err) {
+					const message = '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+	                          'Error: ' + err.statusText + ' (' + err.status + '). ' +
+	                          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+	                        '</div>';
+	        $('#welcome-message-alert').html(message);
+				}
 			});
 		});
+	});
 
 	</script>
 	{% endblock %}

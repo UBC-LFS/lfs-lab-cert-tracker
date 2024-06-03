@@ -59,6 +59,22 @@ def get_user_expired_certs(user):
     return Cert.objects.filter(id__in=[item['cert_id'] for item in usercerts_with_max_expiry_date])
 
 
+def get_user_missing_certs_by_labs(user):
+    user_labs = get_user_labs(user)
+    missing_certs = get_user_missing_certs(user.id)
+    for ul in user_labs:
+        required_certs = required_certs_in_lab(ul.lab.id)
+        ul.required_certs = required_certs
+        ul.missing_certs = required_certs.intersection(missing_certs)
+        ul.access_request = None
+
+        ar = ul.user.accessrequest_set.filter(lab=ul.lab.id)
+        if ar.exists():
+            ul.access_request = ar.first()
+
+    return user_labs
+
+
 # UserLab
 
 

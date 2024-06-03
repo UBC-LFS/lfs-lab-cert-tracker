@@ -8,7 +8,6 @@
 
 {% include 'app/subpages/_return_message.html' with data=messages %}
 
-
 <h3 class="title">
 	All Areas
 	<small class="text-secondary">(Total: {{ total_areas }})</small>
@@ -63,7 +62,7 @@
 											<div class="mb-3">
 												<label for="id_name_{{ area.id }}" class="font-weight-bold">
 													Name:
-													<i class="material-icons text-danger font-size-xs">emergency</i>
+													{% include 'app/icons/asterisk.html' %}
 												</label>
 												<input id="id_name_{{ area.id }}" class="form-control" type="text" name="name" maxlength="256" value="{{ area.name }}" required />
 												<small class="text-muted">(Maximum characters: 256)</small>
@@ -100,7 +99,6 @@
 
 {% include 'app/subpages/_pagination.html' with data=areas %}
 
-
 {% if request.user.is_superuser %}
 
 	<div class="row">
@@ -117,7 +115,7 @@
 								<label for="{{ field.id_for_label }}">
 									{{ field.label }}
 									{% if field.name == 'name' %}
-										<i class="material-icons text-danger font-size-xs">emergency</i>
+										{% include 'app/icons/asterisk.html' %}
 									{% endif %}
 								</label>
 							</th>
@@ -136,6 +134,5 @@
 	</div>
 
 {% endif %}
-
 
 {% endblock %}
