@@ -11,4 +11,3 @@ staticfiles
 saml/
 lfs_lab_cert_tracker/settings.py
 run
-app/fixtures/certs.json

@@ -1,5 +1,9 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
 
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+{% endblock %}
+
 {% block content %}
 
 {% if request.user.is_superuser %}
@@ -13,11 +17,11 @@
 
 {% if request.user.id != app_user.id %}
 
-	<nav aria-label="breadcrumb">
+	<nav class="font-size-dot9rem">
 		<ol class="breadcrumb">
 			<li class="breadcrumb-item">
 				<a href="{% url 'app:user_details' user_id=app_user.id %}">
-					<i class="material-icons">home</i> {{ app_user.get_full_name }}'s Account
+					<span class="material-symbols-outlined">home</span> {{ app_user.get_full_name }}'s Account
 				</a>
 			</li>
 			<li class="breadcrumb-item active" aria-current="page">{{ app_user.get_full_name }}'s Training Record</li>
@@ -26,15 +30,13 @@
 
 {% else %}
 
-	<nav aria-label="breadcrumb">
-		<ol class="breadcrumb">
-			<li class="breadcrumb-item">
-				<a href="{% url 'app:user_details' user_id=app_user.id %}">
-					<i class="material-icons">home</i> My Account
-				</a>
-			</li>
-			<li class="breadcrumb-item active" aria-current="page">My Training Record</li>
-		</ol>
+	<nav class="font-size-dot9rem">
+		<a href="{% url 'app:user_details' user_id=app_user.id %}">
+			{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+			My Account
+		</a>
+		{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
+		<span>My Training Record</span>
 	</nav>
 
 {% endif %}
@@ -52,7 +54,7 @@
 
 <div class="box border-green mt-3">
 	<h5 class="text-success">
-		<i class="material-icons">verified_user</i> Training Record
+		<span class="material-symbols-outlined">verified_user</span> Training Record
 		<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 	</h5>
 	<div class="text-secondary">
@@ -84,7 +86,7 @@
 {% if missing_certs %}
 	<div class="box border-red mt-5">
 		<h5 class="text-danger">
-			<i class="material-icons">notification_important</i> Missing Training Record
+			<span class="material-symbols-outlined">notification_important</span> Missing Training Record
 			<small class="text-secondary">(Total: {{ missing_certs|length }})</small>
 		</h5>
 		<div class="text-secondary">
@@ -100,7 +102,7 @@
 {% if expired_certs %}
 	<div class="box border-gray mt-5">
 		<h5 class="text-secondary">
-			<i class="material-icons">warning</i> Expired Training Record
+			<span class="material-symbols-outlined">warning</span> Expired Training Record
 			<small class="text-secondary">(Total: {{ expired_certs|length }})</small>
 		</h5>
 		<div class="text-secondary">

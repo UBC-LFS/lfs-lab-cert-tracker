@@ -1,16 +1,15 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
 {% load static %}
 
-{% block content %}
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+{% endblock %}
 
-{% if request.user.is_superuser %}
-	{% include 'app/subpages/_admin_menu.html' %}
-{% endif %}
+{% block content %}
 
 {% if viewing %}
 	{% include 'app/subpages/_viewing_info.html' with data=viewing %}
 {% endif %}
-
 
 {% if request.session.is_first_time %}
 
@@ -36,38 +35,50 @@
 
 {% endif %}
 
+
 {% if request.user.id != app_user.id %}
-
 	<nav aria-label="breadcrumb">
-		<ol class="breadcrumb">
-			<li class="breadcrumb-item active" aria-current="page">
-				<i class="material-icons">home</i> {{ app_user.get_full_name }}'s Account
-			</li>
-		</ol>
+		{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+		{{ app_user.get_full_name }}'s Account
 	</nav>
-
 {% else %}
-
-	<nav aria-label="breadcrumb">
-		<ol class="breadcrumb">
-			<li class="breadcrumb-item active" aria-current="page">
-				<i class="material-icons">home</i> My Account
-			</li>
-		</ol>
+	<nav class="font-size-dot9rem">
+		{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+		My Account
 	</nav>
-
 {% endif %}
+
 
 <div id="welcome-message-alert"></div>
 
 <div class="row mt-5">
-
 	<div class="col-md-8">
-		<h3>User: {{ app_user.get_full_name }}</h3>
+		<div class="d-flex align-items-center justify-content-between">
+			<h3 class="m-0">{{ app_user.get_full_name }}</h3>
+
+			<a class="btn btn-primary" href="{% url 'key_request:index' %}">
+				{% include "lfs_lab_cert_tracker/icons/key.html" %}
+				Key Request
+			 </a>
+		</div>
+
+		{% if new_requests %}
+		<div class="mt-4">
+			<div class="bg-prompt mb-5">
+				<div class="prompt text-center p-4 mb-4">
+					<h5>
+						<span class="material-symbols-outlined">mail</span>
+						You now have <strong class="text-chocolate">{{ new_requests }}</strong> new key request form{{ new_requests|pluralize }} for PI.
+					</h5>
+					<a class="btn btn-sm btn-outline-primary mt-1" href="{% url 'key_request:manager_dashboard' %}">Check</a>
+				</div>
+			</div>
+		</div>
+		{% endif %}
 
 		<div class="box border-green mt-3">
 			<h5 class="text-success">
-				<i class="material-icons">verified_user</i> Training Records
+				<span class="material-symbols-outlined">verified_user</span> Training Records
 				<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
@@ -97,7 +108,7 @@
 
 		<div class="box border-red mt-5">
 			<h5 class="text-danger">
-				<i class="material-icons">notification_important</i> Missing Training Records
+				<span class="material-symbols-outlined">notification_important</span> Missing Training Records
 				<small class="text-secondary">(Total: {{ missing_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
@@ -115,7 +126,7 @@
 
 		<div class="box border-gray my-5">
 			<h5 class="text-secondary">
-				<i class="material-icons">warning</i> Expired Training Records
+				<span class="material-symbols-outlined">warning</span> Expired Training Records
 				<small class="text-secondary">(Total: {{ expired_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
@@ -138,7 +149,7 @@
 		<div class="pl-4">
 			<div>
 				<h5 class="text-primary">
-					<i class="material-icons">cloud_download</i>
+					<span class="material-symbols-outlined">cloud_download</span>
 					Report
 				</h5>
 				<a href="{% url 'app:user_report' user_id=app_user.id  %}" target="_blank">Download as PDF</a>
@@ -178,9 +189,9 @@
 				{% endif %}
 			</div>
 
-			<div class="card bg-light-gray mt-5 p-3">
+			<div class="card bg-light mt-5 p-3">
 				<h5 class="text-info">
-					<i class="material-icons">info</i> NOTE
+					{% include 'lfs_lab_cert_tracker/icons/info.html' %} NOTE
 				</h5>
 				<ul class="mb-0 ml-minus-20">
 					<li>

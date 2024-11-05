@@ -1,0 +1,55 @@
+{% load custom_tags %}
+
+<table class="table table-bordered table-hover table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Building</th>
+      <th>Floor</th>
+      <th>Room <br /> Number</th>
+      <th>Areas</th>
+      {% if is_admin == 'True' %}
+        <th>PIs</th>
+      {% endif %}
+      <th>Required Trainings</th>
+    </tr>
+  </thead>
+  {% for room in rooms %}
+    <tr>
+      <td>{{ room.id }}</td>
+      <td>{{ room.building.code }}</td>
+      <td>{{ room.floor.name }}</td>
+      <td>{{ room.number }}</td>
+      <td class="text-left">
+        <ul class="ml-minus-20">
+          {% for area in room.areas.all %}
+            <li>{{ area.name }}</li>
+          {% endfor%}
+        </ul>
+      </td>
+      {% if is_admin == 'True' %}
+        <td class="text-left">
+          <ul class="ml-minus-20">
+            {% for manager in room.managers.all %}
+              <li>
+                {% concat_strings room.id manager.id as args %}
+                <span class="text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+              </li>
+            {% endfor%}
+          </ul>
+        </td>
+      {% endif %}
+      <td class="text-left">
+        <ul class="ml-minus-20">
+          {% for training in room.trainings.all %}
+            <li>{{ training.name }}</li>
+          {% endfor%}
+        </ul>
+      </td>
+    </tr>
+  {% empty %}
+    <tr>
+      <td colspan="100%">No rooms found</td>
+    </tr>
+  {% endfor %}
+</table>

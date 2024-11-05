@@ -1,0 +1,74 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+{% include 'key_request/subpages/breadcrumb.html' with curr_step=1 %}
+
+<h3 class="title mb-5">Step1 - Select Rooms</h3>
+
+<form class="key-request-form" action="" method="POST">
+  {% csrf_token %}
+
+  <div class="row">
+    <div class="col-md-8">
+      <select id="select-building" class="form-control" name="building">
+        <option value="">Select Building</option>
+        {% for building in buildings %}
+          <option value="{{ building.id }}" name="{{ building.name }}" code="{{ building.code }}">{{ building.name }} ({{ building.code }})</option>
+        {% endfor %}
+      </select>
+
+      <select id="select-floor" class="form-control" name="floor">
+        <option value="">Select Floor</option>
+      </select>
+
+      <table class="table table-bordered table-striped mt-4">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Room <br /> Number</th>
+            <th>Areas</th>
+						<th>Required Trainings</th>
+          </tr>
+        </thead>
+        <tbody id="select-room">
+					<tr>
+						<td colspan="100%">Select a Building and a Floor to see a list of rooms</td>
+					</tr>
+				</tbody>
+      </table>
+    </div>
+    <div class="col-md-4">
+      <h5 class="text-info text-center mb-4">Your Selected Rooms</h5>
+      <div id="display-selected-rooms">
+        <p class="text-center text-secondary">Your selected rooms will be displayed here.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a class="btn btn-secondary mr-2" href="{% url 'key_request:index' %}">Go back</a>
+    <input id="select-rooms-continue" class="btn btn-primary" type="button" value="Continue" data-post-url="{% url 'key_request:select_rooms' %}" data-next-url="{% url 'key_request:check_user_trainings' %}" data-token="{{ csrf_token }}" />
+  </div>
+
+</form>
+
+{% endblock %}
+
+{% block js %}
+
+<script type="text/javascript">
+	// const rooms = JSON.parse('{{ rooms|safe }}');
+	const rooms = JSON.parse('{{ rooms|escapejs }}');
+</script>
+
+{% load static %}
+<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/select_rooms.js' %}"></script>
+
+{% endblock %}

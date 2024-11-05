@@ -1,0 +1,28 @@
+{% load custom_tags %}
+
+<button class="btn btn-info btn-sm mr-2" type="button" data-toggle="modal" data-target="#key-request-form-modal-{{ id }}">View</button>
+
+<div class="modal fade" id="key-request-form-modal-{{ id }}" tabindex="-1" role="dialog" aria-labelledby="key-request-form-modal-label-{{ id }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="key-request-form-modal-label-{{ id }}">Key Request Form Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+        {% include 'key_request/subpages/table_request_form_details.html' with form=form %}
+
+        <h5 class="text-info mt-5 mb-4">Selected Rooms</h5>
+        {% include 'key_request/subpages/table_selected_rooms.html' with form=form rooms=form.rooms.all is_admin=is_admin %}
+
+        <h5 class="text-info mt-5 mb-4">User's Training Records</h5>
+        <ul>
+          <li>Total User's Trainings: <strong class="text-chocolate">{{ form.user_trainings|length }}</strong></li>
+          <li>Number of Missing Trainings: <strong class="text-danger">{{ form.total_missing }}</strong></li>
+          <li>Number of Expired Trainings: <strong class="text-danger">{{ form.total_expired }}</strong></li>
+        </ul>
+        {% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings %}
+      </div>
+    </div>
+  </div>
+</div>

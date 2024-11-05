@@ -1,0 +1,16 @@
+[
+  {
+    "model": "key_request.room",
+    "pk": 1,
+    "fields": {
+      "number": "144"
+    }
+  },
+  {
+    "model": "key_request.room",
+    "pk": 2,
+    "fields": {
+      "number": "148"
+    }
+  }
+]

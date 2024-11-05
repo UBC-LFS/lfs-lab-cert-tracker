@@ -1,5 +1,9 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
 
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+{% endblock %}
+
 {% block content %}
 
 {% if request.user.is_superuser %}
@@ -12,12 +16,13 @@
 
 {% if request.user.id != app_user.id %}
 
-	<nav aria-label="breadcrumb">
+	<nav class="font-size-dot9rem">
 		<ol class="breadcrumb">
 			<li class="breadcrumb-item">
 				{% if request.GET.p == 'account' %}
 					<a href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">
-						<i class="material-icons">home</i> {{ app_user.get_full_name }}'s Account
+						{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+						{{ app_user.get_full_name }}'s Account
 					</a>
 				{% elif request.GET.p == 'training' %}
 					<a href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">{{ app_user.get_full_name }}'s Training Record</a>
@@ -29,19 +34,19 @@
 
 {% else %}
 
-	<nav aria-label="breadcrumb">
-		<ol class="breadcrumb">
-			<li class="breadcrumb-item">
-				{% if request.GET.p == 'account' %}
-					<a href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">
-						<i class="material-icons">home</i> My Account
-					</a>
-				{% elif request.GET.p == 'training' %}
-					<a href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">My Training Record</a>
-				{% endif %}
-			</li>
-			<li class="breadcrumb-item active" aria-current="page">Training Details</li>
-		</ol>
+	<nav class="font-size-dot9rem">
+		{% if request.GET.p == 'account' %}
+			<a href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">
+				{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+				My Account
+			</a>
+		{% elif request.GET.p == 'training' %}
+			<a href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">My Training Record</a>
+		{% endif %}
+
+		{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
+
+		<span>Training Details</span>
 	</nav>
 
 {% endif %}
@@ -50,12 +55,12 @@
 
 <h3 class="title mb-4">
 	Training Details
-	<span class="h4 text-info">- Most Recent</span>
+	<span class="h5 text-info">- Most Recent</span>
 </h3>
 
 <div class="row">
 	<div class="col-md-9">
-		<table class="table table-borderless table-sm table-responsive-lg">
+		<table class="table table-bordered table-striped table-hover table-responsive-lg text-left">
 			<tbody>
 				<tr>
 					<td><strong>Training Name</strong></td>
@@ -105,7 +110,7 @@
 
 					<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 					<input type="hidden" name="user_cert" value="{{ latest_user_cert.id }}" />
-					<input class="btn btn-danger btn-sm ml-2" type="submit" value="Delete Training" />
+					<input class="btn btn-danger mt-3" type="submit" value="Delete Training" />
 				</form>
 			{% endif %}
 		{% endif %}
@@ -113,9 +118,9 @@
 	</div>
 	<div class="col-md-3">
 
-		<div class="card bg-light-gray bg-light mt-0 p-3">
+		<div class="card bg-light mt-0 p-3">
 			<h5 class="text-info">
-				<i class="material-icons">info</i> NOTE
+				{% include 'lfs_lab_cert_tracker/icons/info.html' %} NOTE
 			</h5>
 			<p class="mb-0">If a <strong>Canvas Catalog</strong> field is <span class="badge badge-warning font-size-xs">YES</span>, this Training information has been added automatically from <a href="https://login.cpe.ubc.ca/">UBC Canvas Catalog</a>, and you cannot view the certificate file in the TRMS website.</p>
 		</div>
@@ -124,7 +129,7 @@
 </div>
 
 <div class="mt-5">
-	<h4 class="text-info mb-3">Training History</h4>
+	<h4 class="text-info mb-4">Training History</h4>
 
 	<table class="table table-bordered table-hover text-center table-responsive-lg table-vertical-middle">
 		<thead>
@@ -188,22 +193,21 @@
 	</table>
 </div>
 
-
 <div class="mt-5">
 	{% if request.user.id == app_user.id %}
 
 		{% if request.GET.p == 'account' %}
-			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_details' request.user.id %}">Back to My Account</a>
+			<a class="btn btn-secondary d-inline" href="{% url 'app:user_details' request.user.id %}">Back to My Account</a>
 		{% elif request.GET.p == 'training' %}
-			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to My Training Record</a>
+			<a class="btn btn-secondary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to My Training Record</a>
 		{% endif %}
 
 	{% else %}
 
 		{% if request.GET.p == 'account' %}
-			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
+			<a class="btn btn-secondary d-inline" href="{% url 'app:user_details' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Account</a>
 		{% elif request.GET.p == 'training' %}
-			<a class="btn btn-outline-primary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
+			<a class="btn btn-secondary d-inline" href="{% url 'app:user_trainings' user_id=latest_user_cert.user.id %}">Back to {{ app_user.get_full_name }}'s Training Record</a>
 		{% endif %}
 
 	{% endif %}

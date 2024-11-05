@@ -24,6 +24,16 @@ def get_user_by_username(username):
     user = User.objects.filter(username=username)
     return user.first() if user.exists() else None
 
+def get_user_name(user):
+    curr_user = ''
+    if user.first_name and user.last_name:
+        curr_user = user.get_full_name()
+    elif user.username:
+        curr_user = user.username
+    elif user.email:
+        curr_user = user.email
+    return curr_user
+
 
 # UserCert
 
@@ -282,8 +292,12 @@ def get_error_messages(errors):
 
     messages = ''
     for key in errors.keys():
+        print(key)
         value = errors[key]
-        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
+        if key == '__all__':
+            messages += value[0]['message'] + ' '
+        else:
+            messages += '<strong>' + key.replace('_', ' ').upper() + ':</strong> ' + value[0]['message'] + ' '
     return messages.strip()
 
 def make_capital(name):

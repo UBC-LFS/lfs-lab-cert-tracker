@@ -63,7 +63,7 @@
 											<div class="mb-3">
 												<label for="id_name_{{ area.id }}" class="font-weight-bold">
 													Name:
-													<i class="material-icons text-danger font-size-xs">emergency</i>
+													<span class="material-symbols-outlined">emergency</span>
 												</label>
 												<input id="id_name_{{ area.id }}" class="form-control" type="text" name="name" maxlength="256" value="{{ area.name }}" required />
 												<small class="text-muted">(Maximum characters: 256)</small>
@@ -117,7 +117,7 @@
 								<label for="{{ field.id_for_label }}">
 									{{ field.label }}
 									{% if field.name == 'name' %}
-										<i class="material-icons text-danger font-size-xs">emergency</i>
+										<span class="material-symbols-outlined">emergency</span>
 									{% endif %}
 								</label>
 							</th>

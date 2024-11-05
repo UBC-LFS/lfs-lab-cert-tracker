@@ -1,20 +1,22 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
 
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+{% endblock %}
+
 {% block content %}
 
 {% if request.user.is_superuser %}
 	{% include 'app/subpages/_admin_menu.html' %}
 {% endif %}
 
-<nav aria-label="breadcrumb">
-	<ol class="breadcrumb">
-		<li class="breadcrumb-item">
-			<a href="{% url 'app:user_details' user_id=request.user.id %}">
-				<i class="material-icons">home</i> My Account
-			</a>
-		</li>
-		<li class="breadcrumb-item active" aria-current="page">My Work Area(s)</li>
-	</ol>
+<nav class="font-size-dot9rem">
+	<a href="{% url 'app:user_details' user_id=request.user.id %}">
+		{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+		My Account
+	</a>
+	{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
+	<span>My Work Area(s)</span>
 </nav>
 
 <div class="row">

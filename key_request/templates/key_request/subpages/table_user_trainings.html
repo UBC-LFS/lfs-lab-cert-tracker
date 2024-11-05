@@ -1,0 +1,44 @@
+<table class="table table-bordered table-hover table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Training Name</th>
+      <th>Missing?</th>
+      <th>Expired?</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for tr in user_trainings %}
+      <tr>
+        <td>{{ tr.id }}</td>
+        <td class="text-left">
+          {% if not tr.is_missing %}
+            <a href="{% url 'app:user_training_details' user_id=request.user.id training_id=tr.id %}?p=account">
+              {{ tr.name }}
+            </a>
+          {% else %}
+            {{ tr.name }}
+          {% endif %}
+
+          {% if not tr.is_missing and not tr.is_expired %}
+            <span class="material-symbols-outlined text-success">check_circle</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if tr.is_missing %}
+            <span class="badge badge-danger">MISSING</span>
+          {% else %}
+            <span class="badge badge-light">NO</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if tr.is_expired %}
+            <span class="badge badge-secondary">EXPIRED</span>
+          {% else %}
+            <span class="badge badge-light">NO</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

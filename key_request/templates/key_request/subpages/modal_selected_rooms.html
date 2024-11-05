@@ -1,0 +1,15 @@
+<button class="btn btn-info btn-sm mr-2" type="button" data-toggle="modal" data-target="#key-request-selected-rooms-modal-{{ form.id }}">View</button>
+
+<div class="modal fade" id="key-request-selected-rooms-modal-{{ form.id }}" tabindex="-1" role="dialog" aria-labelledby="key-request-selected-rooms-modal-label-{{ form.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="key-request-selected-rooms-modal-label-{{ form.id }}">Selected Rooms</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+        {% include 'key_request/subpages/table_selected_rooms.html' with form=form data=form.rooms.all %}
+      </div>
+    </div>
+  </div>
+</div>

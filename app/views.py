@@ -31,6 +31,7 @@ from datetime import datetime, date, timedelta
 from .accesses import *
 from .forms import *
 from .functions import *
+from key_request import functions as kFunc
 
 from lfs_lab_cert_tracker.models import *
 
@@ -179,7 +180,6 @@ class UserReportMissingTrainingsView(LoginRequiredMixin, View):
         })
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
@@ -259,7 +259,10 @@ class UserDetailsView(LoginRequiredMixin, View):
         return setup
 
     @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):                
+    def get(self, request, *args, **kwargs):
+        requests, new_requests = kFunc.get_manager_dashboard(request.user)
+        print( len(requests), new_requests )
+
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
@@ -268,7 +271,8 @@ class UserDetailsView(LoginRequiredMixin, View):
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user),
             'welcome_message': welcome_message(),
-            'viewing': add_next_str_to_session(request, self.user)
+            'viewing': add_next_str_to_session(request, self.user),
+            'new_requests': new_requests
         })
 
 
@@ -1046,7 +1050,6 @@ def delete_training(request):
     return redirect('app:all_trainings')
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_loggedin_user_pi_admin
@@ -1054,7 +1057,6 @@ def delete_training(request):
 def download_user_cert(request, user_id, cert_id, filename):
     path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
     return serve(request, path, document_root=settings.MEDIA_ROOT)
-
 
 
 # Admin Menu

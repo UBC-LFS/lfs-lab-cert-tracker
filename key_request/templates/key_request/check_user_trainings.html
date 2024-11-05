@@ -1,0 +1,114 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+{% include 'key_request/subpages/breadcrumb.html' with curr_step=2 %}
+
+<h3 class="title mb-5">Step2 - Check User's Training Records</h3>
+
+<p class="h5">
+  You now have <span class="text-chocolate font-weight-bold">{{ rooms|length }}</span> selected room{{ rooms|pluralize }}. See the detailed information below.
+</p>
+
+<h5 class="text-info mt-5 mb-4">Room Information</h5>
+<table class="table table-bordered table-hover table-striped">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>ID</th>
+      <th>Building</th>
+			<th>Floor</th>
+			<th>Room <br /> Number</th>
+      <th>Areas</th>
+      <th>Required <br /> Trainings</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for room in rooms %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ room.id }}</td>
+        <td>{{ room.building.code }}</td>
+				<td>{{ room.floor.name }}</td>
+				<td>{{ room.number }}</td>
+        <td class="text-left">
+          <ul class="ml-minus-20">
+            {% for area in room.areas.all %}
+              <li>{{ area.name }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>
+          <button class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#room-trainings-modal-{{ room.id }}">View</button>
+
+          <div class="modal fade" id="room-trainings-modal-{{ room.id }}" tabindex="-1" role="dialog" aria-labelledby="room-trainings-modal-label-{{ room.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title text-info" id="room-trainings-modal-label-{{ room.id }}">Required Trainings</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body text-left">
+                  <div class="modal-item">
+                    <ul class="ml-minus-20">
+                      {% for training in room.trainings.all %}
+                        <li>{{ training.name }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h5 class="text-info mt-5 mb-4">Summary of Your Training Records</h5>
+
+{% include 'key_request/subpages/table_user_trainings.html' %}
+
+{% if total_missing > 0 or total_expired > 0 %}
+  <div class="bd-callout bd-callout-danger mt-5">
+    <h4>
+      <span class="material-symbols-outlined">warning</span>
+      Action Needed: Training Incomplete or Training Expired
+    </h4>
+    <div>
+      Our records indicate that you have not yet completed the required trainings, or some of your trainings have expired. Please see the detailed information below.
+      <ul>
+        <li>Number of Missing Trainings: <strong class="text-danger">{{ total_missing }}</strong></li>
+        <li>Number of Expired Trainings: <strong class="text-danger">{{ total_expired }}</strong></li>
+      </ul>
+
+      <p>Your request cannot be processed until all required training certificates have been uploaded to <a href="{% url 'app:user_trainings' user_id=request.user.id %}">My Training Record</a>. Please go back and try to select rooms again, or try again later. Thanks.</p>
+      <div class="mt-3 text-center">
+        <a class="btn btn-secondary" href="{% url 'key_request:select_rooms' %}">Go back</a>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="pin-note mt-5">
+    <h6 class="pin-note-title">
+      Success: Training Completed
+    </h6>
+    <div class="pin-note-body">
+      Our records indicate that you have completed all required trainings, so please continue to submit a key request form, or go back to select more rooms.
+
+      <div class="mt-3 text-center">
+        <a class="btn btn-secondary mr-2" href="{% url 'key_request:select_rooms' %}">Go back</a>
+        <a class="btn btn-primary" href="{% url 'key_request:submit_form' %}">Continue</a>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

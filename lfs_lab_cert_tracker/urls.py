@@ -8,6 +8,7 @@ from lfs_lab_cert_tracker import views
 urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('app/', include('app.urls')),
+    path('app/key-request/', include('key_request.urls')),
     path('', views.landing_page, name='landing_page')
 ]
 

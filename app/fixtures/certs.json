@@ -11,7 +11,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 2,
     "fields": {
-      "name": "Preventing and Addressing Workplace Bullying and Harassment",
+      "name": "Preventing and Addressing Workplace Bullying and Harassment Training",
       "expiry_in_years": 0
     }
   },
@@ -27,7 +27,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 4,
     "fields": {
-      "name": "Active Shooter Preparedness Online Training",
+      "name": "Active Shooter Preparedness Workshop",
       "expiry_in_years": 0
     }
   },
@@ -35,7 +35,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 5,
     "fields": {
-      "name": "Privacy & Information Security - Fundamentals Part 1 Online",
+      "name": "Privacy and Information Security Fundamentals Training",
       "expiry_in_years": 0
     }
   },
@@ -75,7 +75,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 10,
     "fields": {
-      "name": "Introduction to Anesthesia of the Laboratory Rodent Rat Lab (UBC)",
+      "name": "Anesthesia of the Laboratory Rodent",
       "expiry_in_years": 0
     }
   },
@@ -83,7 +83,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 11,
     "fields": {
-      "name": "Introduction to Aseptic Techniques in Rodent Surgery Online",
+      "name": "General Principles of Rodent Surgery",
       "expiry_in_years": 0
     }
   },
@@ -107,7 +107,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 14,
     "fields": {
-      "name": "Introduction to Laboratory Safety",
+      "name": "Introduction to Lab Safety Course",
       "expiry_in_years": 5
     }
   },
@@ -115,7 +115,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 15,
     "fields": {
-      "name": "Chemical Safety/Chemical Safety Refresher",
+      "name": "Chemical Safety Course",
       "expiry_in_years": 5
     }
   },
@@ -123,7 +123,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 16,
     "fields": {
-      "name": "Biosafety for Study Team Members/Biosafety Refresher for Study Team Members",
+      "name": "Biological Safety Course",
       "expiry_in_years": 5
     }
   },
@@ -139,7 +139,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 18,
     "fields": {
-      "name": "Introduction to LASER Safety",
+      "name": "Laser Safety Course",
       "expiry_in_years": 5
     }
   },
@@ -147,7 +147,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 19,
     "fields": {
-      "name": "General Audience WHMIS",
+      "name": "WHMIS Course",
       "expiry_in_years": 5
     }
   },
@@ -155,7 +155,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 20,
     "fields": {
-      "name": "Biosafety for Permit Holders/Biosafety Refresher for Permit Holders",
+      "name": "Biosafety for Permit Holders",
       "expiry_in_years": 5
     }
   },
@@ -179,7 +179,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 23,
     "fields": {
-      "name": "Transportation of Dangerous Goods Class 6.2 - Infectious Substances",
+      "name": "Transportation of Dangerous Goods Class 6.2 (Biological materials) Shipping Course for air",
       "expiry_in_years": 2
     }
   },
@@ -195,7 +195,7 @@
     "model": "lfs_lab_cert_tracker.cert",
     "pk": 25,
     "fields": {
-      "name": "Transportation of Dangerous Goods by Ground and Air",
+      "name": "Transportation of Dangerous Goods by air",
       "expiry_in_years": 2
     }
   },
@@ -205,566 +205,6 @@
     "fields": {
       "name": "Transportation of Dangerous Goods by ground",
       "expiry_in_years": 3
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 27,
-    "fields": {
-      "name": "Local Safety Team Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 28,
-    "fields": {
-      "name": "JOHSC Fundamentals (Online)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 29,
-    "fields": {
-      "name": "LFS Lab Guide",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 31,
-    "fields": {
-      "name": "Privacy & Information Security - Fundamentals Part 2 Online",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 33,
-    "fields": {
-      "name": "FNH Safety Orientation",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 34,
-    "fields": {
-      "name": "FNH 190 Code of Conduct", 
-      "expiry_in_years": 1
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 35,
-    "fields": {
-      "name": "LFS General Guide",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 36,
-    "fields": {
-      "name": "FNH 138 Code of Conduct",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 37,
-    "fields": {
-      "name": "Hazardous Waste Management Refresher Course",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 38,
-    "fields": {
-      "name": "Fire Safety Video",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 41,
-    "fields": {
-      "name": "Office Ergonomics Representative Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 42,
-    "fields": {
-      "name": "Preventing COVID-19 Infection in the Workplace (no longer required)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 43,
-    "fields": {
-      "name": "Workday Basics",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 44,
-    "fields": {
-      "name": "Workday Essentials for Salaried Staff",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 45,
-    "fields": {
-      "name": "UBC Farm Part 2 - Safety Orientation",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 46,
-    "fields": {
-      "name": "Environmental Awareness Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 47,
-    "fields": {
-      "name": "Hazardous Waste Management Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 48,
-    "fields": {
-      "name": "Hazardous Waste Manifest Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 50,
-    "fields": {
-      "name": "Autoclave Training",
-      "expiry_in_years": 3
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 51,
-    "fields": {
-      "name": "UBC Go Forward COVID-19 Safety Planning Training (Vancouver) - no longer required",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 52,
-    "fields": {
-      "name": "Home Office Ergo",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 53,
-    "fields": {
-      "name": "FoodSafe Certificate",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 54,
-    "fields": {
-      "name": "Food Services Allergy Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 55,
-    "fields": {
-      "name": "LFS Workplace Safety Vehicle Guide",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 56,
-    "fields": {
-      "name": "LFS Off-Campus Field Training Guide",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 57,
-    "fields": {
-      "name": "MCML 144 Site Specific Orientation",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 58,
-    "fields": {
-      "name": "Supporting Mental Health in the Workplace for Managers and Supervisors (Self Paced)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 59,
-    "fields": {
-      "name": "Introduction to Working with Rodents in Research Mouse Lab (UBC)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 60,
-    "fields": {
-      "name": "LFS Growth Chamber Guide",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 61,
-    "fields": {
-      "name": "Hybrid Work",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 62,
-    "fields": {
-      "name": "VPFO EDI Journey Part 1: Foundations in Equity, Diversity and Inclusion",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 63,
-    "fields": {
-      "name": "Wellbeing in the Workplace",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 64,
-    "fields": {
-      "name": "VPFO EDI Journey Part 2: Power & Privilege",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 65,
-    "fields": {
-      "name": "VPFO EDI Journey Part 3: Stereotypes, Prejudice & Discrimination",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 66,
-    "fields": {
-      "name": "Workday Essentials for Hourly Staff",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 67,
-    "fields": {
-      "name": "VPFO EDI Journey Part 4: Introduction to Anti-Racism",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 68,
-    "fields": {
-      "name": "Workday for Faculty",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 69,
-    "fields": {
-      "name": "VPFO EDI Journey Part 5: Systemic Racism",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 70,
-    "fields": {
-      "name": "Workday Essentials for Student Workers",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 71,
-    "fields": {
-      "name": "VPFO EDI Journey Part 6: Stories of Resilience and Resistance",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 72,
-    "fields": {
-      "name": "Workday Essentials for Contingent Workers",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 73,
-    "fields": {
-      "name": "Workday Finance Foundations",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 74,
-    "fields": {
-      "name": "Workday Expense Reporting",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 75,
-    "fields": {
-      "name": "Workday Cash Sale for Cash/Cheque Deposit and Internal Service Delivery",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 76,
-    "fields": {
-      "name": "Workday Procurement, Receiving and Supplier Invoices",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 77,
-    "fields": {
-      "name": "Workday for Managers",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 78,
-    "fields": {
-      "name": "Workday Budget Owner (Organizational Worktag Manager) Training Resources",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 79,
-    "fields": {
-      "name": "Workday for Grants Management",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 80,
-    "fields": {
-      "name": "Workday Reporting Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 81,
-    "fields": {
-      "name": "CAIRS Workshop #1: Incident Administration",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 82,
-    "fields": {
-      "name": "CAIRS Workshop #2: CAIRS Forms",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 83,
-    "fields": {
-      "name": "CAIRS Workshop #3: JOHSC/LST Involvement in CAIRS",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 84,
-    "fields": {
-      "name": "JOHSC Administrator Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 85,
-    "fields": {
-      "name": "SharePoint Training",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 86,
-    "fields": {
-      "name": "Asbestos Awareness (Vancouver)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 87,
-    "fields": {
-      "name": "Cold Stress Awareness",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 88,
-    "fields": {
-      "name": "De-Energization and Lockout",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 89,
-    "fields": {
-      "name": "Heat Stress Awareness",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 90,
-    "fields": {
-      "name": "Noise Awareness (Vancouver)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 91,
-    "fields": {
-      "name": "Field Work Safety Plan",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 92,
-    "fields": {
-      "name": "LFS TA Training: Teaching Fundamentals 1",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 93,
-    "fields": {
-      "name": "LFS TA Training: Equity, Diversity and Inclusion (EDI)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 94,
-    "fields": {
-      "name": "LFS TA Training: Teaching Theory and Pedagogy",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 95,
-    "fields": {
-      "name": "LFS TA Training: Teaching Fundamentals 2",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 96,
-    "fields": {
-      "name": "LFS TA Training: Teaching Fundamentals 3",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 97,
-    "fields": {
-      "name": "Introduction to Anesthesia of the Laboratory Rodent Online",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 98,
-    "fields": {
-      "name": "Introduction to Anesthesia of the Laboratory Rodent Mouse Lab (UBC)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 99,
-    "fields": {
-      "name": "Introduction to Working with Rodents in Research Online",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 100,
-    "fields": {
-      "name": "Introduction to Working with Rodents in Research Rat Lab (UBC)",
-      "expiry_in_years": 0
-    }
-  },
-  {
-    "model": "lfs_lab_cert_tracker.cert",
-    "pk": 101,
-    "fields": {
-      "name": "JOHSC Fundamentals - Part 2",
-      "expiry_in_years": 0
     }
   }
 ]

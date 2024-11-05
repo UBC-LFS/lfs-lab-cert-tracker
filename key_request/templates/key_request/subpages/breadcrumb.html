@@ -1,0 +1,63 @@
+<section class="key-request-breadcrumb mt-5">
+  <div class="text-primary">
+    <span class="material-symbols-outlined">home</span>
+    <a href="{% url 'key_request:index' %}">Home</a>
+  </div>
+
+  {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
+
+  {% if curr_step == 1 %}
+    <div class="text-success text-underline">
+      <span class="material-symbols-outlined">counter_1</span>
+      Select Rooms
+    </div>
+  {% elif curr_step > 1 %}
+    <div class="text-primary">
+      <span class="material-symbols-outlined">counter_1</span>
+      <a href="{% url 'key_request:select_rooms' %}">Select Rooms</a>
+    </div>
+  {% else %}
+    <div>
+      <span class="material-symbols-outlined">counter_1</span>
+      Select Rooms
+    </div>
+  {% endif %}
+
+  {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
+
+  {% if curr_step == 2 %}
+    <div class="text-success text-underline">
+      <span class="material-symbols-outlined">counter_2</span>
+      Check User's Training Records
+    </div>
+  {% elif curr_step > 2 %}
+    <div class="text-primary">
+      <span class="material-symbols-outlined">counter_2</span>
+      <a href="{% url 'key_request:check_user_trainings' %}">View Required Trainings</a>
+    </div>
+  {% else %}
+    <div>
+      <span class="material-symbols-outlined">counter_2</span>
+      Check User's Training Records
+    </div>
+  {% endif %}
+
+  {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
+
+  {% if curr_step == 3 %}
+    <div class="text-success text-underline">
+      <span class="material-symbols-outlined">counter_3</span>
+      Submit a form
+    </div>
+  {% elif curr_step > 3 %}
+    <div class="text-primary">
+      <span class="material-symbols-outlined">counter_3</span>
+      <a href="{% url 'key_request:submit_form' %}">Submit a form</a>
+    </div>
+  {% else %}
+    <div>
+      <span class="material-symbols-outlined">counter_3</span>
+      Submit a form
+    </div>
+  {% endif %}
+</section>

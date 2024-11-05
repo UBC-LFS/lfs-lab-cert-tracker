@@ -1,6 +1,4 @@
 <nav class="container admin-menu">
-  <span class="text">Admin Menu: </span>
-
   <div class="dropdown">
     <a class="btn dropdown-item" href="{% url 'app:all_areas' %}">All Areas</a>
   </div>
@@ -21,6 +19,19 @@
   </div>
 
   <div class="dropdown">
+    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      Key Request
+    </button>
+    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+      <a class="dropdown-item" href="{% url 'key_request:all_requests' %}">All Requests</a>
+      <a class="dropdown-item" href="{% url 'key_request:manager_dashboard' %}">PI - Dashboard</a>
+      <a class="dropdown-item" href="{% url 'key_request:all_buildings' %}">All Buildings</a>
+      <a class="dropdown-item" href="{% url 'key_request:settings' model='Floor' %}">All Floors</a>
+      <a class="dropdown-item" href="{% url 'key_request:all_rooms' %}">All Rooms</a>
+    </div>
+  </div>
+
+  <div class="dropdown">
      <a class="btn dropdown-item" href="{% url 'app:api_updates' %}">API Updates</a>
-   </div>
+  </div>
 </nav>
