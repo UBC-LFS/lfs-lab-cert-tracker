@@ -329,69 +329,113 @@ def update_all(request):
     return HttpResponseRedirect(reverse('key_request:view_form_details', args=[request.POST.get('form')]))
 
 
+@method_decorator([never_cache], name='dispatch')
+class Settings(LoginRequiredMixin, View):
+    ''' This is for Building and Floor models '''
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllBuildings(LoginRequiredMixin, View):
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+        model = GET_SETTINGS_MODEL(kwargs.get('model'))
+        if not model:
+            raise Http404
+        
+        self.raw_model = kwargs.get('model')
+        self.model = model
+        self.model_obj = apps.get_model(app_label='key_request', model_name=model)
+        self.form = GET_SETTINGS_FORM(model)
+        return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        buildings = Building.objects.all()
-        return render(request, 'key_request/admin/all_buildings.html', {
-            'total_buildings': len(buildings),
-            'buildings': buildings,
-            'form': BuildingForm()
+        items = self.model_obj.objects.all()
+        return render(request, 'key_request/admin/settings.html', {
+            'total_items': len(items),
+            'items': items,
+            'form': self.form,
+            'raw_model': self.raw_model,
+            'model': self.model,
+            'headers': func.get_headers(self.model_obj)
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        # Create a building
-
-        form = BuildingForm(request.POST)
-        if form.is_valid():
-            building = form.save()
-            if building:
-                messages.success(request, 'Success! New Building - {0} ({1}) created'.format(building.name, building.code))
-            else:
-                messages.error(request, 'An error occurred while saving data.')
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( ))
-
-        return redirect('key_request:all_buildings')
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['POST'])
-def edit_course_code(request):
-    building_filtered = Building.objects.filter(id=request.POST.get('building'))
-    if building_filtered.exists():
-        building = building_filtered.first()
-        form = BuildingForm(request.POST, instance=building)
+        form = self.form(request.POST)
         if form.is_valid():
             if form.save():
-                messages.success(request, 'Success! Building {0} ({1}) updated'.format(building.name, building.code))
+                messages.success(request, 'Successfully created {0} under {1} settings.'.format(form.cleaned_data.get('name'), self.model))
             else:
-                messages.error(request, 'An error occurred. Failed to update this Building {0} ({1}). Please try again.'.format(building.name, building.code))
+                messages.error(request, 'Error occured while creating {0} under {1} settings. Please try again.'.format(form.cleaned_data.get('name'), self.model))
         else:
-            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-    else:
-        messages.error(request, 'An error occurred. Building ID - {0} does not exsit in the database.'.format(request.POST.get('building')))
-    return redirect('key_request:all_buildings')
+            messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+
+        return redirect('key_request:settings', model=self.raw_model)
 
 
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['POST'])
-def delete_course_code(request):
-    building_filtered = Building.objects.filter(id=request.POST.get('building'))
-    if building_filtered.exists():
-        building = building_filtered.first()
-        building_filtered.delete()
-        messages.success(request, 'Success! Building {0} ({1}) deleted'.format(building.name, building.code))
-    else:
-        messages.error(request, 'An error occurred. Building ID - {0} does not exsit in the database.'.format(request.POST.get('building')))
-    return redirect('key_request:all_buildings')
+@method_decorator([never_cache], name='dispatch')
+class EditSetting(LoginRequiredMixin, View):
+
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+        model = GET_SETTINGS_MODEL(kwargs.get('model'))
+        if not model:
+            raise Http404
+
+        self.raw_model = kwargs.get('model')
+        self.model = model
+        self.model_obj = apps.get_model(app_label='key_request', model_name=model)
+        self.form = GET_SETTINGS_FORM(model)
+        return setup
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        id = request.POST.get('item')
+        if not id:
+            raise Http404
+
+        instance = get_object_or_404(self.model_obj, id=id)
+        form = self.form(request.POST, instance=instance)
+        if form.is_valid():
+            if form.save():
+                messages.success(request, 'Successfully {0} - {1} (ID: {2}) updated'.format(self.model, instance.name, id))
+            else:
+                messages.error(request, 'Error occured while updating {0} - {1} (ID: {2}). Please try again.'.format(self.model, instance.name, id))
+        else:
+            messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+
+        return redirect('key_request:settings', model=self.raw_model)
+
+
+@method_decorator([never_cache], name='dispatch')
+class DeleteSetting(LoginRequiredMixin, View):
+
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+        model = GET_SETTINGS_MODEL(kwargs.get('model'))
+        if not model:
+            raise Http404
+
+        self.raw_model = kwargs.get('model')
+        self.model = model
+        self.model_obj = apps.get_model(app_label='key_request', model_name=model)
+        return setup
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        id = request.POST.get('item')
+        if not id:
+            raise Http404
+
+        obj = self.model_obj.objects.filter(id=id)
+        if obj.exists():
+            instance = obj.first()
+            obj.delete()
+            messages.success(request, 'Successfully {0} - {1} (ID: {2}) deleted'.format(self.model, instance.name, id))
+        else:
+            messages.error(request, 'Error occured while deleting {0} - {1} (ID: {2}). Please try again.'.format(self.model, instance.name, id))
+
+        return redirect('key_request:settings', model=self.raw_model)
+
+
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
@@ -564,108 +608,6 @@ class CreateRoom(LoginRequiredMixin, View):
         return redirect('key_request:all_rooms')
 
 
-@method_decorator([never_cache], name='dispatch')
-class Settings(LoginRequiredMixin, View):
-
-    def setup(self, request, *args, **kwargs):
-        setup = super().setup(request, *args, **kwargs)
-        model = kwargs.get('model')
-        if not model:
-            raise Http404
-
-        self.model = model
-        self.model_obj = apps.get_model(app_label='key_request', model_name=model)
-        self.form = GET_SETTINGS_FORM(model)
-        return setup
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        items = self.model_obj.objects.all()
-        return render(request, 'key_request/admin/settings.html', {
-            'model': self.model,
-            'headers': func.get_headers(self.model_obj),
-            'form': self.form,
-            'total_items': len(items),
-            'items': items
-        })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        form = self.form(request.POST)
-        if form.is_valid():
-            if form.save():
-                messages.success(request, 'Successfully created {0} under {1} settings.'.format(form.cleaned_data.get('name'), self.model))
-            else:
-                messages.error(request, 'Error occured while creating {0} under {1} settings. Please try again.'.format(form.cleaned_data.get('name'), self.model))
-        else:
-            messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-
-        return redirect('key_request:settings', model=self.model)
-
-
-@method_decorator([never_cache], name='dispatch')
-class EditSettings(LoginRequiredMixin, View):
-
-    def setup(self, request, *args, **kwargs):
-        setup = super().setup(request, *args, **kwargs)
-        model = kwargs.get('model')
-        if not model:
-            raise Http404
-
-        self.model = model
-        self.model_obj = apps.get_model(app_label='key_request', model_name=model)
-        self.form = GET_SETTINGS_FORM(model)
-        return setup
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        id = request.POST.get('item')
-        if not id:
-            raise Http404
-
-        instance = get_object_or_404(self.model_obj, id=id)
-        form = self.form(request.POST, instance=instance)
-        if form.is_valid():
-            if form.save():
-                messages.success(request, 'Successfully {0} - {1} (ID: {2}) updated'.format(self.model, instance.name, id))
-            else:
-                messages.error(request, 'Error occured while updating {0} - {1} (ID: {2}). Please try again.'.format(self.model, instance.name, id))
-        else:
-            messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-
-        return redirect('key_request:settings', model=self.model)
-
-
-@method_decorator([never_cache], name='dispatch')
-class DeleteSettings(LoginRequiredMixin, View):
-
-    def setup(self, request, *args, **kwargs):
-        setup = super().setup(request, *args, **kwargs)
-        model = kwargs.get('model')
-        if not model:
-            raise Http404
-
-        self.model = model
-        self.model_obj = apps.get_model(app_label='key_request', model_name=model)
-        return setup
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        id = request.POST.get('item')
-        if not id:
-            raise Http404
-
-
-        obj = self.model_obj.objects.filter(id=id)
-        if obj.exists():
-            instance = obj.first()
-            obj.delete()
-            messages.success(request, 'Successfully {0} - {1} (ID: {2}) deleted'.format(self.model, instance.name, id))
-        else:
-            messages.error(request, 'Error occured while deleting {0} - {1} (ID: {2}). Please try again.'.format(self.model, instance.name, id))
-
-        return redirect('key_request:settings', model=self.model)
-
 
 
 
@@ -721,9 +663,18 @@ class ManagerRooms(LoginRequiredMixin, View):
 
 # Helpers
 
+def GET_SETTINGS_MODEL(model):
+    dict = {
+        'buildings': 'Building',
+        'floors': 'Floor'
+    }
+
+    return dict[model] if model in dict.keys() else None
+
+
 def GET_SETTINGS_FORM(model):
-    dic = {
+    dict = {
         'Building': BuildingForm,
         'Floor': FloorForm
     }
-    return dic[model]
+    return dict[model] if model in dict.keys() else None

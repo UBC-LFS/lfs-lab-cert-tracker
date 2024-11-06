@@ -12,8 +12,12 @@ def get_headers(model):
     exceptions = ['slug']
     for field in model._meta.fields:
         if field.name not in exceptions:
-            headers.append(field.name.capitalize()) 
-    
+            name = field.name
+            if field.name == 'id':
+                name = 'ID'
+            else:
+                name = field.name.capitalize()
+            headers.append(name)
     headers.append('Actions')
     return headers
 

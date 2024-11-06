@@ -8,7 +8,7 @@
 
 {% block content %}
 
-{% include 'key_request/manager_dashboard/left_side_menu.html' %}
+{% include 'key_request/left_side_menu.html' %}
 
 <section class="main-content">
 	<h3 class="title">
@@ -81,7 +81,7 @@
 	                                Code:
 	                                <span class="material-symbols-outlined">emergency</span>
 	                              </label>
-	                              <div class="help">It must be unique. Maximum characters: 10</div>
+	                              <div class="help">It must be unique. Maximum characters: 20</div>
 	                              <input id="id_code_{{ building.id }}" type="text" name="code" maxlength="10" value="{{ building.code }}" class="form-control" />
 	                            </div>
 
