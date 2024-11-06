@@ -2,61 +2,62 @@
 {% load custom_tags %}
 
 {% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
 {% endblock %}
-
-{% block content %}
 
 {% include 'app/subpages/_return_message.html' with data=messages %}
 
-<h3 class="title">Key Request - Home</h3>
+{% block content %}
 
-<div class="bg-prompt mb-5">
-	<div class="prompt text-center p-4 mb-4">
-		<p>If you would like to request access the Faculty of Land and Food systems areas, please click the <strong>Request</strong> button below.</p>
-		<a class="btn btn-secondary mr-2" href="{% url 'app:user_details' user_id=request.user.id %}">Go back</a>
-		<a class="btn btn-primary" href="{% url 'key_request:select_rooms' %}">Request</a>
+{% include 'key_request/manager_dashboard/left_side_menu.html' %}
+
+<section class="main-content">
+	<h3 class="title">Key Request</h3>
+
+	<div class="bg-prompt mb-5">
+		<div class="prompt text-center p-4 mb-4">
+			<p>If you would like to request access the Faculty of Land and Food systems areas, please click the <strong>Request</strong> button below.</p>
+			<a class="btn btn-secondary mr-2" href="{% url 'app:user_details' user_id=request.user.id %}">Go back</a>
+			<a class="btn btn-primary" href="{% url 'key_request:select_rooms' %}">Request</a>
+		</div>
 	</div>
-</div>
 
-<h4 class="text-info mb-4">History</h4>
+	<h4 class="text-info mb-4">History</h4>
 
-<table class="table table-bordered table-hover table-striped">
-	<thead>
-		<tr>
-			<th>ID</th>
-			<th>Form Details</th>
-			<th>Status</th>
-			<th>Submitted At</th>
-		</tr>
-	</thead>
-	<tbody>
-		{% for form in forms %}
+	<table class="table table-bordered table-hover table-striped">
+		<thead>
 			<tr>
-				<td>{{ form.id }}</td>
-				<td>
-					{% include 'key_request/subpages/modal_request_form_details.html' with is_admin='True' %}
-				</td>
-				<td>
-					{% include 'key_request/subpages/request_status.html' with data=form.status %}
-					{% if form.status == 'Approved' %}
-						{% include 'key_request/subpages/date_and_time.html' with data=form.status_created_at %}
-					{% endif %}
-				</td>
-				<td>
-					{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
-				</td>
+				<th>Form Details</th>
+				<th>Status</th>
+				<th>Submitted At</th>
 			</tr>
-		{% empty %}
-			<tr>
-				<td colspan="100%">No key requrest forms found</td>
-			</tr>
-		{% endfor %}
-	</tbody>
-</table>
+		</thead>
+		<tbody>
+			{% for form in forms %}
+				<tr>
+					<td>
+						{% include 'key_request/subpages/modal_request_form_details.html' with is_admin='True' %}
+					</td>
+					<td>
+						{% include 'key_request/subpages/request_status.html' with data=form.status %}
+						{% if form.status == 'Approved' %}
+							{% include 'key_request/subpages/date_and_time.html' with data=form.status_created_at font_size='font-size-sm' %}
+						{% endif %}
+					</td>
+					<td>
+						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
+					</td>
+				</tr>
+			{% empty %}
+				<tr>
+					<td colspan="100%">No key requrest forms found</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</section>
 
 {% endblock %}
-
 
 {% block js %}
 

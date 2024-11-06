@@ -3,7 +3,9 @@
 <table class="table table-bordered table-hover table-striped">
   <thead>
     <tr>
-      <th>ID</th>
+      {% if is_admin == 'True' %}
+        <th>ID</th>
+      {% endif %}
       <th>Building</th>
       <th>Floor</th>
       <th>Room <br /> Number</th>
@@ -16,12 +18,14 @@
   </thead>
   {% for room in rooms %}
     <tr>
-      <td>{{ room.id }}</td>
+      {% if is_admin == 'True' %}
+        <td>{{ room.id }}</td>
+      {% endif %}
       <td>{{ room.building.code }}</td>
       <td>{{ room.floor.name }}</td>
       <td>{{ room.number }}</td>
       <td class="text-left">
-        <ul class="ml-minus-20">
+        <ul class="list-minus-20">
           {% for area in room.areas.all %}
             <li>{{ area.name }}</li>
           {% endfor%}
@@ -29,7 +33,7 @@
       </td>
       {% if is_admin == 'True' %}
         <td class="text-left">
-          <ul class="ml-minus-20">
+          <ul class="list-minus-20">
             {% for manager in room.managers.all %}
               <li>
                 {% concat_strings room.id manager.id as args %}
@@ -40,7 +44,7 @@
         </td>
       {% endif %}
       <td class="text-left">
-        <ul class="ml-minus-20">
+        <ul class="list-minus-20">
           {% for training in room.trainings.all %}
             <li>{{ training.name }}</li>
           {% endfor%}

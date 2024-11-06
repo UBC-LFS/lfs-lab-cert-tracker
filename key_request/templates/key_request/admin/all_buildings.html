@@ -1,0 +1,121 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+{% endblock %}
+
+{% include 'app/subpages/_return_message.html' with data=messages %}
+
+{% block content %}
+
+{% include 'key_request/manager_dashboard/left_side_menu.html' %}
+
+<section class="main-content">
+	<h3 class="title">
+		All Buildings
+		<small class="text-secondary">(Total: {{ total_buildings }})</small>
+	</h3>
+
+	<div class="row">
+	  <div class="col-md-4">
+	    <form action="{% url 'key_request:all_buildings' %}" method="post">
+	      {% csrf_token %}
+
+	      {% for field in form.visible_fields  %}
+	        <div class="field-wrapper">
+	          <label for="{{ field.id_for_label }}">
+	            {{ field.label }}:
+							{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+	          </label>
+
+	          {% if field.help_text %}
+	            <div class="help">{{ field.help_text|safe }}</div>
+	          {% endif %}
+	          {{ field }}
+	        </div>
+	      {% endfor %}
+
+	      <input class="btn btn-primary mt-2" type="submit" value="Create" />
+	    </form>
+	  </div>
+	  <div class="col-md-8">
+	    <table
+	      class="table table-bordered table-striped table-responsive-md"
+	      data-toggle="table"
+	      data-classes=""
+	      data-pagination="true"
+	      data-search="true"
+	      data-page-size="10"
+	      data-page-list="[10, 20, 30, 50, 100, all]"
+	    >
+	      <thead>
+	        <tr>
+	          <th>Code</th>
+	          <th>Name</th>
+	          <th>Actions</th>
+	        </tr>
+	      </thead>
+	      <tbody>
+	        {% for building in buildings %}
+	          <tr>
+	            <td>{{ building.code }}</td>
+	            <td>{{ building.name }}</td>
+	            <td>
+	              <div class="btn-toolbar">
+	                <button class="btn btn-sm btn-warning mr-2" type="button" data-toggle="modal" data-target="#building-edit-modal-{{ code.id }}">Edit</button>
+
+	                <div class="modal fade" id="building-edit-modal-{{ code.id }}" tabindex="-1" role="dialog" aria-labelledby="building-edit-modal-label-{{ code.id }}" aria-hidden="true">
+	                  <div class="modal-dialog" role="document">
+	                    <div class="modal-content">
+	                      <div class="modal-header">
+	                        <h5 class="modal-title text-info" id="building-edit-modal-label-{{ code.id }}">Edit Building</h5>
+	                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	                      </div>
+	                      <div class="modal-body text-left pt-0">
+	                        <div class="modal-item font-size-1 pt-0">
+	                          <form action="{% url 'key_request:edit_building' %}" method="post">
+	                            {% csrf_token %}
+
+	                            <div class="field-wrapper">
+	                              <label for="id_code_{{ building.id }}">
+	                                Code:
+	                                <span class="material-symbols-outlined">emergency</span>
+	                              </label>
+	                              <div class="help">It must be unique. Maximum characters: 10</div>
+	                              <input id="id_code_{{ building.id }}" type="text" name="code" maxlength="10" value="{{ building.code }}" class="form-control" />
+	                            </div>
+
+	                            <div class="field-wrapper">
+	                              <label for="id_name_{{ building.id }}">
+	                                Name:
+	                                <span class="material-symbols-outlined">emergency</span>
+	                              </label>
+	                              <div class="help">Maximum characters: 256</div>
+	                              <input id="id_name_{{ building.id }}" type="text" name="name" maxlength="256" value="{{ building.name }}" class="form-control" />
+	                            </div>
+
+	                            <input type="hidden" name="building" value="{{ building.id }}" />
+	                            <input class="btn btn-warning" type="submit" value="Update Building" />
+	                          </form>
+	                        </div>
+	                      </div>
+	                    </div>
+	                  </div>
+	                </div>
+
+	                <form action="{% url 'key_request:delete_building' %}" method="post" onsubmit="return confirm('Are you sure to delete this Building - {{ building.name }} ?')">
+	                  {% csrf_token %}
+	                  <input type="hidden" name="building" value="{{ building.id }}" />
+	                  <input class="btn btn-sm btn-danger" type="submit" value="Delete" />
+	                </form>
+	              </div>
+	            </td>
+	          </tr>
+	        {% endfor %}
+	      </tbody>
+	    </table>
+	  </div>
+	</div>
+</section>
+
+{% endblock %}

@@ -1,6 +1,4 @@
 $(document).ready(function() {
-  console.log('ere');
-
   let updateAllList = {};
 
   // Enable a pop-up window

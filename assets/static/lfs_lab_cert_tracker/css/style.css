@@ -36,6 +36,56 @@ footer .column { flex: 50%; }
 
 footer .footer-content a { color: #fff; }
 
+.left-side-menu {
+  width: 250px;
+  margin-top: 100px;
+  padding-right: 40px;
+}
+
+.main-content {
+  width: 100%;
+  padding-left: 40px;
+}
+
+.left-side-menu .menu-title {
+  border-bottom: 4px solid #007bff;
+}
+
+.left-side-menu > ul {
+  padding: 0;
+  margin: 0;
+}
+
+.left-side-menu > ul > li {
+  line-height: 2;
+  padding: 3px 13px;
+}
+
+.left-side-menu > ul > li:hover {
+  background-color: #E8F5E9;
+}
+
+.left-side-menu > ul > li > a {
+  color: #343a40;
+}
+
+.left-side-menu > ul > li > a:hover {
+  text-decoration: none;
+}
+
+.left-side-menu > ul > li:hover,
+.left-side-menu > ul > li.active {
+  border-radius: 4px;
+}
+
+.left-side-menu > ul > li.active {
+  background-color: #1B5E20;
+}
+
+.left-side-menu > ul > li.active > a {
+  color: #fff;
+}
+
 
 .lfs-logo {
   height: 30px;
@@ -408,9 +458,13 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   padding: 1rem 1.5rem;
 }
 
-.ml-minus-20 {
+.list-minus-20 {
   margin-left: -20px;
   margin-bottom: 0 !important;
+}
+
+.list-no-bullets {
+  list-style: none;
 }
 
 .text-underline { text-decoration: underline; }
@@ -539,4 +593,9 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
 @media (min-width: 992px) and (max-width: 1199.98px) {
   header .navbar-brand .brand-title { display: none; }
   header .navbar-brand .brand-shorthand { display: inline; }
+  .max-width-container { max-width: 95%; }
+}
+
+@media (min-width: 1200px) {
+  .max-width-container { max-width: 1400px; }
 }

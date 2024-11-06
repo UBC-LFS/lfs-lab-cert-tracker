@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu_nav.html" %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
 {% endblock %}
 
 {% block content %}
@@ -82,7 +82,7 @@
 				<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 			</h5>
 			<div class="text-secondary">
-				<ul class="ml-minus-20">
+				<ul class="list-minus-20">
 					{% for user_cert in user_certs %}
 						<li>
 							<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.cert_id %}?p=account">
@@ -113,7 +113,7 @@
 			</h5>
 			<div class="text-secondary">
 				{% if missing_certs %}
-					<ul class="ml-minus-20">
+					<ul class="list-minus-20">
 						{% for missing_cert in missing_certs %}
 							<li>{{ missing_cert.name }}</li>
 						{% endfor %}
@@ -131,7 +131,7 @@
 			</h5>
 			<div class="text-secondary">
 				{% if expired_certs %}
-					<ul class="ml-minus-20">
+					<ul class="list-minus-20">
 						{% for expired_cert in expired_certs %}
 							<li>{{ expired_cert.name }}</li>
 						{% endfor %}
@@ -193,7 +193,7 @@
 				<h5 class="text-info">
 					{% include 'lfs_lab_cert_tracker/icons/info.html' %} NOTE
 				</h5>
-				<ul class="mb-0 ml-minus-20">
+				<ul class="mb-0 list-minus-20">
 					<li>
 						Please go to
 						<a href="{% url 'app:user_trainings' user_id=app_user.id %}">

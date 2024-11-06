@@ -73,6 +73,136 @@ class Index(LoginRequiredMixin, View):
         })
 
 
+# Key Request Process
+
+@method_decorator([never_cache], name='dispatch')
+class SelectRooms(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        rooms = Room.objects.all()
+        return render(request, 'key_request/process/select_rooms.html', {
+            'buildings': Building.objects.all(),
+            'floors': Floor.objects.all(),
+            'rooms': func.preprocess_rooms(rooms), 
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        request.session['selected_rooms'] = request.POST.getlist('rooms[]')
+
+        return JsonResponse({'status': 'success', 'next': request.POST['next']})
+        # return redirect('key_request:check_user_trainings')
+
+
+@method_decorator([never_cache], name='dispatch')
+class CheckUserTrainings(LoginRequiredMixin, View):
+
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        selected_rooms = request.session.get('selected_rooms')
+        if not selected_rooms:
+            raise Http404
+
+        self.selected_rooms = selected_rooms
+        return setup
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        rooms = []
+        for room_id in self.selected_rooms:
+            room = Room.objects.get(id=room_id)
+            rooms.append(room)
+
+        user_trainings, total_missing, total_expired = func.check_user_trainings(request.user, self.selected_rooms)
+
+        return render(request, 'key_request/process/check_user_trainings.html', {
+            'rooms': rooms,
+            'user_trainings': user_trainings,
+            'total_missing': total_missing,
+            'total_expired': total_expired
+        })
+
+
+@method_decorator([never_cache], name='dispatch')
+class SubmitForm(LoginRequiredMixin, View):
+    form_class = KeyRequestForm
+
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        selected_rooms = request.session.get('selected_rooms')
+        user_trainings, total_missing, total_expired = func.check_user_trainings(request.user, selected_rooms)
+        if not selected_rooms or total_missing != 0 or total_expired != 0:
+            raise Http404
+
+        self.selected_rooms = selected_rooms
+        return setup
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        room_info = []
+        for rid in self.selected_rooms:
+            room = Room.objects.get(id=rid)
+            room_info.append({
+                'id': room.id,
+                'building': room.building.code,
+                'floor': room.floor.name,
+                'number': room.number
+            })
+
+        return render(request, 'key_request/process/submit_form.html', {
+            'form': self.form_class(initial={'user': request.user.id }),
+            'basic_info': [
+                ('Applicant First Name', request.user.first_name),
+                ('Applicant Last Name', request.user.last_name),
+                ('UBC CWL User Name', request.user.username),
+                ('Applicant UBC Email', request.user.email)
+            ],
+            'room_info': room_info
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        if not request.POST.get('agree'):
+            messages.error(request, 'Error! Please read the <strong>Requirement to Proceed</strong>, and try again.')
+            return redirect('key_request:submit_form')
+
+        form = self.form_class(request.POST)
+        rooms = request.POST.getlist('rooms[]')
+        operator = appFunc.get_user_name(request.user)
+
+        if form.is_valid() and len(rooms) > 0:
+            req_form = form.save()
+            if req_form:
+
+                # Add selected rooms to this key request
+                req_form.rooms.add( *rooms )
+
+                # Update FormStatus
+                # fs = RequestFormStatus.objects.create(form_id=req_form.id, operator=operator, status='0')
+                # if not fs:
+                #     messages.warning(request, "Warning! Failed to update {0}'s status for some reason. Please try again or contact the IT administrator.".format(operator))
+
+                # Delete the selected rooms in the session
+                del request.session['selected_rooms']
+
+                messages.success(request, "Success! {0}'s key request form has been submitted.".format(operator))
+                return redirect('key_request:index')
+            else:
+                messages.error(request, "Error! Failed to submit {0}'s key request form for some reason. Please try again.".format(operator))
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+
+        return redirect('key_request:submit_form')
+
+
+
+# For Admin
+
+
 @method_decorator([never_cache], name='dispatch')
 class AllRequests(LoginRequiredMixin, View):
 
@@ -85,7 +215,7 @@ class AllRequests(LoginRequiredMixin, View):
             form.total_missing = total_missing
             form.total_expired = total_expired
 
-        return render(request, 'key_request/all_requests.html', {
+        return render(request, 'key_request/admin/all_requests.html', {
             'forms': forms,
             'req_status_dict': REQUEST_STATUS_DICT
         })
@@ -102,41 +232,6 @@ class AllRequests(LoginRequiredMixin, View):
             messages.error(request, "Error! Failed to update {0}'s status for some reason. Please try again.".format(operator))
         return HttpResponseRedirect(request.POST.get('next'))
 
-
-@method_decorator([never_cache], name='dispatch')
-class ManagerDashboard(LoginRequiredMixin, View):
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        my_rooms = Room.objects.filter(managers__in=[request.user.id])
-        requests, new_requests = func.get_manager_dashboard(request.user)
-
-        return render(request, 'key_request/manager_dashboard.html', {
-            'my_rooms': my_rooms,
-            'requests': requests,
-            'req_status_dict': REQUEST_STATUS_DICT,
-            'post_url': reverse('key_request:manager_dashboard')
-        })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        form_id = request.POST.get('form')
-        room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager')
-        status = request.POST.get('status')
-
-        if not form_id or not room_id or not manager_id or not status:
-            raise SuspiciousOperation
-
-        RequestFormStatus.objects.create(
-            form_id = form_id,
-            room_id = room_id,
-            manager_id = manager_id,
-            operator_id = request.user.id,
-            status = status
-        )
-        messages.success(request, 'Success! Room {0} status has been updated.'.format(room_id))
-        return redirect('key_request:manager_dashboard')
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -234,135 +329,74 @@ def update_all(request):
     return HttpResponseRedirect(reverse('key_request:view_form_details', args=[request.POST.get('form')]))
 
 
-@method_decorator([never_cache], name='dispatch')
-class SelectRooms(LoginRequiredMixin, View):
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllBuildings(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        rooms = Room.objects.all()
-        return render(request, 'key_request/select_rooms.html', {
-            'buildings': Building.objects.all(),
-            'floors': Floor.objects.all(),
-            'rooms': func.preprocess_rooms(rooms)
+        buildings = Building.objects.all()
+        return render(request, 'key_request/admin/all_buildings.html', {
+            'total_buildings': len(buildings),
+            'buildings': buildings,
+            'form': BuildingForm()
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        request.session['selected_rooms'] = request.POST.getlist('rooms[]')
+        # Create a building
 
-        return JsonResponse({'status': 'success', 'next': request.POST['next']})
-        # return redirect('key_request:check_user_trainings')
-
-
-@method_decorator([never_cache], name='dispatch')
-class CheckUserTrainings(LoginRequiredMixin, View):
-
-    def setup(self, request, *args, **kwargs):
-        setup = super().setup(request, *args, **kwargs)
-
-        selected_rooms = request.session.get('selected_rooms')
-        if not selected_rooms:
-            raise Http404
-
-        self.selected_rooms = selected_rooms
-        return setup
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        rooms = []
-        for room_id in self.selected_rooms:
-            room = Room.objects.get(id=room_id)
-            rooms.append(room)
-
-        user_trainings, total_missing, total_expired = func.check_user_trainings(request.user, self.selected_rooms)
-
-        return render(request, 'key_request/check_user_trainings.html', {
-            'rooms': rooms,
-            'user_trainings': user_trainings,
-            'total_missing': total_missing,
-            'total_expired': total_expired
-        })
-
-
-@method_decorator([never_cache], name='dispatch')
-class SubmitForm(LoginRequiredMixin, View):
-    form_class = KeyRequestForm
-
-    def setup(self, request, *args, **kwargs):
-        setup = super().setup(request, *args, **kwargs)
-
-        selected_rooms = request.session.get('selected_rooms')
-        user_trainings, total_missing, total_expired = func.check_user_trainings(request.user, selected_rooms)
-        if not selected_rooms or total_missing != 0 or total_expired != 0:
-            raise Http404
-
-        self.selected_rooms = selected_rooms
-        return setup
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-
-        room_info = []
-        for rid in self.selected_rooms:
-            room = Room.objects.get(id=rid)
-            room_info.append({
-                'id': room.id,
-                'building': room.building.code,
-                'floor': room.floor.name,
-                'number': room.number
-            })
-
-        return render(request, 'key_request/submit_form.html', {
-            'form': self.form_class(initial={'user': request.user.id }),
-            'basic_info': [
-                ('Applicant First Name', request.user.first_name),
-                ('Applicant Last Name', request.user.last_name),
-                ('UBC CWL User Name', request.user.username),
-                ('Applicant UBC Email', request.user.email)
-            ],
-            'room_info': room_info
-        })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        if not request.POST.get('agree'):
-            messages.error(request, 'Error! Please read the <strong>Requirement to Proceed</strong>, and try again.')
-            return redirect('key_request:submit_form')
-
-        form = self.form_class(request.POST)
-        rooms = request.POST.getlist('rooms[]')
-        operator = appFunc.get_user_name(request.user)
-
-        if form.is_valid() and len(rooms) > 0:
-            req_form = form.save()
-            if req_form:
-
-                # Add selected rooms to this key request
-                req_form.rooms.add( *rooms )
-
-                # Update FormStatus
-                # fs = RequestFormStatus.objects.create(form_id=req_form.id, operator=operator, status='0')
-                # if not fs:
-                #     messages.warning(request, "Warning! Failed to update {0}'s status for some reason. Please try again or contact the IT administrator.".format(operator))
-
-                # Delete the selected rooms in the session
-                del request.session['selected_rooms']
-
-                messages.success(request, "Success! {0}'s key request form has been submitted.".format(operator))
-                return redirect('key_request:index')
+        form = BuildingForm(request.POST)
+        if form.is_valid():
+            building = form.save()
+            if building:
+                messages.success(request, 'Success! New Building - {0} ({1}) created'.format(building.name, building.code))
             else:
-                messages.error(request, "Error! Failed to submit {0}'s key request form for some reason. Please try again.".format(operator))
+                messages.error(request, 'An error occurred while saving data.')
+        else:
+            errors = form.errors.get_json_data()
+            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( ))
+
+        return redirect('key_request:all_buildings')
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@require_http_methods(['POST'])
+def edit_course_code(request):
+    building_filtered = Building.objects.filter(id=request.POST.get('building'))
+    if building_filtered.exists():
+        building = building_filtered.first()
+        form = BuildingForm(request.POST, instance=building)
+        if form.is_valid():
+            if form.save():
+                messages.success(request, 'Success! Building {0} ({1}) updated'.format(building.name, building.code))
+            else:
+                messages.error(request, 'An error occurred. Failed to update this Building {0} ({1}). Please try again.'.format(building.name, building.code))
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+    else:
+        messages.error(request, 'An error occurred. Building ID - {0} does not exsit in the database.'.format(request.POST.get('building')))
+    return redirect('key_request:all_buildings')
 
-        return redirect('key_request:submit_form')
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@require_http_methods(['POST'])
+def delete_course_code(request):
+    building_filtered = Building.objects.filter(id=request.POST.get('building'))
+    if building_filtered.exists():
+        building = building_filtered.first()
+        building_filtered.delete()
+        messages.success(request, 'Success! Building {0} ({1}) deleted'.format(building.name, building.code))
+    else:
+        messages.error(request, 'An error occurred. Building ID - {0} does not exsit in the database.'.format(request.POST.get('building')))
+    return redirect('key_request:all_buildings')
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRooms(LoginRequiredMixin, View):
     """ Display all rooms """
-
-    form = RoomForm
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -375,33 +409,13 @@ class AllRooms(LoginRequiredMixin, View):
             room.area_ids = list(room.areas.all().values_list('id', flat=True))
             room.training_ids = list(room.trainings.all().values_list('id', flat=True))
 
-        return render(request, 'key_request/all_rooms.html', {
+        return render(request, 'key_request/admin/all_rooms.html', {
             'total_rooms': len(rooms),
             'rooms': rooms,
             'users': users,
             'areas': areas,
-            'trainings': trainings,
-            'form': self.form()
+            'trainings': trainings
         })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        # Create a new room
-
-        form = self.form(request.POST)
-        if form.is_valid():
-            room = form.save()
-            if room:
-                room.managers.add( *list(request.POST.getlist('manager[]')) )
-                room.areas.add( *list(request.POST.getlist('area[]')) )
-                room.trainings.add( *list(request.POST.getlist('training[]')) )
-                messages.success(request, 'Success! Room Number {0} created.'.format(room.number))
-            else:
-                messages.error(request, 'Error! Failed to create Room Number {0}. This training has already existed.'.format(room.number))
-        else:
-            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-
-        return redirect('key_request:all_rooms')
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -522,67 +536,32 @@ def change_room_trainings(request):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllBuildings(LoginRequiredMixin, View):
+class CreateRoom(LoginRequiredMixin, View):
+
+    form = RoomForm
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        buildings = Building.objects.all()
-        return render(request, 'key_request/all_buildings.html', {
-            'total_buildings': len(buildings),
-            'buildings': buildings,
-            'form': BuildingForm()
+        return render(request, 'key_request/admin/create_room.html', {
+            'form': self.form()
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        # Create a building
-
-        form = BuildingForm(request.POST)
+        form = self.form(request.POST)
         if form.is_valid():
-            building = form.save()
-            if building:
-                messages.success(request, 'Success! New Building - {0} ({1}) created'.format(building.name, building.code))
+            room = form.save()
+            if room:
+                room.managers.add( *list(request.POST.getlist('manager[]')) )
+                room.areas.add( *list(request.POST.getlist('area[]')) )
+                room.trainings.add( *list(request.POST.getlist('training[]')) )
+                messages.success(request, 'Success! Room Number {0} created.'.format(room.number))
             else:
-                messages.error(request, 'An error occurred while saving data.')
-        else:
-            errors = form.errors.get_json_data()
-            messages.error(request, 'An error occurred. Form is invalid. {0}'.format( ))
-
-        return redirect('key_request:all_buildings')
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['POST'])
-def edit_course_code(request):
-    building_filtered = Building.objects.filter(id=request.POST.get('building'))
-    if building_filtered.exists():
-        building = building_filtered.first()
-        form = BuildingForm(request.POST, instance=building)
-        if form.is_valid():
-            if form.save():
-                messages.success(request, 'Success! Building {0} ({1}) updated'.format(building.name, building.code))
-            else:
-                messages.error(request, 'An error occurred. Failed to update this Building {0} ({1}). Please try again.'.format(building.name, building.code))
+                messages.error(request, 'Error! Failed to create Room Number {0}. This training has already existed.'.format(room.number))
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-    else:
-        messages.error(request, 'An error occurred. Building ID - {0} does not exsit in the database.'.format(request.POST.get('building')))
-    return redirect('key_request:all_buildings')
 
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@require_http_methods(['POST'])
-def delete_course_code(request):
-    building_filtered = Building.objects.filter(id=request.POST.get('building'))
-    if building_filtered.exists():
-        building = building_filtered.first()
-        building_filtered.delete()
-        messages.success(request, 'Success! Building {0} ({1}) deleted'.format(building.name, building.code))
-    else:
-        messages.error(request, 'An error occurred. Building ID - {0} does not exsit in the database.'.format(request.POST.get('building')))
-    return redirect('key_request:all_buildings')
+        return redirect('key_request:all_rooms')
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -602,7 +581,7 @@ class Settings(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         items = self.model_obj.objects.all()
-        return render(request, 'key_request/settings.html', {
+        return render(request, 'key_request/admin/settings.html', {
             'model': self.model,
             'headers': func.get_headers(self.model_obj),
             'form': self.form,
@@ -622,8 +601,6 @@ class Settings(LoginRequiredMixin, View):
             messages.error(request, 'An error occurred. Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return redirect('key_request:settings', model=self.model)
-
-
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -688,6 +665,57 @@ class DeleteSettings(LoginRequiredMixin, View):
             messages.error(request, 'Error occured while deleting {0} - {1} (ID: {2}). Please try again.'.format(self.model, instance.name, id))
 
         return redirect('key_request:settings', model=self.model)
+
+
+
+
+# Manager Dashboard
+
+@method_decorator([never_cache], name='dispatch')
+class ManagerDashboard(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        my_rooms = Room.objects.filter(managers__in=[request.user.id])
+        requests, new_requests = func.get_manager_dashboard(request.user)
+
+        return render(request, 'key_request/manager_dashboard/manager_dashboard.html', {
+            'my_rooms': my_rooms,
+            'requests': requests,
+            'req_status_dict': REQUEST_STATUS_DICT,
+            'post_url': reverse('key_request:manager_dashboard')
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form_id = request.POST.get('form')
+        room_id = request.POST.get('room')
+        manager_id = request.POST.get('manager')
+        status = request.POST.get('status')
+
+        if not form_id or not room_id or not manager_id or not status:
+            raise SuspiciousOperation
+
+        RequestFormStatus.objects.create(
+            form_id = form_id,
+            room_id = room_id,
+            manager_id = manager_id,
+            operator_id = request.user.id,
+            status = status
+        )
+        messages.success(request, 'Success! Room {0} status has been updated.'.format(room_id))
+        return redirect('key_request:manager_dashboard')
+
+
+@method_decorator([never_cache], name='dispatch')
+class ManagerRooms(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'key_request/manager_dashboard/manager_rooms.html', {
+            'rooms': Room.objects.filter(managers__in=[request.user.id])
+        })
+
 
 
 

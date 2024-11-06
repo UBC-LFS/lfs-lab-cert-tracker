@@ -224,7 +224,7 @@ function updateHTMLForSelectedRooms(rooms) {
 }
 
 function createList(items) {
-  let list = '<ul class="ml-minus-20">';
+  let list = '<ul class="list-minus-20">';
   for (let item of items) {
     list += '<li>' + item['name'] + '</li>';
   }

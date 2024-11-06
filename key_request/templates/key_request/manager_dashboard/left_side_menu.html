@@ -1,0 +1,25 @@
+<section id="left-side-menu" class="left-side-menu">
+  <h5 class="menu-title text-center mb-4">Menu</h5>
+  <ul class="list-no-bullets">
+    <li><a href="{% url 'key_request:index' %}">Key Request</a></li>
+  </ul>
+
+  {% if has_manager_key_requests %}
+    <hr />
+    <ul class="list-no-bullets">
+    	<li><a href="{% url 'key_request:manager_dashboard' %}">PI - Dashboard</a></li>
+    	<li><a href="{% url 'key_request:manager_rooms' %}">PI - Rooms</a></li>
+    </ul>
+  {% endif %}
+
+  {% if request.user.is_superuser %}
+    <hr />
+    <ul class="list-no-bullets">
+      <li><a href="{% url 'key_request:all_requests' %}">All Requests</a></li>
+      <li><a href="{% url 'key_request:all_buildings' %}">All Buildings</a></li>
+      <li><a href="{% url 'key_request:settings' model='Floor' %}">All Floors</a></li>
+      <li><a href="{% url 'key_request:all_rooms' %}">All Rooms</a></li>
+      <li><a href="{% url 'key_request:create_room' %}">Create Room</a></li>
+    </ul>
+  {% endif %}
+</section>
