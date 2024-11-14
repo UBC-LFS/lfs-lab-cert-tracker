@@ -1,0 +1,28 @@
+{% include 'key_request/subpages/room_search.html' with table='pis' id=room_id %}
+
+<table id="pis-table-{{ room_id }}" class="table table-bordered table-striped table-responsive-md font-size-sm">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Full Name</th>
+      <th>CWL</th>
+      <th>Email</th>
+      <th>Select</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.get_full_name }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <input id="{{ user.id }}" type="checkbox" name="manager[]" value="{{ user.id }}" {% if user.id in room.manager_ids %}checked{% endif %} />
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'key_request/subpages/room_pagination.html' with table='pis' id=room_id %}

@@ -2,9 +2,8 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/_return_message.html' with data=messages %}
 {% endblock %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
 
 {% block content %}
 
@@ -17,134 +16,61 @@
     {% csrf_token %}
 
     <nav class="mt-5">
-      <div class="nav nav-tabs" id="nav-tab" role="tablist">
-        <button class="nav-link active" id="nav-number-tab" data-toggle="tab" data-target="#nav-number" type="button" role="tab" aria-controls="nav-number" aria-selected="true">Basic Info</button>
-        <button class="nav-link" id="nav-pis-tab" data-toggle="tab" data-target="#nav-pis" type="button" role="tab" aria-controls="nav-pis" aria-selected="true">PIs</button>
-        <button class="nav-link" id="nav-areas-tab" data-toggle="tab" data-target="#nav-areas" type="button" role="tab" aria-controls="nav-areas" aria-selected="false">Areas</button>
-        <button class="nav-link" id="nav-trainings-tab" data-toggle="tab" data-target="#nav-trainings" type="button" role="tab" aria-controls="nav-trainings" aria-selected="false">Required Trainings</button>
+      <div class="nav nav-tabs">
+        <a class="nav-link {% if curr_tab == 'basic_info' %}active{% endif %}" href="{{ tab_urls.basic_info }}">Basic Info</a>
+        <a class="nav-link {% if curr_tab == 'pis' %}active{% endif %}" href="{{ tab_urls.pis }}">PIs</a>
+        <a class="nav-link {% if curr_tab == 'areas' %}active{% endif %}" href="{{ tab_urls.areas }}">Areas</a>
+        <a class="nav-link {% if curr_tab == 'trainings' %}active{% endif %}" href="{{ tab_urls.trainings }}">Required Trainings</a>
       </div>
     </nav>
 
-    <div class="tab-content" id="nav-tabContent">
+		<section class="pt-5">
+			{% if curr_tab == 'pis' %}
 
-      <div class="tab-pane fade show active pt-5" id="nav-number" role="tabpanel" aria-labelledby="nav-number-tab">
-        <table class="form-table">
-          {% for field in form.visible_fields %}
-            <tr>
-              <th>
-                <label for="{{ field.id_for_label }}">
-                  {{ field.label }}
-                  {% if field.name == 'number' %}
-                    {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
-                  {% endif %}
-                </label>
-              </th>
-              <td>
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="helptext">{{ field.help_text|safe }}</div>
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </table>
-      </div>
+				{% include 'key_request/subpages/room_pis_table.html' with room_id='0' %}
 
-      <div class="tab-pane fade pt-4" id="nav-pis" role="tabpanel" aria-labelledby="nav-pis-tab">
-        <table
-          class="table table-bordered table-striped table-responsive-md"
-          data-toggle="table"
-          data-sortable="true"
-          data-classes=""
-          data-pagination="true"
-          data-search="true"
-          data-page-size="10"
-          data-page-list="[10, 20, 30, 50, 100, all]"
-        >
-          <thead>
-            <tr>
-              <th data-sortable="true">Last Name</th>
-              <th data-sortable="true">First Name</th>
-              <th data-sortable="true">CWL</th>
-              <th>Select</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for user in users %}
-              <tr>
-                <td>{{ user.last_name }}</td>
-                <td>{{ user.first_name }}</td>
-                <td>{{ user.username }}</td>
-                <td>
-                  <input type="checkbox" name="manager[]" value="{{ user.id }}" />
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+			{% elif curr_tab == 'areas' %}
 
-      <div class="tab-pane fade pt-4" id="nav-areas" role="tabpanel" aria-labelledby="nav-areas-tab">
-        <table
-          class="table table-bordered table-striped table-responsive-md"
-          data-toggle="table"
-          data-classes=""
-          data-pagination="true"
-          data-search="true"
-          data-page-size="10"
-          data-page-list="[10, 20, 30, 50, 100, all]"
-        >
-          <thead>
-            <tr>
-              <th>Area Name</th>
-              <th>Select</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for area in areas %}
-              <tr>
-                <td class="text-left">{{ area.name }}</td>
-                <td>
-                  <input type="checkbox" name="area[]" value="{{ area.id }}" />
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+				{% include 'key_request/subpages/room_areas_table.html' with room_id='0' %}
 
-      <div class="tab-pane fade pt-4" id="nav-trainings" role="tabpanel" aria-labelledby="nav-trainings-tab">
-        <table
-          class="table table-bordered table-striped table-responsive-md"
-          data-toggle="table"
-          data-classes=""
-          data-pagination="true"
-          data-search="true"
-          data-page-size="10"
-          data-page-list="[10, 20, 30, 50, 100, all]"
-        >
-          <thead>
-            <tr>
-              <th>Training Name</th>
-              <th>Select</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for training in trainings %}
-              <tr>
-                <td class="text-left">{{ training.name }}</td>
-                <td>
-                  <input type="checkbox" name="training[]" value="{{ training.id }}" />
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+			{% elif curr_tab == 'trainings' %}
+
+				{% include 'key_request/subpages/room_trainings_table.html' with room_id='0' %}
+
+			{% else %}
+
+				<table class="form-table">
+					{% for field in form.visible_fields %}
+						<tr>
+							<th>
+								<label for="{{ field.id_for_label }}">
+									{{ field.label }}
+									{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+								</label>
+							</th>
+							<td>
+								{{ field }}
+								{% if field.help_text %}
+									<div class="helptext">{{ field.help_text|safe }}</div>
+								{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
+
+			{% endif %}
+
+		</section>
+
     <input class="btn btn-primary mt-3" type="submit" value="Create New Room" />
   </form>
 
 </section>
 
+{% endblock %}
+
+
+{% block js %}
+	{% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/all_rooms.js' %}"></script>
 {% endblock %}

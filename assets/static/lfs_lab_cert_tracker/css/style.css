@@ -136,9 +136,14 @@ header .container .logout-btn:hover { text-decoration: underline; }
 
 .search-field { float: right; }
 
-.search-field .input-field input { vertical-align: middle; }
+.search-field .input-field select,
+.search-field .input-field input
+ { vertical-align: middle; }
 
+.search-field .input-field select,
 .search-field .input-field .search-field-text::placeholder { font-size: 14px; }
+
+.search-field .input-field select { height: 29px; }
 
 .list-form { display: inline-block; }
 
@@ -159,8 +164,9 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
 }
 
 .font-size-lg { font-size: 1.2rem; }
-.font-size-sm { font-size: 0.8rem; }
-.font-size-xs { font-size: 0.7rem; }
+.font-size-sm { font-size: 0.9rem; }
+.font-size-xs { font-size: 0.8rem; }
+.font-size-xxs { font-size: 0.85rem; }
 
 .color-blue { color: #007bff; }
 
@@ -205,16 +211,21 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
 }
 
 .nav-tabs > a {
-   padding: 0.7rem 1.0rem;
-   font-size: 1.0rem;
- }
+  padding: 0.7rem 1.0rem;
+  font-size: 1.0rem;
+  color: #343a40;
+}
+
+.nav-tabs > a:hover {
+  background-color: #f1f1f1;
+}
 
 .nav-tabs .nav-link.active {
-    color: #495057;
-    font-weight: 600;
-    background-color: #fff;
-    border-top-width: 4px;
-    border-color: #f0ad4e #dee2e6 #fff;
+  color: #495057;
+  font-weight: 600;
+  background-color: #fff;
+  border-top-width: 4px;
+  border-color: #f0ad4e #dee2e6 #fff;
 }
 
 .field-wrapper {
@@ -565,6 +576,47 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   outline: 0;
   box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25);
 }
+
+
+.pagination-container .page-item {
+  position: relative;
+  display: block;
+  padding: .5rem .75rem;
+  line-height: 1.25;
+  color: #007bff;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+}
+
+.pagination-container .page-item:hover {
+  background-color: #f1f1f1;
+}
+
+.pagination-container > .page-item:first-child {
+  border-top-left-radius: .25rem;
+  border-bottom-left-radius: .25rem;
+}
+
+.pagination-container > .page-item:last-child {
+  border-top-right-radius: .25rem;
+  border-bottom-right-radius: .25rem;
+}
+
+.pagination-container > .page-item.disabled {
+  color: #6c757d;
+  pointer-events: none;
+  cursor: auto;
+  background-color: #fff;
+  border-color: #dee2e6;
+}
+
+.pagination-container .pagination .page-item.active {
+  z-index: 3;
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
 
 /* Responsive design */
 

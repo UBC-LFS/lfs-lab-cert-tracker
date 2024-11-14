@@ -3,16 +3,20 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/_return_message.html' with data=messages %}
 {% endblock %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
 
 {% block content %}
 
 {% include 'key_request/left_side_menu.html' %}
 
 <section class="main-content">
-	<h3 class="title">All Requests</h3>
+	<h3 class="title">
+		All Requests
+		<small class="text-secondary">(Total: {{ total_forms }})</small>
+	</h3>
+
+	{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
 
 	<table class="table table-bordered table-hover table-striped">
 	  <thead>
@@ -20,6 +24,7 @@
 	      <th>ID</th>
 	      <th>CWL</th>
 	      <th>Full Name</th>
+	      <th>Building & Room Info</th>
 	      <th>Form <br /> Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted At</th>
@@ -34,6 +39,13 @@
 	          <a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ form.user.username }}</a>
 	        </td>
 	        <td>{{ form.user.get_full_name }}</td>
+					<td class="text-left">
+						<ul class="list-minus-20">
+							{% for room in form.rooms.all %}
+								<li>{{ room.building.code }} {{ room.floor.name }} - Room {{ room.number}}</li>
+							{% endfor %}
+						</ul>
+					</td>
 	        <td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin='True' %}
 	        </td>
@@ -52,6 +64,8 @@
 	    {% endfor %}
 	  </tbody>
 	</table>
+	{% include 'key_request/subpages/pagination.html' with data=forms %}
+
 </section>
 
 {% endblock %}

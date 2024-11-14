@@ -86,12 +86,12 @@
 
 		<table class="table table-bordered table-striped table-hover table-responsive-lg text-center table-vertical-middle"
 		  data-toggle="table"
-		  data-sortable="true"
 		  data-classes=""
+			data-sortable="true"
 		  data-pagination="true"
 		  data-search="true"
 		  data-page-size="10"
-		  data-page-list="[20, 30, 50, 100, all]"
+		  data-page-list="[10, 20, 30, 50, 100, all]"
 		>
 			<thead>
 		    <tr>
@@ -139,7 +139,7 @@
 									<input type="hidden" name="user" value="{{ user.id }}" />
 									<input type="hidden" name="area" value="{{ area.id }}" />
 									<input type="hidden" name="next" value="{{ request.get_full_path }}" />
-									
+
 									<input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
 								</form>
 							{% endif %}

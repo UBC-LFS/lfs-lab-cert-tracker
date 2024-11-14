@@ -5,6 +5,9 @@ app_name = 'key_request'
 
 urlpatterns = [
 
+    # Admin
+    path('all-requests/', views.AllRequests.as_view(), name='all_requests'),
+    
     # Rooms
 
     path('create-room/', views.CreateRoom.as_view(), name='create_room'),
@@ -16,12 +19,7 @@ urlpatterns = [
     path('api/room/areas/change/', views.change_room_areas, name='change_room_areas'),
     path('api/room/trainings/change/', views.change_room_trainings, name='change_room_trainings'),
 
-    # Building
-    path('all-buildingssss/delete/', views.delete_building, name='delete_building'),
-    path('all-buildingssss/edit/', views.edit_building, name='edit_building'),
-    path('all-buildingssss/', views.AllBuildings.as_view(), name='all_buildings'),
-
-    # Floors
+    # Settings - Building and Floors
     path('all-<str:model>/delete/', views.DeleteSetting.as_view(), name='delete_setting'),
     path('all-<str:model>/edit/', views.EditSetting.as_view(), name='edit_setting'),
     path('all-<str:model>/', views.Settings.as_view(), name='settings'),
@@ -35,7 +33,7 @@ urlpatterns = [
 
     path('pi-rooms/', views.ManagerRooms.as_view(), name='manager_rooms'),
     path('pi-dashboard/', views.ManagerDashboard.as_view(), name='manager_dashboard'),
-    path('all-requests/', views.AllRequests.as_view(), name='all_requests'),
+    
 
     
 

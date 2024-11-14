@@ -4,18 +4,16 @@
     {% if data.has_previous %}
       <li class="page-item">
         <a class="page-link" href="?page=1
-{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}
-{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
-{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
-{% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
         >First</a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ data.previous_page_number }}
-{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}
-{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
-{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
-{% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
         >&laquo;</a>
       </li>
     {% else %}
@@ -36,10 +34,9 @@
         <li class="page-item">
           {% if i|add:"-3" <= data.number and data.number <= i|add:"3" %}
             <a class="page-link" href="?page={{ i }}
-{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}
-{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
-{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
-{% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
             >{{ i }}</a>
           {% endif %}
         </li>
@@ -49,18 +46,16 @@
     {% if data.has_next %}
       <li class="page-item">
         <a class="page-link" href="?page={{ data.next_page_number }}
-{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}
-{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
-{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
-{% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
         >&raquo;</a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ data.paginator.num_pages }}
-{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}
-{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
-{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
-{% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
         >Last</a>
       </li>
     {% else %}

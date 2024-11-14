@@ -31,13 +31,11 @@ from datetime import datetime, date, timedelta
 from .accesses import *
 from .forms import *
 from .functions import *
+from .utils import *
+
 from key_request import functions as kFunc
 
 from lfs_lab_cert_tracker.models import *
-
-
-# Set 20 users in a page
-NUM_PER_PAGE = 20
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -952,13 +950,10 @@ def delete_user_in_area(request, area_id):
 class AllTrainingsView(LoginRequiredMixin, View):
     """ Display all training records of a user """
 
-    form_class = TrainingForm
-
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         training_list = Cert.objects.all()
 
-        # Pagination enables
         query = request.GET.get('q')
         if query:
             training_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
@@ -979,15 +974,14 @@ class AllTrainingsView(LoginRequiredMixin, View):
         return render(request, 'app/trainings/all_trainings.html', {
             'total_trainings': len(training_list),
             'trainings': trainings,
-            'form': self.form_class()
+            'form': TrainingForm()
         })
-
-
+    
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         # Create a new training
 
-        form = self.form_class(request.POST)
+        form = TrainingForm(request.POST)
         if form.is_valid():
             cert = form.save()
             if cert:

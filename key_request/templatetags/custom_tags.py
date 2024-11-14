@@ -76,3 +76,13 @@ def concat_strings(*args):
     for a in args: 
         s += str(a) + ','
     return s
+
+
+@register.simple_tag
+def concat_strings_dash(*args):
+    s = ''
+    for i, a in enumerate(args): 
+        s += str(a)
+        if i < len(args) - 1:
+            s += '-'
+    return s

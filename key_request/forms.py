@@ -41,7 +41,6 @@ class RoomForm(forms.ModelForm):
             'building': forms.Select(attrs={ 'class': 'form-control' }),
             'floor': forms.Select(attrs={ 'class': 'form-control' }),
             'number': forms.TextInput(attrs={ 'class': 'form-control' })
-            
         }
         help_texts = {
             'number': 'It must be unique. Maximum characters: 10'

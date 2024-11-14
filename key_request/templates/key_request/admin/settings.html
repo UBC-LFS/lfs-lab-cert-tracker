@@ -40,6 +40,7 @@
 	      class="table table-bordered table-striped table-responsive-md"
 	      data-toggle="table"
 	      data-classes=""
+				data-sortable="true"
 	      data-pagination="true"
 	      data-search="true"
 	      data-page-size="10"
@@ -48,7 +49,7 @@
 	      <thead>
 	        <tr>
 	          {% for header in headers %}
-	            <th>{{ header }}</th>
+	            <th {% if header == 'Name' or header == 'Code' %}data-sortable="true"{% endif %}>{{ header }}</th>
 	          {% endfor %}
 	        </tr>
 	      </thead>

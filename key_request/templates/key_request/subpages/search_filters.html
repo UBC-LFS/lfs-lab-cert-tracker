@@ -1,0 +1,19 @@
+<div class="search-field mb-2">
+  <form method="GET" >
+    <div class="input-field">
+      <select class="" name="option">
+        <option value="user_name">User Name</option>
+        <option value="building_code">Building Code</option>
+        <option value="floor">Floor</option>
+        <option value="room_number">Room Number</option>
+      </select>
+      <input type="text" name="query" value="{{ request.GET.query }}" placeholder="Search" />
+      <button class="btn btn-primary btn-sm" type="submit">Search</button>
+      {% if path == 'all_requests' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}">Clear</a>
+      {% elif path == 'manager_dashboard' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_dashboard' %}">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
