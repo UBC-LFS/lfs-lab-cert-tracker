@@ -82,7 +82,7 @@
 									<div class="modal-body text-left">
 										<form action="{% url 'key_request:change_room_managers' %}" method="post">
 											{% csrf_token %}
-											{% include 'key_request/subpages/room_pis_table.html' with room_id=room.id %}
+											{% include 'key_request/subpages/room_managers_table.html' with room_id=room.id manager_ids=room.manager_ids %}
 											<input type="hidden" name="room" value="{{ room.id }}" />
 											<input class="btn btn-warning" type="submit" value="Update" />
 										</form>
@@ -102,7 +102,7 @@
 	                <div class="modal-body text-left">
                     <form action="{% url 'key_request:change_room_areas' %}" method="post">
                       {% csrf_token %}
-											{% include 'key_request/subpages/room_areas_table.html' with room_id=room.id %}
+											{% include 'key_request/subpages/room_areas_table.html' with room_id=room.id area_ids=room.area_ids %}
                       <input type="hidden" name="room" value="{{ room.id }}" />
                       <input class="btn btn-warning" type="submit" value="Update" />
                     </form>
@@ -122,7 +122,7 @@
 									<div class="modal-body text-left">
 										<form action="{% url 'key_request:change_room_trainings' %}" method="post">
 											{% csrf_token %}
-											{% include 'key_request/subpages/room_trainings_table.html' with room_id=room.id %}
+											{% include 'key_request/subpages/room_trainings_table.html' with room_id=room.id training_ids=room.training_ids %}
 											<input type="hidden" name="room" value="{{ room.id }}" />
 											<input class="btn btn-warning" type="submit" value="Update" />
 										</form>
@@ -202,7 +202,7 @@
 	  </tbody>
 	</table>
 
-	{% include 'key_request/admin/_pagination.html' with data=rooms %}
+	{% include 'key_request/subpages/pagination.html' with data=rooms %}
 
 </section>
 

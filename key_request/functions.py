@@ -80,20 +80,22 @@ def check_user_trainings(user, selected_rooms):
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
 
 
-def get_manager_dashboard(user, option=None, query=None):
-    forms = []
-    
+def search_filters_for_requests(query):
+    forms = RequestForm.objects.all()
     if query:
-        if option == 'user_name':
-            forms = RequestForm.objects.filter(Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query))
-        elif option == 'building_code':
-            forms = RequestForm.objects.filter(Q(rooms__building__code__icontains=query))
-        elif option == 'floor':
-            forms = RequestForm.objects.filter(Q(rooms__floor_name__icontains=query))
-        elif option == 'room_number':
-            forms = RequestForm.objects.filter(Q(rooms__number__icontains=query))
-    else:
-        forms = RequestForm.objects.all()
+        if query['building']:
+            forms = forms.filter(rooms__building__code__icontains=query['building'])
+        if query['floor']:
+            forms = forms.filter(rooms__floor__name__icontains=query['floor'])
+        if query['number']:
+            forms = forms.filter(rooms__number__icontains=query['number'])
+        if query['name']:
+            forms = forms.filter(Q(user__first_name__icontains=query['name']) | Q(user__last_name__icontains=query['name']))
+    return forms
+
+
+def get_manager_dashboard(user, query=None):
+    forms = search_filters_for_requests(query)
 
     requests = []
     new_requests = 0

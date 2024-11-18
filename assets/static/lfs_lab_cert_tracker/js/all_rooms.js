@@ -1,9 +1,7 @@
 $(document).ready(function() {
-
   const hrefs = window.location.href.split('?t=');
-  console.log('here =====', hrefs.length);
 
-  if (hrefs.length === 2) {
+  if (hrefs.length === 2 && hrefs[1] !== 'basic_info') {
     main(hrefs[1] + '-table-0');
   }
 
@@ -14,11 +12,10 @@ $(document).ready(function() {
 });
 
 function main(tableID) {
-  console.log(tableID);
-
   const itemPerPage = 10;
   let currPage = 1;
   let rows = document.getElementById(tableID).getElementsByTagName('tbody')[0].rows;
+
   $('#display-total-' + tableID).html(rows.length);
   paginate(rows, currPage, tableID, itemPerPage);
 

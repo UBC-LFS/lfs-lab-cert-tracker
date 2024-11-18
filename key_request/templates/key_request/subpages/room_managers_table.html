@@ -18,7 +18,7 @@
         <td>{{ user.username }}</td>
         <td>{{ user.email }}</td>
         <td>
-          <input id="{{ user.id }}" type="checkbox" name="manager[]" value="{{ user.id }}" {% if user.id in room.manager_ids %}checked{% endif %} />
+          <input id="{{ user.id }}" type="checkbox" name="managers[]" value="{{ user.id }}" {% if user.id in manager_ids %}checked{% endif %} />
         </td>
       </tr>
     {% endfor %}

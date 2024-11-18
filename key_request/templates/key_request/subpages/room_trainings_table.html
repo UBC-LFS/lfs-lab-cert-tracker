@@ -14,7 +14,7 @@
 				<td>{{ training.id }}</td>
 				<td class="text-left">{{ training.name }}</td>
 				<td>
-					<input type="checkbox" name="training[]" value="{{ training.id }}" {% if training.id in room.training_ids %}checked{% endif %} />
+					<input type="checkbox" name="trainings[]" value="{{ training.id }}" {% if training.id in training_ids %}checked{% endif %} />
 				</td>
 			</tr>
 		{% endfor %}

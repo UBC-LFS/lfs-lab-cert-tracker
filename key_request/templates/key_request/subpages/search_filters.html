@@ -1,13 +1,29 @@
-<div class="search-field mb-2">
+<div class="bg-light-gray border p-4 mb-5 font-size-sm">
   <form method="GET" >
-    <div class="input-field">
-      <select class="" name="option">
-        <option value="user_name">User Name</option>
-        <option value="building_code">Building Code</option>
-        <option value="floor">Floor</option>
-        <option value="room_number">Room Number</option>
-      </select>
-      <input type="text" name="query" value="{{ request.GET.query }}" placeholder="Search" />
+    <select name="building">
+      <option value="">Building</option>
+      {% for building in buildings %}
+        <option value="{{ building.code }}" {% if request.GET.building == building.code %}selected{% endif %}>{{ building.code }}</option>
+      {% endfor %}
+    </select>
+    and
+    <select name="floor">
+      <option value="">Floor</option>
+      {% for floor in floors %}
+        <option value="{{ floor.name }}" {% if request.GET.floor == floor.name %}selected{% endif %}>{{ floor.name }}</option>
+      {% endfor %}
+    </select>
+    and
+    <select name="number">
+      <option value="">Room Number</option>
+      {% for room in rooms %}
+        <option value="{{ room.number }}" {% if request.GET.number == room.number %}selected{% endif %}>{{ room.number }}</option>
+      {% endfor %}
+    </select>
+    and
+    <input type="text" name="full_name" value="{{ request.GET.name }}" placeholder="Full Name" />
+
+    <div class="mt-2">
       <button class="btn btn-primary btn-sm" type="submit">Search</button>
       {% if path == 'all_requests' %}
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}">Clear</a>

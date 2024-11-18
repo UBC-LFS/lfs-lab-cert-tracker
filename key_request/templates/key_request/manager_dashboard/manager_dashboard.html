@@ -20,15 +20,14 @@
 		<small class="text-secondary">(Total: {{ total_requests }})</small>
 	</h4>
 
-	{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
+	{% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
 
-	<table id="selected-rooms" class="table table-bordered table-striped">
+	<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
 	  <thead>
 	    <tr>
 				{% if request.user.is_superuser %}
 					<th>ID</th>
 				{% endif %}
-				<th>CWL</th>
 	      <th>Full Name</th>
 				<th>Building</th>
 				<th>Floor</th>
@@ -47,10 +46,9 @@
 					{% if request.user.is_superuser %}
 						<td>{{ req.form.id }}</td>
 					{% endif %}
-					<td>
-	          <a href="{% url 'app:user_details' user_id=req.form.user.id %}?next={{ request.get_full_path }}">{{ req.form.user.username }}</a>
-	        </td>
-	        <td>{{ req.form.user.get_full_name }}</td>
+	        <td>
+						<a href="{% url 'app:user_details' user_id=req.form.user.id %}?next={{ request.get_full_path }}">{{ req.form.user.get_full_name }}</a>
+					</td>
 	        <td>{{ req.room.building.code }}</td>
 					<td>{{ req.room.floor.name }}</td>
 					<td>{{ req.room.number }}</td>
@@ -72,7 +70,7 @@
 	      </tr>
 			{% empty %}
 				<tr>
-					<td colspan="100%">No key requests found</td>
+					<td colspan="100%">No key request forms found</td>
 				</tr>
 	    {% endfor %}
 	  </tbody>

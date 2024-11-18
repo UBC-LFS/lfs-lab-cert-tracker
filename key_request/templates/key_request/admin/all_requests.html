@@ -18,11 +18,10 @@
 
 	{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
 
-	<table class="table table-bordered table-hover table-striped">
+	<table class="table table-bordered table-hover table-striped font-size-sm">
 	  <thead>
 	    <tr>
 	      <th>ID</th>
-	      <th>CWL</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
 	      <th>Form <br /> Details</th>
@@ -36,9 +35,8 @@
 	      <tr>
 	        <td>{{ form.id }}</td>
 	        <td>
-	          <a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ form.user.username }}</a>
-	        </td>
-	        <td>{{ form.user.get_full_name }}</td>
+						<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ form.user.get_full_name }}</a>
+					</td>
 					<td class="text-left">
 						<ul class="list-minus-20">
 							{% for room in form.rooms.all %}
@@ -61,6 +59,10 @@
 	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}">Details</a>
 	        </td>
 	      </tr>
+			{% empty %}
+				<tr>
+					<td colspan="100%">No key request forms found</td>
+				</tr>
 	    {% endfor %}
 	  </tbody>
 	</table>

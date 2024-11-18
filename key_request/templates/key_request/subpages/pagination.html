@@ -6,14 +6,16 @@
         <a class="page-link" href="?page=1
 {% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
 {% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
-{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}"
         >First</a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ data.previous_page_number }}
 {% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
 {% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
-{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}"
         >&laquo;</a>
       </li>
     {% else %}
@@ -36,7 +38,8 @@
             <a class="page-link" href="?page={{ i }}
 {% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
 {% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
-{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}"
             >{{ i }}</a>
           {% endif %}
         </li>
@@ -48,14 +51,16 @@
         <a class="page-link" href="?page={{ data.next_page_number }}
 {% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
 {% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
-{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}"
         >&raquo;</a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ data.paginator.num_pages }}
 {% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
 {% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
-{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}"
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}"
         >Last</a>
       </li>
     {% else %}

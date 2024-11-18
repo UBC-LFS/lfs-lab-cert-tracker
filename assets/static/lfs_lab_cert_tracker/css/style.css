@@ -617,6 +617,9 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   border-color: #007bff;
 }
 
+.table-paginator {
+  flex: auto;
+}
 
 /* Responsive design */
 

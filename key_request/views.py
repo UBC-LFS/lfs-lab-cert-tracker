@@ -206,21 +206,12 @@ class AllRequests(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        option = request.GET.get('option')
-        query = request.GET.get('query')
-
-        form_list = []
-        if query:
-            if option == 'user_name':
-                form_list = RequestForm.objects.filter(Q(user__first_name__icontains=query) | Q(user__last_name__icontains=query))
-            elif option == 'building_code':
-                form_list = RequestForm.objects.filter(Q(rooms__building__code__icontains=query))
-            elif option == 'floor':
-                form_list = RequestForm.objects.filter(Q(rooms__floor_name__icontains=query))
-            elif option == 'room_number':
-                form_list = RequestForm.objects.filter(Q(rooms__number__icontains=query))
-        else:
-            form_list = RequestForm.objects.all()
+        form_list = func.search_filters_for_requests({
+            'building': request.GET.get('building'),
+            'floor': request.GET.get('floor'),
+            'number': request.GET.get('number'),
+            'name': request.GET.get('name')
+        })
 
         page = request.GET.get('page', 1)
         paginator = Paginator(form_list, NUM_PER_PAGE)
@@ -241,7 +232,10 @@ class AllRequests(LoginRequiredMixin, View):
         return render(request, 'key_request/admin/all_requests.html', {
             'total_forms': len(form_list),
             'forms': forms,
-            'req_status_dict': REQUEST_STATUS_DICT
+            'req_status_dict': REQUEST_STATUS_DICT,
+            'buildings': Building.objects.all(),
+            'floors': Floor.objects.all(),
+            'rooms': Room.objects.all()
         })
 
     @method_decorator(require_POST)
@@ -470,7 +464,6 @@ class AllRooms(LoginRequiredMixin, View):
         building = request.GET.get('building')
         floor = request.GET.get('floor')
         number = request.GET.get('number')
-        print(building, floor, number)
         if building:
             room_list = room_list.filter(building__code__icontains=building)
         if floor:
@@ -479,7 +472,7 @@ class AllRooms(LoginRequiredMixin, View):
             room_list = room_list.filter(number__icontains=number)
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(room_list, NUM_PER_PAGE)
+        paginator = Paginator(room_list, 5)
 
         try:
             rooms = paginator.page(page)
@@ -545,7 +538,7 @@ def change_room_managers(request):
     if room_filtered.exists():
         room = room_filtered.first()
         old_managers = set(room.managers.all().values_list('id', flat=True))
-        new_managers = set([int(a) for a in request.POST.getlist('manager[]')])
+        new_managers = set([int(a) for a in request.POST.getlist('managers[]')])
         if old_managers != new_managers:
             common = old_managers.intersection(new_managers)
             if len(common) == 0:
@@ -573,7 +566,7 @@ def change_room_areas(request):
     if room_filtered.exists():
         room = room_filtered.first()
         old_areas = set(room.areas.all().values_list('id', flat=True))
-        new_areas = set([int(a) for a in request.POST.getlist('area[]')])
+        new_areas = set([int(a) for a in request.POST.getlist('areas[]')])
         if old_areas != new_areas:
             common = old_areas.intersection(new_areas)
             if len(common) == 0:
@@ -601,7 +594,7 @@ def change_room_trainings(request):
     if room_filtered.exists():
         room = room_filtered.first()
         old_trainings = set(room.trainings.all().values_list('id', flat=True))
-        new_trainings = set([int(a) for a in request.POST.getlist('training[]')])
+        new_trainings = set([int(a) for a in request.POST.getlist('trainings[]')])
         if old_trainings != new_trainings:
             common = old_trainings.intersection(new_trainings)
             if len(common) == 0:
@@ -622,41 +615,85 @@ def change_room_trainings(request):
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class CreateRoom(LoginRequiredMixin, View):
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+        tab = request.GET.get('t')
+        if not tab:
+            raise SuspiciousOperation
+        
+        self.tab = tab
+        self.url = reverse('key_request:create_room') + '?t='
+        self.CREATE_ROOM_KEY = 'create_room_data'
+        return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        tab = request.GET.get('t', 'basic_info')
-
+        form_data = {}
+        manager_ids = []
+        area_ids = []
+        training_ids = []
+        if request.session.get(self.CREATE_ROOM_KEY):
+            form_data = request.session[self.CREATE_ROOM_KEY]
+            manager_ids = request.session[self.CREATE_ROOM_KEY]['managers']
+            area_ids = request.session[self.CREATE_ROOM_KEY]['areas']
+            training_ids = request.session[self.CREATE_ROOM_KEY]['trainings']
+        
         return render(request, 'key_request/admin/create_room.html', {
-            'users': User.objects.all(),
-            'areas': Lab.objects.all(),
-            'trainings': Cert.objects.all(),
-            'form': RoomForm(),
+            'form': RoomForm(initial=form_data) if self.tab == 'basic_info' else None,
+            'users': User.objects.all() if self.tab == 'pis' else None,
+            'areas': Lab.objects.all() if self.tab == 'areas' else None,
+            'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': {
-                'basic_info': reverse('key_request:create_room'),
-                'pis': reverse('key_request:create_room') + '?t=pis',
-                'areas': reverse('key_request:create_room') + '?t=areas',
-                'trainings': reverse('key_request:create_room') + '?t=trainings',
+                'basic_info': self.url + 'basic_info',
+                'pis': self.url + 'pis',
+                'areas': self.url + 'areas',
+                'trainings': self.url + 'trainings'
             },
-            'curr_tab': tab
+            'tab': self.tab,
+            'manager_ids': manager_ids,
+            'area_ids': area_ids,
+            'training_ids': training_ids
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form = RoomForm(request.POST)
-        if form.is_valid():
-            room = form.save()
-            if room:
-                room.managers.add( *list(request.POST.getlist('manager[]')) )
-                room.areas.add( *list(request.POST.getlist('area[]')) )
-                room.trainings.add( *list(request.POST.getlist('training[]')) )
-                messages.success(request, 'Success! Room Number {0} created.'.format(room.number))
-            else:
-                messages.error(request, 'Error! Failed to create Room Number {0}. This training has already existed.'.format(room.number))
-        else:
-            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+        method = request.POST.get('method')
+        tab = request.POST.get('tab')
+        if not method or not tab:
+            raise SuspiciousOperation
+        
+        data = {'building': '', 'floor': '', 'number': '', 'managers': [], 'areas': [], 'trainings': []}
+        if request.session.get(self.CREATE_ROOM_KEY):
+            data = request.session[self.CREATE_ROOM_KEY]
 
-        return redirect('key_request:create_room')
+        if 'Save' in method:
+            url_next = {'basic_info': 'pis', 'pis': 'areas', 'areas':'trainings', 'trainings': 'basic_info'}
+            request.session[self.CREATE_ROOM_KEY] = update_room_data(tab, request.POST, data)
+            return HttpResponseRedirect(self.url + url_next[tab])
+        
+        elif method == 'Create New Room':
+            form = RoomForm(update_room_data(tab, request.POST, data))
+            if form.is_valid():
+                room = form.save()
+                if room:
+                    if len(data['managers']) > 0:
+                        room.managers.add( *list(data['managers']) )
+                    
+                    if len(data['areas']) > 0:
+                        room.areas.add( *list(data['areas']) )
+
+                    if len(data['trainings']) > 0:
+                        room.trainings.add( *list(data['trainings']) )
+
+                    del request.session[self.CREATE_ROOM_KEY]
+                    
+                    messages.success(request, 'Success! Room Number {0} has been created.'.format(room.number))
+                else:
+                    messages.error(request, 'Error! Failed to create Room Number {0}. This training has already existed.'.format(room.number))
+            else:
+                messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+
+        return HttpResponseRedirect(self.url + 'basic_info')
 
 
 # Manager Dashboard
@@ -666,10 +703,15 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        option = request.GET.get('option')
-        query = request.GET.get('query')
+        query = {
+            'building': request.GET.get('building'),
+            'floor': request.GET.get('floor'),
+            'number': request.GET.get('number'),
+            'name': request.GET.get('name')
+        }
 
-        request_list, _ = func.get_manager_dashboard(request.user, option, query)
+        request_list, _ = func.get_manager_dashboard(request.user, query)
+        print('request_list ========', request_list)
 
         page = request.GET.get('page', 1)
         paginator = Paginator(request_list, NUM_PER_PAGE)
@@ -686,7 +728,10 @@ class ManagerDashboard(LoginRequiredMixin, View):
             'total_requests': len(request_list),
             'requests': requests,
             'req_status_dict': REQUEST_STATUS_DICT,
-            'post_url': reverse('key_request:manager_dashboard')
+            'post_url': reverse('key_request:manager_dashboard'),
+            'buildings': Building.objects.all(),
+            'floors': Floor.objects.all(),
+            'rooms': Room.objects.all()
         })
 
     @method_decorator(require_POST)
@@ -739,3 +784,27 @@ def GET_SETTINGS_FORM(model):
         'Floor': FloorForm
     }
     return dict[model] if model in dict.keys() else None
+
+
+def str_to_int(l):
+    if len(l) > 0:
+        return [int(a) for a in l]
+    return []
+
+
+def update_room_data(tab, post, data):
+    if tab == 'basic_info':
+        data['building'] = post.get('building')
+        data['floor'] = post.get('floor')
+        data['number'] = post.get('number')
+
+    elif tab == 'pis':
+        data['managers'] = str_to_int(post.getlist('managers[]'))
+
+    elif tab == 'areas':
+        data['areas'] = str_to_int(post.getlist('areas[]'))
+
+    elif tab == 'trainings':
+        data['trainings'] = str_to_int(post.getlist('trainings[]'))
+    
+    return data
