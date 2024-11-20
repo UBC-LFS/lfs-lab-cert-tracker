@@ -4,6 +4,7 @@ from . import views
 app_name = 'app'
 
 urlpatterns = [
+    path('home/', views.Home.as_view(), name='home'),
 
     # Users - classes
     path('users/report/missing-trainings/', views.UserReportMissingTrainingsView.as_view(), name='user_report_missing_trainings'),

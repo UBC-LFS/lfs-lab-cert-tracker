@@ -12,14 +12,7 @@
       <tr>
         <td>{{ tr.id }}</td>
         <td class="text-left">
-          {% if not tr.is_missing %}
-            <a href="{% url 'app:user_training_details' user_id=request.user.id training_id=tr.id %}?p=account">
-              {{ tr.name }}
-            </a>
-          {% else %}
-            {{ tr.name }}
-          {% endif %}
-
+          {{ tr.name }}
           {% if not tr.is_missing and not tr.is_expired %}
             <span class="material-symbols-outlined text-success">check_circle</span>
           {% endif %}

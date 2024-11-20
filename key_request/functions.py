@@ -1,5 +1,6 @@
 import json
 from django.db.models import Q, F, Max
+from urllib.parse import urlparse
 from datetime import date
 
 from .models import *
@@ -128,3 +129,35 @@ def get_manager_dashboard(user, query=None):
                 })
     
     return requests, new_requests
+
+
+def str_to_int(l):
+    if len(l) > 0:
+        return [int(a) for a in l]
+    return []
+
+
+def update_room_data(tab, post, data):
+    if tab == 'basic_info':
+        data['building'] = post.get('building')
+        data['floor'] = post.get('floor')
+        data['number'] = post.get('number')
+
+    elif tab == 'pis':
+        data['managers'] = str_to_int(post.getlist('managers[]'))
+
+    elif tab == 'areas':
+        data['areas'] = str_to_int(post.getlist('areas[]'))
+
+    elif tab == 'trainings':
+        data['trainings'] = str_to_int(post.getlist('trainings[]'))
+    
+    return data
+
+def get_next(request):
+    full_path = request.get_full_path()
+    parse_result = urlparse(full_path)
+    query = parse_result.query.split('next=')
+    if len(query) > 1:
+        return query[1]
+    return None

@@ -1,7 +1,14 @@
+from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Lab, Cert
+
+from django.db.models.signals import post_save
+from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
 from .utils import *
 
 
@@ -98,39 +105,3 @@ class RequestFormStatus(models.Model):
 
     class Meta:
         ordering = ['pk']
-
-
-    # def get_fields(self):
-    #     fields = []
-
-    #     renamed_fields = {
-    #         'role': 'Applicant Role in LFS',
-    #         'affliation': 'Applicant UBC Affliation',
-    #         'supervisor_first_name': "Supervisor's First Name",
-    #         'supervisor_last_name': "Supervisor's Last Name",
-    #         'supervisor_email': "Supervisor's Email",
-    #         'after_hours_access': 'After hours access',
-    #         'working_alone': 'Working alone and/or in isolation',
-    #         'room_numbers': 'Room Numbers that I need access to',
-    #         'comment': 'Additional Comments'
-    #     }
-
-    #     choices_fields = ['affliation', 'after_hours_access', 'building_name']
-
-    #     for field in self._meta.fields:
-    #         if field.name == 'id' or field.name == 'user' or field.name == 'lab':
-    #             continue
-
-    #         name = []
-    #         val = getattr(self, field.name)
-
-    #         if field.name in renamed_fields.keys():
-    #             name.append(renamed_fields[field.name])
-    #         else:
-    #             name = [sp.capitalize() for sp in field.name.split('_')]
-            
-    #         if field.name in choices_fields:
-    #             val = getattr(self, 'get_{0}_display'.format(field.name))()
-
-    #         fields.append( (' '.join(name), val) )
-    #     return fields

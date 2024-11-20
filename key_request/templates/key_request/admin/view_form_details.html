@@ -9,68 +9,94 @@
 
 {% block content %}
 
+{% include 'key_request/left_side_menu.html' %}
+
 <section class="main-content">
-	<h3 class="title">Form Details</h3>
+	<nav>
+		<a href="{{ next }}">All Requests</a>
+		{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
+		<span class="text-secondary">Key Request Form Details</span>
+	</nav>
+	<h3 class="title">Key Request Form Details</h3>
 
-	<h4 class="text-info mt-5 mb-4">Selected Rooms</h4>
+	<nav class="mt-5">
+		<div class="nav nav-tabs">
+			<a class="nav-link {% if tab == 'form_details' %}active{% endif %}" href="{{ tab_urls.form_details }}">Form Details</a>
+			<a class="nav-link {% if tab == 'selected_rooms' %}active{% endif %}" href="{{ tab_urls.selected_rooms }}">Selected Rooms</a>
+			<a class="nav-link {% if tab == 'training_records' %}active{% endif %}" href="{{ tab_urls.training_records }}">Training Records</a>
+		</div>
+	</nav>
 
-	<table id="selected-rooms" class="table table-bordered table-striped">
-	  <thead>
-	    <tr>
-	      <th>ID</th>
-	      <th>Building</th>
-	      <th>Floor</th>
-	      <th>Room <br /> Number</th>
-	      <th>Areas</th>
-	      <th>PI</th>
-				<th>Operator</th>
-				<th>Status <br /> History</th>
-				<th>Action</th>
-				<th>
-					<input id="select-all-checkbox" type="checkbox" />
-				</th>
-	    </tr>
-	  </thead>
-	  {% for item in items %}
-	    <tr>
-	      <td>{{ form.id }} | {{ item.room.id }}</td>
-	      <td>{{ item.room.building.code }}</td>
-	      <td>{{ item.room.floor.name }}</td>
-	      <td>{{ item.room.number }}</td>
-	      <td class="text-left">
-	        <ul class="list-minus-20">
-	          {% for area in item.room.areas.all %}
-	            <li>{{ area.name }}</li>
-	          {% endfor%}
-	        </ul>
-	      </td>
-	      <td>{{ item.manager.full_name }}</td>
-				<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
-				<td>
-					{% if item.status|length > 0 %}
-						{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
-					{% endif %}
-				</td>
-				<td>
-					{% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=item %}
-				</td>
-				<td>
-					<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ item.room.id }}_{{ item.manager.id }}" data-building="{{ item.room.building.code }}" data-floor="{{ item.room.floor.name }}" data-number="{{ item.room.number }}" data-pi="{{ item.manager.full_name }}" data-is_new="{% if item.status|length == 0 %}true{% else %}false{% endif %}"/>
-				</td>
-	    </tr>
-	  {% endfor %}
-	</table>
+	<section class="mt-5">
+		{% if tab == 'form_details' %}
 
-	{% include 'key_request/subpages/modal_rooms_update_all.html' %}
+			{% include 'key_request/subpages/table_request_form_details.html' with data=form %}
 
-	<h4 class="text-info mt-5 mb-4">Users's Training Records</h4>
+		{% elif tab == 'selected_rooms' %}
 
-	{% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings %}
+			<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
+				<thead>
+					<tr>
+						<th>Form <br /> ID</th>
+						<th>Building</th>
+						<th>Floor</th>
+						<th>Room <br /> Number</th>
+						<th>Areas</th>
+						<th>PI</th>
+						<th>Operator</th>
+						<th>Status <br /> History</th>
+						<th>Action</th>
+						<th>
+							<input id="select-all-checkbox" type="checkbox" />
+						</th>
+					</tr>
+				</thead>
+				{% for item in items %}
+					<tr>
+						<td>{{ form.id }}</td>
+						<td>{{ item.room.building.code }}</td>
+						<td>{{ item.room.floor.name }}</td>
+						<td>{{ item.room.number }}</td>
+						<td class="text-left">
+							<ul class="list-minus-20">
+								{% for area in item.room.areas.all %}
+									<li>{{ area.name }}</li>
+								{% endfor%}
+							</ul>
+						</td>
+						<td>{{ item.manager.full_name }}</td>
+						<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
+						<td>
+							{% if item.status|length > 0 %}
+								{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
+							{% endif %}
+						</td>
+						<td>
+							{% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=item %}
+						</td>
+						<td>
+							<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ item.room.id }}_{{ item.manager.id }}" data-building="{{ item.room.building.code }}" data-floor="{{ item.room.floor.name }}" data-number="{{ item.room.number }}" data-pi="{{ item.manager.full_name }}" data-is_new="{% if item.status|length == 0 %}true{% else %}false{% endif %}"/>
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
 
-	{% include 'key_request/subpages/table_request_form_details.html' with data=form %}
+			{% if items.length > 0 %}
+				<div class="float-right">
+					{% include 'key_request/subpages/modal_rooms_update_all.html' %}
+				</div>
+			{% endif %}
+
+		{% elif tab == 'training_records' %}
+
+			{% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings %}
+
+		{% else %}
+		{% endif %}
+	</section>
 
 	<div class="text-center mt-5">
-		<a class="btn btn-secondary" href="{% url 'key_request:all_requests' %}">Go back</a>
+		<a class="btn btn-secondary btn-lg" href="{{ next }}">Back to All Requests</a>
 	</div>
 </section>
 {% endblock %}

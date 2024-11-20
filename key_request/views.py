@@ -22,6 +22,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
+import smtplib
+from email.mime.text import MIMEText
 from django.apps import apps
 
 from app import functions as appFunc
@@ -58,7 +60,6 @@ class Index(LoginRequiredMixin, View):
                         manager_approvals += 1
                         if not form.status_created_at or status_filtered.first().created_at > form.status_created_at:
                             form.status_created_at = status_filtered.first().created_at
-
 
             if num_managers == manager_approvals:
                 form.status = 'Approved'
@@ -133,7 +134,7 @@ class SubmitForm(LoginRequiredMixin, View):
         setup = super().setup(request, *args, **kwargs)
 
         selected_rooms = request.session.get('selected_rooms')
-        user_trainings, total_missing, total_expired = func.check_user_trainings(request.user, selected_rooms)
+        _, total_missing, total_expired = func.check_user_trainings(request.user, selected_rooms)
         if not selected_rooms or total_missing != 0 or total_expired != 0:
             raise Http404
 
@@ -180,11 +181,9 @@ class SubmitForm(LoginRequiredMixin, View):
 
                 # Add selected rooms to this key request
                 req_form.rooms.add( *rooms )
-
-                # Update FormStatus
-                # fs = RequestFormStatus.objects.create(form_id=req_form.id, operator=operator, status='0')
-                # if not fs:
-                #     messages.warning(request, "Warning! Failed to update {0}'s status for some reason. Please try again or contact the IT administrator.".format(operator))
+                
+                # Send a confirmation email
+                send_email(req_form)
 
                 # Delete the selected rooms in the session
                 del request.session['selected_rooms']
@@ -197,6 +196,102 @@ class SubmitForm(LoginRequiredMixin, View):
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return redirect('key_request:submit_form')
+
+
+def send_email(obj):    
+    user_rooms = ''
+    pi_rooms = {}
+    for room in obj.rooms.all():
+        room_info = '<li>{0} {1} - Room {2}</li>'.format(room.building.code, room.floor.name, room.number)
+        user_rooms += room_info
+
+        for manager in room.managers.all():
+            if manager.id not in pi_rooms.keys():
+                pi_rooms[manager.id] = []
+            
+            pi_rooms[manager.id].append({
+                'pi': manager,
+                'room': room_info,
+                'applicant': obj.user,
+                'submitted_date': obj.submitted_at.strftime('%Y-%m-%d')
+            })
+
+    if len(user_rooms) > 0:
+        subject, message = message_for_user(obj.user, user_rooms, 'user')
+        send(obj.user, subject, message)
+    
+    if len(pi_rooms.keys()) > 0:
+        for key, value in pi_rooms.items():
+            if len(value) > 0:
+                rooms = ''
+                for item in value:
+                    rooms += item['room']
+                subject, message = message_for_user(value[0]['pi'], rooms, 'pi', value[0]['applicant'], value[0]['submitted_date'])
+                send(value[0]['pi'], subject, message)
+
+
+def message_for_user(receiver, rooms, option, applicant=None, submitted_date=None):
+    subject = ''
+    message = ''
+
+    if option == 'user':
+        subject = 'Confirmation of Key Request at UBC LFS'
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <div>We have received your key request as follows.</div>
+            <ul>{1}</ul>
+            <div>Please visit <a href={2}>{2}</a> to check the status of your key request. Thank you.</div>
+            <br />
+            <div>
+                <b>Please note that if you try to access the LFS Training Record Management System off campus,
+                you must be connected via
+                <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
+            </div>
+            <br />
+            <p>Best regards,</p>
+            <p>LFS Training Record Management System</p>
+        </div>
+        '''.format(receiver.get_full_name(), rooms, settings.SITE_URL)
+    
+    elif option == 'pi':
+        subject = 'Notification of Key Request at UBC LFS'
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <div>{1} has submitted a key request form on {2}.</div>
+            <ul>{3}</ul>
+            <div>Please visit <a href={4}>{4}</a> to update the status of {1}'s key request form. Thank you.</div>
+            <br />
+            <div>
+                <b>Please note that if you try to access the LFS Training Record Management System off campus,
+                you must be connected via
+                <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
+            </div>
+            <br />
+            <p>Best regards,</p>
+            <p>LFS Training Record Management System</p>
+        </div>
+        '''.format(receiver.get_full_name(), applicant.get_full_name(), submitted_date, rooms, settings.SITE_URL)
+    return subject, message
+
+
+def send(receiver, subject, message):
+    sender = settings.EMAIL_FROM
+    receiver = '{0} <{1}>'.format(receiver.get_full_name(), receiver.email)
+
+    msg = MIMEText(message, 'html')
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = receiver
+
+    try:
+        server = smtplib.SMTP(settings.EMAIL_HOST)
+        server.sendmail(sender, receiver, msg.as_string())
+    except Exception as e:
+        print(e)
+    finally:
+        server.quit()
 
 
 # For Admin
@@ -231,11 +326,7 @@ class AllRequests(LoginRequiredMixin, View):
 
         return render(request, 'key_request/admin/all_requests.html', {
             'total_forms': len(form_list),
-            'forms': forms,
-            'req_status_dict': REQUEST_STATUS_DICT,
-            'buildings': Building.objects.all(),
-            'floors': Floor.objects.all(),
-            'rooms': Room.objects.all()
+            'forms': forms
         })
 
     @method_decorator(require_POST)
@@ -256,12 +347,19 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
-
+        
         form_id = kwargs.get('form_id')
-        if not form_id:
+        tab = request.GET.get('t')
+        next = func.get_next(request)
+
+        if not form_id or not tab or not next:
             raise SuspiciousOperation
 
         self.form = get_object_or_404(RequestForm, id=form_id)
+        self.tab = tab
+        self.url = reverse('key_request:view_form_details', args=[form_id])
+        self.next = next
+
         return setup
 
     @method_decorator(require_GET)
@@ -287,11 +385,18 @@ class ViewFormDetails(LoginRequiredMixin, View):
                     'status': status
                 })
 
-        return render(request, 'key_request/view_form_details.html', {
+        return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
             'items': items,
             'req_status_dict': REQUEST_STATUS_DICT,
-            'post_url': reverse('key_request:view_form_details', args=[self.form.id])
+            'post_url': self.url,
+            'tab_urls': {
+                'form_details': self.url + '?t=form_details&next=' + self.next ,
+                'selected_rooms': self.url + '?t=selected_rooms&next=' + self.next,
+                'training_records': self.url + '?t=training_records&next=' + self.next
+            },
+            'tab': self.tab,
+            'next': self.next
         })
 
     @method_decorator(require_POST)
@@ -668,11 +773,11 @@ class CreateRoom(LoginRequiredMixin, View):
 
         if 'Save' in method:
             url_next = {'basic_info': 'pis', 'pis': 'areas', 'areas':'trainings', 'trainings': 'basic_info'}
-            request.session[self.CREATE_ROOM_KEY] = update_room_data(tab, request.POST, data)
+            request.session[self.CREATE_ROOM_KEY] = func.update_room_data(tab, request.POST, data)
             return HttpResponseRedirect(self.url + url_next[tab])
         
         elif method == 'Create New Room':
-            form = RoomForm(update_room_data(tab, request.POST, data))
+            form = RoomForm(func.update_room_data(tab, request.POST, data))
             if form.is_valid():
                 room = form.save()
                 if room:
@@ -784,27 +889,3 @@ def GET_SETTINGS_FORM(model):
         'Floor': FloorForm
     }
     return dict[model] if model in dict.keys() else None
-
-
-def str_to_int(l):
-    if len(l) > 0:
-        return [int(a) for a in l]
-    return []
-
-
-def update_room_data(tab, post, data):
-    if tab == 'basic_info':
-        data['building'] = post.get('building')
-        data['floor'] = post.get('floor')
-        data['number'] = post.get('number')
-
-    elif tab == 'pis':
-        data['managers'] = str_to_int(post.getlist('managers[]'))
-
-    elif tab == 'areas':
-        data['areas'] = str_to_int(post.getlist('areas[]'))
-
-    elif tab == 'trainings':
-        data['trainings'] = str_to_int(post.getlist('trainings[]'))
-    
-    return data

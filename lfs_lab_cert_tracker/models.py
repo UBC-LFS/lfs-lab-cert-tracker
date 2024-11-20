@@ -1,18 +1,18 @@
 import os
+import sys
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User as AuthUser
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.validators import FileExtensionValidator, validate_email
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
-from django.conf import settings
+
 from io import BytesIO
-import sys
 from PIL import Image as PILImage
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
-from django.utils.translation import gettext_lazy as _
 
 
 class Lab(models.Model):
@@ -25,6 +25,7 @@ class Lab(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Cert(models.Model):
     """ Certificate Model """

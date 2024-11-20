@@ -20,8 +20,11 @@
         <option value="{{ room.number }}" {% if request.GET.number == room.number %}selected{% endif %}>{{ room.number }}</option>
       {% endfor %}
     </select>
+
+    {% if path != 'all_rooms' %}
     and
-    <input type="text" name="full_name" value="{{ request.GET.name }}" placeholder="Full Name" />
+    <input type="text" name="name" value="{{ request.GET.name }}" placeholder="Full Name" />
+    {% endif %}
 
     <div class="mt-2">
       <button class="btn btn-primary btn-sm" type="submit">Search</button>
@@ -29,6 +32,8 @@
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}">Clear</a>
       {% elif path == 'manager_dashboard' %}
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_dashboard' %}">Clear</a>
+      {% elif path == 'all_rooms' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_rooms' %}">Clear</a>
       {% endif %}
     </div>
   </form>

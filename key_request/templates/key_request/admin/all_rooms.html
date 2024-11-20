@@ -16,18 +16,7 @@
 		<small class="text-secondary">(Total: {{ total_rooms }})</small>
 	</h3>
 
-	<div class="mb-5">
-	  <form method="GET">
-			<input type="text" name="building" value="{{ request.GET.building }}" placeholder="Building" /> and
-			<input type="text" name="floor" value="{{ request.GET.floor }}" placeholder="Floor" /> and
-			<input type="text" name="number" value="{{ request.GET.number }}" placeholder="Room Number" />
-
-			<div class="mt-1">
-				<button class="btn btn-sm btn-primary" type="submit">Search</button>
-			  <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_rooms' %}">Clear</a>
-			</div>
-		</form>
-	</div>
+	{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
 
 	<table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
 	  <thead>

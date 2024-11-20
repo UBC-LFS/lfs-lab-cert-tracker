@@ -20,11 +20,24 @@
 		</div>
 	</div>
 
-	<h4 class="text-info mb-4">History</h4>
+	<h4 class="text-info mb-4">
+		History
+		<small class="text-secondary">(Total: {{ forms|length }})</small>
+	</h4>
 
-	<table class="table table-bordered table-hover table-striped">
+	<table
+		class="table table-bordered table-striped table-responsive-md"
+		data-toggle="table"
+		data-classes=""
+		data-sortable="true"
+		data-pagination="true"
+		data-search="true"
+		data-page-size="10"
+		data-page-list="[10, 20, 30, 50, 100, all]"
+	>
 		<thead>
 			<tr>
+				<th data-sortable="true">#</th>
 				<th>Form Details</th>
 				<th>Status</th>
 				<th>Submitted At</th>
@@ -33,6 +46,7 @@
 		<tbody>
 			{% for form in forms %}
 				<tr>
+					<td>{{ forloop.counter }}</td>
 					<td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with is_admin='True' %}
 					</td>

@@ -22,7 +22,6 @@
 	  <thead>
 	    <tr>
 	      <th>#</th>
-	      <th>ID</th>
 	      <th>Building</th>
 				<th>Floor</th>
 				<th>Room <br /> Number</th>
@@ -34,7 +33,6 @@
 	    {% for room in rooms %}
 	      <tr>
 	        <td>{{ forloop.counter }}</td>
-	        <td>{{ room.id }}</td>
 	        <td>{{ room.building.code }}</td>
 					<td>{{ room.floor.name }}</td>
 					<td>{{ room.number }}</td>
@@ -73,7 +71,7 @@
 	  </tbody>
 	</table>
 
-	<h5 class="text-info mt-5 mb-4">Summary of Your Training Records</h5>
+	<h5 class="text-info mt-5 mb-4">Summary of Training Records</h5>
 
 	{% include 'key_request/subpages/table_user_trainings.html' %}
 

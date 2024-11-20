@@ -31,8 +31,8 @@ urlpatterns = [
 
     path('forms/<int:form_id>/details/', views.ViewFormDetails.as_view(), name='view_form_details'),
 
-    path('pi-rooms/', views.ManagerRooms.as_view(), name='manager_rooms'),
-    path('pi-dashboard/', views.ManagerDashboard.as_view(), name='manager_dashboard'),
+    path('rooms/', views.ManagerRooms.as_view(), name='manager_rooms'),
+    path('dashboard/', views.ManagerDashboard.as_view(), name='manager_dashboard'),
     
 
     

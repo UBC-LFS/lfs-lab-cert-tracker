@@ -163,6 +163,7 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   font-size: 0.75rem;
 }
 
+.font-size-nl { font-size: 1rem; }
 .font-size-lg { font-size: 1.2rem; }
 .font-size-sm { font-size: 0.9rem; }
 .font-size-xs { font-size: 0.8rem; }
@@ -338,7 +339,7 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
 .table tr th,
 .table tr td {
   text-align: center;
-  vertical-align: middle;
+  vertical-align: middle !important;
 }
 
 .table-left-column-bold tr td:nth-child(1) {

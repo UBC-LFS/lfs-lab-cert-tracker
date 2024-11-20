@@ -18,7 +18,7 @@
 
 	{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
 
-	<table class="table table-bordered table-hover table-striped font-size-sm">
+	<table class="table table-bordered table-striped font-size-sm">
 	  <thead>
 	    <tr>
 	      <th>ID</th>
@@ -27,16 +27,14 @@
 	      <th>Form <br /> Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted At</th>
-	      <th>Actions</th>
+	      <th>Action</th>
 	    </tr>
 	  </thead>
 	  <tbody>
 	    {% for form in forms %}
 	      <tr>
 	        <td>{{ form.id }}</td>
-	        <td>
-						<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ form.user.get_full_name }}</a>
-					</td>
+	        <td>{{ form.user.get_full_name }}</td>
 					<td class="text-left">
 						<ul class="list-minus-20">
 							{% for room in form.rooms.all %}
@@ -56,7 +54,7 @@
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
 	        </td>
 	        <td>
-	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}">Details</a>
+	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=form_details&next={{ request.get_full_path }}">Details</a>
 	        </td>
 	      </tr>
 			{% empty %}
@@ -66,8 +64,8 @@
 	    {% endfor %}
 	  </tbody>
 	</table>
-	{% include 'key_request/subpages/pagination.html' with data=forms %}
 
+	{% include 'key_request/subpages/pagination.html' with data=forms %}
 </section>
 
 {% endblock %}
