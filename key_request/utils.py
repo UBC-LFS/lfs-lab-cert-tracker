@@ -22,5 +22,11 @@ REQUEST_STATUS_DICT = {
     INSUFFICIENT: 'Insufficient Info'
 }
 
+REV_REQUEST_STATUS_DICT = {
+    'Approved': APPROVED,
+    'Declined': DECLINED,
+    'Insufficient Info': INSUFFICIENT
+}
+
 REQUEST_STATUS = [ (k, v) for k, v in REQUEST_STATUS_DICT.items() ]
 

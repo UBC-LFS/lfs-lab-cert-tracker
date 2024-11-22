@@ -20,14 +20,32 @@
 		<small class="text-secondary">(Total: {{ total_requests }})</small>
 	</h4>
 
-	{% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
+	<div class="row bg-light-gray border p-4 font-size-sm">
+		<div class="col-md-9" style="border-right: 1px solid #bbb;">
+			{% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
+		</div>
+		<div class="col-md-3">
+			<div class="text-center">
+				<h5>Number of <br /> <span class="text-danger">NEW</span> Forms</h5>
+				<a class="h4" href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_requests }}</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="text-dark-gray font-size-sm mb-5">
+	  {{ num_requests }} result{{ num_requests|pluralize }} found. {{ requests|length }} row{{ requests|pluralize }} in this page.
+	</div>
 
 	<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
 	  <thead>
 	    <tr>
-				{% if request.user.is_superuser %}
-					<th>ID</th>
-				{% endif %}
+				<th>
+					{% if request.user.is_superuser %}
+						Form ID
+					{% else %}
+						#
+					{% endif %}
+				</th>
 	      <th>Full Name</th>
 				<th>Building</th>
 				<th>Floor</th>
@@ -43,12 +61,14 @@
 	  <tbody>
 	    {% for req in requests %}
 	      <tr>
-					{% if request.user.is_superuser %}
-						<td>{{ req.form.id }}</td>
-					{% endif %}
-	        <td>
-						<a href="{% url 'app:user_details' user_id=req.form.user.id %}?next={{ request.get_full_path }}">{{ req.form.user.get_full_name }}</a>
+					<td>
+						{% if request.user.is_superuser %}
+							{{ req.form.id }}
+						{% else %}
+							{{ forloop.revcounter }}
+						{% endif %}
 					</td>
+	        <td>{{ req.form.user.get_full_name }}</td>
 	        <td>{{ req.room.building.code }}</td>
 					<td>{{ req.room.floor.name }}</td>
 					<td>{{ req.room.number }}</td>
@@ -56,10 +76,14 @@
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=req.form %}
 	        </td>
 	        <td>
-						{% include 'key_request/subpages/request_status.html' with data=req.status.last.status|get_status_display %}
-						<span class="font-size-xs text-secondary d-block">
-						  {% include 'key_request/subpages/date_and_time.html' with data=req.status.last.created_at %}
-						</span>
+						{% if req.status %}
+							{% include 'key_request/subpages/request_status.html' with data=req.status.last.status|get_status_display %}
+							<span class="font-size-xs text-secondary d-block">
+							  {% include 'key_request/subpages/date_and_time.html' with data=req.status.last.created_at %}
+							</span>
+						{% else %}
+							<span class="badge badge-danger">NEW</span>
+						{% endif %}
 	        </td>
 	        <td>
 	          {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=req %}
@@ -83,7 +107,6 @@
 			{% include 'key_request/subpages/modal_rooms_update_all.html' %}
 		{% endif %}
 	</div>
-
 </section>
 
 {% endblock %}

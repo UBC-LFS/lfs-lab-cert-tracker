@@ -559,7 +559,7 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
 .text-chocolate { color: #D2691E; }
 .text-orange { color: #fd7e14; }
 
-
+.font-weight-600 { font-weight: 600;}
 .font-size-dot9rem { font-size: 0.9rem; }
 .font-size-20px { font-size: 20px; }
 

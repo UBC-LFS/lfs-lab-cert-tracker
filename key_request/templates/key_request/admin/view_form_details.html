@@ -3,9 +3,8 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/_return_message.html' with data=messages %}
 {% endblock %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
 
 {% block content %}
 
@@ -78,10 +77,14 @@
 							<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ item.room.id }}_{{ item.manager.id }}" data-building="{{ item.room.building.code }}" data-floor="{{ item.room.floor.name }}" data-number="{{ item.room.number }}" data-pi="{{ item.manager.full_name }}" data-is_new="{% if item.status|length == 0 %}true{% else %}false{% endif %}"/>
 						</td>
 					</tr>
+				{% empty %}
+					<tr>
+						<td colspan="100%">No selected rooms found</td>
+					</tr>
 				{% endfor %}
 			</table>
-
-			{% if items.length > 0 %}
+			
+			{% if items|length > 0 %}
 				<div class="float-right">
 					{% include 'key_request/subpages/modal_rooms_update_all.html' %}
 				</div>

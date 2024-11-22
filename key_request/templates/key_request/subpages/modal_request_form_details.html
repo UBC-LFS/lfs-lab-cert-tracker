@@ -18,13 +18,13 @@
           </div>
         </nav>
         <div class="tab-content" id="nav-tabContent-{{ id }}">
-          <div class="tab-pane fade show active pt-5" id="nav-form-details-{{ id }}" role="tabpanel" aria-labelledby="nav-form-details-tab">
+          <div class="tab-pane fade show active pt-5" id="nav-form-details-{{ id }}" role="tabpanel" aria-labelledby="nav-form-details-tab-{{ id }}">
             {% include 'key_request/subpages/table_request_form_details.html' with form=form %}
           </div>
-          <div class="tab-pane fade pt-5" id="nav-selected-rooms-{{ id }}" role="tabpanel" aria-labelledby="nav-selected-rooms-tab">
+          <div class="tab-pane fade pt-5" id="nav-selected-rooms-{{ id }}" role="tabpanel" aria-labelledby="nav-selected-rooms-tab-{{ id }}">
             {% include 'key_request/subpages/table_selected_rooms.html' with form=form rooms=form.rooms.all is_admin=is_admin %}
           </div>
-          <div class="tab-pane fade pt-4" id="nav-training-records-{{ id }}" role="tabpanel" aria-labelledby="nav-training-records-tab">
+          <div class="tab-pane fade pt-4" id="nav-training-records-{{ id }}" role="tabpanel" aria-labelledby="nav-training-records-tab-{{ id }}">
             <h6>Quick Summary</h6>
             <ul>
               <li>Total Training Records: <strong class="text-chocolate">{{ form.user_trainings|length }}</strong></li>

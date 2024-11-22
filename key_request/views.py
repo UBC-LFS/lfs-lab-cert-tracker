@@ -40,7 +40,18 @@ class Index(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        forms = request.user.requestform_set.all()
+        form_list = request.user.requestform_set.all()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(form_list, NUM_PER_PAGE)
+
+        try:
+            forms = paginator.page(page)
+        except PageNotAnInteger:
+            forms = paginator.page(1)
+        except EmptyPage:
+            forms = paginator.page(paginator.num_pages)
+
         for form in forms:
             form.status = 'Pending'
             form.status_created_at = None
@@ -70,6 +81,7 @@ class Index(LoginRequiredMixin, View):
             form.total_expired = total_expired
 
         return render(request, 'key_request/index.html', {
+            'total_forms': len(form_list),
             'forms': forms
         })
 
@@ -301,12 +313,22 @@ class AllRequests(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        form_list = func.search_filters_for_requests({
+        query = {
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
             'number': request.GET.get('number'),
-            'name': request.GET.get('name')
-        })
+            'name': request.GET.get('name'),
+            'status': request.GET.get('status')
+        }
+
+        form_list = func.search_filters_for_requests(query)
+        new_forms = form_list.filter(requestformstatus__isnull=True)
+        num_new_forms = new_forms.count()
+        
+        if query['status']:
+            form_list = new_forms
+        
+        num_forms = len(form_list)
 
         page = request.GET.get('page', 1)
         paginator = Paginator(form_list, NUM_PER_PAGE)
@@ -326,7 +348,13 @@ class AllRequests(LoginRequiredMixin, View):
 
         return render(request, 'key_request/admin/all_requests.html', {
             'total_forms': len(form_list),
-            'forms': forms
+            'num_forms': num_forms,
+            'forms': forms,
+            'num_new_forms': num_new_forms,
+            'req_status_dict': REQUEST_STATUS_DICT,
+            'buildings': Building.objects.all(),
+            'floors': Floor.objects.all(),
+            'rooms': Room.objects.all()
         })
 
     @method_decorator(require_POST)
@@ -812,15 +840,15 @@ class ManagerDashboard(LoginRequiredMixin, View):
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
             'number': request.GET.get('number'),
-            'name': request.GET.get('name')
+            'name': request.GET.get('name'),
+            'status': request.GET.get('status')
         }
 
-        request_list, _ = func.get_manager_dashboard(request.user, query)
-        print('request_list ========', request_list)
+        total, request_list, num_new_requests = func.get_manager_dashboard(request.user, query)
+        num_requests = len(request_list)
 
         page = request.GET.get('page', 1)
         paginator = Paginator(request_list, NUM_PER_PAGE)
-        # paginator = Paginator(request_list, 1)
 
         try:
             requests = paginator.page(page)
@@ -830,10 +858,12 @@ class ManagerDashboard(LoginRequiredMixin, View):
             requests = paginator.page(paginator.num_pages)
 
         return render(request, 'key_request/manager_dashboard/manager_dashboard.html', {
-            'total_requests': len(request_list),
+            'total_requests': total,
+            'num_requests': num_requests,
             'requests': requests,
-            'req_status_dict': REQUEST_STATUS_DICT,
+            'num_new_requests': num_new_requests,
             'post_url': reverse('key_request:manager_dashboard'),
+            'req_status_dict': REQUEST_STATUS_DICT,
             'buildings': Building.objects.all(),
             'floors': Floor.objects.all(),
             'rooms': Room.objects.all()

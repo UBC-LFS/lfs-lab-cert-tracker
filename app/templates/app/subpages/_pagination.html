@@ -16,14 +16,14 @@
 {% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
 {% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
 {% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
-        >&laquo;</a>
+        >&lt;</a>
       </li>
     {% else %}
       <li class="page-item disabled">
         <span class="page-link">First</span>
       </li>
       <li class="page-item disabled">
-        <span class="page-link">&laquo;</span>
+        <span class="page-link">&lt;</span>
       </li>
     {% endif %}
 
@@ -53,7 +53,7 @@
 {% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}
 {% if request.GET.q %}&q={{ request.GET.q }}{% endif %}
 {% if request.GET.training %}&training={{ request.GET.training }}{% endif %}"
-        >&raquo;</a>
+        >&gt;</a>
       </li>
       <li class="page-item">
         <a class="page-link" href="?page={{ data.paginator.num_pages }}
@@ -65,7 +65,7 @@
       </li>
     {% else %}
       <li class="page-item disabled">
-        <span class="page-link">&raquo;</span>
+        <span class="page-link">&gt;</span>
       </li>
       <li class="page-item disabled">
         <span class="page-link">Last</span>

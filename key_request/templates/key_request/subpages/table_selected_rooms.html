@@ -1,27 +1,18 @@
 {% load custom_tags %}
 
-<table
-  class="table table-bordered table-striped table-responsive-md font-size-sm"
-  data-toggle="table"
-  data-classes=""
-  data-sortable="true"
-  data-pagination="true"
-  data-search="true"
-  data-page-size="10"
-  data-page-list="[10, 20, 30, 50, 100, all]"
->
+<table class="table table-bordered table-striped table-responsive-md font-size-sm" >
   <thead>
     <tr>
-      <th data-sortable="true">
+      <th>
         {% if is_admin == 'True' %}
           ID
         {% else %}
           #
         {% endif %}
       </th>
-      <th data-sortable="true">Building</th>
-      <th data-sortable="true">Floor</th>
-      <th data-sortable="true">Room <br /> Number</th>
+      <th>Building</th>
+      <th>Floor</th>
+      <th>Room <br /> Number</th>
       <th>Areas</th>
       {% if is_admin == 'True' %}
         <th>PIs</th>
@@ -54,7 +45,7 @@
             {% for manager in room.managers.all %}
               <li>
                 {% concat_strings room.id manager.id as args %}
-                <span class="text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+                <span class="text-{% if form.id|get_status_by_manager:args == 'Approved' %}success font-weight-600{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
               </li>
             {% endfor%}
           </ul>

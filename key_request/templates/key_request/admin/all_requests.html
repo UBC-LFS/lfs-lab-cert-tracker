@@ -16,7 +16,21 @@
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h3>
 
-	{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
+	<div class="row bg-light-gray border p-4 font-size-sm">
+		<div class="col-md-9" style="border-right: 1px solid #bbb;">
+			{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
+		</div>
+		<div class="col-md-3">
+			<div class="text-center">
+				<h5>Number of <br /> <span class="text-danger">NEW</span> Forms</h5>
+				<a class="h4" href="{% url 'key_request:all_requests' %}?page=1&status=New">{{ num_new_forms }}</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="text-dark-gray font-size-sm mb-5">
+	  {{ num_forms }} result{{ num_forms|pluralize }} found. {{ forms|length }} row{{ forms|pluralize }} in this page.
+	</div>
 
 	<table class="table table-bordered table-striped font-size-sm">
 	  <thead>
@@ -48,6 +62,8 @@
 	        <td>
 						{% if form.requestformstatus_set.all|length > 0 %}
 							{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+						{% else %}
+							<span class="badge badge-danger">NEW</span>
 						{% endif %}
 	        </td>
 	        <td>

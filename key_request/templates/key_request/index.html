@@ -22,19 +22,10 @@
 
 	<h4 class="text-info mb-4">
 		History
-		<small class="text-secondary">(Total: {{ forms|length }})</small>
+		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h4>
 
-	<table
-		class="table table-bordered table-striped table-responsive-md"
-		data-toggle="table"
-		data-classes=""
-		data-sortable="true"
-		data-pagination="true"
-		data-search="true"
-		data-page-size="10"
-		data-page-list="[10, 20, 30, 50, 100, all]"
-	>
+	<table class="table table-bordered table-striped table-responsive-md">
 		<thead>
 			<tr>
 				<th data-sortable="true">#</th>
@@ -46,9 +37,9 @@
 		<tbody>
 			{% for form in forms %}
 				<tr>
-					<td>{{ forloop.counter }}</td>
+					<td>{{ forloop.revcounter }}</td>
 					<td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with is_admin='True' %}
+						{% include 'key_request/subpages/modal_request_form_details.html' with id=form.id form=form is_admin='True' %}
 					</td>
 					<td>
 						{% include 'key_request/subpages/request_status.html' with data=form.status %}
@@ -67,6 +58,7 @@
 			{% endfor %}
 		</tbody>
 	</table>
+	{% include 'key_request/subpages/pagination.html' with data=forms %}
 </section>
 
 {% endblock %}
