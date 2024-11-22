@@ -104,7 +104,7 @@
 		{% include 'key_request/subpages/pagination.html' with data=requests %}
 
 		{% if total_requests > 0 %}
-			{% include 'key_request/subpages/modal_rooms_update_all.html' %}
+			{% include 'key_request/subpages/modal_rooms_update_all.html' with path='manager_dashboard' %}
 		{% endif %}
 	</div>
 </section>

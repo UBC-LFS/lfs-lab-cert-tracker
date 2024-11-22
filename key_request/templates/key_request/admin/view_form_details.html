@@ -83,10 +83,10 @@
 					</tr>
 				{% endfor %}
 			</table>
-			
+
 			{% if items|length > 0 %}
 				<div class="float-right">
-					{% include 'key_request/subpages/modal_rooms_update_all.html' %}
+					{% include 'key_request/subpages/modal_rooms_update_all.html' with path='view_form_details' %}
 				</div>
 			{% endif %}
 

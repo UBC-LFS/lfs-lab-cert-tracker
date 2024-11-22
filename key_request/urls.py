@@ -34,9 +34,6 @@ urlpatterns = [
     path('rooms/', views.ManagerRooms.as_view(), name='manager_rooms'),
     path('dashboard/', views.ManagerDashboard.as_view(), name='manager_dashboard'),
     
-
-    
-
     path('func/update/all/', views.update_all, name='update_all'),
     path('', views.Index.as_view(), name='index')
 ]

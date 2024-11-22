@@ -24,7 +24,7 @@
 
 					<p class="text-danger mt-4">Before confirming the update for all, please review all the selected rooms carefully.</p>
 
-					<input type="hidden" name="form" value="{{ form.id }}" />
+					<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 					<input class="btn btn-warning mt-2" type="submit" value="Confirm to update all" />
 				</form>
 			</div>

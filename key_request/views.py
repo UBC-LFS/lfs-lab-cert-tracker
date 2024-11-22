@@ -429,6 +429,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
+        print(request.POST)
         room_id = request.POST.get('room')
         manager_id = request.POST.get('manager')
         status = request.POST.get('status')
@@ -444,7 +445,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
             status = status
         )
         messages.success(request, 'Success! Room {0} status has been updated.'.format(room_id))
-        return HttpResponseRedirect(reverse('key_request:view_form_details', args=[self.form.id]))
+        return HttpResponseRedirect(request.POST.get('next'))
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -470,13 +471,13 @@ def update_all(request):
         
         if len(objs) > 0:
             RequestFormStatus.objects.bulk_create(objs)
-            messages.success(request, 'Success! The number of rooms ({0}) updated.'.format(len(objs)))
+            messages.success(request, 'Success! The number of rooms ({0}) have been updated.'.format(len(objs)))
         else:
             messages.warning(request, 'There is no room to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
     
-    return HttpResponseRedirect(reverse('key_request:view_form_details', args=[request.POST.get('form')]))
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 @method_decorator([never_cache], name='dispatch')
