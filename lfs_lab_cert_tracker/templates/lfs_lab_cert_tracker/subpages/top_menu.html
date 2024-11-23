@@ -8,24 +8,14 @@
   <div class="dropdown">
     <a class="btn dropdown-item" href="{% url 'app:user_trainings' user_id=request.user.id %}">My Training Record</a>
   </div>
-  <div class="dropdown">
-    <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
-  </div>
 
   {% if request.user.is_superuser %}
     <div class="dropdown">
-      <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Settings
-      </button>
-      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-        <a class="dropdown-item" href="{% url 'app:all_areas' %}">All Areas</a>
-        <a class="dropdown-item" href="{% url 'app:all_trainings' %}">All Trainings</a>
-        <a class="dropdown-item" href="{% url 'app:all_users' %}">All Users</a>
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="{% url 'app:new_user' %}">New User</a>
-        <a class="dropdown-item" href="{% url 'app:user_report_missing_trainings' %}">User Report</a>
-        <a class="btn dropdown-item" href="{% url 'app:api_updates' %}">API Updates</a>
-      </div>
+      <a class="btn dropdown-item" href="{% url 'app:setting_index' %}">Settings</a>
     </div>
   {% endif %}
+
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
+  </div>
 </nav>

@@ -95,10 +95,122 @@ class Home(LoginRequiredMixin, View):
         })
 
 
-# Users - classes
+# Settings
+
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllUsersView(LoginRequiredMixin, View):
+class SettingIndex(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'app/settings/setting_index.html', {
+
+        })
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllAreas(LoginRequiredMixin, View):
+
+    form_class = AreaForm
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        area_list = Lab.objects.all()
+
+        # Pagination enables
+        query = request.GET.get('q')
+        if query:
+            area_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(area_list, NUM_PER_PAGE)
+
+        try:
+            areas = paginator.page(page)
+        except PageNotAnInteger:
+            areas = paginator.page(1)
+        except EmptyPage:
+            areas = paginator.page(paginator.num_pages)
+
+        # Add a number of users in each area
+        for area in areas:
+            area.num_certs = area.labcert_set.count()
+            area.num_users = area.userlab_set.count()
+
+        return render(request, 'app/settings/all_areas.html', {
+            'areas': areas,
+            'total_areas': len(area_list),
+            'form': self.form_class()
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+
+        # Create a new area
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            lab = form.save()
+            if lab:
+                messages.success(request, 'Success! {0} created.'.format(lab.name))
+            else:
+                messages.error(request, 'Error! Failed to create {0}.'.format(lab.name))
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+
+        return redirect('app:all_areas')
+
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllTrainings(LoginRequiredMixin, View):
+    """ Display all training records of a user """
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        training_list = Cert.objects.all()
+
+        query = request.GET.get('q')
+        if query:
+            training_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(training_list, NUM_PER_PAGE)
+
+        try:
+            trainings = paginator.page(page)
+        except PageNotAnInteger:
+            trainings = paginator.page(1)
+        except EmptyPage:
+            trainings = paginator.page(paginator.num_pages)
+        
+        for cert in trainings:
+            cert.num_users = cert.usercert_set.count()
+
+        return render(request, 'app/settings/all_trainings.html', {
+            'total_trainings': len(training_list),
+            'trainings': trainings,
+            'form': TrainingForm()
+        })
+    
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        # Create a new training
+
+        form = TrainingForm(request.POST)
+        if form.is_valid():
+            cert = form.save()
+            if cert:
+                messages.success(request, 'Success! {0} created.'.format(cert.name))
+            else:
+                messages.error(request, 'Error! Failed to create {0}. This training has already existed.'.format(cert.name))
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+
+        return redirect('app:all_trainings')
+
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllUsers(LoginRequiredMixin, View):
     """ Display all users """
 
     @method_decorator(require_GET)
@@ -140,7 +252,7 @@ class AllUsersView(LoginRequiredMixin, View):
             area.has_pis = area.userlab_set.filter(role=UserLab.PRINCIPAL_INVESTIGATOR).values_list('user_id', flat=True)
             areas.append(area)
 
-        return render(request, 'app/users/all_users.html', {
+        return render(request, 'app/settings/all_users.html', {
             'total_users': len(user_list),
             'users': users,
             'areas': areas,
@@ -168,70 +280,16 @@ class AllUsersView(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class UserReportMissingTrainingsView(LoginRequiredMixin, View):
-    """ Display an user report for missing trainings """
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-
-        # Find users who have missing certs
-        user_list = []
-        for user in get_users('active'):
-            missing_certs = get_user_missing_certs(user.id)
-            if len(missing_certs) > 0: 
-                user.missing_certs = missing_certs
-                user_list.append(user)
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(user_list, 10)
-
-        try:
-            users = paginator.page(page)
-        except PageNotAnInteger:
-            users = paginator.page(1)
-        except EmptyPage:
-            users = paginator.page(paginator.num_pages)
-
-        return render(request, 'app/users/user_report_missing_trainings.html', {
-            'total_users': len(user_list),
-            'users': users,
-            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings')
-        })
-
-
-@login_required(login_url=settings.LOGIN_URL)
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_admin_only
-@require_http_methods(['GET'])
-def download_user_report_missing_trainings(request):
-
-    # Find users who have missing certs
-    result = 'ID,CWL,First Name,Last Name,Number of Missing Trainings,Missing Trainings\n'
-    for user in get_users('active'):
-        certs = ''
-        missing_certs = get_user_missing_certs(user.id)
-        if len(missing_certs) > 0:
-            for i, cert in enumerate(missing_certs):
-                certs += cert.name
-                if i < len(missing_certs) - 1:
-                    certs += '\n'
-
-            result += '{0},{1},{2},{3},{4},"{5}"\n'.format(user.id, user.username, user.first_name, user.last_name, len(missing_certs), certs)
-
-    return JsonResponse({ 'status': 'success', 'data': result })
-
-
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class NewUserView(LoginRequiredMixin, View):
+class CreateUser(LoginRequiredMixin, View):
     """ Create a new user """
 
     form_class = UserForm
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        return render(request, 'app/users/new_user.html', {
+        return render(request, 'app/settings/create_user.html', {
             'user_form': self.form_class(),
-            'last_ten_users': User.objects.all().order_by('-date_joined')[:15]
+            'last_ten_users': User.objects.all().order_by('-date_joined')[:20]
         })
 
     @method_decorator(require_POST)
@@ -261,6 +319,132 @@ class NewUserView(LoginRequiredMixin, View):
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return redirect('app:new_user')
+
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class UserReportMissingTrainings(LoginRequiredMixin, View):
+    """ Display an user report for missing trainings """
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        # Find users who have missing certs
+        user_list = []
+        for user in get_users('active'):
+            missing_certs = get_user_missing_certs(user.id)
+            if len(missing_certs) > 0: 
+                user.missing_certs = missing_certs
+                user_list.append(user)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(user_list, 10)
+
+        try:
+            users = paginator.page(page)
+        except PageNotAnInteger:
+            users = paginator.page(1)
+        except EmptyPage:
+            users = paginator.page(paginator.num_pages)
+
+        return render(request, 'app/settings/user_report_missing_trainings.html', {
+            'total_users': len(user_list),
+            'users': users,
+            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings')
+        })
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class APIUpdates(LoginRequiredMixin, View):
+    """ Displays all the API updates made """
+    
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        
+        # if session has next value, delete it
+        if request.session.get('next'):
+            del request.session['next']
+
+        today = date.today()
+
+        user_cert_list = UserCert.objects.filter(by_api=True).order_by('uploaded_date', 'user__last_name', 'user__first_name')
+
+        stats = []
+        for i in range(6, 0, -1):
+            d = today - timedelta(i)
+            stats.append({
+                'date': convert_date_to_str(d),
+                'count': user_cert_list.filter(uploaded_date=d).count()
+            })
+        
+        date_from_q = request.GET.get('date_from')
+        date_to_q = request.GET.get('date_to')        
+        username_name_q = request.GET.get('q')
+        training_q = request.GET.get('training')
+
+        if bool(date_from_q) and bool(date_to_q):
+            user_cert_list = user_cert_list.filter( Q(uploaded_date__gte=date_from_q) & Q(uploaded_date__lte=date_to_q) )
+            today = '{0} ~ {1}'.format(date_from_q, date_to_q)
+        elif bool(date_from_q):
+            user_cert_list = user_cert_list.filter(uploaded_date=date_from_q)
+            today = date_from_q
+        elif bool(date_to_q):
+            user_cert_list = user_cert_list.filter(uploaded_date=date_to_q)
+            today = date_to_q
+        else:
+            user_cert_list = user_cert_list.filter(uploaded_date=today)
+            today = convert_date_to_str(today)
+        
+        if bool(username_name_q):
+            user_cert_list = user_cert_list.filter(
+                Q(user__username__icontains=username_name_q) | Q(user__first_name__icontains=username_name_q) | Q(user__last_name__icontains=username_name_q)
+            )
+        if bool(training_q):
+            user_cert_list = user_cert_list.filter(cert__name__icontains=training_q)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(user_cert_list, NUM_PER_PAGE)
+
+        try:
+            user_certs = paginator.page(page)
+        except PageNotAnInteger:
+            user_certs = paginator.page(1)
+        except EmptyPage:
+            user_certs = paginator.page(paginator.num_pages)
+
+        return render(request, 'app/settings/api_updates.html', {
+            "total_user_certs": len(user_cert_list),
+            "user_certs": user_certs,
+            "today": today,
+            "stats": stats
+        })
+
+
+
+
+# Users - classes
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def download_user_report_missing_trainings(request):
+
+    # Find users who have missing certs
+    result = 'ID,CWL,First Name,Last Name,Number of Missing Trainings,Missing Trainings\n'
+    for user in get_users('active'):
+        certs = ''
+        missing_certs = get_user_missing_certs(user.id)
+        if len(missing_certs) > 0:
+            for i, cert in enumerate(missing_certs):
+                certs += cert.name
+                if i < len(missing_certs) - 1:
+                    certs += '\n'
+
+            result += '{0},{1},{2},{3},{4},"{5}"\n'.format(user.id, user.username, user.first_name, user.last_name, len(missing_certs), certs)
+
+    return JsonResponse({ 'status': 'success', 'data': result })
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
@@ -607,58 +791,6 @@ def read_welcome_message(request, user_id):
 
 # Areas - classes
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllAreasView(LoginRequiredMixin, View):
-    """ Display all areas """
-
-    form_class = AreaForm
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        area_list = Lab.objects.all()
-
-        # Pagination enables
-        query = request.GET.get('q')
-        if query:
-            area_list = Lab.objects.filter( Q(name__icontains=query) ).distinct()
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(area_list, NUM_PER_PAGE)
-
-        try:
-            areas = paginator.page(page)
-        except PageNotAnInteger:
-            areas = paginator.page(1)
-        except EmptyPage:
-            areas = paginator.page(paginator.num_pages)
-
-        # Add a number of users in each area
-        for area in areas:
-            area.num_certs = area.labcert_set.count()
-            area.num_users = area.userlab_set.count()
-
-        return render(request, 'app/areas/all_areas.html', {
-            'areas': areas,
-            'total_areas': len(area_list),
-            'form': self.form_class()
-        })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-
-        # Create a new area
-        form = self.form_class(request.POST)
-        if form.is_valid():
-            lab = form.save()
-            if lab:
-                messages.success(request, 'Success! {0} created.'.format(lab.name))
-            else:
-                messages.error(request, 'Error! Failed to create {0}.'.format(lab.name))
-        else:
-            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-
-        return redirect('app:all_areas')
-
 
 @method_decorator([never_cache, access_pi_admin], name='dispatch')
 class AreaDetailsView(LoginRequiredMixin, View):
@@ -966,54 +1098,6 @@ def delete_user_in_area(request, area_id):
 
 # Trainings - classes
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllTrainingsView(LoginRequiredMixin, View):
-    """ Display all training records of a user """
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        training_list = Cert.objects.all()
-
-        query = request.GET.get('q')
-        if query:
-            training_list = Cert.objects.filter( Q(name__icontains=query) ).distinct()
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(training_list, NUM_PER_PAGE)
-
-        try:
-            trainings = paginator.page(page)
-        except PageNotAnInteger:
-            trainings = paginator.page(1)
-        except EmptyPage:
-            trainings = paginator.page(paginator.num_pages)
-        
-        for cert in trainings:
-            cert.num_users = cert.usercert_set.count()
-
-        return render(request, 'app/trainings/all_trainings.html', {
-            'total_trainings': len(training_list),
-            'trainings': trainings,
-            'form': TrainingForm()
-        })
-    
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        # Create a new training
-
-        form = TrainingForm(request.POST)
-        if form.is_valid():
-            cert = form.save()
-            if cert:
-                messages.success(request, 'Success! {0} created.'.format(cert.name))
-            else:
-                messages.error(request, 'Error! Failed to create {0}. This training has already existed.'.format(cert.name))
-        else:
-            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
-
-        return redirect('app:all_trainings')
-
-
 # Trainings - functions
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -1072,73 +1156,6 @@ def download_user_cert(request, user_id, cert_id, filename):
     path = 'users/{0}/certificates/{1}/{2}'.format(user_id, cert_id, filename)
     return serve(request, path, document_root=settings.MEDIA_ROOT)
 
-
-# Admin Menu
-
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class APIUpdates(LoginRequiredMixin, View):
-    """ Displays all the API updates made """
-    
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        
-        # if session has next value, delete it
-        if request.session.get('next'):
-            del request.session['next']
-
-        today = date.today()
-
-        user_cert_list = UserCert.objects.filter(by_api=True).order_by('uploaded_date', 'user__last_name', 'user__first_name')
-
-        stats = []
-        for i in range(6, 0, -1):
-            d = today - timedelta(i)
-            stats.append({
-                'date': convert_date_to_str(d),
-                'count': user_cert_list.filter(uploaded_date=d).count()
-            })
-        
-        date_from_q = request.GET.get('date_from')
-        date_to_q = request.GET.get('date_to')        
-        username_name_q = request.GET.get('q')
-        training_q = request.GET.get('training')
-
-        if bool(date_from_q) and bool(date_to_q):
-            user_cert_list = user_cert_list.filter( Q(uploaded_date__gte=date_from_q) & Q(uploaded_date__lte=date_to_q) )
-            today = '{0} ~ {1}'.format(date_from_q, date_to_q)
-        elif bool(date_from_q):
-            user_cert_list = user_cert_list.filter(uploaded_date=date_from_q)
-            today = date_from_q
-        elif bool(date_to_q):
-            user_cert_list = user_cert_list.filter(uploaded_date=date_to_q)
-            today = date_to_q
-        else:
-            user_cert_list = user_cert_list.filter(uploaded_date=today)
-            today = convert_date_to_str(today)
-        
-        if bool(username_name_q):
-            user_cert_list = user_cert_list.filter(
-                Q(user__username__icontains=username_name_q) | Q(user__first_name__icontains=username_name_q) | Q(user__last_name__icontains=username_name_q)
-            )
-        if bool(training_q):
-            user_cert_list = user_cert_list.filter(cert__name__icontains=training_q)
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(user_cert_list, NUM_PER_PAGE)
-
-        try:
-            user_certs = paginator.page(page)
-        except PageNotAnInteger:
-            user_certs = paginator.page(1)
-        except EmptyPage:
-            user_certs = paginator.page(paginator.num_pages)
-
-        return render(request, 'app/admin/api_updates.html', {
-            "total_user_certs": len(user_cert_list),
-            "user_certs": user_certs,
-            "today": today,
-            "stats": stats
-        })
 
 
 # Helper functions

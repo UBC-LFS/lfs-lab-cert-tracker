@@ -1,0 +1,168 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/_return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'app/left_side_menu.html' %}
+
+<section class="main-content">
+
+	<h3 class="title">
+		All Trainings
+		<small class="text-secondary">(Total: {{ total_trainings }})</small>
+	</h3>
+
+	<div class="search-field mb-2">
+		<form method="GET" >
+			<div class="input-field">
+				<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name" />
+				<button class="btn btn-primary btn-sm" type="submit">Search</button>
+				<a class="btn btn-sm btn-secondary" href="{% url 'app:all_trainings' %}">Clear</a>
+			</div>
+		</form>
+	</div>
+
+	<table class="table table-bordered table-striped table-responsive-md text-center table-vertical-middle">
+	  <thead>
+	    <tr>
+				<th>ID</th>
+	      <th>Training Name</th>
+				<th>Training <br /> Unique ID</th>
+				<th>Expiry in Year</th>
+				<th># of Users <br /> with this Training</th>
+				<th style="width:140px;">Actions</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+			{% for cert in trainings %}
+				<tr>
+					<td>{{ cert.id }}</td>
+					<td class="text-left">{{ cert.name }}</td>
+					<td>
+						{% if cert.unique_id %}
+							{{ cert.unique_id }}
+						{% endif %}
+					</td>
+					<td>
+						{% if cert.expiry_in_years == 0 %}
+							No
+						{% else %}
+							{{ cert.expiry_in_years }} years
+						{% endif %}
+					</td>
+					<td>{{ cert.num_users }}</td>
+					<td>
+						{% if request.user.is_superuser %}
+							<div class="btn-toolbar">
+								<button class="btn btn-warning btn-sm mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
+
+								<div class="modal fade" id="cert-name-edit-modal-{{ cert.id }}" tabindex="-1" role="dialog" aria-labelledby="cert-name-edit-modal-label-{{ cert.id }}" aria-hidden="true">
+									<div class="modal-dialog modal-lg" role="document">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title text-info" id="cert-name-edit-modal-label-{{ cert.id }}">Edit Training</h5>
+												<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+											</div>
+											<div class="modal-body text-left">
+												<div class="modal-item">
+													<form action="{% url 'app:edit_training' %}" method="post">
+														{% csrf_token %}
+
+														<div class="mb-3">
+															<label class="font-weight-bold">
+																Name:
+																<span class="material-symbols-outlined">emergency</span>
+															</label>
+															<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" maxlength="256" required />
+															<small class="text-muted">(Maximum characters: 256)</small>
+														</div>
+
+														<div class="mb-3">
+															<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">
+																Expiry in Years:
+																<span class="material-symbols-outlined">emergency</span>
+															</label>
+															<input id="id_expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
+															<small class="text-muted">(0 means "NO Expiry Date")</small>
+														</div>
+
+														<div class="mb-3">
+													    <label for="id_unique_id_{{ cert.id }}" class="font-weight-bold">Training Unique ID:</label>
+													    <input id="id_unique_id_{{ cert.id }}" class="form-control" type="text" name="unique_id" maxlength="50" value="{% if cert.unique_id %}{{ cert.unique_id }}{% endif %}" />
+															<small class="helptext">Note: Each training has an unique ID in Canvas Catalog</small>
+													  </div>
+
+														<input type="hidden" name="training" value="{{ cert.id }}" />
+														<input class="btn btn-warning d-block mx-auto" type="submit" value="Update" />
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<form class="list-form" action="{% url 'app:delete_training' %}" method="post" onsubmit="return confirm('Are you sure to delete this training - {{ cert.name }}?');">
+									{% csrf_token %}
+
+									<input type="hidden" name="training" value="{{ cert.id }}"  />
+									<input class="btn btn-danger btn-sm" type="submit" value="Delete" />
+								</form>
+							</div>
+						{% endif %}
+					</td>
+				</tr>
+
+			{% empty %}
+
+				<tr>
+					<td colspan="100%">No trainings found</td>
+				</tr>
+
+			{% endfor %}
+		</tbody>
+	</table>
+
+	{% include 'app/subpages/_pagination.html' with data=trainings %}
+
+	{% if request.user.is_superuser %}
+		<div class="row">
+			<div class="col-md-8">
+				<h4 class="text-info mt-5 mb-3">Create Training</h4>
+
+				<form action="" method="POST">
+					{% csrf_token %}
+
+					<table class="form-table-width">
+						{% for field in form.visible_fields %}
+							<tr>
+								<th>
+									<label for="{{ field.id_for_label }}">
+										{{ field.label }}
+										{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
+											<span class="material-symbols-outlined">emergency</span>
+										{% endif %}
+									</label>
+								</th>
+								<td>
+									{{ field }}
+									{% if field.help_text %}
+										<div class="helptext">{{ field.help_text|safe }}</div>
+									{% endif %}
+								</td>
+							</tr>
+						{% endfor %}
+					</table>
+
+					<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
+				</form>
+			</div>
+		</div>
+	{% endif %}
+
+</section>
+
+{% endblock %}

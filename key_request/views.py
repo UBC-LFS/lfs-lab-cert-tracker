@@ -872,12 +872,14 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
+        print(request.POST)
         form_id = request.POST.get('form')
         room_id = request.POST.get('room')
         manager_id = request.POST.get('manager')
         status = request.POST.get('status')
+        next = request.POST.get('next')
 
-        if not form_id or not room_id or not manager_id or not status:
+        if not form_id or not room_id or not manager_id or not status or not next:
             raise SuspiciousOperation
 
         RequestFormStatus.objects.create(
@@ -888,7 +890,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
             status = status
         )
         messages.success(request, 'Success! Room {0} status has been updated.'.format(room_id))
-        return redirect('key_request:manager_dashboard')
+        return HttpResponseRedirect(next)
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -899,8 +901,6 @@ class ManagerRooms(LoginRequiredMixin, View):
         return render(request, 'key_request/manager_dashboard/manager_rooms.html', {
             'rooms': Room.objects.filter(managers__in=[request.user.id])
         })
-
-
 
 
 # Helpers
