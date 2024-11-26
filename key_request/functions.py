@@ -83,62 +83,25 @@ def check_user_trainings(user, selected_rooms):
 
 def search_filters_for_requests(query):
     forms = RequestForm.objects.all()
-    
+    new_forms = forms.filter(requestformstatus__isnull=True)
+
+    total = len(forms)
     if query:
         if query['building']:
-            forms = forms.filter(rooms__building__code__icontains=query['building'])
+            forms = forms.filter(rooms__building__code__icontains=query['building']).distinct()
         if query['floor']:
-            forms = forms.filter(rooms__floor__name__icontains=query['floor'])
+            forms = forms.filter(rooms__floor__name__icontains=query['floor']).distinct()
         if query['number']:
-            forms = forms.filter(rooms__number__icontains=query['number'])
+            forms = forms.filter(rooms__number__icontains=query['number']).distinct()
         if query['name']:
-            forms = forms.filter(Q(user__first_name__icontains=query['name']) | Q(user__last_name__icontains=query['name']))
-        # if query['status']:
-        #     print(query['status'], REV_REQUEST_STATUS_DICT)
-        #     print(REV_REQUEST_STATUS_DICT[query['status']] )
+            forms = forms.filter(Q(user__first_name__icontains=query['name']) | Q(user__last_name__icontains=query['name'])).distinct()
 
-    return forms
-
-
-def get_requests(query):
-    form_list = search_filters_for_requests(query)
-    
-    total = 0
-    forms = []
-    num_new_forms = 0
-
-    for form in form_list:
-        for room in form.rooms.all():
-            is_valid = True
-            total += 1
-            status = None
-            status_filtered = form.requestformstatus_set.filter(form_id=form.id, room_id=room.id)
-            if status_filtered.exists():
-                status = status_filtered
-            else:
-                num_new_forms += 1
-
-            if query and query['status']:
-                if query['status'] == 'New':
-                    if status:
-                        is_valid = False
-                else:
-                    if status:
-                        if query['status'] in REV_REQUEST_STATUS_DICT.keys() and (REV_REQUEST_STATUS_DICT[query['status']] != status.last().status):
-                            is_valid = False
-                    else:
-                        is_valid = False
-            
-            if is_valid:
-                forms.append(form)
-    
-    return total, forms, num_new_forms
+    return forms, total, new_forms
 
 
 def get_manager_dashboard(user, query=None):
-    forms = search_filters_for_requests(query)
-    
-    total = 0
+    forms, _, _ = search_filters_for_requests(query)
+    total_requests = 0
     requests = []
     num_new_requests = 0
     for form in forms:
@@ -146,7 +109,7 @@ def get_manager_dashboard(user, query=None):
             is_valid = True
             room_flitered = room.managers.filter(id__in=[user.id])
             if room_flitered.exists():
-                total += 1
+                total_requests += 1
                 form.room = room
                 
                 user_trainings, total_missing, total_expired = check_user_trainings(form.user, [room.id for room in form.rooms.all()])
@@ -183,9 +146,7 @@ def get_manager_dashboard(user, query=None):
                         'status': status
                     })
     
-    # print(num_new_requests)
-
-    return total, requests, num_new_requests
+    return requests, total_requests, num_new_requests
 
 
 def str_to_int(l):

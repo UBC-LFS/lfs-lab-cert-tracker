@@ -1,8 +1,11 @@
 $(document).ready(function() {
   const hrefs = window.location.href.split('?t=');
 
-  if (hrefs.length === 2 && hrefs[1] !== 'basic_info') {
-    main(hrefs[1] + '-table-0');
+  if (hrefs.length === 2) {
+    const table = hrefs[1].split('&next=');
+    if (table.length > 0 && table[0] !== 'basic_info') {
+      main(table[0] + '-table-0');
+    }
   }
 
   $('.table-trigger').on('click', function() {

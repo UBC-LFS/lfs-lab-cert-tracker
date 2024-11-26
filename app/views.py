@@ -318,7 +318,7 @@ class CreateUser(LoginRequiredMixin, View):
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
-        return redirect('app:new_user')
+        return redirect('app:create_user')
 
 
 
@@ -448,7 +448,7 @@ def download_user_report_missing_trainings(request):
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
-class UserDetailsView(LoginRequiredMixin, View):
+class UserDetails(LoginRequiredMixin, View):
     """ View user details """
 
     def setup(self, request, *args, **kwargs):

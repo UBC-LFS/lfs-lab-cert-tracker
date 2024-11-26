@@ -8,7 +8,7 @@
 {% block content %}
 
 {% if viewing %}
-	{% include 'app/subpages/_viewing_info.html' with data=viewing %}
+	{% include 'app/subpages/viewing_info.html' with data=viewing %}
 {% endif %}
 
 {% if request.session.is_first_time %}
@@ -42,7 +42,7 @@
 		{{ app_user.get_full_name }}'s Account
 	</nav>
 {% else %}
-	<nav class="font-size-dot9rem">
+	<nav class="font-size-sm">
 		{% include 'lfs_lab_cert_tracker/icons/home.html' %}
 		My Account
 	</nav>

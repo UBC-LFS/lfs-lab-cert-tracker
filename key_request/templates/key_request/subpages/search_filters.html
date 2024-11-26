@@ -4,7 +4,7 @@
 
     <select name="building">
       <option value="">Building</option>
-      {% for building in buildings %}
+      {% for building in search_filter_options.buildings %}
         <option value="{{ building.code }}" {% if request.GET.building == building.code %}selected{% endif %}>{{ building.code }}</option>
       {% endfor %}
     </select>
@@ -13,7 +13,7 @@
 
     <select name="floor">
       <option value="">Floor</option>
-      {% for floor in floors %}
+      {% for floor in search_filter_options.floors %}
         <option value="{{ floor.name }}" {% if request.GET.floor == floor.name %}selected{% endif %}>{{ floor.name }}</option>
       {% endfor %}
     </select>
@@ -22,12 +22,12 @@
 
     <select name="number">
       <option value="">Room Number</option>
-      {% for room in rooms %}
+      {% for room in search_filter_options.rooms %}
         <option value="{{ room.number }}" {% if request.GET.number == room.number %}selected{% endif %}>{{ room.number }}</option>
       {% endfor %}
     </select>
 
-    {% if path != 'all_rooms' %}
+    {% if path == 'all_requests' or path == 'manager_dashboard' %}
       and
       <input type="text" name="name" value="{{ request.GET.name }}" placeholder="Full Name" />
     {% endif %}
@@ -51,6 +51,8 @@
       <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}">Clear</a>
     {% elif path == 'manager_dashboard' %}
       <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_dashboard' %}">Clear</a>
+    {% elif path == 'manager_rooms' %}
+      <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_rooms' %}">Clear</a>
     {% elif path == 'all_rooms' %}
       <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_rooms' %}">Clear</a>
     {% endif %}

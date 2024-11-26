@@ -75,7 +75,7 @@ class UserTest(TestCase):
         res = self.client.get(reverse('app:user_details', args=[lab_user.id]) + '?next=/areas/1/') # myself from area
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:new_user')) # new user
+        res = self.client.get(reverse('app:create_user')) # new user
         self.assertEqual(res.status_code, 403)
 
         res = self.client.get(reverse('app:user_report_missing_trainings')) # user report - missing trainings
@@ -117,7 +117,7 @@ class UserTest(TestCase):
         res = self.client.get(reverse('app:user_details', args=[pi.id]) + '?next=/areas/1/') # myself
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:new_user')) # new user
+        res = self.client.get(reverse('app:create_user')) # new user
         self.assertEqual(res.status_code, 403)
 
         res = self.client.get(reverse('app:user_report_missing_trainings')) # user report - missing trainings
@@ -168,7 +168,7 @@ class UserTest(TestCase):
         res = self.client.get(reverse('app:user_details', args=[admin.id]) + '?next=/areas/1/') # myself from work area
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:new_user')) # new user
+        res = self.client.get(reverse('app:create_user')) # new user
         self.assertEqual(res.status_code, 200)
 
         res = self.client.get(reverse('app:user_report_missing_trainings')) # user report - missing trainings
@@ -528,11 +528,11 @@ class UserTest(TestCase):
             'email': 'test.user500@example.com'
         }
 
-        res = self.client.post(reverse('app:new_user'), data=urlencode(data), content_type=ContentType)
+        res = self.client.post(reverse('app:create_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! user500 test created.')
         self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.url, reverse('app:new_user'))
+        self.assertEqual(res.url, reverse('app:create_user'))
         self.assertRedirects(res, res.url)
 
 
@@ -548,11 +548,11 @@ class UserTest(TestCase):
             'send_email': 'yes'
         }
 
-        res = self.client.post(reverse('app:new_user'), data=urlencode(data), content_type=ContentType)
+        res = self.client.post(reverse('app:create_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! user500 test created and sent an email.')
         self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.url, reverse('app:new_user'))
+        self.assertEqual(res.url, reverse('app:create_user'))
         self.assertRedirects(res, res.url)
 
 
@@ -567,11 +567,11 @@ class UserTest(TestCase):
             'email': 'test.user500@example.com'
         }
 
-        res = self.client.post(reverse('app:new_user'), data=urlencode(data), content_type=ContentType)
+        res = self.client.post(reverse('app:create_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Error! Form is invalid. FIRST NAME: Ensure this value has at most 30 characters (it has 31).')
         self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.url, reverse('app:new_user'))
+        self.assertEqual(res.url, reverse('app:create_user'))
         self.assertRedirects(res, res.url)
 
 
@@ -586,11 +586,11 @@ class UserTest(TestCase):
             'email': 'abc'
         }
 
-        res = self.client.post(reverse('app:new_user'), data=urlencode(data), content_type=ContentType)
+        res = self.client.post(reverse('app:create_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Error! Form is invalid. EMAIL: Enter a valid email address.')
         self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.url, reverse('app:new_user'))
+        self.assertEqual(res.url, reverse('app:create_user'))
         self.assertRedirects(res, res.url)
 
 
@@ -604,11 +604,11 @@ class UserTest(TestCase):
             'email': 'test.user500@example.com'
         }
 
-        res = self.client.post(reverse('app:new_user'), data=urlencode(data), content_type=ContentType)
+        res = self.client.post(reverse('app:create_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Error! Form is invalid. USERNAME: Enter a valid username.')
         self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.url, reverse('app:new_user'))
+        self.assertEqual(res.url, reverse('app:create_user'))
         self.assertRedirects(res, res.url)
 
 
@@ -623,11 +623,11 @@ class UserTest(TestCase):
             'email': 'test.user500@example.com'
         }
 
-        res = self.client.post(reverse('app:new_user'), data=urlencode(data), content_type=ContentType)
+        res = self.client.post(reverse('app:create_user'), data=urlencode(data), content_type=ContentType)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Error! Form is invalid. USERNAME: A user with that username already exists.')
         self.assertEqual(res.status_code, 302)
-        self.assertEqual(res.url, reverse('app:new_user'))
+        self.assertEqual(res.url, reverse('app:create_user'))
         self.assertRedirects(res, res.url)
 
 

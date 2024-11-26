@@ -16,7 +16,10 @@
 		<small class="text-secondary">(Total: {{ total_rooms }})</small>
 	</h3>
 
-	{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
+	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
+		{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
+	</div>
+	{% include 'key_request/subpages/search_results.html' with total=num_filtered_rooms items=rooms %}
 
 	<table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
 	  <thead>
@@ -28,7 +31,7 @@
 				<th>PIs</th>
 	      <th>Areas</th>
 				<th>Required Trainings</th>
-				<th style="width: 100px;">Actions</th>
+				<th>Actions</th>
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -60,126 +63,13 @@
 						</ul>
 					</td>
 	        <td>
-						<button class="btn btn-outline-primary btn-xs width-100p mb-2 table-trigger" type="button" data-toggle="modal" data-target="#room-managers-update-modal-{{ room.id }}" data-table="pis-table-{{ room.id }}">PIs</button>
-						<div class="modal fade" id="room-managers-update-modal-{{ room.id }}" tabindex="-1" role="dialog" aria-labelledby="room-managers-update-modal-label-{{ room.id }}" aria-hidden="true">
-							<div class="modal-dialog modal-lg" role="document">
-								<div class="modal-content">
-									<div class="modal-header">
-										<h5 class="modal-title text-info" id="room-managers-update-modal-label-{{ room.id }}">Update PIs in the room</h5>
-										<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-									</div>
-									<div class="modal-body text-left">
-										<form action="{% url 'key_request:change_room_managers' %}" method="post">
-											{% csrf_token %}
-											{% include 'key_request/subpages/room_managers_table.html' with room_id=room.id manager_ids=room.manager_ids %}
-											<input type="hidden" name="room" value="{{ room.id }}" />
-											<input class="btn btn-warning" type="submit" value="Update" />
-										</form>
-									</div>
-								</div>
-							</div>
-						</div>
+						<a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
 
-						<button class="btn btn-outline-primary btn-xs width-100p mb-2 table-trigger" type="button" data-toggle="modal" data-target="#room-areas-update-modal-{{ room.id }}"  data-table="areas-table-{{ room.id }}">Areas</button>
-						<div class="modal fade" id="room-areas-update-modal-{{ room.id }}" tabindex="-1" role="dialog" aria-labelledby="room-areas-update-modal-label-{{ room.id }}" aria-hidden="true">
-	            <div class="modal-dialog modal-lg" role="document">
-	              <div class="modal-content">
-	                <div class="modal-header">
-	                  <h5 class="modal-title text-info" id="room-areas-update-modal-label-{{ room.id }}">Update Areas in the room</h5>
-	                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	                </div>
-	                <div class="modal-body text-left">
-                    <form action="{% url 'key_request:change_room_areas' %}" method="post">
-                      {% csrf_token %}
-											{% include 'key_request/subpages/room_areas_table.html' with room_id=room.id area_ids=room.area_ids %}
-                      <input type="hidden" name="room" value="{{ room.id }}" />
-                      <input class="btn btn-warning" type="submit" value="Update" />
-                    </form>
-	                </div>
-	              </div>
-	            </div>
-	          </div>
-
-						<button class="btn btn-outline-primary btn-xs width-100p mb-2 table-trigger" type="button" data-toggle="modal" data-target="#room-trainings-update-modal-{{ room.id }}" data-table="trainings-table-{{ room.id }}">Trainings</button>
-						<div class="modal fade" id="room-trainings-update-modal-{{ room.id }}" tabindex="-1" role="dialog" aria-labelledby="room-trainings-update-modal-label-{{ room.id }}" aria-hidden="true">
-							<div class="modal-dialog modal-lg" role="document">
-								<div class="modal-content">
-									<div class="modal-header">
-										<h5 class="modal-title text-info" id="room-trainings-update-modal-label-{{ room.id }}">Update Trainings in the room</h5>
-										<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-									</div>
-									<div class="modal-body text-left">
-										<form action="{% url 'key_request:change_room_trainings' %}" method="post">
-											{% csrf_token %}
-											{% include 'key_request/subpages/room_trainings_table.html' with room_id=room.id training_ids=room.training_ids %}
-											<input type="hidden" name="room" value="{{ room.id }}" />
-											<input class="btn btn-warning" type="submit" value="Update" />
-										</form>
-									</div>
-								</div>
-							</div>
-						</div>
-
-	          <button class="btn btn-warning btn-xs width-100p mb-2" type="button" data-toggle="modal" data-target="#room-number-edit-modal-{{ room.id }}">Edit</button>
-	          <div class="modal fade" id="room-number-edit-modal-{{ room.id }}" tabindex="-1" role="dialog" aria-labelledby="room-number-edit-modal-label-{{ room.id }}" aria-hidden="true">
-	            <div class="modal-dialog" role="document">
-	              <div class="modal-content">
-	                <div class="modal-header">
-	                  <h5 class="modal-title text-info" id="room-number-edit-modal-label-{{ room.id }}">Edit Room</h5>
-	                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	                </div>
-	                <div class="modal-body text-left">
-	                  <div class="modal-item">
-	                    <form action="{% url 'key_request:edit_room' %}" method="post">
-	                      {% csrf_token %}
-
-												<div class="mb-3">
-													<label for="id_building_{{ room.id }}" class="font-weight-bold">
-														Building:
-														{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
-													</label>
-													<select name="building" class="form-control" id="id_building_{{ room.id }}">
-														{% for building in buildings %}
-															<option value="{{ building.id }}" {% if building.id == room.building.id %}selected{% endif %}>{{ building.name }} ({{ building.code }})</option>
-														{% endfor %}
-													</select>
-												</div>
-
-												<div class="mb-3">
-													<label for="id_floor_{{ room.id }}" class="font-weight-bold">
-														Floor:
-														{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
-													</label>
-													<select name="floor" class="form-control" id="id_floor_{{ room.id }}">
-														{% for floor in floors %}
-															<option value="{{ floor.id }}" {% if floor.id == room.floor.id %}selected{% endif %}>{{ floor.name }}</option>
-														{% endfor %}
-													</select>
-												</div>
-
-	                      <div class="mb-3">
-	                        <label for="id_number_{{ room.id }}" class="font-weight-bold">
-	                          Name:
-	                          {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
-	                        </label>
-	                        <input id="id_number_{{ room.id }}" class="form-control" type="text" name="number" value="{{ room.number }}" maxlength="10" required />
-	                        <small class="text-muted">It must be unique. Maximum characters: 10</small>
-	                      </div>
-
-	                      <input type="hidden" name="room" value="{{ room.id }}" />
-	                      <input class="btn btn-warning" type="submit" value="Update" />
-	                    </form>
-	                  </div>
-	                </div>
-	              </div>
-	            </div>
-	          </div>
-
-	          <form class="list-form width-100p" action="{% url 'key_request:delete_room' %}" method="post" onsubmit="return confirm('Are you sure to delete this room - {{ room.number }}?');">
+	          <form action="{% url 'key_request:delete_room' %}" method="post" onsubmit="return confirm('Are you sure to delete this room - {{ room.number }}?');">
 	            {% csrf_token %}
 
 	            <input type="hidden" name="room" value="{{ room.id }}"  />
-	            <input class="btn btn-danger btn-xs width-100p" type="submit" value="Delete" style="vertical-align:top;" />
+	            <input class="btn btn-danger btn-sm" type="submit" value="Delete" style="vertical-align:top;" />
 	          </form>
 	        </td>
 	      </tr>
@@ -199,5 +89,5 @@
 
 {% block js %}
 	{% load static %}
-  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/all_rooms.js' %}"></script>
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
 {% endblock %}

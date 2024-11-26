@@ -16,7 +16,7 @@
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h3>
 
-	<div class="row bg-light-gray border p-4 font-size-sm">
+	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
 		<div class="col-md-9" style="border-right: 1px solid #bbb;">
 			{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
 		</div>
@@ -27,10 +27,7 @@
 			</div>
 		</div>
 	</div>
-
-	<div class="text-dark-gray font-size-sm mb-5">
-	  {{ num_forms }} result{{ num_forms|pluralize }} found. {{ forms|length }} row{{ forms|pluralize }} in this page.
-	</div>
+	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
 
 	<table class="table table-bordered table-striped font-size-sm">
 	  <thead>

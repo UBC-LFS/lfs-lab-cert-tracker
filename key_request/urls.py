@@ -9,15 +9,10 @@ urlpatterns = [
     path('all-requests/', views.AllRequests.as_view(), name='all_requests'),
     
     # Rooms
-
     path('create-room/', views.CreateRoom.as_view(), name='create_room'),
-    path('all-rooms/edit/', views.edit_room, name='edit_room'),
+    path('<int:room_id>/edit-room/', views.EditRoom.as_view(), name='edit_room'),
     path('all-rooms/delete/', views.delete_room, name='delete_room'),
     path('all-rooms/', views.AllRooms.as_view(), name='all_rooms'),
-
-    path('api/room/managers/change/', views.change_room_managers, name='change_room_managers'),
-    path('api/room/areas/change/', views.change_room_areas, name='change_room_areas'),
-    path('api/room/trainings/change/', views.change_room_trainings, name='change_room_trainings'),
 
     # Settings - Building and Floors
     path('all-<str:model>/delete/', views.DeleteSetting.as_view(), name='delete_setting'),
@@ -31,6 +26,7 @@ urlpatterns = [
 
     path('forms/<int:form_id>/details/', views.ViewFormDetails.as_view(), name='view_form_details'),
 
+    # Managers
     path('rooms/', views.ManagerRooms.as_view(), name='manager_rooms'),
     path('dashboard/', views.ManagerDashboard.as_view(), name='manager_dashboard'),
     
