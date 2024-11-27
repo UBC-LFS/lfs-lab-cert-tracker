@@ -38,7 +38,7 @@ footer .footer-content a { color: #fff; }
 
 .left-side-menu {
   width: 250px;
-  margin-top: 100px;
+  margin-top: 80px;
   padding-right: 40px;
 }
 
@@ -129,9 +129,11 @@ header .container .logout-btn { display: inline-block; }
 
 header .container .logout-btn:hover { text-decoration: underline; }
 
-.title { margin-bottom: 30px; }
+.title {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
 
-.title,
 .card { margin-top: 40px; }
 
 .search-field { float: right; }
@@ -556,6 +558,7 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   color: #474d52;
 }
 
+.bg-chocolate { background-color: #D2691E; }
 .text-chocolate { color: #D2691E; }
 .text-orange { color: #fd7e14; }
 

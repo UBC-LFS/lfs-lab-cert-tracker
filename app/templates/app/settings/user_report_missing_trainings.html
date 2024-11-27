@@ -3,6 +3,7 @@
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
 	{% include 'app/subpages/return_message.html' with data=messages %}
+	<div id="download-csv-message" class="container"></div>
 {% endblock %}
 
 {% block content %}
@@ -11,9 +12,7 @@
 
 <section class="main-content">
 
-	<div id="download-csv-message" class="container"></div>
-
-	<h3 class="my-5">
+	<h3 class="title">
 		User Report
 		<small class="text-secondary">Total: {{ total_users }}</small> <br />
 		<small class="text-danger">for Missing Training Records</small>

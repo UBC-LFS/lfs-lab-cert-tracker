@@ -60,7 +60,7 @@
 						{% if form.requestformstatus_set.all|length > 0 %}
 							{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
 						{% else %}
-							<span class="badge badge-danger">NEW</span>
+							<span class="badge">NEW</span>
 						{% endif %}
 	        </td>
 	        <td>

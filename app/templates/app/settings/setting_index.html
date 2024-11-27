@@ -18,13 +18,13 @@
 			<div class="d-flex justify-content-around mb-5">
 				<p class="text-center">
 					<a href="{% url 'app:all_areas' %}">
-						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/lab_icon.png' %}" width="170" height="170" />
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/lab_icon.png' %}" width="160" height="160" />
 						<span class="d-block mt-3">All Areas</span>
 					</a>
 				</p>
 				<p class="text-center">
-					<a class="d-block mt-3" href="{% url 'app:all_trainings' %}">
-						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/certificate_icon.png' %}" width="170" height="170" />
+					<a href="{% url 'app:all_trainings' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/certificate_icon.png' %}" width="160" height="160" />
 						<span class="d-block mt-3">All Trainings</span>
 					</a>
 				</p>
@@ -32,21 +32,21 @@
 
 			<div class="d-flex justify-content-around">
 				<p class="text-center">
-					<a class="d-block mt-3" href="{% url 'app:all_users' %}">
-						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/user_icon.png' %}" width="170" height="170" />
+					<a href="{% url 'app:all_users' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/user_icon.png' %}" width="160" height="160" />
 						<span class="d-block mt-3">All Users</span>
 					</a>
 				</p>
 				<p class="text-center">
-					<a class="d-block mt-3" href="{% url 'app:create_user' %}">
-						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/create_user_icon.png' %}" width="170" height="170" />
+					<a href="{% url 'app:create_user' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/create_user_icon.png' %}" width="160" height="160" />
 						<span class="d-block mt-3">Create User</span>
 					</a>
 				</p>
 			</div>
 		</div>
 		<div class="col-md-5">
-			{% include 'app/settings/_recent_new_users.html' with data=last_ten_users %}
+			{% include 'app/settings/_recent_users.html' with data=last_ten_users %}
 		</div>
 	</div>
 

@@ -45,7 +45,11 @@
             {% for manager in room.managers.all %}
               <li>
                 {% concat_strings room.id manager.id as args %}
-                <span class="text-{% if form.id|get_status_by_manager:args == 'Approved' %}success font-weight-600{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+                {% if form.id|get_status_by_manager:args %}
+                  <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+                {% else %}
+                  <span>{{ manager.get_full_name }}</span>
+                {% endif %}
               </li>
             {% endfor%}
           </ul>
@@ -65,3 +69,16 @@
     </tr>
   {% endfor %}
 </table>
+
+
+{% if is_admin == 'True' %}
+
+  <div class="mt-4">
+    <p class="mb-0">Note: Different colours indicate the status of key requests in the <strong>PIs</strong> column.</p>
+    <ul>
+      <li><span class="font-weight-600 text-success">Approved</span></li>
+      <li><span class="font-weight-600 text-danger">Declined</span></li>
+      <li><span class="font-weight-600 text-orange">Insufficient Info</span></li>
+    </ul>
+  </div>
+{% endif %}

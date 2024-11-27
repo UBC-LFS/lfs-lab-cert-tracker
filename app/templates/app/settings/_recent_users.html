@@ -1,5 +1,8 @@
 <div class="ml-5">
-  <h5 class="text-info">Recent New Users ({{ data|length }})</h5>
+  <h5 class="text-info">
+    Recent Users
+    <small class="text-secondary"> ({{ data|length }})</small>
+  </h5>
   <ul>
     {% for user in data %}
       <li>{{ user.get_full_name }} <small class="text-secondary">({{ user.date_joined|date:"M d, Y" }})</small></li>

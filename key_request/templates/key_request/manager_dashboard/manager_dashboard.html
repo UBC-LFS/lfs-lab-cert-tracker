@@ -13,7 +13,7 @@
 <section class="main-content">
 	<h3 class="title">Dashboard</h3>
 
-	<p>Memo - afa as fasf das</p>
+	<p>This page includes a table to display all the applications for Key Request and update their status.</p>
 
 	<h4 class="text-info mt-5 mb-4">
 		Key Request Forms
@@ -79,7 +79,7 @@
 							  {% include 'key_request/subpages/date_and_time.html' with data=req.status.last.created_at %}
 							</span>
 						{% else %}
-							<span class="badge badge-danger">NEW</span>
+							<span class="badge">NEW</span>
 						{% endif %}
 	        </td>
 	        <td>
