@@ -2,7 +2,7 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/_return_message.html' with data=messages %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
 		<small class="text-secondary">(Total: {{ total_users }})</small>
 	</h3>
 
-	{% include 'app/subpages/_search_note.html' with data=users %}
+	{% include 'app/subpages/search_note.html' with data=users %}
 
 	<div class="search-field mb-2">
 		<form method="GET">
@@ -284,7 +284,7 @@
 	  </tbody>
 	</table>
 
-	{% include 'app/subpages/_pagination.html' with data=users %}
+	{% include 'app/subpages/pagination.html' with data=users %}
 </section>
 {% endblock %}
 

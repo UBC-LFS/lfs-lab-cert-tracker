@@ -4,7 +4,6 @@ from . import views
 app_name = 'app'
 
 urlpatterns = [
-    # path('home/', views.Home.as_view(), name='home'),
 
     # Settings - classes
     path('settings/', views.SettingIndex.as_view(), name='setting_index'),

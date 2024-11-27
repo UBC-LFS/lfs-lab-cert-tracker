@@ -2,7 +2,7 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/_return_message.html' with data=messages %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
@@ -12,9 +12,9 @@
 <section class="main-content">
 	<div class="row">
 	  <div class="col-md-7">
+			<h3 class="title">Create User</h3>
+			
 			<div class="new-users-section">
-				<h3 class="">Create User</h3>
-
 				{% include 'app/subpages/_user_form_note.html' %}
 
 				<form action="" method="post">
@@ -42,17 +42,8 @@
 			</div>
 	  </div>
 
-		<div class="col-md-5">
-			<div class="mt-5 ml-5">
-				<h5 class="text-info">Recent New Users ({{ last_ten_users|length }})</h5>
-				<ul>
-					{% for user in last_ten_users %}
-						<li>{{ user.get_full_name }} <small class="text-secondary">({{ user.date_joined|date:"M d, Y" }})</small></li>
-					{% empty %}
-						<li>No users found</li>
-					{% endfor %}
-				</ul>
-			</div>
+		<div class="col-md-5 pt-5">
+			{% include 'app/settings/_recent_new_users.html' with data=last_ten_users %}
 		</div>
 
 	</div>

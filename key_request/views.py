@@ -427,7 +427,6 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        print(request.POST)
         room_id = request.POST.get('room')
         manager_id = request.POST.get('manager')
         status = request.POST.get('status')

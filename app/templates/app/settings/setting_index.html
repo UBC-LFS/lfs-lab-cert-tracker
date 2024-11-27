@@ -1,8 +1,9 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
+{% load static %}
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/_return_message.html' with data=messages %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
@@ -10,7 +11,45 @@
 {% include 'app/left_side_menu.html' %}
 
 <section class="main-content">
-  index
+	<h3 class="title">Settings</h3>
+
+	<div class="row">
+		<div class="col-md-7">
+			<div class="d-flex justify-content-around mb-5">
+				<p class="text-center">
+					<a href="{% url 'app:all_areas' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/lab_icon.png' %}" width="170" height="170" />
+						<span class="d-block mt-3">All Areas</span>
+					</a>
+				</p>
+				<p class="text-center">
+					<a class="d-block mt-3" href="{% url 'app:all_trainings' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/certificate_icon.png' %}" width="170" height="170" />
+						<span class="d-block mt-3">All Trainings</span>
+					</a>
+				</p>
+			</div>
+
+			<div class="d-flex justify-content-around">
+				<p class="text-center">
+					<a class="d-block mt-3" href="{% url 'app:all_users' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/user_icon.png' %}" width="170" height="170" />
+						<span class="d-block mt-3">All Users</span>
+					</a>
+				</p>
+				<p class="text-center">
+					<a class="d-block mt-3" href="{% url 'app:create_user' %}">
+						<img class="img-thumbnail" src="{% static 'lfs_lab_cert_tracker/images/create_user_icon.png' %}" width="170" height="170" />
+						<span class="d-block mt-3">Create User</span>
+					</a>
+				</p>
+			</div>
+		</div>
+		<div class="col-md-5">
+			{% include 'app/settings/_recent_new_users.html' with data=last_ten_users %}
+		</div>
+	</div>
+
 </section>
 
 {% endblock %}

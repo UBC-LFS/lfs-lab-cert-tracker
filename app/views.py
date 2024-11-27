@@ -74,27 +74,6 @@ def index(request):
     return HttpResponseRedirect(reverse('app:user_details', args=[request.user.id]))
     # return redirect('app:home')
 
-
-@method_decorator([never_cache], name='dispatch')
-class Home(LoginRequiredMixin, View):
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        _, new_requests = kFunc.get_manager_dashboard(request.user)
-
-        return render(request, 'app/home.html', {
-            'app_user': request.user,
-            'user_labs': get_user_labs(request.user),
-            'user_labs_pi': get_user_labs(request.user, is_pi=True),
-            'user_certs': get_user_certs_with_info(request.user),
-            'missing_certs': get_user_missing_certs(request.user.id),
-            'expired_certs': get_user_expired_certs(request.user),
-            'welcome_message': welcome_message(),
-            'viewing': add_next_str_to_session(request, request.user),
-            'new_requests': new_requests
-        })
-
-
 # Settings
 
 
@@ -104,7 +83,7 @@ class SettingIndex(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/setting_index.html', {
-
+            'last_ten_users': User.objects.all().order_by('-date_joined')[:20]
         })
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
