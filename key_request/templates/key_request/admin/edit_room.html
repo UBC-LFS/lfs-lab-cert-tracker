@@ -1,4 +1,5 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
+{% load custom_tags %}
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
@@ -13,11 +14,10 @@
   <nav>
     <a href="{{ next }}">All Rooms</a>
     {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
-    <span class="text-secondary">Edit Room: {{ room.building.code }} {{ room.floor.name }} - Room {{ room.number }} (ID: {{ room.id }})</span>
+    <span class="text-secondary">Edit Room: {{ room|display_room:'id' }}</span>
   </nav>
 
-  <h3 class="mt-4 mb-3">Edit Room: {{ room.building.code }} {{ room.floor.name }} - Room {{ room.number }} (ID: {{ room.id }})</h3>
-
+  <h3 class="mt-4 mb-3">Edit Room: {{ room|display_room:'id' }}</h3>
   {% include 'key_request/admin/_form.html' with path='edit_room' %}
 </section>
 

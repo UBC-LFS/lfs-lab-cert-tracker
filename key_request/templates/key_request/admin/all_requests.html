@@ -22,7 +22,7 @@
 		</div>
 		<div class="col-md-3">
 			<div class="text-center">
-				<h5>Number of <br /> <span class="text-danger">NEW</span> Forms</h5>
+				<h5>Number of NEW <br /> Applications</h5>
 				<a class="h4" href="{% url 'key_request:all_requests' %}?page=1&status=New">{{ num_new_forms }}</a>
 			</div>
 		</div>
@@ -35,7 +35,7 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
-	      <th>Form <br /> Details</th>
+	      <th>Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted At</th>
 	      <th>Action</th>
@@ -49,7 +49,13 @@
 					<td class="text-left">
 						<ul class="list-minus-20">
 							{% for room in form.rooms.all %}
-								<li>{{ room.building.code }} {{ room.floor.name }} - Room {{ room.number}}</li>
+								<li>
+									{% if room.is_active %}
+										{{ room.building.code }} {{ room.floor.name }} - Room {{ room.number}}
+									{% else %}
+										<s>{{ room.building.code }} {{ room.floor.name }} - Room {{ room.number}}</s>
+									{% endif %}
+								</li>
 							{% endfor %}
 						</ul>
 					</td>

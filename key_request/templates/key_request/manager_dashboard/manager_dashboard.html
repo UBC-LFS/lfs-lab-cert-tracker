@@ -16,8 +16,8 @@
 	<p>This page includes a table to display all the applications for Key Request and update their status.</p>
 
 	<h4 class="text-info mt-5 mb-4">
-		Key Request Forms
-		<small class="text-secondary">(Total: {{ total_requests }})</small>
+		Key Request Applications
+		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h4>
 
 	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
@@ -26,12 +26,12 @@
 		</div>
 		<div class="col-md-3">
 			<div class="text-center">
-				<h5>Number of <br /> <span class="text-danger">NEW</span> Forms</h5>
-				<a class="h4" href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_requests }}</a>
+				<h5>Number of NEW <br /> Applications</h5>
+				<a class="h4" href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_forms }}</a>
 			</div>
 		</div>
 	</div>
-	{% include 'key_request/subpages/search_results.html' with total=num_filtered_requests items=requests %}
+	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
 
 	<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
 	  <thead>
@@ -47,7 +47,7 @@
 				<th>Building</th>
 				<th>Floor</th>
 	      <th>Room <br /> Number</th>
-	      <th>Form <br /> Details</th>
+	      <th>Details</th>
 	      <th>Status</th>
 	      <th>Action</th>
 				<th>
@@ -56,37 +56,37 @@
 	    </tr>
 	  </thead>
 	  <tbody>
-	    {% for req in requests %}
+	    {% for form in forms %}
 	      <tr>
 					<td>
 						{% if request.user.is_superuser %}
-							{{ req.form.id }}
+							{{ form.id }}
 						{% else %}
 							{{ forloop.revcounter }}
 						{% endif %}
 					</td>
-	        <td>{{ req.form.user.get_full_name }}</td>
-	        <td>{{ req.room.building.code }}</td>
-					<td>{{ req.room.floor.name }}</td>
-					<td>{{ req.room.number }}</td>
+	        <td>{{ form.user.get_full_name }}</td>
+	        <td>{{ form.room.building.code }}</td>
+					<td>{{ form.room.floor.name }}</td>
+					<td>{{ form.room.number }}</td>
 	        <td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=req.form %}
+						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form %}
 	        </td>
 	        <td>
-						{% if req.status %}
-							{% include 'key_request/subpages/request_status.html' with data=req.status.last.status|get_status_display %}
+						{% if form.requestformstatus_set.count > 0 %}
+							{% include 'key_request/subpages/request_status.html' with data=form.requestformstatus_set.last.status|get_status_display %}
 							<span class="font-size-xs text-secondary d-block">
-							  {% include 'key_request/subpages/date_and_time.html' with data=req.status.last.created_at %}
+							  {% include 'key_request/subpages/date_and_time.html' with data=form.requestformstatus_set.last.created_at %}
 							</span>
 						{% else %}
 							<span class="badge">NEW</span>
 						{% endif %}
 	        </td>
 	        <td>
-	          {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=req %}
+	          {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
 	        </td>
 					<td>
-						<input class="room-checkbox" type="checkbox" value="{{ req.form.id }}_{{ req.room.id }}_{{ req.manager.id }}" data-building="{{ req.room.building.code }}" data-floor="{{ req.room.floor.name }}" data-number="{{ req.room.number }}" data-pi="{{ request.user.get_full_name }}" data-is_new="{% if req.status|length == 0 %}true{% else %}false{% endif %}"/>
+						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-pi="{{ request.user.get_full_name }}" data-is_new="{% if form.requestformstatus_set.count == 0 %}true{% else %}false{% endif %}"/>
 					</td>
 	      </tr>
 			{% empty %}
@@ -98,9 +98,9 @@
 	</table>
 
 	<div class="d-flex justify-content-between align-items-start">
-		{% include 'key_request/subpages/pagination.html' with data=requests %}
+		{% include 'key_request/subpages/pagination.html' with data=forms %}
 
-		{% if total_requests > 0 %}
+		{% if total_forms > 0 %}
 			{% include 'key_request/subpages/modal_rooms_update_all.html' with path='manager_dashboard' %}
 		{% endif %}
 	</div>

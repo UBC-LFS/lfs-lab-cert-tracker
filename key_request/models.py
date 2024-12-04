@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from datetime import datetime
 
 from .utils import *
 
@@ -54,19 +55,21 @@ class Room(models.Model):
     managers = models.ManyToManyField(User)
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
+    is_active = models.BooleanField(default=True)
+
     slug = models.SlugField(max_length=256, unique=True)
     created_on = models.DateField(auto_now_add=True)
     updated_on = models.DateField(auto_now=True)
 
     class Meta:
-        unique_together = ['building', 'floor', 'number']
+        # unique_together = ['building', 'floor', 'number']
         ordering = ['building', 'floor', 'number']
 
     def __str__(self):
         return self.number
     
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number)
+        self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
         super(Room, self).save(*args, **kwargs)
 
 
@@ -100,7 +103,6 @@ class RequestFormStatus(models.Model):
     manager_id = models.BigIntegerField()
     operator_id = models.BigIntegerField()
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
-    comment = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -30,13 +30,13 @@
 				 </a>
 			</div>
 
-			{% if request.user.id == app_user.id and num_new_requests %}
+			{% if request.user.id == app_user.id and num_new_forms %}
 				<div class="mt-4">
 					<div class="bg-prompt mb-5">
 						<div class="prompt text-center p-4 mb-4">
 							<h5>
 								<span class="material-symbols-outlined">mail</span>
-								You now have <strong class="text-chocolate">{{ num_new_requests }}</strong> new application{{ num_new_requests|pluralize }} for Key Request.
+								You now have <strong class="text-chocolate">{{ num_new_forms }}</strong> new application{{ num_new_forms|pluralize }} for Key Request.
 							</h5>
 							<a class="btn btn-sm btn-outline-primary mt-1" href="{% url 'key_request:manager_dashboard' %}">Check</a>
 						</div>

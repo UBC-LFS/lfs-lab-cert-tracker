@@ -17,7 +17,12 @@
 	</h3>
 
 	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
-		{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
+		<div class="col-md-6" style="border-right: 1px solid #bbb;">
+			{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
+		</div>
+		<div class="col-md-6">
+			<strong>Note:</strong> Only <strong class="text-success">ACTIVE</strong> rooms will be displayed in the Key Request process.
+		</div>
 	</div>
 	{% include 'key_request/subpages/search_results.html' with total=num_filtered_rooms items=rooms %}
 
@@ -31,6 +36,7 @@
 				<th>PIs</th>
 	      <th>Areas</th>
 				<th>Required Trainings</th>
+				<th>Active?</th>
 				<th>Actions</th>
 	    </tr>
 	  </thead>
@@ -61,6 +67,13 @@
 							<li>{{ training.name }}</li>
 						{% endfor %}
 						</ul>
+					</td>
+					<td>
+						{% if room.is_active %}
+							<span class="badge badge-success">YES</span>
+						{% else %}
+							<span class="badge badge-danger">NO</span>
+						{% endif %}
 					</td>
 	        <td>
 						<a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>

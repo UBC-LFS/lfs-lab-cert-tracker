@@ -66,7 +66,6 @@
 {% block js %}
 
 <script type="text/javascript">
-	// const rooms = JSON.parse('{{ rooms|safe }}');
 	const rooms = JSON.parse('{{ rooms|escapejs }}');
 </script>
 

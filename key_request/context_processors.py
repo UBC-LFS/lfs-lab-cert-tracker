@@ -1,7 +1,7 @@
 from key_request import functions as func
 
 def has_manager_key_requests(request):
-    requests, _, _ = func.get_manager_dashboard(request.user)
+    forms = func.get_forms_per_manager(request.user)
     return {
-        'has_manager_key_requests': True if len(requests) > 0 else False
+        'has_manager_key_requests': True if forms.exists() else False
     }

@@ -27,7 +27,6 @@ def preprocess_rooms(rooms):
     by_building = {}
     for room in rooms:
         r = model_to_dict(room)
-
         building_id = r['building']
         floor_id = r['floor']
         floor = Floor.objects.get(id=floor_id)
@@ -41,7 +40,8 @@ def preprocess_rooms(rooms):
 
         by_building[building_id][floor_id]['numbers'].append({ 
             'id': r['id'], 
-            'number': r['number'], 
+            'number': r['number'],
+            'is_active': r['is_active'],
             'areas': [{ 'id': area.id, 'name': area.name } for area in r['areas']],
             'trainings': [{ 'id': training.id, 'name': training.name } for training in r['trainings']]
         })
@@ -99,54 +99,152 @@ def search_filters_for_requests(query):
     return forms, total, new_forms
 
 
-def get_manager_dashboard(user, query=None):
-    forms, _, _ = search_filters_for_requests(query)
-    total_requests = 0
-    requests = []
-    num_new_requests = 0
-    for form in forms:
-        for room in form.rooms.all():
-            is_valid = True
-            room_flitered = room.managers.filter(id__in=[user.id])
-            if room_flitered.exists():
-                total_requests += 1
-                form.room = room
-                
-                user_trainings, total_missing, total_expired = check_user_trainings(form.user, [room.id for room in form.rooms.all()])
-                form.user_trainings = user_trainings
-                form.total_missing = total_missing
-                form.total_expired = total_expired
+def get_forms_per_manager(manager):
+    rooms_managed = Room.objects.filter(managers=manager)
+    return RequestForm.objects.filter(rooms__in=rooms_managed)
 
-                status = None
-                status_filtered = form.requestformstatus_set.filter(form_id=form.id, room_id=room.id, manager_id=user.id)
-                if status_filtered.exists():
-                    status = status_filtered
-                else:
-                    num_new_requests += 1
 
-                if query and query['status']:
+def get_manager_dashboard(manager, query=None):
+    rooms_managed = Room.objects.filter(managers=manager)
+    form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed)
+    total_forms = form_filtered.count()
+
+    num_new_forms = 0
+    for form in form_filtered.all():
+        if form.requestformstatus_set.count() == 0:
+            num_new_forms += 1
+
+    if query:
+        if query['building']:
+            rooms_managed = rooms_managed.filter(building__code__exact=query['building'])
+        if query['floor']:
+            rooms_managed = rooms_managed.filter(floor__name__exact=query['floor'])
+        if query['number']:
+            rooms_managed = rooms_managed.filter(number__exact=query['number'])
+
+    forms = []
+    for room in rooms_managed.all():
+        all_forms = room.requestform_set.all()
+        for form in all_forms:
+            form.manager = manager
+            form.room = room
+            form.status = form.requestformstatus_set
+
+            if query['status']:
+                if form.requestformstatus_set.count() == 0:
                     if query['status'] == 'New':
-                        if status:
-                            is_valid = False
-                    else:
-                        if status:
-                            if query['status'] in REV_REQUEST_STATUS_DICT.keys() and (REV_REQUEST_STATUS_DICT[query['status']] != status.last().status):
-                                is_valid = False
-                        else:
-                            is_valid = False
-                
-                if is_valid:
-                    requests.append({ 
-                        'form': form, 
-                        'room': room, 
-                        'manager': {
-                            'id': user.id, 
-                            'full_name': user.get_full_name()
-                        },
-                        'status': status
-                    })
+                        forms.append(form)
+                else:
+                    if (query['status'] in REV_REQUEST_STATUS_DICT.keys()) and (form.requestformstatus_set.last().status == REV_REQUEST_STATUS_DICT[query['status']]):
+                        forms.append(form)
+            else:
+                forms.append(form)
+
+    forms = sorted(forms, key=lambda x: x.id, reverse=True)
+    return total_forms, num_new_forms, forms
+
+
+def create_data_from_session(session, key, room=None):
+    data = model_to_dict(room) if room else {}
+    manager_ids = [manager.id for manager in room.managers.all()] if room else []
+    area_ids = [area.id for area in room.areas.all()] if room else []
+    training_ids = [training.id for training in room.trainings.all()] if room else []
     
-    return requests, total_requests, num_new_requests
+    if session.get(key):
+        if session[key]['building']:
+            data['building'] = session[key]['building']
+        if session[key]['floor']:
+            data['floor'] = session[key]['floor']
+        if session[key]['number']:
+            data['number'] = session[key]['number']
+        if session[key]['is_active']:
+            data['is_active'] = session[key]['is_active']
+
+        if len(session[key]['managers']) > 0:
+            manager_ids = session[key]['managers']
+
+        if len(session[key]['areas']) > 0:
+            area_ids = session[key]['areas']
+
+        if len(session[key]['trainings']) > 0:
+            training_ids = session[key]['trainings']
+    
+    return data, manager_ids, area_ids, training_ids
+
+
+def update_data_from_post_and_session(post, session, key, tab, room=None):
+    data, manager_ids, area_ids, training_ids = create_data_from_session(session, key, room)
+
+    if tab == 'basic_info':
+        if data['building'] != post.get('building'):
+            data['building'] = post.get('building')
+        if data['floor'] != post.get('floor'):
+            data['floor'] = post.get('floor')
+        if data['number'] != post.get('number'):
+            data['number'] = post.get('number')
+        
+        is_active = True if post.get('is_active') else False
+        if data['is_active'] != is_active:
+            data['is_active'] = is_active
+    
+    elif tab == 'pis':
+        managers = str_to_int(post.getlist('managers[]'))
+        if not is_two_lists_equal(manager_ids, managers):
+            manager_ids = managers
+
+    elif tab == 'areas':
+        areas = str_to_int(post.getlist('areas[]'))
+        if not is_two_lists_equal(area_ids, areas):
+            area_ids = areas
+
+    elif tab == 'trainings':
+        trainings = str_to_int(post.getlist('trainings[]'))
+        if not is_two_lists_equal(training_ids, trainings):
+            training_ids = trainings
+
+    return data, manager_ids, area_ids, training_ids
+
+
+def is_two_lists_equal(l1, l2):
+    return set(l1) == set(l2)
+
+# def update_room_data(post, session, tab, key, room=None):
+    # data = {
+    #     'building': room.building.id if room else '', 
+    #     'floor': room.floor.id if room else '', 
+    #     'number': room.number if room else '', 
+    #     'is_active': room.building.id if room else None, 
+    #     'managers': [manager.id for manager in room.managers.all()] if room else [], 
+    #     'areas': [manager.id for manager in room.areas.all()] if room else [], 
+    #     'trainings': [manager.id for manager in room.trainings.all()] if room else []
+    # }
+    
+    # if session.get(key):
+    #     data = session[key]
+
+    # if tab == 'basic_info':
+    #     data['building'] = post.get('building')
+    #     data['floor'] = post.get('floor')
+    #     data['number'] = post.get('number')
+    #     data['is_active'] = post.get('is_active')
+
+    # elif tab == 'pis':
+    #     data['managers'] = str_to_int(post.getlist('managers[]'))
+
+    # elif tab == 'areas':
+    #     data['areas'] = str_to_int(post.getlist('areas[]'))
+
+    # elif tab == 'trainings':
+    #     data['trainings'] = str_to_int(post.getlist('trainings[]'))
+
+    # return data
+
+
+def display_room(room, option=None):
+    ret = '{} {} - Room {}'.format(room.building.code, room.floor.name, room.number, room.id)
+    if option == 'id':
+        ret += f' (ID: {room.id})'
+    return ret
 
 
 def str_to_int(l):
@@ -155,23 +253,6 @@ def str_to_int(l):
     return []
 
 
-def update_room_data(tab, post, data):
-    if tab == 'basic_info':
-        data['building'] = post.get('building')
-        data['floor'] = post.get('floor')
-        data['number'] = post.get('number')
-
-    elif tab == 'pis':
-        data['managers'] = str_to_int(post.getlist('managers[]'))
-
-    elif tab == 'areas':
-        data['areas'] = str_to_int(post.getlist('areas[]'))
-
-    elif tab == 'trainings':
-        data['trainings'] = str_to_int(post.getlist('trainings[]'))
-    
-    return data
-
 def get_next(request):
     full_path = request.get_full_path()
     parse_result = urlparse(full_path)
@@ -179,3 +260,12 @@ def get_next(request):
     if len(query) > 1:
         return query[1]
     return None
+
+
+def get_tab_urls(url, next):
+    return {
+        'basic_info': url + 'basic_info&next=' + next,
+        'pis': url + 'pis&next=' + next,
+        'areas': url + 'areas&next=' + next,
+        'trainings': url + 'trainings&next=' + next
+    }

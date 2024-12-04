@@ -18,7 +18,9 @@
             <th>
               <label for="{{ field.id_for_label }}">
                 {{ field.label }}
-                {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+                {% if field.name != 'is_active' %}
+                  {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+                {% endif %}
               </label>
             </th>
             <td>
@@ -42,19 +44,21 @@
   </section>
 
   <input type="hidden" name="tab" value="{{ tab }}" />
-  <input type="hidden" name="next" value="{{ next }}" />
 
   <div class="mt-3">
-    {% if path == 'create_room '%}
-      <input class="btn btn-primary mr-2" name="method" type="submit" value="Create New Room" />
-      {% if tab == 'trainings' %}
-        <input class="btn btn-warning" name="method" type="submit" value="Save and Back to Basic Info" />
-      {% else %}
-        <input class="btn btn-warning" name="method" type="submit" value="Save and Next" />
-      {% endif %}
+    <a class="btn btn-outline-secondary" href="{{ next }}">Cancel</a>
+
+    {% if path == 'create_room' %}
+      <input class="btn btn-primary mx-2" name="method" type="submit" value="Create New Room" />
     {% elif path == 'edit_room' %}
-      <input class="btn btn-warning mr-2" type="submit" value="Update Room" />
-      <a class="btn btn-secondary" href="{{ next }}">Go back</a>
+      <input type="hidden" name="next" value="{{ next }}" />
+      <input class="btn btn-primary mx-2" name="method" type="submit" value="Update Room" />
+    {% endif %}
+
+    {% if tab == 'trainings' %}
+      <input class="btn btn-warning" name="method" type="submit" value="Save and Back to Basic Info" />
+    {% else %}
+      <input class="btn btn-warning" name="method" type="submit" value="Save and Next" />
     {% endif %}
   </div>
 </form>

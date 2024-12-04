@@ -176,7 +176,9 @@ function displayRooms(rooms, buildingID, floorID) {
   if (rooms && buildingID && floorID && rooms[buildingID][floorID]) {
     $('#select-room').html('');
     for (let room of rooms[buildingID][floorID]['numbers']) {
-      $('#select-room').append('<tr><td><input id="room_' + room['id'] + '" type="checkbox" name="room[]" value="' + room['id'] + '" data-number="' + room['number'] + '" /></td><td>' + room['number'] + '</td><td class="text-left">' + createList(room['areas']) + '</td><td class="text-left">' + createList(room['trainings']) + '</td></tr>');
+      if (room['is_active']) {
+        $('#select-room').append('<tr><td><input id="room_' + room['id'] + '" type="checkbox" name="room[]" value="' + room['id'] + '" data-number="' + room['number'] + '" /></td><td>' + room['number'] + '</td><td class="text-left">' + createList(room['areas']) + '</td><td class="text-left">' + createList(room['trainings']) + '</td></tr>');
+      }
     }
   }
 }

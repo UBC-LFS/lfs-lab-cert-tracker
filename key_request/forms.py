@@ -33,9 +33,10 @@ class FloorForm(forms.ModelForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['building', 'floor', 'number']
+        fields = ['building', 'floor', 'number', 'is_active']
         labels = {
-            'number': 'Room Number'
+            'number': 'Room Number',
+            'is_active': 'Active?'
         }
         widgets = {
             'building': forms.Select(attrs={ 'class': 'form-control' }),

@@ -442,7 +442,7 @@ class UserDetails(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        _, _, num_new_requests = kFunc.get_manager_dashboard(request.user)
+        _, num_new_forms, _  = kFunc.get_manager_dashboard(request.user)
 
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
@@ -453,7 +453,7 @@ class UserDetails(LoginRequiredMixin, View):
             'expired_certs': get_user_expired_certs(self.user),
             'welcome_message': welcome_message(),
             'viewing': add_next_str_to_session(request, self.user),
-            'num_new_requests': num_new_requests
+            'num_new_forms': num_new_forms
         })
 
 

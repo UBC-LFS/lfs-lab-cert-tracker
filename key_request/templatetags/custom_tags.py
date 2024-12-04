@@ -1,6 +1,7 @@
 from django import template
 from django.contrib.auth.models import User
 
+from key_request import functions as func
 from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
 from key_request.forms import KEY_REQUEST_LABELS
@@ -86,3 +87,8 @@ def concat_strings_dash(*args):
         if i < len(args) - 1:
             s += '-'
     return s
+
+
+@register.filter
+def display_room(room, args):
+    return func.display_room(room, args)

@@ -8,11 +8,11 @@
     {% endfor %}
   </select>
 
-  <input type="hidden" name="form" value="{{ data.form.id }}" />
+  <input type="hidden" name="form" value="{{ data.id }}" />
   <input type="hidden" name="room" value="{{ data.room.id }}" />
   <input type="hidden" name="manager" value="{{ data.manager.id }}" />
 
   <input type="hidden" name="next" value="{{ request.get_full_path }}" />
 
-  <input class="btn btn-{% if data.status|length > 0 %}secondary{% else %}warning{% endif %} btn-xs ml-2" type="submit" value="Update" />
+  <input class="btn btn-{% if data.status.count > 0 %}secondary{% else %}warning{% endif %} btn-xs ml-2" type="submit" value="Update" />
 </form>

@@ -30,3 +30,8 @@ REV_REQUEST_STATUS_DICT = {
 
 REQUEST_STATUS = [ (k, v) for k, v in REQUEST_STATUS_DICT.items() ]
 
+
+URL_NEXT = {'basic_info': 'pis', 'pis': 'areas', 'areas':'trainings', 'trainings': 'basic_info'}
+
+CREATE_ROOM_KEY = 'create_room_data'
+EDIT_ROOM_KEY = 'edit_room_data'
