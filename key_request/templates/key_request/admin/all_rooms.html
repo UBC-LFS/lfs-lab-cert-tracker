@@ -37,6 +37,7 @@
 	      <th>Areas</th>
 				<th>Required Trainings</th>
 				<th>Active?</th>
+				<th>Num of <br /> Reqs</th>
 				<th>Actions</th>
 	    </tr>
 	  </thead>
@@ -74,6 +75,11 @@
 						{% else %}
 							<span class="badge badge-danger">NO</span>
 						{% endif %}
+					</td>
+					<td>
+						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}">
+							{{ room.requestform_set.count }}
+						</a>
 					</td>
 	        <td>
 						<a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>

@@ -4,7 +4,7 @@
   <thead>
     <tr>
       <th>
-        {% if is_admin == 'True' %}
+        {% if is_admin %}
           ID
         {% else %}
           #
@@ -14,7 +14,7 @@
       <th>Floor</th>
       <th>Room <br /> Number</th>
       <th>Areas</th>
-      {% if is_admin == 'True' %}
+      {% if is_admin %}
         <th>PIs</th>
       {% endif %}
       <th>Required Trainings</th>
@@ -23,7 +23,7 @@
   {% for room in rooms %}
     <tr>
       <td>
-        {% if is_admin == 'True' %}
+        {% if is_admin %}
           {{ room.id }}
         {% else %}
           {{ forloop.counter }}
@@ -39,7 +39,7 @@
           {% endfor%}
         </ul>
       </td>
-      {% if is_admin == 'True' %}
+      {% if is_admin %}
         <td class="text-left">
           <ul class="list-minus-20">
             {% for manager in room.managers.all %}
@@ -71,7 +71,7 @@
 </table>
 
 
-{% if is_admin == 'True' %}
+{% if is_admin %}
 
   <div class="mt-4">
     <p class="mb-0">Note: Different colours indicate the status of key requests in the <strong>PIs</strong> column.</p>

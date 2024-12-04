@@ -39,7 +39,7 @@
 				<tr>
 					<td>{{ forloop.revcounter }}</td>
 					<td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with id=form.id form=form is_admin='True' %}
+						{% include 'key_request/subpages/modal_request_form_details.html' with id=form.id form=form is_admin=is_admin %}
 					</td>
 					<td>
 						{% include 'key_request/subpages/request_status.html' with data=form.status %}

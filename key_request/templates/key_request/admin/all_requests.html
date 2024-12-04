@@ -22,7 +22,7 @@
 		</div>
 		<div class="col-md-3">
 			<div class="text-center">
-				<h5>Number of NEW <br /> Applications</h5>
+				<h5>Number of <br /> New Requests</h5>
 				<a class="h4" href="{% url 'key_request:all_requests' %}?page=1&status=New">{{ num_new_forms }}</a>
 			</div>
 		</div>
@@ -60,7 +60,7 @@
 						</ul>
 					</td>
 	        <td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin='True' %}
+						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 	        </td>
 	        <td>
 						{% if form.requestformstatus_set.all|length > 0 %}

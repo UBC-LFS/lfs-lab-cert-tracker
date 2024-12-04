@@ -155,48 +155,46 @@
 				Users: Missing Training Records
 				<small class="text-secondary">(Total: {{ users_missing_certs|length }})</small>
 			</h4>
-			{% if users_missing_certs %}
-				<table class="table table-bordered table-striped table-responsive-lg text-center table-vertical-middle"
-					data-toggle="table"
-				  data-sortable="true"
-				  data-classes=""
-				  data-pagination="true"
-				  data-search="true"
-				  data-page-size="10"
-				  data-page-list="[20, 30, 50, 100, all]"
-				>
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>CWL</th>
-							<th data-sortable="true">First Name</th>
-							<th data-sortable="true">Last Name</th>
-							<th>Missing Training Records</th>
-						</tr>
-					</thead>
-					<tbody>
-					{% for user_missing_cert in users_missing_certs %}
-						<tr>
-							<td>{{ forloop.counter }}</td>
-							<td>
-								<a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-									{{ user_missing_cert.user.username }}
-								</a>
-							</td>
-							<td>{{ user_missing_cert.user.first_name }}</td>
-							<td>{{ user_missing_cert.user.last_name }}</td>
-							<td class="text-left">
-								<ul class="list-minus-20">
-									{% for cert in user_missing_cert.missing_certs %}
-										<li>{{ cert.name }}</li>
-									{% endfor %}
-								</ul>
-							</td>
-						</tr>
-					{% endfor %}
-					</tbody>
-				</table>
-			{% endif %}
+			<table class="table table-bordered table-striped table-responsive-lg text-center table-vertical-middle"
+				data-toggle="table"
+			  data-sortable="true"
+			  data-classes=""
+			  data-pagination="true"
+			  data-search="true"
+			  data-page-size="10"
+			  data-page-list="[20, 30, 50, 100, all]"
+			>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>CWL</th>
+						<th data-sortable="true">First Name</th>
+						<th data-sortable="true">Last Name</th>
+						<th>Missing Training Records</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for user_missing_cert in users_missing_certs %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td>
+							<a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+								{{ user_missing_cert.user.username }}
+							</a>
+						</td>
+						<td>{{ user_missing_cert.user.first_name }}</td>
+						<td>{{ user_missing_cert.user.last_name }}</td>
+						<td class="text-left">
+							<ul class="list-minus-20">
+								{% for cert in user_missing_cert.missing_certs %}
+									<li>{{ cert.name }}</li>
+								{% endfor %}
+							</ul>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
 		</section>
 
 	{% elif current_tab == 'users_expired_records' %}
@@ -207,48 +205,46 @@
 				<small class="text-secondary">(Total: {{ users_expired_certs|length }})</small>
 			</h4>
 
-			{% if users_expired_certs %}
-				<table class="table table-bordered table-striped table-responsive-lg text-center table-vertical-middle"
-					data-toggle="table"
-					data-sortable="true"
-					data-classes=""
-					data-pagination="true"
-					data-search="true"
-					data-page-size="10"
-					data-page-list="[20, 30, 50, 100, all]"
-				>
-					<thead>
+			<table class="table table-bordered table-striped table-responsive-lg text-center table-vertical-middle"
+				data-toggle="table"
+				data-sortable="true"
+				data-classes=""
+				data-pagination="true"
+				data-search="true"
+				data-page-size="10"
+				data-page-list="[20, 30, 50, 100, all]"
+			>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>CWL</th>
+						<th data-sortable="true">First Name</th>
+						<th data-sortable="true">Last Name</th>
+						<th>Expired Training Records</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for user_expired_cert in users_expired_certs %}
 						<tr>
-							<th>#</th>
-							<th>CWL</th>
-							<th data-sortable="true">First Name</th>
-							<th data-sortable="true">Last Name</th>
-							<th>Expired Training Records</th>
+							<td>{{ forloop.counter }}</td>
+							<td>
+								<a href="{% url 'app:user_details' user_id=user_expired_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+									{{ user_expired_cert.user.username }}
+								</a>
+							</td>
+							<td>{{ user_expired_cert.user.first_name }}</td>
+							<td>{{ user_expired_cert.user.last_name }}</td>
+							<td class="text-left">
+								<ul class="list-minus-20">
+									{% for cert in user_expired_cert.expired_certs %}
+										<li>{{ cert.name }}</li>
+									{% endfor %}
+								</ul>
+							</td>
 						</tr>
-					</thead>
-					<tbody>
-						{% for user_expired_cert in users_expired_certs %}
-							<tr>
-								<td>{{ forloop.counter }}</td>
-								<td>
-									<a href="{% url 'app:user_details' user_id=user_expired_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
-										{{ user_expired_cert.user.username }}
-									</a>
-								</td>
-								<td>{{ user_expired_cert.user.first_name }}</td>
-								<td>{{ user_expired_cert.user.last_name }}</td>
-								<td class="text-left">
-									<ul class="list-minus-20">
-										{% for cert in user_expired_cert.expired_certs %}
-											<li>{{ cert.name }}</li>
-										{% endfor %}
-									</ul>
-								</td>
-							</tr>
-						{% endfor %}
-					</tbody>
-				</table>
-			{% endif %}
+					{% endfor %}
+				</tbody>
+			</table>
 		</section>
 
 	{% endif %}

@@ -16,7 +16,7 @@
 	<p>This page includes a table to display all the applications for Key Request and update their status.</p>
 
 	<h4 class="text-info mt-5 mb-4">
-		Key Request Applications
+		Key Requests
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h4>
 
@@ -26,7 +26,7 @@
 		</div>
 		<div class="col-md-3">
 			<div class="text-center">
-				<h5>Number of NEW <br /> Applications</h5>
+				<h5>Number of <br /> New Requests</h5>
 				<a class="h4" href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_forms }}</a>
 			</div>
 		</div>

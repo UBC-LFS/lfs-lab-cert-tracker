@@ -83,7 +83,8 @@ class Index(LoginRequiredMixin, View):
 
         return render(request, 'key_request/index.html', {
             'total_forms': len(form_list),
-            'forms': forms
+            'forms': forms,
+            'is_admin': True if request.user.is_superuser else False
         })
 
 
@@ -350,9 +351,8 @@ class AllRequests(LoginRequiredMixin, View):
             'forms': forms,
             'num_new_forms': new_forms.count(),
             'req_status_dict': REQUEST_STATUS_DICT,
-            'buildings': Building.objects.all(),
-            'floors': Floor.objects.all(),
-            'rooms': Room.objects.all()
+            'search_filter_options': SEARCH_FILTER_OPTIONS,
+            'is_admin': True if request.user.is_superuser else False
         })
 
     @method_decorator(require_POST)
@@ -619,8 +619,7 @@ class AllRooms(LoginRequiredMixin, View):
         num_filtered_rooms = len(room_list)
 
         page = request.GET.get('page', 1)
-        # paginator = Paginator(room_list, 10)
-        paginator = Paginator(room_list, 50)
+        paginator = Paginator(room_list, 10)
 
         try:
             rooms = paginator.page(page)
@@ -638,8 +637,7 @@ class AllRooms(LoginRequiredMixin, View):
             'total_rooms': total_rooms,
             'num_filtered_rooms': num_filtered_rooms,
             'rooms': rooms,
-            'buildings': Building.objects.all(),
-            'floors': Floor.objects.all(),
+            'search_filter_options': SEARCH_FILTER_OPTIONS,
             'users': User.objects.all(),
             'areas': Lab.objects.all(),
             'trainings': Cert.objects.all()
@@ -834,7 +832,7 @@ class CreateRoom(LoginRequiredMixin, View):
             'users': User.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
-            'tab_urls': func.get_tab_urls(self.url, self.next),
+            'tab_urls': func.get_tab_urls(self.url),
             'tab': self.tab,
             'manager_ids': manager_ids,
             'area_ids': area_ids,
@@ -1013,9 +1011,7 @@ class ManagerRooms(LoginRequiredMixin, View):
             'total_rooms': total,
             'num_filtered_rooms': num_filtered_rooms,
             'manager_rooms': rooms,
-            'buildings': Building.objects.all(),
-            'floors': Floor.objects.all(),
-            'rooms': Room.objects.all()
+            'search_filter_options': SEARCH_FILTER_OPTIONS
         })
 
 
@@ -1040,7 +1036,7 @@ def GET_SETTINGS_FORM(model):
 
 def SEARCH_FILTER_OPTIONS():
     return {
-        'buildings': Building.objects.all(),
-        'floors': Floor.objects.all(),
-        'rooms': Room.objects.all()
+        'buildings': Building.objects.values('code').distinct(),
+        'floors': Floor.objects.values('name').distinct(),
+        'rooms': Room.objects.values('number').distinct()
     }

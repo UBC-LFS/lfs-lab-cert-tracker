@@ -2,6 +2,7 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
@@ -23,8 +24,6 @@
 			{{ app_user.get_full_name }}'s Training Record
 		{% endif %}
 	</nav>
-
-	{% include 'app/subpages/return_message.html' with data=messages %}
 
 	<h3 class="title">
 		{% if request.user.id == app_user.id %}

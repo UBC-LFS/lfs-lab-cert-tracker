@@ -2,9 +2,8 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
-
-{% include 'app/subpages/return_message.html' with data=messages %}
 
 {% block content %}
 
@@ -12,6 +11,8 @@
 	{% include 'key_request/subpages/breadcrumb.html' with curr_step=1 %}
 
 	<h3 class="title mb-5">Step1 - Select Rooms</h3>
+
+	<p class="font-size-lg mb-4">You can select multiple rooms.</p>
 
 	<form class="key-request-form" action="" method="POST">
 	  {% csrf_token %}

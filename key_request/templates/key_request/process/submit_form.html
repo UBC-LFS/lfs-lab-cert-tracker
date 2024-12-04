@@ -2,11 +2,10 @@
 
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
-
-{% include 'app/subpages/return_message.html' with data=messages %}
 
 <section class="main-content">
 	{% include 'key_request/subpages/breadcrumb.html' with curr_step=3 %}
@@ -109,13 +108,15 @@
 			{% endfor %}
 
 			<div class="mt-5 border border-secondary p-3 bg-light-gray">
-				<h6>
+				<h6 class="font-weight-600">
 					Requirement to Proceed:
 					{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 				</h6>
 				I understand this request will not be processed until all my required training certificates have been uploaded to https://training-report.landfood.ubc.ca. -- For undergraduate students who need access to FNH labs, please contact your supervisor.
-				<br />
-				<input type="checkbox" name="agree" value="yes" /> I agree
+
+				<p class="font-size-lg mt-3 mb-0">
+					<input class="mr-2" type="checkbox" name="agree" value="yes" /> <strong>I agree</strong>
+				</p>
 			</div>
 
 			<div class="mt-5 text-center">

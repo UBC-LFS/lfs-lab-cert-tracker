@@ -6,12 +6,10 @@
 
 {% block content %}
 
-{% include 'app/subpages/return_message.html' with data=messages %}
-
 <section class="main-content">
 	{% include 'key_request/subpages/breadcrumb.html' with curr_step=2 %}
 
-	<h3 class="title mb-5">Step2 - Check User's Training Records</h3>
+	<h3 class="title mb-5">Step2 - Check Training Records</h3>
 
 	<p class="h5">
 	  You now have <span class="text-chocolate font-weight-bold">{{ rooms|length }}</span> selected room{{ rooms|pluralize }}. See the detailed information below.

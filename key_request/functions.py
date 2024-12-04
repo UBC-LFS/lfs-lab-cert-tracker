@@ -130,7 +130,7 @@ def get_manager_dashboard(manager, query=None):
             form.room = room
             form.status = form.requestformstatus_set
 
-            if query['status']:
+            if query and 'status' in query.keys() and query['status']:
                 if form.requestformstatus_set.count() == 0:
                     if query['status'] == 'New':
                         forms.append(form)
@@ -262,7 +262,7 @@ def get_next(request):
     return None
 
 
-def get_tab_urls(url, next):
+def get_tab_urls(url, next=''):
     return {
         'basic_info': url + 'basic_info&next=' + next,
         'pis': url + 'pis&next=' + next,
