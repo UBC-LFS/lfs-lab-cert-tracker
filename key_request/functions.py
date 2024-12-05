@@ -88,11 +88,13 @@ def search_filters_for_requests(query):
     total = len(forms)
     if query:
         if query['building']:
-            forms = forms.filter(rooms__building__code__icontains=query['building']).distinct()
+            forms = forms.filter(rooms__building__code__exact=query['building']).distinct()
         if query['floor']:
-            forms = forms.filter(rooms__floor__name__icontains=query['floor']).distinct()
+            forms = forms.filter(rooms__floor__name__exact=query['floor']).distinct()
         if query['number']:
-            forms = forms.filter(rooms__number__icontains=query['number']).distinct()
+            forms = forms.filter(rooms__number__exact=query['number']).distinct()
+        if query['room']:
+            forms = forms.filter(rooms__id__exact=query['room']).distinct()
         if query['name']:
             forms = forms.filter(Q(user__first_name__icontains=query['name']) | Q(user__last_name__icontains=query['name'])).distinct()
 
@@ -111,7 +113,7 @@ def get_manager_dashboard(manager, query=None):
 
     num_new_forms = 0
     for form in form_filtered.all():
-        if form.requestformstatus_set.count() == 0:
+        if form.requestformstatus_set.filter(operator_id=manager.id).count() == 0:
             num_new_forms += 1
 
     if query:
@@ -128,14 +130,14 @@ def get_manager_dashboard(manager, query=None):
         for form in all_forms:
             form.manager = manager
             form.room = room
-            form.status = form.requestformstatus_set
-            
+            form.status = form.requestformstatus_set.filter(operator_id=manager.id)
+
             if query and query['status']:
-                if form.requestformstatus_set.count() == 0:
+                if form.status.count() == 0:
                     if query['status'] == 'New':
                         forms.append(form)
                 else:
-                    if (query['status'] in REV_REQUEST_STATUS_DICT.keys()) and (form.requestformstatus_set.last().status == REV_REQUEST_STATUS_DICT[query['status']]):
+                    if (query['status'] in REV_REQUEST_STATUS_DICT.keys()) and (form.status.last().status == REV_REQUEST_STATUS_DICT[query['status']]):
                         forms.append(form)
             else:
                 forms.append(form)
@@ -145,7 +147,7 @@ def get_manager_dashboard(manager, query=None):
 
 
 def create_data_from_session(session, key, room=None):
-    data = model_to_dict(room) if room else {}
+    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'is_active': True}
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     area_ids = [area.id for area in room.areas.all()] if room else []
     training_ids = [training.id for training in room.trainings.all()] if room else []
@@ -174,7 +176,7 @@ def create_data_from_session(session, key, room=None):
 
 def update_data_from_post_and_session(post, session, key, tab, room=None):
     data, manager_ids, area_ids, training_ids = create_data_from_session(session, key, room)
-
+    print(data)
     if tab == 'basic_info':
         if data['building'] != post.get('building'):
             data['building'] = post.get('building')

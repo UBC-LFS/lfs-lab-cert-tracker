@@ -99,7 +99,7 @@ class SelectRooms(LoginRequiredMixin, View):
         return render(request, 'key_request/process/select_rooms.html', {
             'buildings': Building.objects.all(),
             'floors': Floor.objects.all(),
-            'rooms': func.preprocess_rooms(rooms), 
+            'rooms': func.preprocess_rooms(rooms),
         })
 
     @method_decorator(require_POST)
@@ -194,7 +194,7 @@ class SubmitForm(LoginRequiredMixin, View):
 
                 # Add selected rooms to this key request
                 req_form.rooms.add( *rooms )
-                
+
                 # Send a confirmation email
                 send_email(req_form)
 
@@ -211,7 +211,7 @@ class SubmitForm(LoginRequiredMixin, View):
         return redirect('key_request:submit_form')
 
 
-def send_email(obj):    
+def send_email(obj):
     user_rooms = ''
     pi_rooms = {}
     for room in obj.rooms.all():
@@ -221,7 +221,7 @@ def send_email(obj):
         for manager in room.managers.all():
             if manager.id not in pi_rooms.keys():
                 pi_rooms[manager.id] = []
-            
+
             pi_rooms[manager.id].append({
                 'pi': manager,
                 'room': room_info,
@@ -232,7 +232,7 @@ def send_email(obj):
     if len(user_rooms) > 0:
         subject, message = message_for_user(obj.user, user_rooms, 'user')
         send(obj.user, subject, message)
-    
+
     if len(pi_rooms.keys()) > 0:
         for key, value in pi_rooms.items():
             if len(value) > 0:
@@ -266,7 +266,7 @@ def message_for_user(receiver, rooms, option, applicant=None, submitted_date=Non
             <p>LFS Training Record Management System</p>
         </div>
         '''.format(receiver.get_full_name(), rooms, settings.SITE_URL)
-    
+
     elif option == 'pi':
         subject = 'Notification of Key Request at UBC LFS'
         message = '''\
@@ -318,15 +318,16 @@ class AllRequests(LoginRequiredMixin, View):
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
             'number': request.GET.get('number'),
+            'room': request.GET.get('room'),
             'name': request.GET.get('name'),
             'status': request.GET.get('status')
         }
 
-        form_list, total_forms, new_forms = func.search_filters_for_requests(query)        
-        
+        form_list, total_forms, new_forms = func.search_filters_for_requests(query)
+
         if query['status']:
             form_list = new_forms
-        
+
         num_filtered_forms = len(form_list)
 
         page = request.GET.get('page', 1)
@@ -373,7 +374,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
-        
+
         form_id = kwargs.get('form_id')
         tab = request.GET.get('t')
         next = func.get_next(request)
@@ -454,7 +455,7 @@ def update_all(request):
     status = request.POST.get('status')
     if not rooms:
             raise SuspiciousOperation
-    
+
     if status:
         objs = []
         for room in rooms:
@@ -466,7 +467,7 @@ def update_all(request):
                 operator_id = request.user.id,
                 status = status
             ))
-        
+
         if len(objs) > 0:
             RequestFormStatus.objects.bulk_create(objs)
             messages.success(request, 'Success! The number of rooms ({0}) have been updated.'.format(len(objs)))
@@ -474,7 +475,7 @@ def update_all(request):
             messages.warning(request, 'There is no room to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
-    
+
     return HttpResponseRedirect(request.POST.get('next'))
 
 
@@ -487,7 +488,7 @@ class Settings(LoginRequiredMixin, View):
         model = GET_SETTINGS_MODEL(kwargs.get('model'))
         if not model:
             raise Http404
-        
+
         self.raw_model = kwargs.get('model')
         self.model = model
         self.model_obj = apps.get_model(app_label='key_request', model_name=model)
@@ -615,7 +616,7 @@ class AllRooms(LoginRequiredMixin, View):
             room_list = room_list.filter(floor__name__icontains=floor)
         if number:
             room_list = room_list.filter(number__icontains=number)
-        
+
         num_filtered_rooms = len(room_list)
 
         page = request.GET.get('page', 1)
@@ -663,20 +664,20 @@ class EditRoom(LoginRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
-        
+
         room_id = kwargs.get('room_id')
         tab = request.GET.get('t')
         next = func.get_next(request)
         if not room_id or not tab or not next:
             raise SuspiciousOperation
-        
+
         self.room = get_object_or_404(Room, id=room_id)
         self.tab = tab
         self.url = reverse('key_request:edit_room', args=[room_id]) + '?t='
         self.next = next
 
         return setup
-    
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
@@ -717,7 +718,7 @@ class EditRoom(LoginRequiredMixin, View):
 
             if request.session.get(EDIT_ROOM_KEY):
                 data = request.session[EDIT_ROOM_KEY]
-            
+
             if tab == 'basic_info':
                 data['building'] = request.POST.get('building')
                 data['floor'] = request.POST.get('floor')
@@ -726,17 +727,17 @@ class EditRoom(LoginRequiredMixin, View):
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
-            
+
             elif tab == 'areas':
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
-            
+
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
 
             request.session[EDIT_ROOM_KEY] = data
 
             return HttpResponseRedirect(self.url + URL_NEXT[tab] + '&next=' + next)
-        
+
         elif method == 'Update Room':
             data, manager_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
             form = RoomForm(data, instance=self.room)
@@ -749,16 +750,16 @@ class EditRoom(LoginRequiredMixin, View):
 
                     if len(manager_ids) > 0:
                         room.managers.add(*manager_ids)
-                    
+
                     if len(area_ids) > 0:
                         room.areas.add(*area_ids)
-                    
+
                     if len(training_ids) > 0:
                         room.trainings.add(*training_ids)
 
                     if request.session.get(EDIT_ROOM_KEY):
                         del request.session[EDIT_ROOM_KEY]
-                    
+
                     messages.success(request, 'Success! {0} has been updated.'.format(func.display_room(room, 'id')))
                 else:
                     messages.error(request, 'Error! Failed to update {0} for some reason. Please try again.'.format(func.display_room(room, 'id')))
@@ -766,7 +767,7 @@ class EditRoom(LoginRequiredMixin, View):
                 messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
         return HttpResponseRedirect(next)
-    
+
         # success = False
         # if tab == 'basic_info':
         #     form = RoomForm(request.POST, instance=self.room)
@@ -781,7 +782,7 @@ class EditRoom(LoginRequiredMixin, View):
         #     success = update_room_data(self.room.areas, request.POST.getlist('areas[]'))
         # elif tab == 'trainings':
         #     success = update_room_data(self.room.trainings, request.POST.getlist('trainings[]'))
-        
+
         # if success:
         #     messages.success(request, 'Success! {1} {2} - Room {3} ({0}) has been updated.'.format(self.room.id, self.room.building.code, self.room.floor.name, self.room.number))
         # else:
@@ -817,16 +818,16 @@ class CreateRoom(LoginRequiredMixin, View):
         tab = request.GET.get('t')
         if not tab:
             raise SuspiciousOperation
-        
+
         self.tab = tab
         self.url = reverse('key_request:create_room') + '?t='
-        
+
         return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
-        
+        print(data)
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
@@ -843,7 +844,7 @@ class CreateRoom(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         method = request.POST.get('method')
         tab = request.POST.get('tab')
-        
+
         if not method or not tab:
             raise SuspiciousOperation
 
@@ -866,22 +867,22 @@ class CreateRoom(LoginRequiredMixin, View):
                 data['floor'] = request.POST.get('floor')
                 data['number'] = request.POST.get('number')
                 data['is_active'] = True if request.POST.get('is_active') else False
-            
+
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
-            
+
             elif tab == 'areas':
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
-            
+
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
-            
+
             request.session[CREATE_ROOM_KEY] = data
-            
-            
+
+
             return HttpResponseRedirect(self.url + URL_NEXT[tab])
-        
-        elif method == 'Create New Room':
+
+        elif method == 'Create Room':
             data, manager_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
             form = RoomForm(data)
             if form.is_valid():
@@ -889,16 +890,16 @@ class CreateRoom(LoginRequiredMixin, View):
                 if room:
                     if len(manager_ids) > 0:
                         room.managers.add(*manager_ids)
-                    
+
                     if len(area_ids) > 0:
                         room.areas.add(*area_ids)
-                    
+
                     if len(training_ids) > 0:
                         room.trainings.add(*training_ids)
 
                     if request.session.get(CREATE_ROOM_KEY):
                         del request.session[CREATE_ROOM_KEY]
-                    
+
                     messages.success(request, 'Success! {0} has been created.'.format(func.display_room(room)))
                 else:
                     messages.error(request, 'Error! Failed to create {0} for some reason. Please try again.'.format(func.display_room(room)))
@@ -941,7 +942,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
-
+        
         return render(request, 'key_request/manager_dashboard/manager_dashboard.html', {
             'total_forms': total_forms,
             'num_new_forms': num_new_forms,
@@ -949,7 +950,8 @@ class ManagerDashboard(LoginRequiredMixin, View):
             'forms': forms,
             'post_url': reverse('key_request:manager_dashboard'),
             'req_status_dict': REQUEST_STATUS_DICT,
-            'search_filter_options': SEARCH_FILTER_OPTIONS
+            'search_filter_options': SEARCH_FILTER_OPTIONS,
+            'is_admin': True if request.user.is_superuser else False
         })
 
     @method_decorator(require_POST)

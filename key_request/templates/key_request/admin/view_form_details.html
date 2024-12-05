@@ -75,7 +75,7 @@
 							{% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=item %}
 						</td>
 						<td>
-							<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ item.room.id }}_{{ item.manager.id }}" data-building="{{ item.room.building.code }}" data-floor="{{ item.room.floor.name }}" data-number="{{ item.room.number }}" data-pi="{{ item.manager.full_name }}" data-is_new="{% if item.status|length == 0 %}true{% else %}false{% endif %}"/>
+							<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ item.room.id }}_{{ item.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ item.room.building.code }}" data-floor="{{ item.room.floor.name }}" data-number="{{ item.room.number }}" data-is_new="{% if item.status|length == 0 %}true{% else %}false{% endif %}"/>
 						</td>
 					</tr>
 				{% empty %}

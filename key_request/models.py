@@ -51,7 +51,7 @@ class Floor(models.Model):
 class Room(models.Model):
     building = models.ForeignKey(Building, on_delete=models.CASCADE)
     floor = models.ForeignKey(Floor, on_delete=models.CASCADE)
-    number = models.CharField(max_length=10)
+    number = models.CharField(max_length=100)
     managers = models.ManyToManyField(User)
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
@@ -62,7 +62,6 @@ class Room(models.Model):
     updated_on = models.DateField(auto_now=True)
 
     class Meta:
-        # unique_together = ['building', 'floor', 'number']
         ordering = ['building', 'floor', 'number']
 
     def __str__(self):

@@ -70,13 +70,13 @@
 					<td>{{ form.room.floor.name }}</td>
 					<td>{{ form.room.number }}</td>
 	        <td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form %}
+						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 	        </td>
 	        <td>
-						{% if form.requestformstatus_set.count > 0 %}
-							{% include 'key_request/subpages/request_status.html' with data=form.requestformstatus_set.last.status|get_status_display %}
+						{% if form.status.count > 0 %}
+							{% include 'key_request/subpages/request_status.html' with data=form.status.last.status|get_status_display %}
 							<span class="font-size-xs text-secondary d-block">
-							  {% include 'key_request/subpages/date_and_time.html' with data=form.requestformstatus_set.last.created_at %}
+							  {% include 'key_request/subpages/date_and_time.html' with data=form.status.last.created_at %}
 							</span>
 						{% else %}
 							<span class="badge">NEW</span>
@@ -86,7 +86,7 @@
 	          {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
 	        </td>
 					<td>
-						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.requestformstatus_set.count == 0 %}true{% else %}false{% endif %}"/>
+						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.status.count == 0 %}true{% else %}false{% endif %}"/>
 					</td>
 	      </tr>
 			{% empty %}

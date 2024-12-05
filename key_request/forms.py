@@ -44,7 +44,7 @@ class RoomForm(forms.ModelForm):
             'number': forms.TextInput(attrs={ 'class': 'form-control' })
         }
         help_texts = {
-            'number': 'It must be unique. Maximum characters: 10'
+            'number': 'It must be unique. Maximum characters: 100'
         }
         error_messages = {
             'number': { 'required': 'Enter a valid number.' },

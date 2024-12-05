@@ -131,7 +131,7 @@
 	{% if request.user.is_superuser %}
 		<div class="row">
 			<div class="col-md-8">
-				<h4 class="text-info mt-5 mb-3">Create New Training</h4>
+				<h4 class="text-info mt-5 mb-3">Create Training</h4>
 
 				<form action="" method="POST">
 					{% csrf_token %}
@@ -157,7 +157,7 @@
 						{% endfor %}
 					</table>
 
-					<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
+					<input class="btn btn-primary mt-3" type="submit" value="Create Training" />
 				</form>
 			</div>
 		</div>

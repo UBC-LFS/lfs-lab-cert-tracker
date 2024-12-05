@@ -77,7 +77,7 @@
 						{% endif %}
 					</td>
 					<td>
-						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}">
+						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
 							{{ room.requestform_set.count }}
 						</a>
 					</td>

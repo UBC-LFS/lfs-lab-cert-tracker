@@ -28,6 +28,7 @@ $(document).ready(function() {
     for (const tr of $('#selected-rooms > tbody > tr')) {
       $self = $(tr).find('input.room-checkbox');
       if ($(this).is(':checked')) {
+
         // New rooms are checked
         if ($self.data('is_new') === true) {
           $self.prop('checked', true);
@@ -43,6 +44,7 @@ $(document).ready(function() {
         delete updateAllList[$self.val()];
       }
     }
+    console.log(updateAllList);
     updateInfo(updateAllList);
   });
 });
