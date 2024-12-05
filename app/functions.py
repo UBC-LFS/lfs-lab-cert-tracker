@@ -49,9 +49,9 @@ def get_user_certs_with_info(user):
             user_cert = UserCert.objects.filter(user_id=user.id, cert_id=uc.cert.id, by_api=True)
             if user_cert.exists():
                 by_api = True
-            
+
             user_certs.append({
-                'cert_id': uc.cert.id, 
+                'cert_id': uc.cert.id,
                 'cert_name': uc.cert.name,
                 'by_api': by_api,
                 'num_certs': UserCert.objects.filter(user_id=user.id, cert_id=uc.cert.id).count()
@@ -264,11 +264,11 @@ def get_viewing(next):
     viewing = {}
     if res.url_name == 'all_users' or res.url_name == 'api_updates':
         query = ''
-        if len(split_query) > 1: 
+        if len(split_query) > 1:
             query = split_query[1]
-        
-        viewing = { 
-            'page': res.url_name, 
+
+        viewing = {
+            'page': res.url_name,
             'query': query,
             'name': make_capital(res.url_name),
             'route': os.path.join(settings.SITE_URL, res.route)
@@ -276,10 +276,10 @@ def get_viewing(next):
 
     elif res.url_name == 'area_details':
         id = res.kwargs['area_id']
-        viewing = { 
-            'page': 'area_details', 
-            'id': id, 
-            'name': get_lab_by_id(id).name 
+        viewing = {
+            'page': 'area_details',
+            'id': id,
+            'name': get_lab_by_id(id).name
         }
 
     return viewing
@@ -292,7 +292,6 @@ def get_error_messages(errors):
 
     messages = ''
     for key in errors.keys():
-        print(key)
         value = errors[key]
         if key == '__all__':
             messages += value[0]['message'] + ' '
@@ -308,7 +307,7 @@ def make_capital(name):
         first = 'API'
 
     return '{0} {1}'.format(first, second)
-    
+
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')

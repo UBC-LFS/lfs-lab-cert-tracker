@@ -7,9 +7,9 @@
 				<h5 class="modal-title text-info">Update All</h5>
 			</div>
 			<div class="modal-body">
-				<h5>
+				<p class="font-size-lg">
 					Number of selected rooms: <span id='update-all-num-2' class="text-chocolate">0</span>
-				</h5>
+				</p>
 				<form action="{% url 'key_request:update_all' %}" method="post">
 					{% csrf_token %}
 

@@ -11,12 +11,16 @@ $(document).ready(function() {
 
     if ($(this).is(':checked')) {
       $(this).prop('checked', true);
-      updateAllList[id] = {'building': $(this).data('building'), 'floor': $(this).data('floor'), 'number': $(this).data('number'), 'pi': $(this).data('pi')};
+      updateAllList[id] = {
+        'user': $(this).data('user'),
+        'building': $(this).data('building'),
+        'floor': $(this).data('floor'),
+        'number': $(this).data('number')
+      };
     } else {
       $(this).prop('checked', false)
       delete updateAllList[id];
     }
-
     updateInfo(updateAllList);
   });
 
@@ -27,14 +31,18 @@ $(document).ready(function() {
         // New rooms are checked
         if ($self.data('is_new') === true) {
           $self.prop('checked', true);
-          updateAllList[$self.val()] = {'building': $self.data('building'), 'floor': $self.data('floor'), 'number': $self.data('number'), 'pi': $self.data('pi')};
+          updateAllList[$self.val()] = {
+            'user': $self.data('user'),
+            'building': $self.data('building'),
+            'floor': $self.data('floor'),
+            'number': $self.data('number')
+          };
         }
       } else {
         $self.prop('checked', false)
         delete updateAllList[$self.val()];
       }
     }
-
     updateInfo(updateAllList);
   });
 });
@@ -59,7 +67,7 @@ function updateInfo(list) {
     // Display a list of clicked rooms in the pop-up window
     items = '';
     for (const [key, value] of Object.entries(list)) {
-      items += '<li id="room_' + key + '"><input type="hidden" name="rooms[]" value="' + key + '" />' + value['building'] + ' ' + value['floor'] + ' - ' + value['number'] + ' - ' + value['pi'] + '</li>';
+      items += '<li id="room_' + key + '"><input type="hidden" name="rooms[]" value="' + key + '" /><span class="text-primary">' + value['user'] + '</span>: ' + value['building'] + ' ' + value['floor'] + ' - Room ' + value['number'] + '</li>';
     }
     $('#update-all-list').html(items);
   }

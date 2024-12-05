@@ -129,8 +129,8 @@ def get_manager_dashboard(manager, query=None):
             form.manager = manager
             form.room = room
             form.status = form.requestformstatus_set
-
-            if query and 'status' in query.keys() and query['status']:
+            
+            if query and query['status']:
                 if form.requestformstatus_set.count() == 0:
                     if query['status'] == 'New':
                         forms.append(form)
@@ -207,37 +207,6 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
 
 def is_two_lists_equal(l1, l2):
     return set(l1) == set(l2)
-
-# def update_room_data(post, session, tab, key, room=None):
-    # data = {
-    #     'building': room.building.id if room else '', 
-    #     'floor': room.floor.id if room else '', 
-    #     'number': room.number if room else '', 
-    #     'is_active': room.building.id if room else None, 
-    #     'managers': [manager.id for manager in room.managers.all()] if room else [], 
-    #     'areas': [manager.id for manager in room.areas.all()] if room else [], 
-    #     'trainings': [manager.id for manager in room.trainings.all()] if room else []
-    # }
-    
-    # if session.get(key):
-    #     data = session[key]
-
-    # if tab == 'basic_info':
-    #     data['building'] = post.get('building')
-    #     data['floor'] = post.get('floor')
-    #     data['number'] = post.get('number')
-    #     data['is_active'] = post.get('is_active')
-
-    # elif tab == 'pis':
-    #     data['managers'] = str_to_int(post.getlist('managers[]'))
-
-    # elif tab == 'areas':
-    #     data['areas'] = str_to_int(post.getlist('areas[]'))
-
-    # elif tab == 'trainings':
-    #     data['trainings'] = str_to_int(post.getlist('trainings[]'))
-
-    # return data
 
 
 def display_room(room, option=None):
