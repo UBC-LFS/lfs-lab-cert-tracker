@@ -1,0 +1,62 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'app/left_side_menu.html' %}
+
+<section class="main-content">
+	<div class="row">
+	  <div class="col-md-7">
+			<h3 class="title">Create Training</h3>
+
+			<div class="border bg-lighter-gray p-5">
+				{% include 'app/subpages/_form_note.html' %}
+
+        <form action="" method="POST">
+					{% csrf_token %}
+
+					{% for field in form.visible_fields %}
+            <div class="field-wrapper">
+							<label for="{{ field.id_for_label }}">
+								{{ field.label }}
+								{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
+									{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+								{% endif %}
+							</label>
+
+              {% if field.help_text %}
+                <div class="helptext">{{ field.help_text|safe }}</div>
+              {% endif %}
+              {{ field }}
+            </div>
+					{% endfor %}
+
+					<input class="btn btn-primary mt-3" type="submit" value="Create Training" />
+				</form>
+			</div>
+	  </div>
+
+		<div class="col-md-5 pt-5">
+      <div class="ml-5">
+        <h5 class="text-info">
+          Recent Trainings
+          <small class="text-secondary"> ({{ recent_trainings|length }})</small>
+        </h5>
+        <ul>
+          {% for training in recent_trainings %}
+            <li>{{ training.name }} ({{ training.expiry_in_years }})</li>
+          {% empty %}
+            <li>No trainings found</li>
+          {% endfor %}
+        </ul>
+      </div>
+		</div>
+	</div>
+</section>
+
+{% endblock %}

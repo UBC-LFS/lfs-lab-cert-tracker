@@ -51,9 +51,9 @@
 							{% for room in form.rooms.all %}
 								<li>
 									{% if room.is_active %}
-										{{ room.building.code }} {{ room.floor.name }} - Room {{ room.number}} (ID: {{ room.id }})
+										{{ room|display_room }}
 									{% else %}
-										<s>{{ room.building.code }} {{ room.floor.name }} - Room {{ room.number}} (ID: {{ room.id }})</s>
+										<s>{{ room|display_room }}</s>
 									{% endif %}
 								</li>
 							{% endfor %}

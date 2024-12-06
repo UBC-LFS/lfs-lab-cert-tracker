@@ -90,5 +90,5 @@ def concat_strings_dash(*args):
 
 
 @register.filter
-def display_room(room, args):
+def display_room(room, args=None):
     return func.display_room(room, args)

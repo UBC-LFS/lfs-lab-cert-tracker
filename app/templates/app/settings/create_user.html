@@ -13,17 +13,18 @@
 	<div class="row">
 	  <div class="col-md-7">
 			<h3 class="title">Create User</h3>
-			
-			<div class="new-users-section">
-				{% include 'app/subpages/_user_form_note.html' %}
+
+			<div class="border bg-lighter-gray p-5">
+				{% include 'app/subpages/_form_note.html' %}
 
 				<form action="" method="post">
 					{% csrf_token %}
 
-					{% for field in user_form.visible_fields  %}
+					{% for field in form.visible_fields  %}
 						<div class="field-wrapper">
 							<label for="{{ field.id_for_label }}">
-								{{ field.label }}: <span class="text-danger">*</span>
+								{{ field.label }}
+								{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 							</label>
 
 							{% if field.help_text %}
@@ -43,7 +44,7 @@
 	  </div>
 
 		<div class="col-md-5 pt-5">
-			{% include 'app/settings/_recent_users.html' with data=last_ten_users %}
+			{% include 'app/settings/_recent_users.html' with data=recent_users %}
 		</div>
 
 	</div>

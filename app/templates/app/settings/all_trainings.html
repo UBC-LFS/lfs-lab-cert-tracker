@@ -10,7 +10,6 @@
 {% include 'app/left_side_menu.html' %}
 
 <section class="main-content">
-
 	<h3 class="title">
 		All Trainings
 		<small class="text-secondary">(Total: {{ total_trainings }})</small>
@@ -127,42 +126,6 @@
 	</table>
 
 	{% include 'app/subpages/pagination.html' with data=trainings %}
-
-	{% if request.user.is_superuser %}
-		<div class="row">
-			<div class="col-md-8">
-				<h4 class="text-info mt-5 mb-3">Create Training</h4>
-
-				<form action="" method="POST">
-					{% csrf_token %}
-
-					<table class="form-table-width">
-						{% for field in form.visible_fields %}
-							<tr>
-								<th>
-									<label for="{{ field.id_for_label }}">
-										{{ field.label }}
-										{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
-											{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
-										{% endif %}
-									</label>
-								</th>
-								<td>
-									{{ field }}
-									{% if field.help_text %}
-										<div class="helptext">{{ field.help_text|safe }}</div>
-									{% endif %}
-								</td>
-							</tr>
-						{% endfor %}
-					</table>
-
-					<input class="btn btn-primary mt-3" type="submit" value="Create Training" />
-				</form>
-			</div>
-		</div>
-	{% endif %}
-
 </section>
 
 {% endblock %}

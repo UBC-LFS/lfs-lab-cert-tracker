@@ -96,7 +96,7 @@ def search_filters_for_requests(query):
         if query['room']:
             forms = forms.filter(rooms__id__exact=query['room']).distinct()
         if query['name']:
-            forms = forms.filter(Q(user__first_name__icontains=query['name']) | Q(user__last_name__icontains=query['name'])).distinct()
+            forms = forms.filter(Q(user__first_name__icontains=query['name'].strip()) | Q(user__last_name__icontains=query['name'].strip())).distinct()
 
     return forms, total, new_forms
 

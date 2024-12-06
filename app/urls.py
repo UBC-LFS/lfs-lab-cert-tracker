@@ -7,8 +7,13 @@ urlpatterns = [
 
     # Settings - classes
     path('settings/', views.SettingIndex.as_view(), name='setting_index'),
+    
     path('all-areas/', views.AllAreas.as_view(), name='all_areas'),
+    path('create-area/', views.CreateArea.as_view(), name='create_area'),
+
     path('all-trainings/', views.AllTrainings.as_view(), name='all_trainings'),
+    path('create-training/', views.CreateTraining.as_view(), name='create_training'),
+    
     path('all-users/', views.AllUsers.as_view(), name='all_users'),
     path('create-user/', views.CreateUser.as_view(), name='create_user'),
     path('user-report/', views.UserReportMissingTrainings.as_view(), name='user_report_missing_trainings'),

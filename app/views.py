@@ -86,10 +86,9 @@ class SettingIndex(LoginRequiredMixin, View):
             'last_ten_users': User.objects.all().order_by('-date_joined')[:20]
         })
 
+
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllAreas(LoginRequiredMixin, View):
-
-    form_class = AreaForm
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -117,31 +116,38 @@ class AllAreas(LoginRequiredMixin, View):
 
         return render(request, 'app/settings/all_areas.html', {
             'areas': areas,
-            'total_areas': len(area_list),
-            'form': self.form_class()
+            'total_areas': len(area_list)
+        })
+
+
+class CreateArea(LoginRequiredMixin, View):
+    """ Create a new area """
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'app/settings/create_area.html', {
+            'form': AreaForm(),
+            'recent_areas': Lab.objects.all().order_by('-id')[:20]
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-
-        # Create a new area
-        form = self.form_class(request.POST)
+        form = AreaForm(request.POST)
         if form.is_valid():
-            lab = form.save()
-            if lab:
-                messages.success(request, 'Success! {0} created.'.format(lab.name))
+            area = form.save()
+            if area:
+                messages.success(request, 'Success! {0} has been created.'.format(area.name))
             else:
-                messages.error(request, 'Error! Failed to create {0}.'.format(lab.name))
+                messages.error(request, 'Error! Failed to create {0}.'.format(area.name))
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
-        return redirect('app:all_areas')
-
+        return redirect('app:create_area')
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllTrainings(LoginRequiredMixin, View):
-    """ Display all training records of a user """
+    """ Display all training records """
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -166,26 +172,33 @@ class AllTrainings(LoginRequiredMixin, View):
 
         return render(request, 'app/settings/all_trainings.html', {
             'total_trainings': len(training_list),
-            'trainings': trainings,
-            'form': TrainingForm()
+            'trainings': trainings
         })
-    
+
+
+class CreateTraining(LoginRequiredMixin, View):
+    """ Create a new training """
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'app/settings/create_training.html', {
+            'form': TrainingForm(),
+            'recent_trainings': Cert.objects.all().order_by('-id')[:20]
+        })
+
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        # Create a new training
-
         form = TrainingForm(request.POST)
         if form.is_valid():
             cert = form.save()
             if cert:
-                messages.success(request, 'Success! {0} created.'.format(cert.name))
+                messages.success(request, 'Success! {0} has been created.'.format(cert.name))
             else:
                 messages.error(request, 'Error! Failed to create {0}. This training has already existed.'.format(cert.name))
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
 
-        return redirect('app:all_trainings')
-
+        return redirect('app:create_training')
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
@@ -249,7 +262,7 @@ class AllUsers(LoginRequiredMixin, View):
         form = UserForm(request.POST, instance=user)
         if form.is_valid():
             if form.save():
-                messages.success(request, 'Success! {0} updated.'.format(user.get_full_name()))
+                messages.success(request, 'Success! {0} has been updated.'.format(user.get_full_name()))
             else:
                 messages.error(request, 'Error! Failed to update {0}.'.format(user.get_full_name()))
         else:
@@ -262,18 +275,16 @@ class AllUsers(LoginRequiredMixin, View):
 class CreateUser(LoginRequiredMixin, View):
     """ Create a new user """
 
-    form_class = UserForm
-
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_user.html', {
-            'user_form': self.form_class(),
-            'last_ten_users': User.objects.all().order_by('-date_joined')[:20]
+            'form': UserForm(),
+            'recent_users': User.objects.all().order_by('-date_joined')[:20]
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST)
+        form = UserForm(request.POST)
         if form.is_valid():
             user = form.save()
             if user:
@@ -287,11 +298,11 @@ class CreateUser(LoginRequiredMixin, View):
                     if email_error is None:
                         sent = send_info_email(user)
                         if sent:
-                            messages.success(request, 'Success! {0} created and sent an email.'.format(user.get_full_name()))
+                            messages.success(request, 'Success! {0} has been created and sent an email.'.format(user.get_full_name()))
                         else:
-                            messages.warning(request, 'Warning! {0} created, but failed to send an email due to {1}'.format(user.get_full_name(), sent.error))
+                            messages.warning(request, 'Warning! {0} has been created, but failed to send an email due to {1}'.format(user.get_full_name(), sent.error))
                 else:
-                    messages.success(request, 'Success! {0} created.'.format(user.get_full_name()))
+                    messages.success(request, 'Success! {0} has been created.'.format(user.get_full_name()))
             else:
                 messages.error(request, 'Error! Failed to create {0}. Please check your CWL.'.format(user.get_full_name()))
         else:
@@ -972,7 +983,7 @@ def edit_area(request):
     if form.is_valid():
         updated_area = form.save()
         if updated_area:
-            messages.success(request, 'Success! {0} updated.'.format(updated_area.name))
+            messages.success(request, 'Success! {0} has been updated.'.format(updated_area.name))
         else:
             messages.error(request, 'Error! Failed to update {0}.'.format(area.name))
     else:
