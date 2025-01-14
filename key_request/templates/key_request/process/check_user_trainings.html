@@ -86,7 +86,7 @@
 	        <li>Number of Expired Trainings: <strong class="text-danger">{{ total_expired }}</strong></li>
 	      </ul>
 
-	      <p>Your request cannot be processed until all required training certificates have been uploaded to <a href="{% url 'app:user_trainings' user_id=request.user.id %}">My Training Record</a>. Please go back and try to select rooms again, or try again later. Thanks.</p>
+	      <p>Your request cannot be processed until all required training certificates have been uploaded to <a href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a>. Please go back and try to select rooms again, or try again later. Thanks.</p>
 	      <div class="mt-3 text-center">
 	        <a class="btn btn-secondary" href="{% url 'key_request:select_rooms' %}">Go back</a>
 	      </div>

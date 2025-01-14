@@ -23,7 +23,8 @@ urlpatterns = [
     # Users - classes
     path('users/<int:user_id>/work-area/', views.UserAreasView.as_view(), name='user_areas'),
     path('users/<int:user_id>/', views.UserDetails.as_view(), name='user_details'),
-    path('users/<int:user_id>/training-record/', views.UserTrainingsView.as_view(), name='user_trainings'),
+    path('users/<int:user_id>/my-training-record/', views.MyTrainingRecord.as_view(), name='my_training_record'),
+    path('users/<int:user_id>/add-training-record/', views.AddTrainingRecord.as_view(), name='add_training_record'),
     path('users/<int:user_id>/training-record/<int:training_id>/', views.UserTrainingDetailsView.as_view(), name='user_training_details'),
 
 

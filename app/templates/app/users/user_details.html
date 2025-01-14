@@ -46,7 +46,7 @@
 
 			<div class="box border-green mt-3">
 				<h5 class="text-success">
-					<span class="material-symbols-outlined">verified_user</span> Training Records
+					<span class="material-symbols-outlined">verified_user</span> Training Record
 					<small class="text-secondary">(Total: {{ user_certs|length }})</small>
 				</h5>
 				<div class="text-secondary">
@@ -67,7 +67,7 @@
 							</li>
 						{% empty %}
 							<li>
-								{{ app_user.first_name }} does not have any training records
+								No training record found
 							</li>
 						{% endfor %}
 					</ul>
@@ -76,7 +76,7 @@
 
 			<div class="box border-red mt-5">
 				<h5 class="text-danger">
-					<span class="material-symbols-outlined">notification_important</span> Missing Training Records
+					<span class="material-symbols-outlined">notification_important</span> Missing Training Record
 					<small class="text-secondary">(Total: {{ missing_certs|length }})</small>
 				</h5>
 				<div class="text-secondary">
@@ -87,14 +87,14 @@
 							{% endfor %}
 						</ul>
 					{% else %}
-						{{ app_user.first_name }} is not missing any training records
+						No missing training record found
 					{% endif %}
 				</div>
 			</div>
 
 			<div class="box border-gray my-5">
 				<h5 class="text-secondary">
-					<span class="material-symbols-outlined">warning</span> Expired Training Records
+					<span class="material-symbols-outlined">warning</span> Expired Training Record
 					<small class="text-secondary">(Total: {{ expired_certs|length }})</small>
 				</h5>
 				<div class="text-secondary">
@@ -105,7 +105,7 @@
 							{% endfor %}
 						</ul>
 					{% else %}
-						{{ app_user.first_name }} does not have any expired training records
+						No expired training record found
 					{% endif %}
 				</div>
 			</div>
@@ -164,7 +164,7 @@
 					<ul class="mb-0 list-minus-20">
 						<li>
 							Please go to
-							<a href="{% url 'app:user_trainings' user_id=app_user.id %}">
+							<a href="{% url 'app:my_training_record' user_id=app_user.id %}">
 								{% if request.user.id == app_user.id %}
 									My
 								{% else %}

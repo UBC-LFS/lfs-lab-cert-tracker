@@ -1105,10 +1105,10 @@ class UserTrainingTest(TestCase):
         lab_user = self.api.get_user(USERS[2], 'username')
         lab_user2 = self.api.get_user('testuser4', 'username')
 
-        res = self.client.get(reverse('app:user_trainings', args=[lab_user.id]))
+        res = self.client.get(reverse('app:my_training_record', args=[lab_user.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_trainings', args=[2]))
+        res = self.client.get(reverse('app:my_training_record', args=[2]))
         self.assertEqual(res.status_code, 403)
 
 
@@ -1129,13 +1129,13 @@ class UserTrainingTest(TestCase):
         lab_user = self.api.get_user(USERS[2], 'username')
         lab_user2 = self.api.get_user('testuser4', 'username')
 
-        res = self.client.get(reverse('app:user_trainings', args=[pi.id]))
+        res = self.client.get(reverse('app:my_training_record', args=[pi.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_trainings', args=[lab_user.id])) # lab user
+        res = self.client.get(reverse('app:my_training_record', args=[lab_user.id])) # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_trainings', args=[lab_user2.id])) # Wrong lab user
+        res = self.client.get(reverse('app:my_training_record', args=[lab_user2.id])) # Wrong lab user
         self.assertEqual(res.status_code, 403)
 
 
@@ -1160,16 +1160,16 @@ class UserTrainingTest(TestCase):
         lab_user = self.api.get_user(USERS[2], 'username')
         lab_user2 = self.api.get_user('testuser4', 'username')
 
-        res = self.client.get(reverse('app:user_trainings', args=[pi.id]))
+        res = self.client.get(reverse('app:my_training_record', args=[pi.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_trainings', args=[pi.id]))
+        res = self.client.get(reverse('app:my_training_record', args=[pi.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_trainings', args=[lab_user.id]))
+        res = self.client.get(reverse('app:my_training_record', args=[lab_user.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_trainings', args=[lab_user2.id]))
+        res = self.client.get(reverse('app:my_training_record', args=[lab_user2.id]))
         self.assertEqual(res.status_code, 200)
 
 
@@ -1194,7 +1194,7 @@ class UserTrainingTest(TestCase):
 
         user_id = 11
 
-        res = self.client.get(reverse('app:user_trainings', args=[user_id]))
+        res = self.client.get(reverse('app:my_training_record', args=[user_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(len(res.context['user_cert_list']), 6)
@@ -1285,11 +1285,11 @@ class UserTrainingTest(TestCase):
             'completion_date_day': 15
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user.id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user.id]))
         self.assertRedirects(res, res.url)
 
 
@@ -1307,7 +1307,7 @@ class UserTrainingTest(TestCase):
 
         user_id = 11
 
-        res = self.client.get(reverse('app:user_trainings', args=[user_id]))
+        res = self.client.get(reverse('app:my_training_record', args=[user_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(len(res.context['user_cert_list']), 6)
@@ -1397,11 +1397,11 @@ class UserTrainingTest(TestCase):
             'completion_date_day': 15
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user.id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user.id]))
         self.assertRedirects(res, res.url)
 
         user2 = self.api.get_user(user_id)
@@ -1418,7 +1418,7 @@ class UserTrainingTest(TestCase):
 
         user_id = 11
 
-        res = self.client.get(reverse('app:user_trainings', args=[user_id]))
+        res = self.client.get(reverse('app:my_training_record', args=[user_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(len(res.context['user_cert_list']), 6)
@@ -1506,11 +1506,11 @@ class UserTrainingTest(TestCase):
             'completion_date': '2020-01-15'
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res, res.url)
 
         user1 = self.api.get_user(user_id)
@@ -1538,11 +1538,11 @@ class UserTrainingTest(TestCase):
             'completion_date': '2020-01-15'
         }
 
-        res1 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data1, format='multipart')
+        res1 = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data1, format='multipart')
         self.assertEqual(res1.status_code, 302)
         messages1 = self.messages(res1)
         self.assertEqual(messages1[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res1.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res1.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res1, res1.url)
 
         user1 = self.api.get_user(user_id)
@@ -1559,11 +1559,11 @@ class UserTrainingTest(TestCase):
             'completion_date': '2020-02-15'
         }
 
-        res2 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data2, format='multipart')
+        res2 = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data2, format='multipart')
         self.assertEqual(res2.status_code, 302)
         messages2 = self.messages(res2)
         self.assertEqual(messages2[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res2.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res2.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res2, res2.url)
 
         user2 = self.api.get_user(user_id)
@@ -1601,11 +1601,11 @@ class UserTrainingTest(TestCase):
             'completion_date': '2020-01-15'
         }
 
-        res1 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data1, format='multipart')
+        res1 = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data1, format='multipart')
         self.assertEqual(res1.status_code, 302)
         messages1 = self.messages(res1)
         self.assertEqual(messages1[0], 'Success! Preventing and Addressing Workplace Bullying and Harassment Training added.')
-        self.assertEqual(res1.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res1.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res1, res1.url)
 
         user1 = self.api.get_user(user_id)
@@ -1621,12 +1621,12 @@ class UserTrainingTest(TestCase):
             'completion_date': '2020-01-15'
         }
 
-        res2 = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data2, format='multipart')
+        res2 = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data2, format='multipart')
         self.assertEqual(res2.status_code, 302)
         
         messages2 = self.messages(res2)
         self.assertEqual(messages2[0], 'Error! Failed to add your training. The certificate already exists. If you wish to update a new training, please delete your old training first.')
-        self.assertEqual(res2.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res2.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res2, res2.url)
         
         user_certs1.delete()
@@ -1636,7 +1636,7 @@ class UserTrainingTest(TestCase):
         print("\n- Test: view user's trainings - by wrong pi")
         self.login('testpi3', PASSWORD)
 
-        res = self.client.get(reverse('app:user_trainings', args=[12]))
+        res = self.client.get(reverse('app:my_training_record', args=[12]))
         self.assertEqual(res.status_code, 403)
 
 
@@ -1655,7 +1655,7 @@ class UserTrainingTest(TestCase):
             'completion_date_day': 15
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user.id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user.id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 403)"""
 
 
@@ -1678,11 +1678,11 @@ class UserTrainingTest(TestCase):
             'completion_date_day': 15
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! Chemical Safety Course added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res, res.url)
 
         user2 = self.api.get_user(user_id)
@@ -1709,7 +1709,7 @@ class UserTrainingTest(TestCase):
         messages = self.messages(res)
         self.assertEqual(res.status_code, 302)
         self.assertTrue(messages[0], 'Success! Chemical Safety Course deleted.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res, res.url)"""
 
 
@@ -1732,11 +1732,11 @@ class UserTrainingTest(TestCase):
             'completion_date_day': 15
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! Radiation Safety Course added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res, res.url)
 
         user2 = self.api.get_user(user_id)
@@ -1784,11 +1784,11 @@ class UserTrainingTest(TestCase):
             'completion_date_day': 15
         }
 
-        res = self.client.post(reverse('app:user_trainings', args=[user_id]), data=data, format='multipart')
+        res = self.client.post(reverse('app:my_training_record', args=[user_id]), data=data, format='multipart')
         self.assertEqual(res.status_code, 302)
         messages = self.messages(res)
         self.assertEqual(messages[0], 'Success! Chemical Safety Course added.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res, res.url)
 
         user2 = self.api.get_user(user_id)
@@ -1815,7 +1815,7 @@ class UserTrainingTest(TestCase):
         messages = self.messages(res)
         self.assertEqual(res.status_code, 302)
         self.assertTrue(messages[0], 'Success! Chemical Safety Course deleted.')
-        self.assertEqual(res.url, reverse('app:user_trainings', args=[user_id]))
+        self.assertEqual(res.url, reverse('app:my_training_record', args=[user_id]))
         self.assertRedirects(res, res.url)
 
 

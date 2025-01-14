@@ -6,7 +6,7 @@
     <a class="btn dropdown-item" href="{% url 'app:user_areas' user_id=request.user.id %}">My Work Area</a>
   </div>
   <div class="dropdown">
-    <a class="btn dropdown-item" href="{% url 'app:user_trainings' user_id=request.user.id %}">My Training Record</a>
+    <a class="btn dropdown-item" href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a>
   </div>
 
   {% if request.user.is_superuser %}

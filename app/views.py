@@ -517,10 +517,8 @@ class UserAreasView(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
-class UserTrainingsView(LoginRequiredMixin, View):
+class MyTrainingRecord(LoginRequiredMixin, View):
     """ Display all training records of a user """
-
-    form_class = UserTrainingForm
 
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
@@ -539,20 +537,45 @@ class UserTrainingsView(LoginRequiredMixin, View):
         if request.user.id != self.user.id and request.session.get('next'):
             viewing = get_viewing(request.session.get('next'))
 
-        return render(request, 'app/trainings/user_trainings.html', {
+        return render(request, 'app/users/my_training_record.html', {
             'app_user': self.user,
             'user_certs': get_user_certs_with_info(self.user),
             'missing_certs': get_user_missing_certs(self.user.id),
             'expired_certs': get_user_expired_certs(self.user),
-            'form': self.form_class(initial={ 'user': self.user.id }),
+            'viewing': viewing
+        })
+
+
+@method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
+class AddTrainingRecord(LoginRequiredMixin, View):
+    """ Add training record of a user """
+
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
+
+        user_id = kwargs.get('user_id', None)
+        if not user_id:
+            raise SuspiciousOperation
+        
+        self.user = get_user_by_id(user_id)
+        return setup
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        viewing = {}
+        if request.user.id != self.user.id and request.session.get('next'):
+            viewing = get_viewing(request.session.get('next'))
+
+        return render(request, 'app/users/add_training_record.html', {
+            'app_user': self.user,
+            'form': UserTrainingForm(initial={ 'user': self.user.id }),
             'viewing': viewing
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        # Add a training record
-
-        form = self.form_class(request.POST, request.FILES)
+        form = UserTrainingForm(request.POST, request.FILES)
 
         if form.is_valid():
             data = form.cleaned_data
@@ -596,7 +619,7 @@ class UserTrainingsView(LoginRequiredMixin, View):
 
             messages.error(request, "Error! Failed to add your training. {0}".format(error_message))
 
-        return HttpResponseRedirect(reverse('app:user_trainings', args=[self.user.id]))
+        return HttpResponseRedirect(reverse('app:add_training_record', args=[self.user.id]))
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
@@ -656,7 +679,7 @@ class UserTrainingDetailsView(LoginRequiredMixin, View):
         else:
             messages.error(request, 'Error! Form is invalid.')
 
-        return HttpResponseRedirect(reverse('app:user_trainings', args=[self.user.id]))
+        return HttpResponseRedirect(reverse('app:my_training_record', args=[self.user.id]))
 
 
 # Users - functions

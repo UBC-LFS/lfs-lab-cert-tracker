@@ -24,7 +24,7 @@
 	      Please note the following:
 	    </h5>
 	    <ol class="list-line-height-2">
-	      <li>Key, card access, and alarm code requests will NOT be processed unless all required training completion certificates have been uploaded to <a href="{% url 'app:user_trainings' user_id=request.user.id %}">My Training Record</a>.</li>
+	      <li>Key, card access, and alarm code requests will NOT be processed unless all required training completion certificates have been uploaded to <a href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a>.</li>
 	      <li>Key requisition is valid for thirty days from date of application.</li>
 	      <li>A refundable deposit is required for each key.</li>
 	      <li>UBC Key Desk may require few weeks from the date they receive the key requisition to provide the requested key(s). They will send email notices to the email address which you entered when you first requested a key at UBC even if it was many years ago. Please check that email.</li>

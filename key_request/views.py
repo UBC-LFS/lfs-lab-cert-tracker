@@ -54,7 +54,7 @@ class Index(LoginRequiredMixin, View):
             forms = paginator.page(paginator.num_pages)
 
         for form in forms:
-            form.status = 'Pending'
+            form.status = 'Pending by Supervisor'
             form.status_created_at = None
 
             room_ids = []

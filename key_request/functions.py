@@ -176,7 +176,6 @@ def create_data_from_session(session, key, room=None):
 
 def update_data_from_post_and_session(post, session, key, tab, room=None):
     data, manager_ids, area_ids, training_ids = create_data_from_session(session, key, room)
-    print(data)
     if tab == 'basic_info':
         if data['building'] != post.get('building'):
             data['building'] = post.get('building')
