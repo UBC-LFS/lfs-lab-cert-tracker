@@ -1,71 +1,59 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
-	<div id="download-csv-message" class="container"></div>
-{% endblock %}
+{% block sub_content %}
 
-{% block content %}
+<h3 class="title">
+	User Report
+	<small class="text-secondary">Total: {{ total_users }}</small> <br />
+	<small class="text-danger">for Missing Training Records</small>
+</h3>
 
-{% include 'app/settings/left_side_menu.html' %}
+<div class="text-primary float-right">
+	<span class="material-symbols-outlined">cloud_download</span>
+	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
+		Download All as CSV
+	</button>
+</div>
 
-<section class="main-content">
-
-	<h3 class="title">
-		User Report
-		<small class="text-secondary">Total: {{ total_users }}</small> <br />
-		<small class="text-danger">for Missing Training Records</small>
-	</h3>
-
-	<div class="text-primary float-right">
-		<span class="material-symbols-outlined">cloud_download</span>
-		<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
-			Download All as CSV
-		</button>
-	</div>
-
-	<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm table-vertical-middle">
-		<thead>
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm table-vertical-middle">
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>CWL</th>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>Number of <br /> Missing <br /> Trainings</th>
+			<th>Missing Trainings</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for user in users %}
 			<tr>
-				<th>ID</th>
-				<th>CWL</th>
-				<th>First Name</th>
-				<th>Last Name</th>
-				<th>Number of <br /> Missing <br /> Trainings</th>
-				<th>Missing Trainings</th>
+				<td>{{ user.id }}</td>
+				<td>{{ user.username }}</td>
+				<td>{{ user.first_name }}</td>
+				<td>{{ user.last_name }}</td>
+				<td>{{ user.missing_certs.count }}</td>
+				<td class="text-left">
+					<ul>
+						{% for missing_cert in user.missing_certs %}
+							<li>{{ missing_cert.name }}</li>
+						{% endfor %}
+					</ul>
+				</td>
 			</tr>
-		</thead>
-		<tbody>
-			{% for user in users %}
-				<tr>
-					<td>{{ user.id }}</td>
-					<td>{{ user.username }}</td>
-					<td>{{ user.first_name }}</td>
-					<td>{{ user.last_name }}</td>
-					<td>{{ user.missing_certs.count }}</td>
-					<td class="text-left">
-						<ul>
-							{% for missing_cert in user.missing_certs %}
-								<li>{{ missing_cert.name }}</li>
-							{% endfor %}
-						</ul>
-					</td>
-				</tr>
 
-			{% empty %}
+		{% empty %}
 
-				<tr>
-					<td colspan="5">No users found</td>
-				</tr>
+			<tr>
+				<td colspan="5">No users found</td>
+			</tr>
 
-			{% endfor %}
-		</tbody>
-	</table>
+		{% endfor %}
+	</tbody>
+</table>
 
-	{% include 'app/subpages/pagination.html' with data=users %}
-
-</section>
+{% include 'app/subpages/pagination.html' with data=users %}
 
 {% endblock %}
 

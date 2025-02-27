@@ -1,88 +1,77 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
-{% endblock %}
+{% block sub_content %}
 
-{% block content %}
-
-{% include 'app/settings/left_side_menu.html' %}
-
-<section class="main-content">
-
-	<div class="mt-4" style="float:right;">
-		<h5 class="text-info text-center">Summary</h5>
-		<table class="table-sm font-size-sm text-center table-vertical-middle stats-table">
-			<tr>
-				{% for st in stats %}
-					<td>{{ st.date }}</td>
-				{% endfor %}
-			</tr>
-			<tr>
-				{% for st in stats %}
-					<td>{{ st.count }}</td>
-				{% endfor %}
-			</tr>
-		</table>
-	</div>
-
-	<h3 class="title">
-		API Updates
-		<small class="text-secondary">({{ today }} | Total: {{ total_user_certs }})</small>
-	</h3>
-
-	{% include 'app/subpages/search_note.html' with data=user_certs %}
-
-	<div class="search-field my-3">
-		<form method="GET">
-			<div class="input-field">
-				<label for="date_from">From:</label>
-				<input class="mr-2" type="date" name="date_from" value="{{ request.GET.date_from }}" />
-				<label for="date_to">To:</label>
-				<input type="date" name="date_to" value="{{ request.GET.date_to }}" />
-				<input class="search-field-text mx-2" type="text" name="q" value="{{ request.GET.q }}" placeholder="User's CWL or Name" />
-				<input class="search-field-text" type="text" name="training" value="{{ request.GET.training }}" placeholder="Training Name" />
-
-				<div class="text-right">
-					<button class="btn btn-primary btn-sm" type="submit">Filter</button>
-					<a class="btn btn-secondary btn-sm" href="{% url 'app:api_updates' %}">Clear</a>
-				</div>
-			</div>
-		</form>
-	</div>
-
-	<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-vertical-middle">
-	  <thead>
-	    <tr>
-			<th>CWL</th>
-			<th>Full Name</th>
-			<th>Uploaded Date</th>
-	    <th>Training</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-	    {% for uc in user_certs %}
-	      <tr>
-					<td>
-						<a href="{% url 'app:user_details' user_id=uc.user.id %}?next={{ request.get_full_path }}">{{ uc.user.username }}</a>
-					</td>
-					<td>{{ uc.user.get_full_name }}</td>
-					<td>{{ uc.uploaded_date }}</td>
-					<td class="text-left">
-						<a href="{% url 'app:user_training_details' user_id=uc.user.id training_id=uc.cert.id %}?next={{ request.get_full_path }}&p=account">{{ uc.cert.name }}</a>
-					</td>
-	      </tr>
-			{% empty %}
-				<tr>
-					<td colspan="100%">No user trainings found</td>
-				</tr>
-	    {% endfor %}
-	  </tbody>
+<div class="mt-4" style="float:right;">
+	<h5 class="text-info text-center">Summary</h5>
+	<table class="table-sm font-size-sm text-center table-vertical-middle stats-table">
+		<tr>
+			{% for st in stats %}
+				<td>{{ st.date }}</td>
+			{% endfor %}
+		</tr>
+		<tr>
+			{% for st in stats %}
+				<td>{{ st.count }}</td>
+			{% endfor %}
+		</tr>
 	</table>
+</div>
 
-	{% include 'app/subpages/pagination.html' with data=user_certs %}
+<h3 class="title">
+	API Updates
+	<small class="text-secondary">({{ today }} | Total: {{ total_user_certs }})</small>
+</h3>
 
-</section>
+{% include 'app/subpages/search_note.html' with data=user_certs %}
+
+<div class="search-field my-3">
+	<form method="GET">
+		<div class="input-field">
+			<label for="date_from">From:</label>
+			<input class="mr-2" type="date" name="date_from" value="{{ request.GET.date_from }}" />
+			<label for="date_to">To:</label>
+			<input type="date" name="date_to" value="{{ request.GET.date_to }}" />
+			<input class="search-field-text mx-2" type="text" name="q" value="{{ request.GET.q }}" placeholder="User's CWL or Name" />
+			<input class="search-field-text" type="text" name="training" value="{{ request.GET.training }}" placeholder="Training Name" />
+
+			<div class="text-right">
+				<button class="btn btn-primary btn-sm" type="submit">Filter</button>
+				<a class="btn btn-secondary btn-sm" href="{% url 'app:api_updates' %}">Clear</a>
+			</div>
+		</div>
+	</form>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-vertical-middle">
+  <thead>
+    <tr>
+		<th>CWL</th>
+		<th>Full Name</th>
+		<th>Uploaded Date</th>
+    <th>Training</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for uc in user_certs %}
+      <tr>
+				<td>
+					<a href="{% url 'app:user_details' user_id=uc.user.id %}?next={{ request.get_full_path }}">{{ uc.user.username }}</a>
+				</td>
+				<td>{{ uc.user.get_full_name }}</td>
+				<td>{{ uc.uploaded_date }}</td>
+				<td class="text-left">
+					<a href="{% url 'app:user_training_details' user_id=uc.user.id training_id=uc.cert.id %}?next={{ request.get_full_path }}&p=account">{{ uc.cert.name }}</a>
+				</td>
+      </tr>
+		{% empty %}
+			<tr>
+				<td colspan="100%">No user trainings found</td>
+			</tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'app/subpages/pagination.html' with data=user_certs %}
 
 {% endblock %}

@@ -1,54 +1,44 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
-{% endblock %}
+{% block sub_content %}
 
-{% block content %}
+<div class="row">
+  <div class="col-md-7">
+		<h3 class="title">Create User</h3>
 
-{% include 'app/settings/left_side_menu.html' %}
+		<div class="border bg-lighter-gray p-4">
+			{% include 'app/subpages/_form_note.html' %}
 
-<section class="main-content">
-	<div class="row">
-	  <div class="col-md-7">
-			<h3 class="title">Create User</h3>
+			<form action="" method="post">
+				{% csrf_token %}
 
-			<div class="border bg-lighter-gray p-5">
-				{% include 'app/subpages/_form_note.html' %}
-
-				<form action="" method="post">
-					{% csrf_token %}
-
-					{% for field in form.visible_fields  %}
-						<div class="field-wrapper">
-							<label for="{{ field.id_for_label }}">
-								{{ field.label }}
-								{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
-							</label>
-
-							{% if field.help_text %}
-								<div class="help">{{ field.help_text|safe }}</div>
-							{% endif %}
-							{{ field }}
-						</div>
-					{% endfor %}
-
+				{% for field in form.visible_fields  %}
 					<div class="field-wrapper">
-						<input name="send_email" type="checkbox" value="yes" /> Are you sure to send an email?
+						<label for="{{ field.id_for_label }}">
+							{{ field.label }}
+							{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+						</label>
+
+						{% if field.help_text %}
+							<div class="help">{{ field.help_text|safe }}</div>
+						{% endif %}
+						{{ field }}
 					</div>
+				{% endfor %}
 
-					<input class="btn btn-primary mt-3" type="submit" value="Create User" />
-				</form>
-			</div>
-	  </div>
+				<div class="field-wrapper">
+					<input name="send_email" type="checkbox" value="yes" /> Are you sure to send an email?
+				</div>
 
-		<div class="col-md-5 pt-5">
-			{% include 'app/settings/_recent_users.html' with data=recent_users %}
+				<input class="btn btn-primary mt-3" type="submit" value="Create User" />
+			</form>
 		</div>
+  </div>
 
+	<div class="col-md-5 pt-5">
+		{% include 'app/settings/_recent_users.html' with data=recent_users %}
 	</div>
 
-</section>
+</div>
 
 {% endblock %}
