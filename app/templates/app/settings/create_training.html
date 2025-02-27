@@ -33,20 +33,10 @@
 		</div>
   </div>
 
-	<div class="col-md-5 pt-5">
-    <div class="ml-5">
-      <h5 class="text-info">
-        Recent Trainings
-        <small class="text-secondary"> ({{ recent_trainings|length }})</small>
-      </h5>
-      <ul>
-        {% for training in recent_trainings %}
-          <li>{{ training.name }} ({{ training.expiry_in_years }})</li>
-        {% empty %}
-          <li>No trainings found</li>
-        {% endfor %}
-      </ul>
-    </div>
+	<div class="col-md-5">
+    <section class="ml-5 pt-5">
+      {% include 'app/settings/_display_trainings.html' with data=recent_trainings title='Recent Trainings' %}
+    </section>
 	</div>
 </div>
 

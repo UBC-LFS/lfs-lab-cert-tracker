@@ -1,0 +1,11 @@
+<h5 class="text-info">
+  {{ title }}
+  <small class="text-secondary"> ({{ data|length }})</small>
+</h5>
+<ul>
+  {% for training in data %}
+    <li>{{ training.name }} ({{ training.expiry_in_years }})</li>
+  {% empty %}
+    <li>No trainings found</li>
+  {% endfor %}
+</ul>

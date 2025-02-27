@@ -24,10 +24,11 @@ class Index(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/index.html', {
-            'last_ten_users': User.objects.all().order_by('-date_joined')[:20]
+            'recent_users': User.objects.all().order_by('-date_joined')[:20]
         })
     
 
+# Area
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllAreas(LoginRequiredMixin, View):

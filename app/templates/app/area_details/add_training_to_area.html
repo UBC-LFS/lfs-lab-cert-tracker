@@ -4,7 +4,7 @@
 
 {% if is_admin %}
 
-  <h4 class="text-info mt-5">Add Training to Area</h4>
+  <h4 class="text-info">Add Training to Area</h4>
 
   <div class="border bg-lighter-gray p-4 mt-4">
     <form action="#" method="post">
@@ -14,6 +14,10 @@
       <input class="btn btn-primary mt-3" type="submit" value="ADD" />
     </form>
   </div>
+
+  <section class="mt-5">
+    {% include 'app/settings/_display_trainings.html' with data=required_trainings title='Required Training Record in Area' %}
+  </section>
 
 {% endif %}
 

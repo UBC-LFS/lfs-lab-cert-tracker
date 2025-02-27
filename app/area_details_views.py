@@ -179,7 +179,6 @@ class UsersMissingTrainings(LoginRequiredMixin, View):
         if not area_id:
             raise SuspiciousOperation
         
-        print('UsersMissingTrainings ======', area_id)
         self.area = get_lab_by_id(area_id)
         return setup
     
@@ -254,7 +253,8 @@ class AddUserToArea(LoginRequiredMixin, View):
             'area': self.area,
             'is_admin': request.user.is_superuser,
             'is_pi': is_pi_in_area(request.user.id, self.area.id),
-            'user_area_form': UserAreaForm(initial={ 'lab': self.area.id })
+            'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
+            'recent_users': User.objects.all().order_by('-date_joined')[:10]
         })
 
     @method_decorator(require_POST)
@@ -323,7 +323,8 @@ class AddTrainingToArea(LoginRequiredMixin, View):
             'area': self.area,
             'is_admin': request.user.is_superuser,
             'is_pi': is_pi_in_area(request.user.id, self.area.id),
-            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id })
+            'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id }),
+            'required_trainings': Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
         })
     
 

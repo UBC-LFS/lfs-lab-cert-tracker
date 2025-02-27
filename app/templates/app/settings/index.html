@@ -38,7 +38,9 @@
 		</div>
 	</div>
 	<div class="col-md-5">
-		{% include 'app/settings/_recent_users.html' with data=last_ten_users %}
+		<section class="ml-5">
+			{% include 'app/settings/_display_users.html' with data=recent_users %}
+		</section>
 	</div>
 </div>
 
