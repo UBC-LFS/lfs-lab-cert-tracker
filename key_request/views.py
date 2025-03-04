@@ -309,65 +309,6 @@ def send(receiver, subject, message):
 
 # For Admin
 
-@method_decorator([never_cache], name='dispatch')
-class AllRequests(LoginRequiredMixin, View):
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        query = {
-            'building': request.GET.get('building'),
-            'floor': request.GET.get('floor'),
-            'number': request.GET.get('number'),
-            'room': request.GET.get('room'),
-            'name': request.GET.get('name'),
-            'status': request.GET.get('status')
-        }
-
-        form_list, total_forms, new_forms = func.search_filters_for_requests(query)
-
-        if query['status']:
-            form_list = new_forms
-
-        num_filtered_forms = len(form_list)
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(form_list, NUM_PER_PAGE)
-
-        try:
-            forms = paginator.page(page)
-        except PageNotAnInteger:
-            forms = paginator.page(1)
-        except EmptyPage:
-            forms = paginator.page(paginator.num_pages)
-
-        for form in forms:
-            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, [room.id for room in form.rooms.all()])
-            form.user_trainings = user_trainings
-            form.total_missing = total_missing
-            form.total_expired = total_expired
-
-        return render(request, 'key_request/admin/all_requests.html', {
-            'total_forms': total_forms,
-            'num_filtered_forms': num_filtered_forms,
-            'forms': forms,
-            'num_new_forms': new_forms.count(),
-            'req_status_dict': REQUEST_STATUS_DICT,
-            'search_filter_options': SEARCH_FILTER_OPTIONS,
-            'is_admin': True if request.user.is_superuser else False
-        })
-
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
-        form_id = request.POST.get('form')
-        operator = appFunc.get_user_name(request.user)
-        status = request.POST.get('status')
-        fs = RequestFormStatus.objects.create(form_id=form_id, operator=operator, status=status)
-        if fs:
-            messages.success(request, "Success! {0}'s status has been updated.".format(operator))
-        else:
-            messages.error(request, "Error! Failed to update {0}'s status for some reason. Please try again.".format(operator))
-        return HttpResponseRedirect(request.POST.get('next'))
-
 
 @method_decorator([never_cache], name='dispatch')
 class ViewFormDetails(LoginRequiredMixin, View):

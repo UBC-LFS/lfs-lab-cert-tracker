@@ -8,14 +8,14 @@ $(document).ready(function() {
     }
   }
 
-  $('.table-trigger').on('click', function() {
-    tableID = $(this).data('table');
-    main(tableID);
-  });
+  // $('.table-trigger').on('click', function() {
+  //   tableID = $(this).data('table');
+  //   main(tableID);
+  // });
 });
 
 function main(tableID) {
-  const itemPerPage = 10;
+  const itemPerPage = 20;
   let currPage = 1;
   let rows = document.getElementById(tableID).getElementsByTagName('tbody')[0].rows;
 
@@ -59,6 +59,7 @@ function main(tableID) {
 
   // Search filter
   $('#search-' + tableID).on('keyup', function() {
+    // TODO: check - tableID
     rows = filter($(this).data('table'), $(this).val().toLowerCase(), tableID, itemPerPage);
     $('#display-total-' + tableID).html(rows.length);
   });

@@ -40,11 +40,10 @@ $(document).ready(function() {
           };
         }
       } else {
-        $self.prop('checked', false)
+        $self.prop('checked', false);
         delete updateAllList[$self.val()];
       }
     }
-    console.log(updateAllList);
     updateInfo(updateAllList);
   });
 });

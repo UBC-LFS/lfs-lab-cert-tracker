@@ -1,12 +1,15 @@
 from django.urls import path
 from . import views
+from . import admin_views
 
 app_name = 'key_request'
 
 urlpatterns = [
 
     # Admin
-    path('all-requests/', views.AllRequests.as_view(), name='all_requests'),
+    path('all-requests/', admin_views.AllRequests.as_view(), name='all_requests'),
+    path('add-training-to-room/', admin_views.AddTrainingToRoom.as_view(), name='add_training_to_room'),
+    path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room'),
     
     # Rooms
     path('create-room/', views.CreateRoom.as_view(), name='create_room'),

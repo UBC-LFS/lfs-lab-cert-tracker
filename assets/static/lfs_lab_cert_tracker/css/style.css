@@ -142,6 +142,7 @@ header .container .logout-btn:hover { text-decoration: underline; }
 .search-field .input-field input
  { vertical-align: middle; }
 
+.search-rooms select,
 .search-field .input-field select,
 .search-field .input-field .search-field-text::placeholder { font-size: 14px; }
 
