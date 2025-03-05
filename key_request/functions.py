@@ -26,25 +26,29 @@ def get_headers(model):
 def preprocess_rooms(rooms):
     by_building = {}
     for room in rooms:
-        r = model_to_dict(room)
-        building_id = r['building']
-        floor_id = r['floor']
-        floor = Floor.objects.get(id=floor_id)
-        floor_dict = { 'id': floor.id, 'name': floor.name, 'numbers': [] }
+        if room.is_active and room.key:
+            r = model_to_dict(room)
+            building_id = r['building']
+            floor_id = r['floor']
+            floor = Floor.objects.get(id=floor_id)
+            floor_dict = { 'id': floor.id, 'name': floor.name, 'numbers': [] }
 
-        if building_id not in by_building.keys():
-            by_building[building_id] = {}
-        
-        if floor_id not in by_building[building_id].keys():
-            by_building[building_id][floor_id] = floor_dict
+            if building_id not in by_building.keys():
+                by_building[building_id] = {}
+            
+            if floor_id not in by_building[building_id].keys():
+                by_building[building_id][floor_id] = floor_dict
 
-        by_building[building_id][floor_id]['numbers'].append({ 
-            'id': r['id'], 
-            'number': r['number'],
-            'is_active': r['is_active'],
-            'areas': [{ 'id': area.id, 'name': area.name } for area in r['areas']],
-            'trainings': [{ 'id': training.id, 'name': training.name } for training in r['trainings']]
-        })
+            by_building[building_id][floor_id]['numbers'].append({ 
+                'id': r['id'], 
+                'number': r['number'],
+                'is_active': r['is_active'],
+                'key': r['key'],
+                'fob': r['fob'],
+                'alarm': r['alarm'],
+                'areas': [{ 'id': area.id, 'name': area.name } for area in r['areas']],
+                'trainings': [{ 'id': training.id, 'name': training.name } for training in r['trainings']]
+            })
     
     return json.dumps(by_building)
 
@@ -147,7 +151,7 @@ def get_manager_dashboard(manager, query=None):
 
 
 def create_data_from_session(session, key, room=None):
-    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'is_active': True}
+    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     area_ids = [area.id for area in room.areas.all()] if room else []
     training_ids = [training.id for training in room.trainings.all()] if room else []
@@ -159,6 +163,12 @@ def create_data_from_session(session, key, room=None):
             data['floor'] = session[key]['floor']
         if session[key]['number']:
             data['number'] = session[key]['number']
+        if session[key]['key']:
+            data['key'] = session[key]['key']
+        if session[key]['fob']:
+            data['fob'] = session[key]['fob']
+        if session[key]['alarm']:
+            data['alarm'] = session[key]['alarm']
         if session[key]['is_active']:
             data['is_active'] = session[key]['is_active']
 
@@ -184,10 +194,22 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
         if data['number'] != post.get('number'):
             data['number'] = post.get('number')
         
+        key = True if post.get('key') else False
+        if data['key'] != key:
+            data['key'] = key
+
+        fob = True if post.get('fob') else False
+        if data['fob'] != fob:
+            data['fob'] = fob
+
+        alarm = True if post.get('alarm') else False
+        if data['alarm'] != alarm:
+            data['alarm'] = alarm
+    
         is_active = True if post.get('is_active') else False
         if data['is_active'] != is_active:
             data['is_active'] = is_active
-    
+
     elif tab == 'pis':
         managers = str_to_int(post.getlist('managers[]'))
         if not is_two_lists_equal(manager_ids, managers):

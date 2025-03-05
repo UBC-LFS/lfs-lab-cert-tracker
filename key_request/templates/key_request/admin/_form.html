@@ -18,7 +18,7 @@
             <th>
               <label for="{{ field.id_for_label }}">
                 {{ field.label }}
-                {% if field.name != 'is_active' %}
+                {% if field.name != 'is_active' and field.name != 'key' and field.name != 'fob' and field.name != 'alarm' %}
                   {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
                 {% endif %}
               </label>

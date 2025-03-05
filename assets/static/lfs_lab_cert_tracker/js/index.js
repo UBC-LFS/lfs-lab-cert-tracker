@@ -10,7 +10,7 @@ $(document).ready(function() {
       $(hyperlink).parent().removeClass('active');
 
       const slug = slugify($(hyperlink).text());
-      if (currPageName === slug) {
+      if (slug.includes(currPageName)) {
         $(hyperlink).parent().addClass('active');
       }
     }

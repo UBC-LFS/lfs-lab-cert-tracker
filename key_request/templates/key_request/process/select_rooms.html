@@ -12,7 +12,10 @@
 
 	<h3 class="title mb-5">Step1 - Select Rooms</h3>
 
-	<p class="font-size-lg mb-4">You can select multiple rooms.</p>
+	<p class="font-size-lg mb-4">
+		<span class="material-symbols-outlined text-success">check</span>
+		You can select multiple rooms.
+	</p>
 
 	<form class="key-request-form" action="" method="POST">
 	  {% csrf_token %}
@@ -37,6 +40,8 @@
 	            <th>Room <br /> Number</th>
 	            <th>Areas</th>
 							<th>Required Trainings</th>
+							<th>FOB?</th>
+							<th>Alarm?</th>
 	          </tr>
 	        </thead>
 	        <tbody id="select-room">

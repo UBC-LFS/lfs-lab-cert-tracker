@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import admin_views
+from . import process_views
 
 app_name = 'key_request'
 
@@ -22,10 +23,10 @@ urlpatterns = [
     path('all-<str:model>/edit/', views.EditSetting.as_view(), name='edit_setting'),
     path('all-<str:model>/', views.Settings.as_view(), name='settings'),
 
-    # Form Submission process
-    path('rooms/select/step1/', views.SelectRooms.as_view(), name='select_rooms'),
-    path('user-trainings/check/step2/', views.CheckUserTrainings.as_view(), name='check_user_trainings'),
-    path('form/submit/step3/', views.SubmitForm.as_view(), name='submit_form'),
+    # Key Request process
+    path('rooms/select/step1/', process_views.SelectRooms.as_view(), name='select_rooms'),
+    path('user-trainings/check/step2/', process_views.CheckUserTrainings.as_view(), name='check_user_trainings'),
+    path('form/submit/step3/', process_views.SubmitForm.as_view(), name='submit_form'),
 
     path('forms/<int:form_id>/details/', views.ViewFormDetails.as_view(), name='view_form_details'),
 

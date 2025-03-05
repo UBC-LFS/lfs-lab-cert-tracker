@@ -55,6 +55,10 @@ class Room(models.Model):
     managers = models.ManyToManyField(User)
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
+    key = models.BooleanField(default=False)
+    fob = models.BooleanField(default=False)
+    alarm = models.BooleanField(default=False)
+
     is_active = models.BooleanField(default=True)
 
     slug = models.SlugField(max_length=256, unique=True)

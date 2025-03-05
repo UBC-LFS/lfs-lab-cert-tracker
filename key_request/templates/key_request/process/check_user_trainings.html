@@ -25,6 +25,8 @@
 				<th>Room <br /> Number</th>
 	      <th>Areas</th>
 	      <th>Required <br /> Trainings</th>
+				<th>FOB?</th>
+				<th>Alarm?</th>
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -64,6 +66,8 @@
 	            </div>
 	          </div>
 	        </td>
+					<td>{% include 'key_request/subpages/_yes_or_no.html' with data=room.fob %}</td>
+					<td>{% include 'key_request/subpages/_yes_or_no.html' with data=room.alarm %}</td>
 	      </tr>
 	    {% endfor %}
 	  </tbody>

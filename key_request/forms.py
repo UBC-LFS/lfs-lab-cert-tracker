@@ -33,10 +33,13 @@ class FloorForm(forms.ModelForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['building', 'floor', 'number', 'is_active']
+        fields = ['building', 'floor', 'number', 'key', 'fob' , 'alarm', 'is_active']
         labels = {
             'number': 'Room Number',
-            'is_active': 'Active?'
+            'key': 'Key?',
+            'fob': 'FOB?',
+            'alarm': 'Alarm?',
+            'is_active': 'Active?',
         }
         widgets = {
             'building': forms.Select(attrs={ 'class': 'form-control' }),
@@ -50,6 +53,7 @@ class RoomForm(forms.ModelForm):
             'number': { 'required': 'Enter a valid number.' },
         }
 
+
 KEY_REQUEST_LABELS = {
     'role': 'Applicant Role in LFS',
     'affliation': 'Applicant UBC Affliation',
@@ -60,10 +64,9 @@ KEY_REQUEST_LABELS = {
     'supervisor_email': "Supervisor's Email",
     'after_hours_access': 'After Hours Access',
     'working_alone': 'Working alone and/or in isolation',
-    'comment': 'Additional Comments'            
-    # 'building_name': 'Building Name',
-    # 'room_numbers': 'Room Numbers that I need access to',
+    'comment': 'Additional Comments'
 }
+
 
 class KeyRequestForm(forms.ModelForm):
     class Meta:
