@@ -163,11 +163,11 @@ class SubmitForm(LoginRequiredMixin, View):
         return redirect('key_request:submit_form')
 
 
-def send_email(obj):
-    submitted_date = obj.submitted_at.strftime('%Y-%m-%d')
+def send_email(form):
+    submitted_at = form.submitted_at.strftime('%Y-%m-%d')
     user_rooms = ''
     pi_rooms = {}
-    for room in obj.rooms.all():
+    for room in form.rooms.all():
         room_info = '<li>{0} {1} - Room {2}</li>'.format(room.building.code, room.floor.name, room.number)
         user_rooms += room_info
 
@@ -178,13 +178,13 @@ def send_email(obj):
             pi_rooms[manager.id].append({
                 'pi': manager,
                 'room': room_info,
-                'applicant': obj.user,
-                'submitted_date': submitted_date
+                'applicant': form.user,
+                'submitted_at': submitted_at
             })
 
     if len(user_rooms) > 0:
-        subject, message = get_message(obj.user, user_rooms, 'user', submitted_date)
-        send(obj.user, subject, message)
+        subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
+        send(form.user, subject, message)
 
     if len(pi_rooms.keys()) > 0:
         admins = User.objects.filter(is_superuser=True)
@@ -194,16 +194,16 @@ def send_email(obj):
                 rooms = ''
                 for item in value:
                     rooms += item['room']
-                subject, message = get_message(value[0]['pi'], rooms, 'pi', value[0]['submitted_date'], value[0]['applicant'])
+                subject, message = get_message(value[0]['pi'], rooms, 'pi', value[0]['submitted_at'], value[0]['applicant'])
                 send(value[0]['pi'], subject, message)
 
     if len(admins) > 0:
         for admin in admins:
-            subject, message = get_message(admin, user_rooms, 'admin', submitted_date, obj.user)
+            subject, message = get_message(admin, user_rooms, 'admin', submitted_at, form.user)
             send(admin, subject, message)
             
 
-def get_message(receiver, rooms, option, submitted_date, applicant=None):
+def get_message(receiver, rooms, option, submitted_at, applicant=None):
     subject = ''
     message = ''
 
@@ -225,7 +225,7 @@ def get_message(receiver, rooms, option, submitted_date, applicant=None):
             <p>Best regards,</p>
             <p>LFS Training Record Management System</p>
         </div>
-        '''.format(receiver.get_full_name(), submitted_date, rooms, settings.SITE_URL)
+        '''.format(receiver.get_full_name(), submitted_at, rooms, settings.SITE_URL)
 
     elif option == 'pi':
         subject = 'Notification of Key Request at UBC LFS'
@@ -245,7 +245,7 @@ def get_message(receiver, rooms, option, submitted_date, applicant=None):
             <p>Best regards,</p>
             <p>LFS Training Record Management System</p>
         </div>
-        '''.format(receiver.get_full_name(), applicant.get_full_name(), submitted_date, rooms, settings.SITE_URL)
+        '''.format(receiver.get_full_name(), applicant.get_full_name(), submitted_at, rooms, settings.SITE_URL)
     
     elif option == 'admin':
         subject = 'Notification of Key Request at UBC LFS'
@@ -265,7 +265,7 @@ def get_message(receiver, rooms, option, submitted_date, applicant=None):
             <p>Best regards,</p>
             <p>LFS Training Record Management System</p>
         </div>
-        '''.format(receiver.get_full_name(), applicant.get_full_name(), submitted_date, rooms, settings.SITE_URL)
+        '''.format(receiver.get_full_name(), applicant.get_full_name(), submitted_at, rooms, settings.SITE_URL)
 
     return subject, message
 

@@ -134,8 +134,8 @@ def get_manager_dashboard(manager, query=None):
         for form in all_forms:
             form.manager = manager
             form.room = room
-            form.status = form.requestformstatus_set.filter(operator_id=manager.id)
-
+            form.status = form.requestformstatus_set.filter(room_id=form.room.id, operator_id=manager.id)
+            
             if query and query['status']:
                 if form.status.count() == 0:
                     if query['status'] == 'New':
@@ -147,6 +147,9 @@ def get_manager_dashboard(manager, query=None):
                 forms.append(form)
 
     forms = sorted(forms, key=lambda x: x.id, reverse=True)
+    for i, form in enumerate(forms):
+        form.counter = len(forms) - i
+    
     return total_forms, num_new_forms, forms
 
 
@@ -227,6 +230,16 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
 
     return data, manager_ids, area_ids, training_ids
 
+
+
+def search_filter_options():
+    return {
+        'buildings': Building.objects.values('code').distinct(),
+        'floors': Floor.objects.values('name').distinct(),
+        'rooms': Room.objects.values('number').distinct()
+    }
+
+# Helper
 
 def is_two_lists_equal(l1, l2):
     return set(l1) == set(l2)

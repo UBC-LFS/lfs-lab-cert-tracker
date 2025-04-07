@@ -13,7 +13,7 @@ def local_login(request):
         if form.is_valid():
             user = authenticate(username=request.POST['username'], password=request.POST['password'])
 
-            if user is not None:
+            if user:
                 # To check whether users are logged in for the first time or not
                 request.session['is_first_time'] = True if user.last_login == None else False
 

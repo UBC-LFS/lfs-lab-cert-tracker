@@ -11,14 +11,14 @@
 {% include 'key_request/left_side_menu.html' %}
 
 <section class="main-content">
-	<h3 class="title">Dashboard</h3>
+	<h2 class="title">Dashboard</h2>
 
 	<p>This page includes a table to display all the applications for Key Request and update their status.</p>
 
-	<h4 class="text-info mt-5 mb-4">
+	<h3 class="text-info mt-5 mb-4">
 		Key Requests
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
-	</h4>
+	</h3>
 
 	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
 		<div class="col-md-9" style="border-right: 1px solid #bbb;">
@@ -43,11 +43,12 @@
 						#
 					{% endif %}
 				</th>
-	      <th>Full Name</th>
+	      <th>Applicant <br /> Full Name</th>
 				<th>Building</th>
 				<th>Floor</th>
 	      <th>Room <br /> Number</th>
 	      <th>Details</th>
+				<th>Submitted at</th>
 	      <th>Status</th>
 	      <th>Action</th>
 				<th>
@@ -62,7 +63,7 @@
 						{% if request.user.is_superuser %}
 							{{ form.id }}
 						{% else %}
-							{{ forloop.revcounter }}
+							{{ form.counter }}
 						{% endif %}
 					</td>
 	        <td>{{ form.user.get_full_name }}</td>
@@ -72,6 +73,7 @@
 	        <td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 	        </td>
+					<td>{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-xs' %}</td>
 	        <td>
 						{% if form.status.count > 0 %}
 							{% include 'key_request/subpages/request_status.html' with data=form.status.last.status|get_status_display %}

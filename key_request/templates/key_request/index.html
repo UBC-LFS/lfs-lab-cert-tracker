@@ -37,7 +37,7 @@
 		<tbody>
 			{% for form in forms %}
 				<tr>
-					<td>{{ forloop.revcounter }}</td>
+					<td>{{ form.counter }}</td>
 					<td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=form.id form=form is_admin=is_admin %}
 					</td>
