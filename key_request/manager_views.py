@@ -1,42 +1,26 @@
-import os
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_control, never_cache
-from django.shortcuts import render, redirect
-from django.views.static import serve
-from django.template.loader import get_template
-from django.template import Context
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
-from django.db.models import Q, F, Max
-from datetime import date
-from django.forms.models import model_to_dict
-
+from django.views.decorators.cache import never_cache
+from django.shortcuts import render
+from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.urls import reverse
-from django.core.validators import validate_email
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
 import smtplib
 from email.mime.text import MIMEText
-from django.apps import apps
-
-from app import functions as appFunc
-from . import functions as func
-from .utils import *
 
 from app.accesses import *
-from .models import *
-from .forms import *
 from app.utils import *
 
-from .mixins import RoomActionsMixin
+from .models import *
+from .forms import *
+from . import functions as func
+from .utils import *
 
 
 @method_decorator([never_cache], name='dispatch')
