@@ -164,9 +164,9 @@
 					<ul class="mb-0 list-minus-20">
 						<li>
 							Please go to
-							<a href="{% url 'app:my_training_record' user_id=app_user.id %}">
+							<a href="{% url 'app:add_training_record' user_id=app_user.id %}">
 								{% if request.user.id == app_user.id %}
-									My
+									Add
 								{% else %}
 									{{ app_user.get_full_name }}'s
 								{% endif %}

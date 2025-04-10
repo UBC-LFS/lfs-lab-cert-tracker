@@ -102,9 +102,9 @@ class RequestForm(models.Model):
 
 class RequestFormStatus(models.Model):
     form = models.ForeignKey(RequestForm, on_delete=models.CASCADE)
-    room_id = models.BigIntegerField()
-    manager_id = models.BigIntegerField()
-    operator_id = models.BigIntegerField()
+    room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
+    manager = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_manager_set')
+    operator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_operator_set')
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 

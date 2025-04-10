@@ -168,7 +168,7 @@ def send_email(form):
     user_rooms = ''
     pi_rooms = {}
     for room in form.rooms.all():
-        room_info = '<li>{0} {1} - Room {2}</li>'.format(room.building.code, room.floor.name, room.number)
+        room_info = '<li>{0}</li>'.format(func.display_room(room))
         user_rooms += room_info
 
         for manager in room.managers.all():
@@ -187,8 +187,6 @@ def send_email(form):
         send(form.user, subject, message)
 
     if len(pi_rooms.keys()) > 0:
-        admins = User.objects.filter(is_superuser=True)
-
         for key, value in pi_rooms.items():
             if len(value) > 0:
                 rooms = ''
@@ -197,7 +195,8 @@ def send_email(form):
                 subject, message = get_message(value[0]['pi'], rooms, 'pi', value[0]['submitted_at'], value[0]['applicant'])
                 send(value[0]['pi'], subject, message)
 
-    if len(admins) > 0:
+    admins = User.objects.filter(is_superuser=True)
+    if admins.count() > 0:
         for admin in admins:
             subject, message = get_message(admin, user_rooms, 'admin', submitted_at, form.user)
             send(admin, subject, message)
@@ -270,9 +269,9 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
     return subject, message
 
 
-def send(receiver, subject, message):
+def send(user, subject, message):
     sender = settings.EMAIL_FROM
-    receiver = '{0} <{1}>'.format(receiver.get_full_name(), receiver.email)
+    receiver = '{0} <{1}>'.format(user.get_full_name(), user.email)
 
     msg = MIMEText(message, 'html')
     msg['Subject'] = subject

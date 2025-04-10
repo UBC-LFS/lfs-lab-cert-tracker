@@ -130,11 +130,10 @@ def get_manager_dashboard(manager, query=None):
 
     forms = []
     for room in rooms_managed.all():
-        all_forms = room.requestform_set.all()
-        for form in all_forms:
+        for form in room.requestform_set.all():
             form.manager = manager
             form.room = room
-            form.status = form.requestformstatus_set.filter(room_id=form.room.id, operator_id=manager.id)
+            form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=manager.id)
             
             if query and query['status']:
                 if form.status.count() == 0:
@@ -231,7 +230,6 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
     return data, manager_ids, area_ids, training_ids
 
 
-
 def search_filter_options():
     return {
         'buildings': Building.objects.values('code').distinct(),
@@ -239,14 +237,23 @@ def search_filter_options():
         'rooms': Room.objects.values('number').distinct()
     }
 
+
 # Helper
 
 def is_two_lists_equal(l1, l2):
     return set(l1) == set(l2)
 
 
+def display_user_full_name(user):
+    return user.get_full_name() if user.first_name and user.last_name else user.username
+
+
+def display_user_first_name(user):
+    return user.first_name if user.first_name else user.username
+
+
 def display_room(room, option=None):
-    ret = '{} {} - Room {}'.format(room.building.code, room.floor.name, room.number, room.id)
+    ret = '{0} {1} - Room {2}'.format(room.building.code, room.floor.name, room.number)
     if option == 'id':
         ret += f' (ID: {room.id})'
     return ret
@@ -274,3 +281,7 @@ def get_tab_urls(url, next=''):
         'areas': url + 'areas&next=' + next,
         'trainings': url + 'trainings&next=' + next
     }
+
+
+def convert_date_to_str(date):
+    return date.strftime('%Y-%m-%d')
