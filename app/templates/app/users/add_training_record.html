@@ -1,65 +1,19 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/users/training_base.html" %}
 
-{% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
-{% endblock %}
+{% block sub_content %}
 
-{% block content %}
-
-<section id="left-side-menu" class="left-side-menu">
-  <h5 class="menu-title text-center mb-4">Menu</h5>
-  <ul class="list-no-bullets">
-    <li><a href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a></li>
-		<li><a href="{% url 'app:add_training_record' user_id=request.user.id %}">Add Training Record</a></li>
+<div class="border bg-lighter-gray p-3 mb-4">
+  <ul class="list-minus-20">
+    <li>Valid file types: jpg, jpeg, png, pdf, doc, docx</li>
+    <li>The maximum file size that can be uploaded is 1.5 MB.</li>
+    <li>A filename has at most 256 characters.</li>
   </ul>
-</section>
+</div>
 
-<section class="main-content">
-	<nav class="font-size-sm text-secondary">
-		{% if request.user.id == app_user.id %}
-			<a href="{% url 'app:user_details' user_id=app_user.id %}">
-				{% include 'lfs_lab_cert_tracker/icons/home.html' %}
-				My Account
-			</a>
-			{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
-			Add Training Record
-		{% else %}
-			<a href="{% url 'app:user_details' user_id=app_user.id %}">
-				<span class="material-symbols-outlined">home</span> {{ app_user.get_full_name }}'s Account
-			</a>
-			{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
-			Add {{ app_user.get_full_name }}'s Training Record
-		{% endif %}
-	</nav>
-
-  <h3 class="title">
-    Add
-    {% if request.user.id != app_user.id %}
-			{{ app_user.get_full_name }}'s
-		{% endif %}
-    Training Record
-  </h3>
-
-  <div class="border bg-lighter-gray p-3 mb-4">
-    <ul class="list-minus-20">
-      <li>Valid file types: jpg, jpeg, png, pdf, doc, docx</li>
-      <li>The maximum file size that can be uploaded is 1.5 MB.</li>
-      <li>A filename has at most 256 characters.</li>
-    </ul>
-  </div>
-
-  <form id="add_user_cert_form" action="" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <table class="form-table">{{ form.as_table }}</table>
-
-    <input class="btn btn-primary mt-3" type="submit" value="Add Training Record" />
-  </form>
-
-	{% if viewing %}
-		{% include 'app/subpages/viewing_info.html' with data=viewing %}
-	{% endif %}
-</section>
+<form id="add_user_cert_form" action="" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <table class="form-table">{{ form.as_table }}</table>
+  <input class="btn btn-primary mt-3" type="submit" value="Add Training Record" />
+</form>
 
 {% endblock %}

@@ -1,18 +1,24 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
+from django.conf import settings
+from django.shortcuts import render
+from django.http import HttpResponseRedirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.views.decorators.cache import cache_control, never_cache
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.core.exceptions import SuspiciousOperation
+from django.db.models import Q
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
-from .accesses import *
-from .forms import *
-from .utils import *
+from django.contrib.auth.models import User
+from lfs_lab_cert_tracker.models import Cert, LabCert, UserLab
+from .forms import UserAreaForm, AreaTrainingForm
+from .accesses import access_admin_only, access_pi_admin
+from . import functions as func
+# from .utils import *
 
 
 @method_decorator([never_cache, access_pi_admin], name='dispatch')
@@ -25,37 +31,19 @@ class Index(LoginRequiredMixin, View):
         if not area_id:
             raise SuspiciousOperation
         
-        self.area = get_lab_by_id(area_id)
-
-        self.tab = ''
+        self.area = func.get_lab_by_id(area_id)
         return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
-        # if session has next value, delete it
         if request.session.get('next'):
             del request.session['next']
 
-        required_certs = Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
-
-        users_in_area = []
-                
-        for userlab in self.area.userlab_set.all():
-            user = userlab.user
-            if is_pi_in_area(user.id, self.area.id): 
-                user.is_pi = True
-            else: 
-                user.is_pi = False
-            users_in_area.append(user)
-
-        
         return render(request, 'app/area_details/index.html', {
             'area': self.area,
-            'is_admin': request.user.is_superuser,
-            'is_pi': is_pi_in_area(request.user.id, self.area.id),
-            'required_certs': required_certs,
-            'users_in_area': users_in_area
+            'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
+            'required_certs': Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name'),
+            'users_in_area': func.get_users_in_area(self.area)
         })
     
 
@@ -85,11 +73,10 @@ def delete_training_in_area(request):
         else:
             messages.error(request, 'Error! Failed to delete {0}.'.format(lab_cert_obj.cert.name))
     else:
-        training = get_cert_by_id(training_id)
+        training = func.get_cert_by_id(training_id)
         messages.error(request, 'Error! {0} does not exist in this Area.'.format(training.name))
 
     return HttpResponseRedirect(request.POST.get('next'))
-
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -110,7 +97,7 @@ def switch_user_role_in_area(request, area_id):
         messages.error(request, 'Error! Something went wrong. Area is required.')
         return HttpResponseRedirect(request.POST.get('next'))
 
-    user = get_user_by_id(user_id)
+    user = func.get_user_by_id(user_id)
     user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
 
     if user_lab.exists():
@@ -156,7 +143,7 @@ def delete_user_in_area(request, area_id):
         messages.error(request, 'Error! Something went wrong. Area is required.')
         return HttpResponseRedirect(request.POST.get('next'))
 
-    user = get_user_by_id(user_id)
+    user = func.get_user_by_id(user_id)
     user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
     if user_lab.exists():
         user_lab_obj = user_lab.first()
@@ -179,7 +166,7 @@ class UsersMissingTrainings(LoginRequiredMixin, View):
         if not area_id:
             raise SuspiciousOperation
         
-        self.area = get_lab_by_id(area_id)
+        self.area = func.get_lab_by_id(area_id)
         return setup
     
     @method_decorator(require_GET)
@@ -198,6 +185,7 @@ class UsersMissingTrainings(LoginRequiredMixin, View):
         
         return render(request, 'app/area_details/users_missing_trainings.html', {
             'area': self.area,
+            'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
             'users_missing_certs': users_missing_certs
         })
     
@@ -211,7 +199,7 @@ class UsersExpiredTrainings(LoginRequiredMixin, View):
         if not area_id:
             raise SuspiciousOperation
         
-        self.area = get_lab_by_id(area_id)
+        self.area = func.get_lab_by_id(area_id)
         return setup
     
     @method_decorator(require_GET)
@@ -220,7 +208,7 @@ class UsersExpiredTrainings(LoginRequiredMixin, View):
 
         users_expired_certs = []
         for user_lab in self.area.userlab_set.all():
-            expired_certs = get_user_expired_certs(user_lab.user)
+            expired_certs = func.get_user_expired_certs(user_lab.user)
             expired_certs_in_lab = required_certs.intersection(expired_certs)
 
             if len(expired_certs_in_lab) > 0:
@@ -231,6 +219,7 @@ class UsersExpiredTrainings(LoginRequiredMixin, View):
 
         return render(request, 'app/area_details/users_expired_trainings.html', {
             'area': self.area,
+            'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
             'users_expired_certs': users_expired_certs
         })
     
@@ -244,17 +233,16 @@ class AddUserToArea(LoginRequiredMixin, View):
         if not area_id:
             raise SuspiciousOperation
         
-        self.area = get_lab_by_id(area_id)
+        self.area = func.get_lab_by_id(area_id)
         return setup
     
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/area_details/add_user_to_area.html', {
             'area': self.area,
-            'is_admin': request.user.is_superuser,
-            'is_pi': is_pi_in_area(request.user.id, self.area.id),
+            'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
             'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
-            'recent_users': User.objects.all().order_by('-date_joined')[:10]
+            'recent_users': func.get_users_in_area(self.area)[:15]
         })
 
     @method_decorator(require_POST)
@@ -271,7 +259,7 @@ class AddUserToArea(LoginRequiredMixin, View):
             messages.error(request, 'Error! Something went wrong. Role is required.')
             return HttpResponseRedirect(request.POST.get('next'))
 
-        user = get_user_by_username(username)
+        user = func.get_user_by_username(username)
 
         # Check whether a user exists or not
         if user:
@@ -309,7 +297,7 @@ class AddTrainingToArea(LoginRequiredMixin, View):
         if not area_id:
             raise SuspiciousOperation
         
-        self.area = get_lab_by_id(area_id)
+        self.area = func.get_lab_by_id(area_id)
         return setup
     
     @method_decorator(require_GET)
@@ -321,8 +309,7 @@ class AddTrainingToArea(LoginRequiredMixin, View):
 
         return render(request, 'app/area_details/add_training_to_area.html', {
             'area': self.area,
-            'is_admin': request.user.is_superuser,
-            'is_pi': is_pi_in_area(request.user.id, self.area.id),
+            'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
             'area_training_form': AreaTrainingForm(initial={ 'lab': self.area.id }),
             'required_trainings': Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
         })
@@ -352,6 +339,6 @@ class AddTrainingToArea(LoginRequiredMixin, View):
                 new_lab_cert = form.save()
                 messages.success(request, 'Success! {0} added.'.format(new_lab_cert.cert.name))
             else:
-                messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+                messages.error(request, 'Error! Form is invalid. {0}'.format(func.get_error_messages(form.errors.get_json_data())))
 
         return HttpResponseRedirect(request.POST.get('next'))

@@ -30,7 +30,7 @@
     <tr>
       <td>{{ forloop.counter }}</td>
       <td>
-        <a href="{% url 'app:user_details' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
+        <a href="{% url 'app:my_account' user_id=user_missing_cert.user.id %}?next={% url 'app:area_details' area_id=area.id %}">
           {{ user_missing_cert.user.username }}
         </a>
       </td>

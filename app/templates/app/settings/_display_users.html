@@ -1,5 +1,8 @@
 <h5 class="text-info">
   Recent Users
+  {% if path == 'area' %}
+    in Area
+  {% endif %}
   <small class="text-secondary"> ({{ data|length }})</small>
 </h5>
 <ul>

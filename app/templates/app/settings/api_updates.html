@@ -56,12 +56,12 @@
     {% for uc in user_certs %}
       <tr>
 				<td>
-					<a href="{% url 'app:user_details' user_id=uc.user.id %}?next={{ request.get_full_path }}">{{ uc.user.username }}</a>
+					<a href="{% url 'app:my_account' user_id=uc.user.id %}?next={{ request.get_full_path }}">{{ uc.user.username }}</a>
 				</td>
 				<td>{{ uc.user.get_full_name }}</td>
 				<td>{{ uc.uploaded_date }}</td>
 				<td class="text-left">
-					<a href="{% url 'app:user_training_details' user_id=uc.user.id training_id=uc.cert.id %}?next={{ request.get_full_path }}&p=account">{{ uc.cert.name }}</a>
+					<a href="{% url 'app:training_details' user_id=uc.user.id training_id=uc.cert.id %}?next={{ request.get_full_path }}&p=account">{{ uc.cert.name }}</a>
 				</td>
       </tr>
 		{% empty %}

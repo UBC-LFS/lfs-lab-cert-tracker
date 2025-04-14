@@ -15,7 +15,7 @@
 	<div class="bg-prompt mb-5">
 		<div class="prompt text-center p-4 mb-4">
 			<p>If you would like to request access the Faculty of Land and Food systems areas, please click the <strong>Request</strong> button below.</p>
-			<a class="btn btn-secondary mr-2" href="{% url 'app:user_details' user_id=request.user.id %}">Go back</a>
+			<a class="btn btn-secondary mr-2" href="{% url 'app:my_account' user_id=request.user.id %}">Go back</a>
 			<a class="btn btn-primary" href="{% url 'key_request:select_rooms' %}">Request</a>
 		</div>
 	</div>

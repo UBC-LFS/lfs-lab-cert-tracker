@@ -206,7 +206,7 @@ class TrainingTest(TestCase):
         user_id = 11
         training_id = 1
 
-        res = self.client.get(reverse('app:user_training_details', args=[user_id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user_id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(res.context['app_user'].username, 'testuser1')
@@ -225,7 +225,7 @@ class TrainingTest(TestCase):
         user_id = 11
         training_id = 1
 
-        res = self.client.get(reverse('app:user_training_details', args=[user_id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user_id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(res.context['app_user'].username, 'testuser1')
@@ -237,7 +237,7 @@ class TrainingTest(TestCase):
         print('\n- Test: upload a training - by wrong pi')
         self.login('testpi3', PASSWORD)
 
-        res = self.client.get(reverse('app:user_training_details', args=[12, 1]))
+        res = self.client.get(reverse('app:training_details', args=[12, 1]))
         self.assertEqual(res.status_code, 403)
 
 
@@ -248,7 +248,7 @@ class TrainingTest(TestCase):
         user_id = 11
         training_id = 1
 
-        res = self.client.get(reverse('app:user_training_details', args=[user_id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user_id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(res.context['app_user'].username, 'testuser1')

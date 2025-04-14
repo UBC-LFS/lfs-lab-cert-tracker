@@ -14,7 +14,7 @@
 		{% if request.user.is_superuser %}
 			<a href="{% url 'app:all_areas' %}">All Areas</a>
 		{% else %}
-			<a href="{% url 'app:user_areas' user_id=request.user.id %}">My Work Area(s)</a>
+			<a href="{% url 'app:my_work_area' user_id=request.user.id %}">My Work Area(s)</a>
 		{% endif %}
 		{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
 		Area: {{ area.name }}

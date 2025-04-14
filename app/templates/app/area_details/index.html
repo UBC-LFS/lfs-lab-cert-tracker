@@ -73,7 +73,7 @@
         <tr>
           <td>{{ forloop.counter }}</td>
           <td>
-            <a href="{% url 'app:user_details' user_id=user.id %}?next={% url 'app:area_details' area_id=area.id %}">{{ user.username }}</a>
+            <a href="{% url 'app:my_account' user_id=user.id %}?next={% url 'app:area_details' area_id=area.id %}">{{ user.username }}</a>
 
             {% if not user.is_active %}
               <span class="badge badge-secondary">Inactive</span>

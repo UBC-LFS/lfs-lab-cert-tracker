@@ -2,7 +2,7 @@
 
 {% block sub_content %}
 
-{% if is_admin %}
+{% if request.user.is_superuser %}
 
   <h4 class="text-info">Add Training to Area</h4>
 

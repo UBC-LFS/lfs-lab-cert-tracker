@@ -81,6 +81,19 @@ def required_certs_in_lab(lab_id):
     return Cert.objects.filter(labcert__lab_id=lab_id).order_by('name')
 
 
+def get_users_in_area(area):
+    users_in_area = []
+    for userlab in area.userlab_set.all():
+        user = userlab.user
+        if is_pi_in_area(user.id, area.id):
+            user.is_pi = True
+        else: 
+            user.is_pi = False
+        users_in_area.append(user)
+
+    users_in_area.sort(key=lambda a: a.date_joined, reverse=True)
+    return users_in_area
+
 # Cert
 
 def get_certs():

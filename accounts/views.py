@@ -18,7 +18,7 @@ def local_login(request):
                 request.session['is_first_time'] = True if user.last_login == None else False
 
                 DjangoLogin(request, user)
-                return HttpResponseRedirect(reverse('app:user_details', args=[user.id]))
+                return HttpResponseRedirect(reverse('app:my_account', args=[user.id]))
             else:
                 messages.error(request, 'Error! No user found.')
         else:

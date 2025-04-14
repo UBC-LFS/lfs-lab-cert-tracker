@@ -53,7 +53,7 @@
 					<ul class="list-minus-20">
 						{% for user_cert in user_certs %}
 							<li>
-								<a href="{% url 'app:user_training_details' user_id=app_user.id training_id=user_cert.cert_id %}?p=account">
+								<a href="{% url 'app:training_details' user_id=app_user.id training_id=user_cert.cert_id %}?p=account">
 									{{ user_cert.cert_name }}
 								</a>
 
@@ -148,7 +148,7 @@
 						<ul class="text-secondary">
 							{% for user_lab in user_labs_pi %}
 								<li>
-									<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}?t=users_in_area">{{ user_lab.lab.name }}</a>
+									<a href="{% url 'app:area_details' area_id=user_lab.lab.id %}">{{ user_lab.lab.name }}</a>
 								</li>
 							{% endfor %}
 						</ul>
@@ -164,11 +164,11 @@
 					<ul class="mb-0 list-minus-20">
 						<li>
 							Please go to
-							<a href="{% url 'app:add_training_record' user_id=app_user.id %}">
+							<a href="{% url 'app:my_training_record' user_id=app_user.id %}">
 								{% if request.user.id == app_user.id %}
-									Add
+									My
 								{% else %}
-									{{ app_user.get_full_name }}'s
+									{{ app_user.first_name }}'s
 								{% endif %}
 								Training Record</a>
 							if you would like to add your training records (upload your certificates).

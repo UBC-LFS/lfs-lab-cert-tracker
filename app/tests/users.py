@@ -66,13 +66,13 @@ class UserTest(TestCase):
 
         # user details
 
-        res = self.client.get(reverse('app:user_details', args=[2]) + '?next=/area/all/?page=1&q=user') # anonymous
+        res = self.client.get(reverse('app:my_account', args=[2]) + '?next=/area/all/?page=1&q=user') # anonymous
         self.assertEqual(res.status_code, 403)
 
-        res = self.client.get(reverse('app:user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # myself
+        res = self.client.get(reverse('app:my_account', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # myself
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[lab_user.id]) + '?next=/areas/1/') # myself from area
+        res = self.client.get(reverse('app:my_account', args=[lab_user.id]) + '?next=/areas/1/') # myself from area
         self.assertEqual(res.status_code, 200)
 
         res = self.client.get(reverse('app:create_user')) # new user
@@ -105,16 +105,16 @@ class UserTest(TestCase):
 
         # user details
 
-        res = self.client.get(reverse('app:user_details', args=[2]) + '?next=/users/all/?page=1&q=user') # anonymous
+        res = self.client.get(reverse('app:my_account', args=[2]) + '?next=/users/all/?page=1&q=user') # anonymous
         self.assertEqual(res.status_code, 403)
 
-        res = self.client.get(reverse('app:user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # lab user
+        res = self.client.get(reverse('app:my_account', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[pi.id]) + '?next=/users/all/?page=1&q=user') # lab user
+        res = self.client.get(reverse('app:my_account', args=[pi.id]) + '?next=/users/all/?page=1&q=user') # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[pi.id]) + '?next=/areas/1/') # myself
+        res = self.client.get(reverse('app:my_account', args=[pi.id]) + '?next=/areas/1/') # myself
         self.assertEqual(res.status_code, 200)
 
         res = self.client.get(reverse('app:create_user')) # new user
@@ -153,19 +153,19 @@ class UserTest(TestCase):
 
         # user details
 
-        res = self.client.get(reverse('app:user_details', args=[2]) + '?next=/users/all/?page=1&q=user&u=2') # anonymous
+        res = self.client.get(reverse('app:my_account', args=[2]) + '?next=/users/all/?page=1&q=user&u=2') # anonymous
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # lab user
+        res = self.client.get(reverse('app:my_account', args=[lab_user.id]) + '?next=/users/all/?page=1&q=user') # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[pi.id]) + '?next=/users/all/?page=1&q=user') # pi
+        res = self.client.get(reverse('app:my_account', args=[pi.id]) + '?next=/users/all/?page=1&q=user') # pi
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[admin.id]) + '?next=/users/all/?page=1&q=user') # admin
+        res = self.client.get(reverse('app:my_account', args=[admin.id]) + '?next=/users/all/?page=1&q=user') # admin
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_details', args=[admin.id]) + '?next=/areas/1/') # myself from work area
+        res = self.client.get(reverse('app:my_account', args=[admin.id]) + '?next=/areas/1/') # myself from work area
         self.assertEqual(res.status_code, 200)
 
         res = self.client.get(reverse('app:create_user')) # new user
@@ -426,7 +426,7 @@ class UserTest(TestCase):
 
         user = self.api.get_user(USERS[2], 'username')
 
-        res = self.client.get(reverse('app:user_details', args=[user.id]) + ALL_USERS_NEXT + '&u=' + str(user.id))
+        res = self.client.get(reverse('app:my_account', args=[user.id]) + ALL_USERS_NEXT + '&u=' + str(user.id))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user.id)
         self.assertEqual(res.context['app_user'].username, user.username)
@@ -660,10 +660,10 @@ class UserAreaTest(TestCase):
         lab_user = self.api.get_user(USERS[2], 'username')
         lab_user2 = self.api.get_user('testuser4', 'username')
 
-        res = self.client.get(reverse('app:user_areas', args=[lab_user.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[lab_user.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_areas', args=[2]))
+        res = self.client.get(reverse('app:my_work_area', args=[2]))
         self.assertEqual(res.status_code, 403)
 
 
@@ -675,10 +675,10 @@ class UserAreaTest(TestCase):
         lab_user = self.api.get_user(USERS[2], 'username')
         lab_user2 = self.api.get_user('testuser4', 'username')
 
-        res = self.client.get(reverse('app:user_areas', args=[pi.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[pi.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_areas', args=[2]))
+        res = self.client.get(reverse('app:my_work_area', args=[2]))
         self.assertEqual(res.status_code, 403)
 
 
@@ -691,13 +691,13 @@ class UserAreaTest(TestCase):
         lab_user = self.api.get_user(USERS[2], 'username')
         lab_user2 = self.api.get_user('testuser4', 'username')
 
-        res = self.client.get(reverse('app:user_areas', args=[admin.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[admin.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_areas', args=[pi.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[pi.id]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_areas', args=[lab_user.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[lab_user.id]))
         self.assertEqual(res.status_code, 200)
 
 
@@ -708,7 +708,7 @@ class UserAreaTest(TestCase):
 
         user = self.api.get_user(USERS[1], 'username')
 
-        res = self.client.get(reverse('app:user_areas', args=[user.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[user.id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['user_lab_list'], [{'id': 1, 'name': 'Learning Centre'}])
         self.assertEqual(res.context['pi_user_lab_list'], [{'id': 1, 'name': 'Learning Centre'}])
@@ -720,7 +720,7 @@ class UserAreaTest(TestCase):
 
         user = self.api.get_user(USERS[2], 'username')
 
-        res = self.client.get(reverse('app:user_areas', args=[user.id]))
+        res = self.client.get(reverse('app:my_work_area', args=[user.id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['user_lab_list'], [{'id': 1, 'name': 'Learning Centre'}, {'id': 2, 'name': 'Bio Lab'}])
         self.assertEqual(res.context['pi_user_lab_list'], [])
@@ -1114,10 +1114,10 @@ class UserTrainingTest(TestCase):
 
         # user training details
 
-        res = self.client.get(reverse('app:user_training_details', args=[lab_user.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[lab_user.id, 1]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_training_details', args=[lab_user2.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[lab_user2.id, 1]))
         self.assertEqual(res.status_code, 403)
 
 
@@ -1141,13 +1141,13 @@ class UserTrainingTest(TestCase):
 
         # user training details
 
-        res = self.client.get(reverse('app:user_training_details', args=[pi.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[pi.id, 1]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_training_details', args=[lab_user.id, 1])) # lab user
+        res = self.client.get(reverse('app:training_details', args=[lab_user.id, 1])) # lab user
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_training_details', args=[lab_user2.id, 1])) # Wrong lab user
+        res = self.client.get(reverse('app:training_details', args=[lab_user2.id, 1])) # Wrong lab user
         self.assertEqual(res.status_code, 403)
 
 
@@ -1175,16 +1175,16 @@ class UserTrainingTest(TestCase):
 
         # user training details
 
-        res = self.client.get(reverse('app:user_training_details', args=[pi.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[pi.id, 1]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_training_details', args=[pi.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[pi.id, 1]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_training_details', args=[lab_user.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[lab_user.id, 1]))
         self.assertEqual(res.status_code, 200)
 
-        res = self.client.get(reverse('app:user_training_details', args=[lab_user2.id, 1]))
+        res = self.client.get(reverse('app:training_details', args=[lab_user2.id, 1]))
         self.assertEqual(res.status_code, 200)
 
 
@@ -1692,7 +1692,7 @@ class UserTrainingTest(TestCase):
         self.assertEqual(training.first().cert_file.name, 'users/11/certificates/15/karsten-wurth-9qvZSH_NOQs-unsplash.jpg')
 
 
-        res = self.client.get(reverse('app:user_training_details', args=[user_id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user_id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(res.context['user_cert'].cert.id, training_id)
@@ -1746,7 +1746,7 @@ class UserTrainingTest(TestCase):
         self.assertEqual(training.first().cert_file.name, 'users/11/certificates/17/karsten-wurth-9qvZSH_NOQs-unsplash.jpg')
 
 
-        res = self.client.get(reverse('app:user_training_details', args=[user_id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user_id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(res.context['user_cert'].cert.id, training_id)
@@ -1798,7 +1798,7 @@ class UserTrainingTest(TestCase):
         self.assertEqual(training.first().cert_file.name, 'users/11/certificates/15/karsten-wurth-9qvZSH_NOQs-unsplash.jpg')
 
 
-        res = self.client.get(reverse('app:user_training_details', args=[user_id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user_id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].id, user_id)
         self.assertEqual(res.context['user_cert'].cert.id, training_id)
@@ -1830,7 +1830,7 @@ class UserTrainingTest(TestCase):
         session['next'] = '/users/all/?page=1'
         session.save()
 
-        res = self.client.get(reverse('app:user_training_details', args=[user.id, training_id]) + '?p=training')
+        res = self.client.get(reverse('app:training_details', args=[user.id, training_id]) + '?p=training')
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].username, USERS[2])
         self.assertEqual(res.context['user_cert'].id, 15)
@@ -1843,7 +1843,7 @@ class UserTrainingTest(TestCase):
 
         user = self.api.get_user(USERS[2], 'username')
         training_id = 1
-        res = self.client.get(reverse('app:user_training_details', args=[user.id, training_id]))
+        res = self.client.get(reverse('app:training_details', args=[user.id, training_id]))
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.context['app_user'].username, USERS[2])
         self.assertEqual(res.context['user_cert'].id, 15)

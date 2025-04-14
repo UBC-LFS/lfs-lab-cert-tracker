@@ -117,7 +117,7 @@ def get_manager_dashboard(manager, query=None):
 
     num_new_forms = 0
     for form in form_filtered.all():
-        if form.requestformstatus_set.filter(operator_id=manager.id).count() == 0:
+        if form.requestformstatus_set.filter(manager_id=manager.id).count() == 0:
             num_new_forms += 1
 
     if query:

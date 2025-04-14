@@ -2,7 +2,7 @@
 
 {% block sub_content %}
 
-{% if is_admin or is_pi %}
+{% if request.user.is_superuser or is_pi %}
 
   <div class="row">
   	<div class="col-md-7">
@@ -18,7 +18,7 @@
     </div>
     <div class="col-md-5">
       <section class="ml-5">
-        {% include 'app/settings/_display_users.html' with data=recent_users %}        
+        {% include 'app/settings/_display_users.html' with data=recent_users path='area' %}
       </section>
   	</div>
   </div>

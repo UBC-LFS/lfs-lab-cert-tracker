@@ -12,7 +12,7 @@
     You do not have permission to access this page. Please refer to your system administrator.
   </p>
 
-  <p><a href="{% url 'app:user_details' user_id=request.user.id %}">Go to My Account</a></p>
+  <p><a href="{% url 'app:my_account' user_id=request.user.id %}">Go to My Account</a></p>
 </div>
 
 {% endblock %}
