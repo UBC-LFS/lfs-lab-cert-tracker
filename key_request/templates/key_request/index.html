@@ -29,6 +29,7 @@
 		<thead>
 			<tr>
 				<th>#</th>
+				<th>Number <br /> of Rooms</th>
 				<th>Form Details</th>
 				<th>Status</th>
 				<th>Submitted at</th>
@@ -38,6 +39,7 @@
 			{% for form in forms %}
 				<tr>
 					<td>{{ form.counter }}</td>
+					<td>{{ form.rooms.count }}</td>
 					<td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=form.id form=form is_admin=is_admin %}
 					</td>
@@ -48,7 +50,7 @@
 						{% endif %}
 					</td>
 					<td>
-						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
+						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-sm' %}
 					</td>
 				</tr>
 			{% empty %}

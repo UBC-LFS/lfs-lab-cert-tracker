@@ -17,7 +17,7 @@ class RoomActionsMixin:
         template = 'key_request/admin/{0}.html'.format(url_name)
 
         room_numbers = list(set(Room.objects.values_list('number', flat=True)))
-        room_numbers.sort(key=lambda a: int(a))
+        room_numbers.sort(key=lambda a: a)
         
         return render(request, template, {
             'rooms': Room.objects.all(),

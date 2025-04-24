@@ -16,15 +16,16 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.apps import apps
 
+from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only
 from app import functions as appFunc
-from app.utils import *
+from app.utils import NUM_PER_PAGE
 
-from .models import *
-from .forms import *
+from .models import Room
+from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .utils import *
+from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
@@ -70,7 +71,7 @@ class AllRequests(LoginRequiredMixin, View):
             'forms': forms,
             'num_new_forms': new_forms.count(),
             'req_status_dict': REQUEST_STATUS_DICT,
-            'search_filter_options': SEARCH_FILTER_OPTIONS,
+            'search_filter_options': func.search_filter_options,
             'is_admin': True if request.user.is_superuser else False
         })
 
@@ -306,6 +307,7 @@ class DeleteSetting(LoginRequiredMixin, View):
         return redirect('key_request:settings', model=self.raw_model)
 
 
+import re
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRooms(LoginRequiredMixin, View):
@@ -354,12 +356,12 @@ class AllRooms(LoginRequiredMixin, View):
             room.manager_ids = list(room.managers.all().values_list('id', flat=True))
             room.area_ids = list(room.areas.all().values_list('id', flat=True))
             room.training_ids = list(room.trainings.all().values_list('id', flat=True))
-
+        
         return render(request, 'key_request/admin/all_rooms.html', {
             'total_rooms': total_rooms,
             'num_filtered_rooms': num_filtered_rooms,
             'rooms': rooms,
-            'search_filter_options': SEARCH_FILTER_OPTIONS,
+            'search_filter_options': func.search_filter_options,
             'users': User.objects.all(),
             'areas': Lab.objects.all(),
             'trainings': Cert.objects.all()
@@ -493,7 +495,7 @@ class EditRoom(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
-        print(data)
+        
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
@@ -725,11 +727,3 @@ def GET_SETTINGS_FORM(model):
         'Floor': FloorForm
     }
     return dict[model] if model in dict.keys() else None
-
-
-def SEARCH_FILTER_OPTIONS():
-    return {
-        'buildings': Building.objects.values('code').distinct(),
-        'floors': Floor.objects.values('name').distinct(),
-        'rooms': Room.objects.values('number').distinct()
-    }

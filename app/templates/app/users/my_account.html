@@ -24,10 +24,12 @@
 			<div class="d-flex align-items-center justify-content-between">
 				<h3 class="m-0">{{ app_user.get_full_name }}</h3>
 
-				<a class="btn btn-primary" href="{% url 'key_request:index' %}">
-					{% include "lfs_lab_cert_tracker/icons/key.html" %}
-					Key Request
-				 </a>
+				{% if request.user.id == app_user.id %}
+					<a class="btn btn-primary" href="{% url 'key_request:index' %}">
+						{% include "lfs_lab_cert_tracker/icons/key.html" %}
+						Key Request
+					 </a>
+				 {% endif %}
 			</div>
 
 			{% if request.user.id == app_user.id and num_new_forms %}
@@ -117,7 +119,7 @@
 			<div class="pl-4">
 				<div>
 					<h5 class="text-primary">
-						<span class="material-symbols-outlined">cloud_download</span>
+						{% include 'lfs_lab_cert_tracker/icons/cloud_download.html' %}
 						Report
 					</h5>
 					<a href="{% url 'app:user_report' user_id=app_user.id  %}" target="_blank">Download as PDF</a>

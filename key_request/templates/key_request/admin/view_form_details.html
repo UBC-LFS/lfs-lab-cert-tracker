@@ -21,18 +21,14 @@
 
 	<nav class="mt-5">
 		<div class="nav nav-tabs">
-			<a class="nav-link {% if tab == 'form_details' %}active{% endif %}" href="{{ tab_urls.form_details }}">Form Details</a>
 			<a class="nav-link {% if tab == 'selected_rooms' %}active{% endif %}" href="{{ tab_urls.selected_rooms }}">Selected Rooms</a>
+			<a class="nav-link {% if tab == 'form_details' %}active{% endif %}" href="{{ tab_urls.form_details }}">Form Details</a>
 			<a class="nav-link {% if tab == 'training_records' %}active{% endif %}" href="{{ tab_urls.training_records }}">Training Records</a>
 		</div>
 	</nav>
 
 	<section class="mt-5">
-		{% if tab == 'form_details' %}
-
-			{% include 'key_request/subpages/table_request_form_details.html' with data=form %}
-
-		{% elif tab == 'selected_rooms' %}
+		{% if tab == 'selected_rooms' %}
 
 			<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
 				<thead>
@@ -91,16 +87,19 @@
 				</div>
 			{% endif %}
 
+		{% elif tab == 'form_details' %}
+
+			{% include 'key_request/subpages/table_request_form_details.html' with data=form %}
+
 		{% elif tab == 'training_records' %}
 
 			{% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings %}
 
-		{% else %}
 		{% endif %}
 	</section>
 
-	<div class="text-center mt-5">
-		<a class="btn btn-outline-primary" href="{{ next }}">Back to All Requests</a>
+	<div class="mt-5">
+		<a class="btn btn-secondary" href="{{ next }}">Back to All Requests</a>
 	</div>
 </section>
 {% endblock %}

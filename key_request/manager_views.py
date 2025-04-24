@@ -14,13 +14,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import smtplib
 from email.mime.text import MIMEText
 
-from app.accesses import *
-from app.utils import *
+from app.utils import NUM_PER_PAGE
 
-from .models import *
-from .forms import *
+from .models import Room
+from .forms import RequestForm, RequestFormStatus
 from . import functions as func
-from .utils import *
+from .utils import REQUEST_STATUS_DICT, REV_REQUEST_STATUS_DICT, EMAIL_FOOTER
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -105,7 +104,6 @@ class ManagerDashboard(LoginRequiredMixin, View):
             count = 0
             for c in check:
                 count += c
-            print('count:', check, count, form.rooms.count())
 
             if count >= form.rooms.count():
                 send_email(form, room)

@@ -73,7 +73,7 @@
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
 	        </td>
 	        <td>
-	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=form_details&next={{ request.get_full_path }}">Details</a>
+	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=selected_rooms&next={{ request.get_full_path }}">Details</a>
 	        </td>
 	      </tr>
 			{% empty %}

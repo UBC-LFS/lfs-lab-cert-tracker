@@ -15,14 +15,14 @@
   {% if request.user.is_superuser %}
     <hr />
     <ul class="list-no-bullets">
-      <li><a href="{% url 'key_request:all_requests' %}">- All Requests</a></li>
-      <li><a href="{% url 'key_request:settings' model='buildings' %}">- All Buildings</a></li>
-      <li><a href="{% url 'key_request:settings' model='floors' %}">- All Floors</a></li>
-      <li><a href="{% url 'key_request:all_rooms' %}">- All Rooms</a></li>
-      <li><a href="{% url 'key_request:create_room' %}?t=basic_info">- Create Room</a></li>
+      <li><a href="{% url 'key_request:all_requests' %}">All Requests</a></li>
+      <li><a href="{% url 'key_request:settings' model='buildings' %}">All Buildings</a></li>
+      <li><a href="{% url 'key_request:settings' model='floors' %}">All Floors</a></li>
+      <li><a href="{% url 'key_request:all_rooms' %}">All Rooms</a></li>
+      <li><a href="{% url 'key_request:create_room' %}?t=basic_info">Create Room</a></li>
       <hr />
-      <li><a href="{% url 'key_request:add_training_to_room' %}">- Add Training to Room</a></li>
-      <li><a href="{% url 'key_request:delete_training_from_room' %}">- Delete Training from Room</a></li>
+      <li><a href="{% url 'key_request:add_training_to_room' %}">Add Training to Room</a></li>
+      <li><a href="{% url 'key_request:delete_training_from_room' %}">Delete Training from Room</a></li>
     </ul>
   {% endif %}
 </section>

@@ -11,14 +11,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import smtplib
 from email.mime.text import MIMEText
 
-from app.accesses import *
 from app import functions as appFunc
-from app.utils import *
 
-from .models import *
-from .forms import *
+from .models import Building, Floor, Room
+from .forms import KeyRequestForm
 from . import functions as func
-from .utils import *
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -27,8 +24,7 @@ class SelectRooms(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         rooms = Room.objects.all()
-
-        print(func.preprocess_rooms(rooms))
+        
         return render(request, 'key_request/process/select_rooms.html', {
             'buildings': Building.objects.all(),
             'floors': Floor.objects.all(),
@@ -139,7 +135,7 @@ class SubmitForm(LoginRequiredMixin, View):
             else:
                 messages.error(request, "Error! Failed to submit {0}'s key request form for some reason. Please try again.".format(operator))
         else:
-            messages.error(request, 'Error! Form is invalid. {0}'.format(get_error_messages(form.errors.get_json_data())))
+            messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
 
         return redirect('key_request:submit_form')
 

@@ -298,6 +298,23 @@ def get_viewing(next):
     return viewing
 
 
+def is_settings_viewing(request, loggedin_user=None):
+    is_settings_viewing = False
+
+    if loggedin_user:
+        if request.user.id == loggedin_user.id:
+            is_settings_viewing = True
+    else:
+        if request.user.is_superuser:
+            is_settings_viewing = True
+    
+    return is_settings_viewing
+
+
+def is_key_request_viewing(request, loggedin_user=None):
+    return False if loggedin_user and request.user.id != loggedin_user.id else True
+
+
 # Helper functions
 
 def get_error_messages(errors):

@@ -1,41 +1,30 @@
 import os
-
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
-from django.shortcuts import render, redirect
-from django.views.static import serve
 from django.template.loader import get_template
 from django.template import Context
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
-from django.db.models import Q, F
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.urls import reverse
-from django.core.validators import validate_email
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
-from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
-
 
 from io import BytesIO
 # from cgi import escape # < python 3.8
 from html import escape 
 from xhtml2pdf import pisa
-from datetime import datetime, date, timedelta
+from datetime import date
 
-from .accesses import *
-from .forms import *
+from lfs_lab_cert_tracker.models import UserCert
+from .forms import UserTrainingForm
+from .accesses import access_loggedin_user_pi_admin, access_loggedin_user_admin
 from . import functions as func
-from .utils import *
-
 from key_request import functions as kFunc
-
-from lfs_lab_cert_tracker.models import *
 
 
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
@@ -49,7 +38,7 @@ class MyAccount(LoginRequiredMixin, View):
         if not user_id:
             raise SuspiciousOperation
         
-        self.user = get_user_by_id(user_id)
+        self.user = func.get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
@@ -58,14 +47,16 @@ class MyAccount(LoginRequiredMixin, View):
 
         return render(request, 'app/users/my_account.html', {
             'app_user': self.user,
-            'user_labs': get_user_labs(self.user),
-            'user_labs_pi': get_user_labs(self.user, is_pi=True),
-            'user_certs': get_user_certs_with_info(self.user),
-            'missing_certs': get_user_missing_certs(self.user.id),
-            'expired_certs': get_user_expired_certs(self.user),
-            'welcome_message': welcome_message(),
-            'viewing': add_next_str_to_session(request, self.user),
-            'num_new_forms': num_new_forms
+            'user_labs': func.get_user_labs(self.user),
+            'user_labs_pi': func.get_user_labs(self.user, is_pi=True),
+            'user_certs': func.get_user_certs_with_info(self.user),
+            'missing_certs': func.get_user_missing_certs(self.user.id),
+            'expired_certs': func.get_user_expired_certs(self.user),
+            'welcome_message': func.welcome_message(),
+            'viewing': func.add_next_str_to_session(request, self.user),
+            'num_new_forms': num_new_forms,
+            'is_settings_viewing': func.is_settings_viewing(request, self.user),
+            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
         })
 
 
@@ -74,13 +65,13 @@ class MyAccount(LoginRequiredMixin, View):
 @access_loggedin_user_pi_admin
 @require_http_methods(['GET'])
 def user_report(request, user_id):
-    user = get_user_by_id(user_id)
+    user = func.get_user_by_id(user_id)
 
-    user_labs = get_user_labs(user)
-    missing_certs = get_user_missing_certs(user.id)
-    expired_certs = get_user_expired_certs(user)
+    user_labs = func.get_user_labs(user)
+    missing_certs = func.get_user_missing_certs(user.id)
+    expired_certs = func.get_user_expired_certs(user)
     for user_lab in user_labs:
-        required_certs = required_certs_in_lab(user_lab.lab.id)
+        required_certs = func.required_certs_in_lab(user_lab.lab.id)
         missing_certs_in_lab = required_certs.intersection(missing_certs)
         expired_certs_in_lab = required_certs.intersection(expired_certs)
         
@@ -90,7 +81,7 @@ def user_report(request, user_id):
     return render_to_pdf('app/users/user_report.html', {
         'app_user': user,
         'user_labs': user_labs,
-        'user_certs': get_user_certs(user)
+        'user_certs': func.get_user_certs(user)
     })
 
 
@@ -105,15 +96,16 @@ class MyWorkArea(LoginRequiredMixin, View):
         if not user_id:
             raise SuspiciousOperation
         
-        self.user = get_user_by_id(user_id)
+        self.user = func.get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
         return render(request, 'app/users/my_work_area.html', {
-            'user_labs': get_user_labs(self.user),
-            'user_labs_pi': get_user_labs(self.user, is_pi=True)
+            'user_labs': func.get_user_labs(self.user),
+            'user_labs_pi': func.get_user_labs(self.user, is_pi=True),
+            'is_settings_viewing': func.is_settings_viewing(request, self.user),
+            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
         })
 
 
@@ -128,7 +120,7 @@ class MyTrainingRecord(LoginRequiredMixin, View):
         if not user_id:
             raise SuspiciousOperation
         
-        self.user = get_user_by_id(user_id)
+        self.user = func.get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
@@ -136,14 +128,16 @@ class MyTrainingRecord(LoginRequiredMixin, View):
 
         viewing = {}
         if request.user.id != self.user.id and request.session.get('next'):
-            viewing = get_viewing(request.session.get('next'))
+            viewing = func.get_viewing(request.session.get('next'))
 
         return render(request, 'app/users/my_training_record.html', {
             'app_user': self.user,
-            'user_certs': get_user_certs_with_info(self.user),
-            'missing_certs': get_user_missing_certs(self.user.id),
-            'expired_certs': get_user_expired_certs(self.user),
-            'viewing': viewing
+            'user_certs': func.get_user_certs_with_info(self.user),
+            'missing_certs': func.get_user_missing_certs(self.user.id),
+            'expired_certs': func.get_user_expired_certs(self.user),
+            'viewing': viewing,
+            'is_settings_viewing': func.is_settings_viewing(request, self.user),
+            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
         })
 
 
@@ -158,7 +152,7 @@ class AddTrainingRecord(LoginRequiredMixin, View):
         if not user_id:
             raise SuspiciousOperation
         
-        self.user = get_user_by_id(user_id)
+        self.user = func.get_user_by_id(user_id)
         return setup
 
     @method_decorator(require_GET)
@@ -166,12 +160,14 @@ class AddTrainingRecord(LoginRequiredMixin, View):
 
         viewing = {}
         if request.user.id != self.user.id and request.session.get('next'):
-            viewing = get_viewing(request.session.get('next'))
+            viewing = func.get_viewing(request.session.get('next'))
 
         return render(request, 'app/users/add_training_record.html', {
             'app_user': self.user,
             'form': UserTrainingForm(initial={ 'user': self.user.id }),
-            'viewing': viewing
+            'viewing': viewing,
+            'is_settings_viewing': func.is_settings_viewing(request, self.user),
+            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
         })
 
     @method_decorator(require_POST)
@@ -223,8 +219,6 @@ class AddTrainingRecord(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse('app:add_training_record', args=[self.user.id]))
 
 
-
-
 @method_decorator([never_cache, access_loggedin_user_pi_admin], name='dispatch')
 class TrainingDetailsView(LoginRequiredMixin, View):
     """ Display details of a training record of a user """
@@ -238,7 +232,7 @@ class TrainingDetailsView(LoginRequiredMixin, View):
         if not user_id or not training_id:
             raise SuspiciousOperation
 
-        user = get_user_by_id(user_id)
+        user = func.get_user_by_id(user_id)
         self.user = user
         self.user_certs = user.usercert_set.filter(cert_id=training_id).order_by('-completion_date')
         self.training_id = training_id
@@ -251,7 +245,9 @@ class TrainingDetailsView(LoginRequiredMixin, View):
             'app_user': self.user,
             'latest_user_cert': self.user_certs.first(),
             'user_certs': self.user_certs[1:],
-            'viewing': add_next_str_to_session(request, self.user)
+            'viewing': func.add_next_str_to_session(request, self.user),
+            'is_settings_viewing': func.is_settings_viewing(request, self.user),
+            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
         })
 
     @method_decorator(require_POST)

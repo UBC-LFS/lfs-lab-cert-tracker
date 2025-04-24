@@ -55,7 +55,7 @@ $(document).ready(function() {
   // Select a building
   $('#select-building').on('change', function() {
     $('#select-floor option:not(:first)').remove();
-    $('#select-room').html('<tr><td colspan="100%">Select a Building and a Floor to see a list of rooms</td></tr>');
+    $('#select-room').html('<tr><td colspan="100%">Select a building and a floor to view the list of rooms</td></tr>');
 
     const id = this.value;
     if (id && rooms[id]) {
@@ -73,7 +73,7 @@ $(document).ready(function() {
 
   // Select a floor
   $('#select-floor').on('change', function() {
-    $('#select-room').html('<tr><td colspan="100%">Select a Building and a Floor to see a list of rooms</td></tr>');
+    $('#select-room').html('<tr><td colspan="100%">Select a building and a floor to view the list of rooms</td></tr>');
 
     const buildingID = data['building']['id'];
     const id = this.value;
@@ -106,6 +106,9 @@ $(document).ready(function() {
         appendSelectedRooms(data, buildingCode, floorName, id, number);
       }
     }
+
+    // Enable the Continue button
+    $('#select-rooms-continue').removeAttr("disabled");
   });
 
   // Delete a room in the selected rooms
@@ -178,7 +181,7 @@ function displayRooms(rooms, buildingID, floorID) {
     for (let room of rooms[buildingID][floorID]['numbers']) {
       let fob = '<span class="badge badge-danger">NO</span>';
       let alarm = '<span class="badge badge-danger">NO</span>';
-      
+
       if (room['fob']) fob = '<span class="badge badge-success">YES</span>';
       if (room['alarm']) alarm = '<span class="badge badge-success">YES</span>';
 
@@ -209,6 +212,7 @@ function deleteSelectedRooms(data, room) {
 
   if (Object.keys(data['rooms']).length === 0) {
     $('#display-selected-rooms').html('<p class="text-center text-secondary">Your selected rooms will be displayed here.</p>');
+    $('#select-rooms-continue').prop('disabled', true); // Disable the Continue button
   } else {
     updateHTMLForSelectedRooms(data['rooms']);
   }
@@ -224,7 +228,7 @@ function updateHTMLForSelectedRooms(rooms) {
       content += '<tr><td>' + count + '</td><td>' + item['building'] + ' - ' + item['floor'] + '</td><td>Room ' + item['number'] + '</td><td><button class="btn btn-xs btn-danger room" type="button" data-room="' + id + '">Del</button></td></tr>';
       count++;
     }
-    content += '</table><button class="btn btn-danger delete-all" type="button">Delete All</button>';
+    content += '</table><button class="btn btn-danger btn-sm delete-all float-right" type="button">Delete All</button>';
     $('#display-selected-rooms').html(content);
   }
 }
@@ -232,7 +236,7 @@ function updateHTMLForSelectedRooms(rooms) {
 function createList(items) {
   let list = '<ul class="list-minus-20">';
   for (let item of items) {
-    list += '<li>' + item['name'] + '</li>';
+    list += '<li class="font-size-sm">' + item['name'] + '</li>';
   }
   list += '</ul>';
   return list;

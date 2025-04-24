@@ -22,8 +22,8 @@
 
     <select name="number">
       <option value="">Room Number</option>
-      {% for room in search_filter_options.rooms %}
-        <option value="{{ room.number }}" {% if request.GET.number == room.number %}selected{% endif %}>{{ room.number }}</option>
+      {% for room_number in search_filter_options.rooms %}
+        <option value="{{ room_number }}" {% if request.GET.number == room_number %}selected{% endif %}>{{ room_number }}</option>
       {% endfor %}
     </select>
 

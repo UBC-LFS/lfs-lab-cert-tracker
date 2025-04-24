@@ -195,24 +195,24 @@
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 17,
     "fields": {
-      "expiry_date": "2019-07-14",
+      "expiry_date": "2028-07-14",
       "cert_id": 20,
       "user_id": 11,
       "cert_file": "users/11/certificates/20/certificate_1.jpg",
-      "uploaded_date": "2018-06-10",
-      "completion_date": "2014-07-14"
+      "uploaded_date": "2024-01-01",
+      "completion_date": "2023-07-14"
     }
   },
   {
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 18,
     "fields": {
-      "expiry_date": "2019-07-13",
+      "expiry_date": "2025-07-13",
       "cert_id": 23,
       "user_id": 11,
       "cert_file": "users/11/certificates/23/certificate_1.jpg",
-      "uploaded_date": "2018-06-10",
-      "completion_date": "2017-07-13"
+      "uploaded_date": "2024-01-01",
+      "completion_date": "2023-07-13"
     }
   },
   {
@@ -243,24 +243,24 @@
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 21,
     "fields": {
-      "expiry_date": "2019-10-01",
+      "expiry_date": "2028-10-01",
       "cert_id": 16,
       "user_id": 11,
       "cert_file": "users/11/certificates/16/certificate_1.jpg",
-      "uploaded_date": "2020-01-10",
-      "completion_date": "2014-10-01"
+      "uploaded_date": "2024-01-10",
+      "completion_date": "2023-10-01"
     }
   },
   {
     "model": "lfs_lab_cert_tracker.usercert",
     "pk": 22,
     "fields": {
-      "expiry_date": "2019-10-01",
+      "expiry_date": "2026-10-01",
       "cert_id": 22,
       "user_id": 11,
       "cert_file": "users/11/certificates/22/certificate_1.jpg",
-      "uploaded_date": "2020-01-10",
-      "completion_date": "2016-10-01"
+      "uploaded_date": "2024-01-10",
+      "completion_date": "2023-10-01"
     }
   },
   {
@@ -321,6 +321,30 @@
       "cert_file": "users/12/certificates/16/certificate_1.jpg",
       "uploaded_date": "2010-01-01",
       "completion_date": "2010-01-01"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 28,
+    "fields": {
+      "expiry_date": "2023-01-01",
+      "cert_id": 2,
+      "user_id": 12,
+      "cert_file": "users/12/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2024-01-01",
+      "completion_date": "2023-01-01"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 29,
+    "fields": {
+      "expiry_date": "2024-01-01",
+      "cert_id": 13,
+      "user_id": 12,
+      "cert_file": "users/12/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2025-01-01",
+      "completion_date": "2024-01-01"
     }
   }
 ]

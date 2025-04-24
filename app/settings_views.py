@@ -32,7 +32,9 @@ class Index(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/index.html', {
-            'recent_users': User.objects.all().order_by('-date_joined')[:20]
+            'recent_users': User.objects.all().order_by('-date_joined')[:20],
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
     
 
@@ -67,7 +69,9 @@ class AllAreas(LoginRequiredMixin, View):
 
         return render(request, 'app/settings/all_areas.html', {
             'areas': areas,
-            'total_areas': len(area_list)
+            'total_areas': len(area_list),
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
 
 
@@ -79,7 +83,9 @@ class CreateArea(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_area.html', {
             'form': AreaForm(),
-            'recent_areas': Lab.objects.all().order_by('-id')[:20]
+            'recent_areas': Lab.objects.all().order_by('-id')[:20],
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
 
     @method_decorator(require_POST)
@@ -95,8 +101,6 @@ class CreateArea(LoginRequiredMixin, View):
             messages.error(request, 'Error! Form is invalid. {0}'.format(func.get_error_messages(form.errors.get_json_data())))
 
         return redirect('app:create_area')
-
-
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -165,7 +169,9 @@ class AllTrainings(LoginRequiredMixin, View):
 
         return render(request, 'app/settings/all_trainings.html', {
             'total_trainings': len(training_list),
-            'trainings': trainings
+            'trainings': trainings,
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
 
 
@@ -226,7 +232,9 @@ class CreateTraining(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_training.html', {
             'form': TrainingForm(),
-            'recent_trainings': Cert.objects.all().order_by('-id')[:20]
+            'recent_trainings': Cert.objects.all().order_by('-id')[:20],
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
 
     @method_decorator(require_POST)
@@ -245,7 +253,6 @@ class CreateTraining(LoginRequiredMixin, View):
 
 
 # User
-
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllUsers(LoginRequiredMixin, View):
@@ -297,7 +304,10 @@ class AllUsers(LoginRequiredMixin, View):
             'roles': { 
                 'LAB_USER': UserLab.LAB_USER, 
                 'PI': UserLab.PRINCIPAL_INVESTIGATOR 
-            }
+            },
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
 
     @method_decorator(require_POST)
@@ -315,8 +325,6 @@ class AllUsers(LoginRequiredMixin, View):
             messages.error(request, 'Error! Form is invalid. {0}'.format(func.get_error_messages(form.errors.get_json_data())))
 
         return HttpResponseRedirect( request.POST.get('next') )
-
-
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -432,7 +440,9 @@ class CreateUser(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_user.html', {
             'form': UserForm(),
-            'recent_users': User.objects.all().order_by('-date_joined')[:20]
+            'recent_users': User.objects.all().order_by('-date_joined')[:20],
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
 
     @method_decorator(require_POST)
@@ -493,9 +503,10 @@ class UserReportMissingTrainings(LoginRequiredMixin, View):
         return render(request, 'app/settings/user_report_missing_trainings.html', {
             'total_users': len(user_list),
             'users': users,
-            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings')
+            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings'),
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
-
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -518,8 +529,6 @@ def download_user_report_missing_trainings(request):
             result += '{0},{1},{2},{3},{4},"{5}"\n'.format(user.id, user.username, user.first_name, user.last_name, len(missing_certs), certs)
 
     return JsonResponse({ 'status': 'success', 'data': result })
-
-
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
@@ -584,7 +593,7 @@ class APIUpdates(LoginRequiredMixin, View):
             "total_user_certs": len(user_cert_list),
             "user_certs": user_certs,
             "today": today,
-            "stats": stats
+            "stats": stats,
+            'is_settings_viewing': func.is_settings_viewing(request),
+            'is_key_request_viewing': func.is_key_request_viewing(request)
         })
-
-

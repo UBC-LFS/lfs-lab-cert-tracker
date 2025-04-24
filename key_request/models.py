@@ -1,16 +1,11 @@
-from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Lab, Cert
 
-from django.db.models.signals import post_save
-from django.core.mail import send_mail
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 from datetime import datetime
 
-from .utils import *
+from .utils import AFFLIATIONS, AFTER_HOURS_ACCESS, REQUEST_STATUS
 
 
 class Building(models.Model):
@@ -89,7 +84,7 @@ class RequestForm(models.Model):
     supervisor_last_name = models.CharField(max_length=150)
     supervisor_email = models.EmailField(max_length=254)
     
-    after_hours_access = models.CharField(max_length=1, choices=AFTER_HOUR_ACCESS, default=None)
+    after_hours_access = models.CharField(max_length=1, choices=AFTER_HOURS_ACCESS, default=None)
     working_alone = models.BooleanField(default=False)
     comment = models.TextField(null=True, blank=True)
 

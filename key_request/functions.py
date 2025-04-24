@@ -1,10 +1,13 @@
 import json
 from django.db.models import Q, F, Max
 from urllib.parse import urlparse
-from datetime import date
-
-from .models import *
 from django.forms.models import model_to_dict
+from datetime import date
+import re
+
+from lfs_lab_cert_tracker.models import Cert
+from .models import Building, Floor, Room, RequestForm
+from .utils import REV_REQUEST_STATUS_DICT
 
 
 def get_headers(model):
@@ -230,11 +233,16 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
     return data, manager_ids, area_ids, training_ids
 
 
+def natural_key(s):
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
+
+
 def search_filter_options():
+    rooms = Room.objects.values_list('number', flat=True)
     return {
-        'buildings': Building.objects.values('code').distinct(),
-        'floors': Floor.objects.values('name').distinct(),
-        'rooms': Room.objects.values('number').distinct()
+        'buildings': Building.objects.values('code'),
+        'floors': Floor.objects.values('name'),
+        'rooms': sorted(set(rooms), key=natural_key)
     }
 
 

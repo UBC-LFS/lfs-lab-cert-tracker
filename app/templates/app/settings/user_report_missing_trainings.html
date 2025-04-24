@@ -8,9 +8,9 @@
 	<small class="text-danger">for Missing Training Records</small>
 </h3>
 
-<div class="text-primary float-right">
-	<span class="material-symbols-outlined">cloud_download</span>
-	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
+<div class="text-primary float-right mb-3">
+	{% include 'lfs_lab_cert_tracker/icons/cloud_download.html' %}
+	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" style="margin-bottom: -7px;" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
 		Download All as CSV
 	</button>
 </div>

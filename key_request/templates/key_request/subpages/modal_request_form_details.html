@@ -12,18 +12,20 @@
       <div class="modal-body text-left font-size-nl">
         <nav>
           <div class="nav nav-tabs" id="nav-tab-{{ id }}" role="tablist">
-            <button class="nav-link active" id="nav-form-details-tab-{{ id }}" data-toggle="tab" data-target="#nav-form-details-{{ id }}" type="button" role="tab" aria-controls="nav-form-details-{{ id }}" aria-selected="true">Form Details</button>
-            <button class="nav-link" id="nav-selected-rooms-tab-{{ id }}" data-toggle="tab" data-target="#nav-selected-rooms-{{ id }}" type="button" role="tab" aria-controls="nav-selected-rooms-{{ id }}" aria-selected="false">Selected Rooms</button>
+            <button class="nav-link active" id="nav-selected-rooms-tab-{{ id }}" data-toggle="tab" data-target="#nav-selected-rooms-{{ id }}" type="button" role="tab" aria-controls="nav-selected-rooms-{{ id }}" aria-selected="false">Selected Rooms</button>
+            <button class="nav-link" id="nav-form-details-tab-{{ id }}" data-toggle="tab" data-target="#nav-form-details-{{ id }}" type="button" role="tab" aria-controls="nav-form-details-{{ id }}" aria-selected="true">Form Details</button>
             <button class="nav-link" id="nav-training-records-tab-{{ id }}" data-toggle="tab" data-target="#nav-training-records-{{ id }}" type="button" role="tab" aria-controls="nav-training-records-{{ id }}" aria-selected="false">Training Records</button>
           </div>
         </nav>
         <div class="tab-content" id="nav-tabContent-{{ id }}">
-          <div class="tab-pane fade show active pt-5" id="nav-form-details-{{ id }}" role="tabpanel" aria-labelledby="nav-form-details-tab-{{ id }}">
-            {% include 'key_request/subpages/table_request_form_details.html' with form=form %}
-          </div>
-          <div class="tab-pane fade pt-5" id="nav-selected-rooms-{{ id }}" role="tabpanel" aria-labelledby="nav-selected-rooms-tab-{{ id }}">
+          <div class="tab-pane fade show active pt-5" id="nav-selected-rooms-{{ id }}" role="tabpanel" aria-labelledby="nav-selected-rooms-tab-{{ id }}">
             {% include 'key_request/subpages/table_selected_rooms.html' with form=form rooms=form.rooms.all is_admin=is_admin %}
           </div>
+
+          <div class="tab-pane fade pt-5" id="nav-form-details-{{ id }}" role="tabpanel" aria-labelledby="nav-form-details-tab-{{ id }}">
+            {% include 'key_request/subpages/table_request_form_details.html' with form=form %}
+          </div>
+
           <div class="tab-pane fade pt-4" id="nav-training-records-{{ id }}" role="tabpanel" aria-labelledby="nav-training-records-tab-{{ id }}">
             <h6>Quick Summary</h6>
             <ul>

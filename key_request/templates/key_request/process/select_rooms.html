@@ -12,10 +12,13 @@
 
 	<h3 class="title mb-5">Step1 - Select Rooms</h3>
 
-	<p class="font-size-lg mb-4">
-		<span class="material-symbols-outlined text-success">check</span>
-		You can select multiple rooms.
-	</p>
+	<div class="bd-callout bd-callout-warning mb-4">
+		<ul>
+			<li>You may select multiple rooms.</li>
+			<li>The <strong>FOB</strong> system provides key card access to enter the room.</li>
+			<li>If the <strong>Alerm</strong> is <strong class="text-success">YES</strong>, an alarm system operates in the room.</li>
+		</ul>
+	</div>
 
 	<form class="key-request-form" action="" method="POST">
 	  {% csrf_token %}
@@ -46,7 +49,7 @@
 	        </thead>
 	        <tbody id="select-room">
 						<tr>
-							<td colspan="100%">Select a Building and a Floor to see a list of rooms</td>
+							<td colspan="100%">Select a building and a floor to view the list of rooms</td>
 						</tr>
 					</tbody>
 	      </table>
@@ -56,14 +59,14 @@
 	      <div id="display-selected-rooms">
 	        <p class="text-center text-secondary">Your selected rooms will be displayed here.</p>
 	      </div>
+
+				<div class="text-center border bg-lighter-gray pt-3 pb-4" style="margin-top:100px">
+					<p>Click the <span class="text-primary">Continue</span> button below to proceed.</p>
+					<a class="btn btn-secondary mr-2" href="{% url 'key_request:index' %}">Go back</a>
+					<input id="select-rooms-continue" class="btn btn-primary" type="button" value="Continue" disabled data-post-url="{% url 'key_request:select_rooms' %}" data-next-url="{% url 'key_request:check_user_trainings' %}" data-token="{{ csrf_token }}" />
+				</div>
 	    </div>
 	  </div>
-
-	  <div class="mt-4">
-	    <a class="btn btn-secondary mr-2" href="{% url 'key_request:index' %}">Go back</a>
-	    <input id="select-rooms-continue" class="btn btn-primary" type="button" value="Continue" data-post-url="{% url 'key_request:select_rooms' %}" data-next-url="{% url 'key_request:check_user_trainings' %}" data-token="{{ csrf_token }}" />
-	  </div>
-
 	</form>
 </section>
 

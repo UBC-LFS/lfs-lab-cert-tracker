@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from app.utils import NUM_PER_PAGE
 
 from . import functions as func
-from .forms import APPROVED
+from .utils import APPROVED
 
 
 @method_decorator([never_cache], name='dispatch')

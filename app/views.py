@@ -44,7 +44,6 @@ def index(request):
         request.user.save(update_fields=update_fields)
 
     return HttpResponseRedirect(reverse('app:my_account', args=[request.user.id]))
-    # return redirect('app:home')
 
 
 @login_required(login_url=settings.LOGIN_URL)

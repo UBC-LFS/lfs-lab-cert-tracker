@@ -2,6 +2,10 @@
 
 {% block sub_content %}
 
+<p class="mb-4">
+	Please click <a href="{% url 'app:add_training_record' user_id=app_user.id %}">Add Training Record</a> to upload your certificates.
+</p>
+
 <div class="box border-green mt-3">
 	<h5 class="text-success">
 		<span class="material-symbols-outlined">verified_user</span> Training Record
