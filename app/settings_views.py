@@ -32,9 +32,7 @@ class Index(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/index.html', {
-            'recent_users': User.objects.all().order_by('-date_joined')[:20],
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'recent_users': User.objects.all().order_by('-date_joined')[:20]
         })
     
 
@@ -69,9 +67,7 @@ class AllAreas(LoginRequiredMixin, View):
 
         return render(request, 'app/settings/all_areas.html', {
             'areas': areas,
-            'total_areas': len(area_list),
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'total_areas': len(area_list)
         })
 
 
@@ -83,9 +79,7 @@ class CreateArea(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_area.html', {
             'form': AreaForm(),
-            'recent_areas': Lab.objects.all().order_by('-id')[:20],
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'recent_areas': Lab.objects.all().order_by('-id')[:20]
         })
 
     @method_decorator(require_POST)
@@ -169,9 +163,7 @@ class AllTrainings(LoginRequiredMixin, View):
 
         return render(request, 'app/settings/all_trainings.html', {
             'total_trainings': len(training_list),
-            'trainings': trainings,
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'trainings': trainings
         })
 
 
@@ -232,9 +224,7 @@ class CreateTraining(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_training.html', {
             'form': TrainingForm(),
-            'recent_trainings': Cert.objects.all().order_by('-id')[:20],
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'recent_trainings': Cert.objects.all().order_by('-id')[:20]
         })
 
     @method_decorator(require_POST)
@@ -304,10 +294,7 @@ class AllUsers(LoginRequiredMixin, View):
             'roles': { 
                 'LAB_USER': UserLab.LAB_USER, 
                 'PI': UserLab.PRINCIPAL_INVESTIGATOR 
-            },
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            }
         })
 
     @method_decorator(require_POST)
@@ -440,9 +427,7 @@ class CreateUser(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_user.html', {
             'form': UserForm(),
-            'recent_users': User.objects.all().order_by('-date_joined')[:20],
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'recent_users': User.objects.all().order_by('-date_joined')[:20]
         })
 
     @method_decorator(require_POST)
@@ -503,9 +488,7 @@ class UserReportMissingTrainings(LoginRequiredMixin, View):
         return render(request, 'app/settings/user_report_missing_trainings.html', {
             'total_users': len(user_list),
             'users': users,
-            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings'),
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            'download_user_report_missing_trainings_url': reverse('app:download_user_report_missing_trainings')
         })
 
 
@@ -593,7 +576,5 @@ class APIUpdates(LoginRequiredMixin, View):
             "total_user_certs": len(user_cert_list),
             "user_certs": user_certs,
             "today": today,
-            "stats": stats,
-            'is_settings_viewing': func.is_settings_viewing(request),
-            'is_key_request_viewing': func.is_key_request_viewing(request)
+            "stats": stats
         })

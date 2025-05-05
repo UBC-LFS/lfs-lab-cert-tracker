@@ -30,14 +30,14 @@ urlpatterns += [
     path('all-rooms/delete/', admin_views.delete_room, name='delete_room'),
     
     path('add-training-to-room/', admin_views.AddTrainingToRoom.as_view(), name='add_training_to_room'),
-    path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room'),
+    path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room')
 ]
 
 
 # Managers
 urlpatterns += [
     path('rooms/', manager_views.ManagerRooms.as_view(), name='manager_rooms'),
-    path('dashboard/', manager_views.ManagerDashboard.as_view(), name='manager_dashboard'),
+    path('dashboard/', manager_views.ManagerDashboard.as_view(), name='manager_dashboard')
 ]
 
 
@@ -45,5 +45,5 @@ urlpatterns += [
 urlpatterns += [
     path('rooms/select/step1/', process_views.SelectRooms.as_view(), name='select_rooms'),
     path('user-trainings/check/step2/', process_views.CheckUserTrainings.as_view(), name='check_user_trainings'),
-    path('form/submit/step3/', process_views.SubmitForm.as_view(), name='submit_form'),
+    path('form/submit/step3/', process_views.SubmitForm.as_view(), name='submit_form')
 ]

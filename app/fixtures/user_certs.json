@@ -346,5 +346,41 @@
       "uploaded_date": "2025-01-01",
       "completion_date": "2024-01-01"
     }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 30,
+    "fields": {
+      "expiry_date": "2029-01-01",
+      "cert_id": 20,
+      "user_id": 16,
+      "cert_file": "users/12/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2025-01-01",
+      "completion_date": "2024-01-01"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 31,
+    "fields": {
+      "expiry_date": "2027-01-01",
+      "cert_id": 24,
+      "user_id": 16,
+      "cert_file": "users/12/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2025-01-01",
+      "completion_date": "2024-01-01"
+    }
+  },
+  {
+    "model": "lfs_lab_cert_tracker.usercert",
+    "pk": 32,
+    "fields": {
+      "expiry_date": "2026-01-01",
+      "cert_id": 21,
+      "user_id": 16,
+      "cert_file": "users/12/certificates/16/certificate_1.jpg",
+      "uploaded_date": "2025-01-01",
+      "completion_date": "2024-01-01"
+    }
   }
 ]

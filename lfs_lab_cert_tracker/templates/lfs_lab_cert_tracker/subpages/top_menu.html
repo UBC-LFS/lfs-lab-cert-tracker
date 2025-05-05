@@ -9,15 +9,13 @@
     <a class="btn dropdown-item" href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a>
   </div>
 
-  {% if is_settings_viewing %}
+  {% if request.user.is_superuser %}
     <div class="dropdown">
       <a class="btn dropdown-item" href="{% url 'app:setting_index' %}">Settings</a>
     </div>
   {% endif %}
 
-  {% if is_key_request_viewing %}
-    <div class="dropdown">
-      <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
-    </div>
-  {% endif %}
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
+  </div>
 </nav>

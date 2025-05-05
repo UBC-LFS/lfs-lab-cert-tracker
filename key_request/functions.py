@@ -6,8 +6,8 @@ from datetime import date
 import re
 
 from lfs_lab_cert_tracker.models import Cert
-from .models import Building, Floor, Room, RequestForm
-from .utils import REV_REQUEST_STATUS_DICT
+from .models import Building, Floor, Room, RequestForm, RequestFormStatus
+from .utils import APPROVED, REV_REQUEST_STATUS_DICT
 
 
 def get_headers(model):
@@ -38,12 +38,12 @@ def preprocess_rooms(rooms):
 
             if building_id not in by_building.keys():
                 by_building[building_id] = {}
-            
+
             if floor_id not in by_building[building_id].keys():
                 by_building[building_id][floor_id] = floor_dict
 
-            by_building[building_id][floor_id]['numbers'].append({ 
-                'id': r['id'], 
+            by_building[building_id][floor_id]['numbers'].append({
+                'id': r['id'],
                 'number': r['number'],
                 'is_active': r['is_active'],
                 'key': r['key'],
@@ -52,7 +52,7 @@ def preprocess_rooms(rooms):
                 'areas': [{ 'id': area.id, 'name': area.name } for area in r['areas']],
                 'trainings': [{ 'id': training.id, 'name': training.name } for training in r['trainings']]
             })
-    
+
     return json.dumps(by_building)
 
 
@@ -60,11 +60,11 @@ def check_user_trainings(user, selected_rooms):
     required_trainings = []
     for room_id in selected_rooms:
         room = Room.objects.get(id=room_id)
-        
+
         for training in room.trainings.all():
             if training not in required_trainings:
                 required_trainings.append(training)
-    
+
     certs = Cert.objects.filter(usercert__user_id=user.id).distinct()
     missing_ids = [m.id for m in set(required_trainings).difference(set(certs))]
 
@@ -84,7 +84,7 @@ def check_user_trainings(user, selected_rooms):
         if tr.id in expired_ids:
             tr.is_expired = True
             total_expired += 1
-    
+
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
 
 
@@ -108,19 +108,20 @@ def search_filters_for_requests(query):
     return forms, total, new_forms
 
 
-def get_forms_per_manager(manager):
-    rooms_managed = Room.objects.filter(managers=manager)
-    return RequestForm.objects.filter(rooms__in=rooms_managed)
+def get_forms_per_manager(user):
+    # rooms_managed = Room.objects.filter(managers=user)
+    # return RequestForm.objects.filter(rooms__in=rooms_managed)
+    return RequestForm.objects.filter(rooms__managers=user)
 
 
-def get_manager_dashboard(manager, query=None):
-    rooms_managed = Room.objects.filter(managers=manager)
+def get_manager_dashboard(user, query=None):
+    rooms_managed = Room.objects.filter(managers=user)
     form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed)
     total_forms = form_filtered.count()
 
     num_new_forms = 0
     for form in form_filtered.all():
-        if form.requestformstatus_set.filter(manager_id=manager.id).count() == 0:
+        if form.requestformstatus_set.filter(manager_id=user.id).count() == 0:
             num_new_forms += 1
 
     if query:
@@ -134,10 +135,10 @@ def get_manager_dashboard(manager, query=None):
     forms = []
     for room in rooms_managed.all():
         for form in room.requestform_set.all():
-            form.manager = manager
+            form.manager = user
             form.room = room
-            form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=manager.id)
-            
+            form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=user.id)
+
             if query and query['status']:
                 if form.status.count() == 0:
                     if query['status'] == 'New':
@@ -151,7 +152,7 @@ def get_manager_dashboard(manager, query=None):
     forms = sorted(forms, key=lambda x: x.id, reverse=True)
     for i, form in enumerate(forms):
         form.counter = len(forms) - i
-    
+
     return total_forms, num_new_forms, forms
 
 
@@ -160,7 +161,7 @@ def create_data_from_session(session, key, room=None):
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     area_ids = [area.id for area in room.areas.all()] if room else []
     training_ids = [training.id for training in room.trainings.all()] if room else []
-    
+
     if session.get(key):
         if session[key]['building']:
             data['building'] = session[key]['building']
@@ -185,7 +186,7 @@ def create_data_from_session(session, key, room=None):
 
         if len(session[key]['trainings']) > 0:
             training_ids = session[key]['trainings']
-    
+
     return data, manager_ids, area_ids, training_ids
 
 
@@ -198,7 +199,7 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
             data['floor'] = post.get('floor')
         if data['number'] != post.get('number'):
             data['number'] = post.get('number')
-        
+
         key = True if post.get('key') else False
         if data['key'] != key:
             data['key'] = key
@@ -210,7 +211,7 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
         alarm = True if post.get('alarm') else False
         if data['alarm'] != alarm:
             data['alarm'] = alarm
-    
+
         is_active = True if post.get('is_active') else False
         if data['is_active'] != is_active:
             data['is_active'] = is_active
@@ -231,6 +232,23 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
             training_ids = trainings
 
     return data, manager_ids, area_ids, training_ids
+
+
+def count_approved_status(form, room):
+    cache = [0] * room.managers.count()
+    for i, manager in enumerate(room.managers.all()):
+        status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
+        if status_filtered.exists():
+            for item in status_filtered:
+                if item.status == APPROVED:
+                    cache[i] = 1
+                    break
+    
+    count = 0
+    for c in cache:
+        count += c
+    
+    return count
 
 
 def natural_key(s):

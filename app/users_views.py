@@ -54,9 +54,7 @@ class MyAccount(LoginRequiredMixin, View):
             'expired_certs': func.get_user_expired_certs(self.user),
             'welcome_message': func.welcome_message(),
             'viewing': func.add_next_str_to_session(request, self.user),
-            'num_new_forms': num_new_forms,
-            'is_settings_viewing': func.is_settings_viewing(request, self.user),
-            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
+            'num_new_forms': num_new_forms
         })
 
 
@@ -103,9 +101,7 @@ class MyWorkArea(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         return render(request, 'app/users/my_work_area.html', {
             'user_labs': func.get_user_labs(self.user),
-            'user_labs_pi': func.get_user_labs(self.user, is_pi=True),
-            'is_settings_viewing': func.is_settings_viewing(request, self.user),
-            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
+            'user_labs_pi': func.get_user_labs(self.user, is_pi=True)
         })
 
 
@@ -135,9 +131,7 @@ class MyTrainingRecord(LoginRequiredMixin, View):
             'user_certs': func.get_user_certs_with_info(self.user),
             'missing_certs': func.get_user_missing_certs(self.user.id),
             'expired_certs': func.get_user_expired_certs(self.user),
-            'viewing': viewing,
-            'is_settings_viewing': func.is_settings_viewing(request, self.user),
-            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
+            'viewing': viewing
         })
 
 
@@ -165,9 +159,7 @@ class AddTrainingRecord(LoginRequiredMixin, View):
         return render(request, 'app/users/add_training_record.html', {
             'app_user': self.user,
             'form': UserTrainingForm(initial={ 'user': self.user.id }),
-            'viewing': viewing,
-            'is_settings_viewing': func.is_settings_viewing(request, self.user),
-            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
+            'viewing': viewing
         })
 
     @method_decorator(require_POST)
@@ -245,9 +237,7 @@ class TrainingDetailsView(LoginRequiredMixin, View):
             'app_user': self.user,
             'latest_user_cert': self.user_certs.first(),
             'user_certs': self.user_certs[1:],
-            'viewing': func.add_next_str_to_session(request, self.user),
-            'is_settings_viewing': func.is_settings_viewing(request, self.user),
-            'is_key_request_viewing': func.is_key_request_viewing(request, self.user)
+            'viewing': func.add_next_str_to_session(request, self.user)
         })
 
     @method_decorator(require_POST)

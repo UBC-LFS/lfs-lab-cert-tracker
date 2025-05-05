@@ -34,6 +34,8 @@ SECRET_KEY = os.environ['LFS_LAB_CERT_TRACKER_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 LOCAL_LOGIN = False
+SCHEDULER = False
+
 
 ALLOWED_HOSTS = ['localhost']
 

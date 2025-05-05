@@ -8,6 +8,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import SuspiciousOperation
 import smtplib
 from email.mime.text import MIMEText
 
@@ -24,7 +25,6 @@ class SelectRooms(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         rooms = Room.objects.all()
-        
         return render(request, 'key_request/process/select_rooms.html', {
             'buildings': Building.objects.all(),
             'floors': Floor.objects.all(),
@@ -34,13 +34,11 @@ class SelectRooms(LoginRequiredMixin, View):
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         request.session['selected_rooms'] = request.POST.getlist('rooms[]')
-
         return JsonResponse({'status': 'success', 'next': request.POST['next']})
 
 
 @method_decorator([never_cache], name='dispatch')
 class CheckUserTrainings(LoginRequiredMixin, View):
-
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
 
@@ -70,14 +68,15 @@ class CheckUserTrainings(LoginRequiredMixin, View):
 
 @method_decorator([never_cache], name='dispatch')
 class SubmitForm(LoginRequiredMixin, View):
-    form_class = KeyRequestForm
-
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
 
         selected_rooms = request.session.get('selected_rooms')
+        if not selected_rooms:
+            raise SuspiciousOperation
+
         _, total_missing, total_expired = func.check_user_trainings(request.user, selected_rooms)
-        if not selected_rooms or total_missing != 0 or total_expired != 0:
+        if total_missing != 0 or total_expired != 0:
             raise Http404
 
         self.selected_rooms = selected_rooms
@@ -85,7 +84,6 @@ class SubmitForm(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
         room_info = []
         for rid in self.selected_rooms:
             room = Room.objects.get(id=rid)
@@ -95,9 +93,9 @@ class SubmitForm(LoginRequiredMixin, View):
                 'floor': room.floor.name,
                 'number': room.number
             })
-
+        
         return render(request, 'key_request/process/submit_form.html', {
-            'form': self.form_class(initial={'user': request.user.id }),
+            'form': KeyRequestForm(initial={'user': request.user.id }),
             'basic_info': [
                 ('Applicant First Name', request.user.first_name),
                 ('Applicant Last Name', request.user.last_name),
@@ -113,7 +111,7 @@ class SubmitForm(LoginRequiredMixin, View):
             messages.error(request, 'Error! Please read the <strong>Requirement to Proceed</strong>, and try again.')
             return redirect('key_request:submit_form')
 
-        form = self.form_class(request.POST)
+        form = KeyRequestForm(request.POST)
         rooms = request.POST.getlist('rooms[]')
         operator = appFunc.get_user_name(request.user)
 
@@ -247,18 +245,19 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
 
 
 def send(user, subject, message):
-    sender = settings.EMAIL_FROM
-    receiver = '{0} <{1}>'.format(user.get_full_name(), user.email)
+    if settings.EMAIL_FROM and appFunc.check_email_valid(user.email):
+        sender = settings.EMAIL_FROM
+        receiver = '{0} <{1}>'.format(user.get_full_name(), user.email)
 
-    msg = MIMEText(message, 'html')
-    msg['Subject'] = subject
-    msg['From'] = sender
-    msg['To'] = receiver
+        msg = MIMEText(message, 'html')
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = receiver
 
-    try:
-        server = smtplib.SMTP(settings.EMAIL_HOST)
-        server.sendmail(sender, receiver, msg.as_string())
-    except Exception as e:
-        print(e)
-    finally:
-        server.quit()
+        try:
+            server = smtplib.SMTP(settings.EMAIL_HOST)
+            server.sendmail(sender, receiver, msg.as_string())
+        except Exception as e:
+            print(e)
+        finally:
+            server.quit()

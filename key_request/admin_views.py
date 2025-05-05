@@ -64,7 +64,7 @@ class AllRequests(LoginRequiredMixin, View):
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
-
+        
         return render(request, 'key_request/admin/all_requests.html', {
             'total_forms': total_forms,
             'num_filtered_forms': num_filtered_forms,

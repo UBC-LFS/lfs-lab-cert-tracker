@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q, F, Max
 from django.core.mail import send_mail
 from django.urls import resolve
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import *
@@ -298,21 +300,14 @@ def get_viewing(next):
     return viewing
 
 
-def is_settings_viewing(request, loggedin_user=None):
-    is_settings_viewing = False
-
-    if loggedin_user:
-        if request.user.id == loggedin_user.id:
-            is_settings_viewing = True
-    else:
-        if request.user.is_superuser:
-            is_settings_viewing = True
+def check_email_valid(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError as e:
+        return False
     
-    return is_settings_viewing
-
-
-def is_key_request_viewing(request, loggedin_user=None):
-    return False if loggedin_user and request.user.id != loggedin_user.id else True
+        
 
 
 # Helper functions

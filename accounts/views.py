@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.contrib import messages
-from django.contrib.auth import authenticate, login as DjangoLogin
+from django.contrib.auth import authenticate, login as DjangoLogin, logout as DjangoLogout
 
 from .forms import LocalLoginForm
 
@@ -29,3 +29,7 @@ def local_login(request):
     return render(request, 'accounts/local_login.html', {
         'form': LocalLoginForm()
     })
+
+
+def local_logout(request):
+    DjangoLogout(request)
