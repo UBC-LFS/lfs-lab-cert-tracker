@@ -1,19 +1,16 @@
 from django.conf import settings
-from datetime import date
+from django.db.models import Q, F, Max
+import os
 import smtplib
-from email.mime.text import MIMEText
-import re
 import requests
+from datetime import date
+from email.mime.text import MIMEText
 
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models  import UserCert, LabCert
+from lfs_lab_cert_tracker.models  import Cert, UserLab, UserCert, LabCert
 
-from app.functions import *
+from app import functions as appFunc
 
-
-def get_admins():
-    """ Get all administrators """
-    return User.objects.filter(is_superuser=True)
 
 def get_next_url(curr_page):
     return '{0}?page={1}&pageSize={2}'.format(settings.LFS_LAB_CERT_TRACKER_API_URL, curr_page, 50)
@@ -54,10 +51,9 @@ def pull_by_api(headers, certs, usernames, validation):
 
             if item['certificate']['status'] == 'active' and len(completion_date) == 3:
                 completion_date = date(year=int(completion_date[0]), month=int(completion_date[1]), day=int(completion_date[2]))
-                user = get_user_by_username(username)
+                user = appFunc.get_user_by_username(username)
                 
                 cert = find_cert_by_unique_id(certs, training_id)
-                #print(training_name, training_id, ' ===== ', cert)
                 #cert = find_cert(certs, training_name)
                 
                 if user and cert:
@@ -183,7 +179,7 @@ def find_missing_trainings():
                 pis[supervisor] = set()
 
     # Insert users when missing trainings exist
-    for user in get_users('active'):
+    for user in appFunc.get_users('active'):
         if user.userlab_set.count() > 0:
             missing_trainings = set()
 
@@ -210,12 +206,13 @@ def find_missing_trainings():
     return lab_users, pis
 
 
-def find_expired_trainings(target_day, type):
+def find_expired_trainings(active_users, target_day, type):
     """ Find expired trainings of each user on the target day """
 
     lab_users = []
     pis = {}
-    for user in get_users('active'):
+
+    for user in active_users:
         if user.usercert_set.count() > 0:
             lab_user = { 'id': user.id, 'trainings': [] }
             
@@ -228,10 +225,10 @@ def find_expired_trainings(target_day, type):
             for uc in user_certs_with_max_expiry_date:
                 user_cert = UserCert.objects.filter(user_id=user.id, cert_id=uc['cert_id'], expiry_date=uc['max_expiry_date'])
                 user_certs.append(user_cert.first())
-
+            
             for user_cert in user_certs:
                 lab_user, pis = help_find_expired_trainings(user, user_cert, lab_user, pis)
-
+            
             if len(lab_user['trainings']) > 0:
                 lab_users.append(lab_user)
 
@@ -263,8 +260,10 @@ def help_find_expired_trainings(user, usercert, lab_user, pis):
                     
                     if user.id not in pis[pi]: 
                         pis[pi][user.id] = []
-
-                    pis[pi][user.id].append(info)
+                    
+                    ids = [item['id'] for item in pis[pi][user.id]]
+                    if info['id'] not in ids:
+                        pis[pi][user.id].append(info)
 
     return lab_user, pis
 
@@ -273,20 +272,22 @@ def help_find_expired_trainings(user, usercert, lab_user, pis):
 
 def send_email(receiver, message):
     """ Send an email with a receiver and a message """
+    
+    if settings.EMAIL_FROM:
+        sender = settings.EMAIL_FROM
 
-    sender = os.environ['LFS_LAB_CERT_TRACKER_EMAIL_FROM']
-    msg = MIMEText(message, 'html')
-    msg['Subject'] = 'Training Record Notification'
-    msg['From'] = sender
-    msg['To'] = receiver
+        msg = MIMEText(message, 'html')
+        msg['Subject'] = 'Training Record Notification'
+        msg['From'] = sender
+        msg['To'] = receiver
 
-    try:
-        server = smtplib.SMTP(os.environ['LFS_LAB_CERT_TRACKER_EMAIL_HOST'])
-        server.sendmail(sender, receiver, msg.as_string())
-    except Exception as e:
-        print(e)
-    finally:
-        server.quit()
+        try:
+            server = smtplib.SMTP(settings.EMAIL_HOST)
+            server.sendmail(sender, receiver, msg.as_string())
+        except Exception as e:
+            print(e)
+        finally:
+            server.quit()
 
 
 def html_template(first_name, last_name, message):
@@ -322,82 +323,93 @@ def html_template(first_name, last_name, message):
     return template
 
 
-def get_receiver(user):
+def get_receiver(first_name, last_name, email):
     """ Get a receiver for an email receiver """
+    return '{0} {1} <{2}>'.format(first_name, last_name, email)
 
-    return '{0} {1} <{2}>'.format(user.first_name, user.last_name, user.email)
 
 def datetime_to_string(datetime):
     """ Convert datetime to string """
-
     return datetime.strftime('%m/%d/%Y')
 
 
 # For missing trainings
-def get_message_lab_users_missing_trainings(user_id, missing_trainings):
+def get_message_users_missing_trainings(user_id, trainings):
     """ Get a message for lab users """
 
-    trainings = []
-    for training_id in missing_trainings:
-        trainings.append('<li>' + get_cert_by_id(training_id).name + '</li>')
+    contents = []
+    for area in trainings.keys():
+        area_split = area.split('|')
+        area_id = area_split[0]
+        area_name = area_split[1]
+        trainings = trainings[area]
+
+        content = '<p>{0}</p><ul>'.format(area_name)
+        for training in trainings:
+            content += '<li>{0}</li>'.format(training)
+        content += '</ul>'
+
+        contents.append(content)
 
     message = """\
-        <p>You have missing training(s). Please update it.</p>
-        <ul>{0}</ul>
-        <p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
-    """.format(''.join(trainings), settings.SITE_URL, user_id)
+<p>Our records indicate that you have missing training certification(s) required for each area. Please take a moment to update your records at your earliest convenience. Let us know if you need any assistance.</p>
+<div>{0}</div>
+<p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
+    """.format(''.join(contents), settings.SITE_URL, user_id)
 
     return message
 
 
-def get_message_pis_missing_trainings(lab_users):
+def get_message_pis_missing_trainings(contents):
     """ Get a message for PIs """
 
-    lab_users_list = []
-    for uid in lab_users:
-        lab_users_list.append('<li>' + get_user_by_id(uid).first_name + ' ' + get_user_by_id(uid).last_name + '</li>')
-
     message = """\
-        <p>The following users have missing training(s).</p>
-        <ul>{0}</ul>
-    """.format( ''.join(lab_users_list) )
+<p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>
+<div>{0}</div>
+<p>Let us know if you need any further details or assistance.</p>
+    """.format(contents)
 
     return message
 
 
 # For expiry trainings
-def get_message_lab_users_expired_trainings(trainings, user_id, days, type):
+def get_message_users_expired_trainings(user_id, trainings, days, type):
     """ Get a message with a list of users for lab users """
+
+    contents = []
+    for tr in trainings:
+        content = '<li>{0} (Expiry Date: {1})</li>'.format(tr['name'], tr['expiry_date'])
+        contents.append(content)
 
     if type == 'before':
         message = """\
-            <p>Your training(s) will expire in {0} days.</p>
-            <ul>{1}</ul>
-            <p>See <a href="{2}/app/users/{3}/report.pdf/">User report</a></p>
-            """.format(days, "".join(trainings), settings.SITE_URL, user_id)
+<p>Your training(s) will expire in {0} days.</p>
+<ul>{1}</ul>
+<p>See <a href='{2}/app/users/{3}/report.pdf/'>User Report</a></p>
+        """.format(days, ''.join(contents), settings.SITE_URL, user_id)
     else:
         message = """\
-            <p>Your training expiration date has already passed. Please update it.</p>
-            <ul>{0}</ul>
-            <p>See <a href="{1}/app/users/{2}/report.pdf/">User report</a></p>
-            """.format("".join(trainings), settings.SITE_URL, user_id)
+<p>Your training expiration date has already passed. Please update it.</p>
+<ul>{0}</ul>
+<p>See <a href='{1}/app/users/{2}/report.pdf/'>User Report</a></p>
+        """.format(''.join(contents), settings.SITE_URL, user_id)
 
     return message
 
 
-def get_message_pis_expired_trainings(lab_users_list, days, type):
+def get_message_pis_expired_trainings(contents, days, type):
     """ Get a message with a list of users """
 
     if type == 'before':
         message = """\
-            <p>Trainings of the following users in your area will expire in {0} days.</p>
-            {1}
-        """.format(days, lab_users_list)
+<p>Trainings of the following users in your area will expire in {0} days.</p>
+{1}
+        """.format(days, contents)
     else:
         message = """\
-            <p>The following users have expired training(s).</p>
-            <ul>{0}</ul>
-        """.format(lab_users_list)
+<p>The following users have expired training(s).</p>
+{0}
+        """.format(contents)
 
     return message
 
@@ -409,14 +421,14 @@ def send_email_to_lab_users(lab_users, days, type):
         user_id = lab_user['id']
 
         if len(lab_user['trainings']) > 0:
-            user = get_user_by_id(user_id)
+            user = appFunc.get_user_by_id(user_id)
 
             trainings = []
             for item in lab_user['trainings']:
                 trainings.append('<li>' + item['training'].name + ' (Expiry Date: ' + datetime_to_string(item['expiry_date']) + ')</li>')
 
             receiver = get_receiver(user)
-            message = get_message_lab_users_expired_trainings(trainings, user_id, days, type)
+            message = get_message_users_expired_trainings(trainings, user_id, days, type)
             template = html_template(user.first_name, user.last_name, message)
 
             send_email(receiver, template)
@@ -433,8 +445,8 @@ def send_email_to_pis(pis, days, type):
             for user_id, trainings in lab_users.items():
 
                 if len(trainings) > 0:
-                    pi = get_user_by_id(pid)
-                    user = get_user_by_id(user_id)
+                    pi = appFunc.get_user_by_id(pid)
+                    user = appFunc.get_user_by_id(user_id)
 
                     content = '<div>' + user.first_name + ' ' + user.last_name + '</div><ul>'
                     for item in trainings:
@@ -445,7 +457,7 @@ def send_email_to_pis(pis, days, type):
             if len(contents) > 0:
                 lab_users_list =  ''.join(contents)
 
-                pi = get_user_by_id(pid)
+                pi = appFunc.get_user_by_id(pid)
                 receiver = get_receiver(pi)
                 message = get_message_pis_expired_trainings(lab_users_list, days, type)
                 template = html_template(pi.first_name, pi.last_name, message)
@@ -459,7 +471,7 @@ def send_email_to_admins(admins, lab_users, days, type):
     contents = []
     for lab_user in lab_users:
         user_id = lab_user['id']
-        user = get_user_by_id(user_id)
+        user = appFunc.get_user_by_id(user_id)
         content = '<div>' + user.first_name + ' ' + user.last_name + " (<a href='" + settings.SITE_URL + '/app/users/' + str(user_id) + "/report.pdf/'>User report</a>)</div><ul>"
 
         for item in lab_user['trainings']:

@@ -179,7 +179,6 @@ class UserReportMissingTrainingsView(LoginRequiredMixin, View):
         })
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
@@ -259,7 +258,10 @@ class UserDetailsView(LoginRequiredMixin, View):
         return setup
 
     @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):                
+    def get(self, request, *args, **kwargs):
+        # from scheduler import tasks
+        # tasks.send_missing_trainings_pis()
+
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),

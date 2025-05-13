@@ -31,7 +31,7 @@ class Cert(models.Model):
 
     name = models.CharField(max_length=256, unique=True)
     expiry_in_years = models.IntegerField(default=0)
-    unique_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    # unique_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
     class Meta:
         ordering = ['name']
@@ -115,7 +115,10 @@ class UserCert(models.Model):
             elif width > 1000 or height > 500:
                 width, height = width/1.5, height/1.5
 
-            img.thumbnail( (width, height), PILImage.ANTIALIAS )
+            # TODO
+            # img.thumbnail( (width, height), PILImage.ANTIALIAS )
+            img.thumbnail( (width, height), PILImage.LANCZOS )
+             
             output = BytesIO()
             img.save(output, format='JPEG', quality=70) # Reduce a quality by 70%
             output.seek(0)
