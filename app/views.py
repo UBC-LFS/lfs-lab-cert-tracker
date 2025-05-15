@@ -259,8 +259,8 @@ class UserDetailsView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        # from scheduler import tasks
-        # tasks.send_missing_trainings_pis()
+        from scheduler import tasks
+        tasks.send_after_expiry_date_admins()
 
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
