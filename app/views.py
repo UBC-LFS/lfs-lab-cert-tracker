@@ -259,9 +259,6 @@ class UserDetailsView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        from scheduler import tasks
-        tasks.send_after_expiry_date_admins()
-
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
@@ -954,7 +951,7 @@ class AllTrainingsView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        training_list = Cert.objects.all()
+        training_list = Cert.objects.all().order_by('id')
 
         # Pagination enables
         query = request.GET.get('q')

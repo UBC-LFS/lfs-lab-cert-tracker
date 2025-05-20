@@ -5,7 +5,6 @@ import smtplib
 import requests
 from datetime import date
 
-
 from lfs_lab_cert_tracker.models  import Cert, UserCert, LabCert
 from django.db.models import Q, F, Max, OuterRef, Exists
 
@@ -220,109 +219,6 @@ def get_message_pis_expired_trainings(contents, days, type):
     return message
 
 
-# API service
-
-
-def get_next_url(curr_page):
-    return '{0}?page={1}&pageSize={2}'.format(settings.LFS_LAB_CERT_TRACKER_API_URL, curr_page, 50)
-
-
-def get_expiry_date(completion_date, cert):
-    expiry_year = completion_date.year + int(cert.expiry_in_years)
-    return date(year=expiry_year, month=completion_date.month, day=completion_date.day)
-
-
-def pull_by_api(headers, certs, usernames, validation):
-    data = []
-    
-    body = { 'requestIdentifiers': [{ 'identifierType': 'CWL', 'identifier': username } for username in usernames] }
-    next_url = get_next_url(1)
-    hasNextPage = True
-
-    while hasNextPage:
-        res = requests.post(next_url, json=body, headers=headers)
-        if res.status_code != 200:
-            print('Error occurred:', res.status_code)
-            break
-
-        json = res.json()
-        if 'page' not in json.keys() or 'pageSize' not in json.keys() or 'hasNextPage' not in json.keys() or 'pageItems' not in json.keys():
-            print('Error: page, pageSize, hasNextPage and pageItems are required.')
-            break
-        
-        for item in json['pageItems']:
-            if 'requestedIdentifier' not in item.keys() or 'certificate' not in item.keys() or 'identifier' not in item['requestedIdentifier'].keys() or 'trainingName' not in item['certificate'].keys() or 'trainingId' not in item['certificate'].keys() or 'completionDate' not in item['certificate'].keys():
-                print('Warning: no requestedIdentifier, certificate, identifier, trainingName or completionDate')
-                continue
-
-            username = item['requestedIdentifier']['identifier']
-            training_name = item['certificate']['trainingName'].strip()
-            training_id = item['certificate']['trainingId']
-            completion_date = item['certificate']['completionDate'].split('T')[0].split('-')
-
-            if item['certificate']['status'] == 'active' and len(completion_date) == 3:
-                completion_date = date(year=int(completion_date[0]), month=int(completion_date[1]), day=int(completion_date[2]))
-                user = appFunc.get_user_by_username(username)
-                
-                cert = find_cert_by_unique_id(certs, training_id)
-                #cert = find_cert(certs, training_name)
-                
-                if user and cert:
-                    user_certs = user.usercert_set.filter(cert_id=cert.id, completion_date=completion_date)
-                    form = '{0}_{1}_{2}'.format(user.id, cert.id, completion_date)
-
-                    if not user_certs.exists() and form not in validation:
-                        validation.append(form)                        
-                        data.append(UserCert(
-                            user = user,
-                            cert = cert,
-                            cert_file = 'None',
-                            uploaded_date = date.today(),
-                            completion_date = completion_date,
-                            expiry_date = get_expiry_date(completion_date, cert),
-                            by_api = True
-                        ))
-            else:
-                print('Warning: completion date is wrong, or status is not active:', username, training_name)
-        
-        hasNextPage = json['hasNextPage']
-        next_url = get_next_url(int(json['page']) + 1)
-    
-    return data, validation
-
-
-def find_cert_by_unique_id(certs, unique_id):
-    training = None
-    
-    cert_obj = Cert.objects.filter(unique_id__icontains=unique_id)
-    if cert_obj.exists():
-        for cert in cert_obj:
-            ids = cert.unique_id.split('/')
-            if str(unique_id) in ids:
-                training = cert
-                break
-
-    return training
-
-
-def find_cert(certs, training_name):
-    if training_name == 'Chemical Safety' or training_name == 'Chemical Safety Refresher':
-        training_name = 'Chemical Safety/Chemical Safety Refresher'
-    elif training_name == 'Biosafety for Study Team Members' or training_name == 'Biosafety Refresher for Study Team Members':
-        training_name = 'Biosafety for Study Team Members/Biosafety Refresher for Study Team Members'
-    elif training_name == 'Biosafety for Permit Holders' or training_name == 'Biosafety Refresher for Permit Holders':
-        training_name = 'Biosafety for Permit Holders/Biosafety Refresher for Permit Holders'
-    elif training_name == 'Transportation of Dangerous Goods by Ground and Air_ April 2020- March 7 2022':
-        training_name = 'Transportation of Dangerous Goods by Ground and Air'
-    elif training_name == "Remote Work. Home Office Ergonomics. Orientation":
-        training_name = "Home Office Ergo"
-
-    cert = Cert.objects.filter(name=training_name)    
-    return cert.first() if cert.exists() else None
-
-
-# Methods to send emails
-
 def send_email(receiver, message):
     """ Send an email with a receiver and a message """
     
@@ -365,7 +261,7 @@ def html_template(first_name, last_name, message):
             If you are trying to enroll in a missing or expired training, or to retrieve the training completion record, please visit the following links to get to the appropriate sites:
             <p>
                 <b>UBC/LFS Mandatory Training</b><br />
-                <a href="https://my.landfood.ubc.ca/lfs-mandatory-training">https://my.landfood.ubc.ca/lfs-mandatory-training</a>
+                <a href="https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/">https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/</a>
             </p>
         </div>
         <br />
@@ -381,3 +277,92 @@ def html_template(first_name, last_name, message):
 def get_receiver(first_name, last_name, email):
     """ Get a receiver for an email receiver """
     return '{0} {1} <{2}>'.format(first_name, last_name, email)
+
+
+
+# API service
+
+
+def get_next_url(curr_page):
+    return '{0}?page={1}&pageSize={2}'.format(settings.LFS_LAB_CERT_TRACKER_API_URL, curr_page, 50)
+
+
+def get_expiry_date(completion_date, cert):
+    expiry_year = completion_date.year + int(cert.expiry_in_years)
+    return date(year=expiry_year, month=completion_date.month, day=completion_date.day)
+
+
+def pull_by_api(headers, usernames, form_checking):
+    user_trainings = []
+    
+    body = {'requestIdentifiers': [{'identifierType': 'CWL', 'identifier': username} for username in usernames]}
+    next_url = get_next_url(1)
+    hasNextPage = True
+
+    while hasNextPage:
+        res = requests.post(next_url, json=body, headers=headers)
+        if res.status_code != 200:
+            print('Error occurred:', res.status_code)
+            break
+
+        json = res.json()
+        if 'page' not in json.keys() or 'pageSize' not in json.keys() or 'hasNextPage' not in json.keys() or 'pageItems' not in json.keys():
+            print('Error: page, pageSize, hasNextPage and pageItems are required.')
+            break
+        
+        for item in json['pageItems']:
+            if 'requestedIdentifier' not in item.keys() or 'certificate' not in item.keys() or 'identifier' not in item['requestedIdentifier'].keys() or 'trainingName' not in item['certificate'].keys() or 'trainingId' not in item['certificate'].keys() or 'completionDate' not in item['certificate'].keys():
+                print('Warning: no requestedIdentifier, certificate, identifier, trainingName or completionDate')
+                continue
+
+            username = item['requestedIdentifier']['identifier']
+            training_name = item['certificate']['trainingName'].strip()
+            training_id = item['certificate']['trainingId']
+            completion_date = item['certificate']['completionDate'].split('T')[0].split('-')
+
+            if item['certificate']['status'] == 'active' and len(completion_date) == 3:
+                completion_date = date(year=int(completion_date[0]), month=int(completion_date[1]), day=int(completion_date[2]))
+                user = appFunc.get_user_by_username(username)
+
+                #cert = find_cert(certs, training_name)
+                found_training = Cert.objects.filter(unique_id__icontains=training_id)
+                if user and found_training.exists():
+                    training = found_training.first()
+                    form = '{0}_{1}_{2}'.format(user.id, training.id, completion_date)
+
+                    user_certs = user.usercert_set.filter(cert_id=training.id, completion_date=completion_date)
+                    if not user_certs.exists() and form not in form_checking:
+                        user_trainings.append(UserCert(
+                            user = user,
+                            cert = training,
+                            cert_file = 'None',
+                            uploaded_date = date.today(),
+                            completion_date = completion_date,
+                            expiry_date = get_expiry_date(completion_date, training),
+                            by_api = True
+                        ))
+
+                        form_checking.append(form)                        
+            else:
+                print('Warning: completion date is wrong, or status is not active:', username, training_name)
+        
+        hasNextPage = json['hasNextPage']
+        next_url = get_next_url(int(json['page']) + 1)
+    
+    return user_trainings, form_checking
+
+
+# def find_cert(training_name):
+#     if training_name == 'Chemical Safety' or training_name == 'Chemical Safety Refresher':
+#         training_name = 'Chemical Safety/Chemical Safety Refresher'
+#     elif training_name == 'Biosafety for Study Team Members' or training_name == 'Biosafety Refresher for Study Team Members':
+#         training_name = 'Biosafety for Study Team Members/Biosafety Refresher for Study Team Members'
+#     elif training_name == 'Biosafety for Permit Holders' or training_name == 'Biosafety Refresher for Permit Holders':
+#         training_name = 'Biosafety for Permit Holders/Biosafety Refresher for Permit Holders'
+#     elif training_name == 'Transportation of Dangerous Goods by Ground and Air_ April 2020- March 7 2022':
+#         training_name = 'Transportation of Dangerous Goods by Ground and Air'
+#     elif training_name == "Remote Work. Home Office Ergonomics. Orientation":
+#         training_name = "Home Office Ergo"
+
+#     cert = Cert.objects.filter(name=training_name)    
+#     return cert.first() if cert.exists() else None

@@ -31,7 +31,7 @@ class Cert(models.Model):
 
     name = models.CharField(max_length=256, unique=True)
     expiry_in_years = models.IntegerField(default=0)
-    # unique_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    unique_id = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         ordering = ['name']

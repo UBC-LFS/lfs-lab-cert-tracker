@@ -78,22 +78,21 @@ class TrainingForm(forms.ModelForm):
 
     class Meta:
         model = Cert
-        # fields = ['name', 'expiry_in_years', 'unique_id']
-        fields = ['name', 'expiry_in_years']
+        fields = ['name', 'expiry_in_years', 'unique_id']
         labels = {
             'name': 'Training Name',
             'expiry_in_years': 'Expiry in Years',
-            # 'unique_id': 'Training Unique ID'
+            'unique_id': 'Training Unique ID'
         }
         widgets = {
             'name': forms.TextInput(attrs={ 'class': 'form-control' }),
             'expiry_in_years': forms.TextInput(attrs={ 'class': 'form-control' }),
-            # 'unique_id': forms.TextInput(attrs={ 'class': 'form-control' })
+            'unique_id': forms.TextInput(attrs={ 'class': 'form-control' })
         }
         help_texts = {
             'name': '(Maximum characters: 256)',
             'expiry_in_years': '(0 means "NO Expiry Date")',
-            # 'unique_id': 'Note: Each training has an unique ID in Canvas Catalog'
+            'unique_id': 'Note: Each training has an unique ID in Canvas Catalog'
         }
         error_messages = {
             'name': { 'required': 'Enter a valid name.' },

@@ -9,9 +9,6 @@ from lfs_lab_cert_tracker.models import UserCert, Lab, UserLab
 from app import functions as appFunc
 from . import functions as func
 
-DAYS30 = 30
-DAYS14 = 14
-
 
 # Users
 
@@ -235,13 +232,12 @@ def send_after_expiry_date_admins():
 
 # API service
 
-def check_user_certs_by_api():
+def check_user_trainings_by_api():
     headers = { 
         'X-Client-Id': settings.LFS_LAB_CERT_TRACKER_CLIENT_ID, 
         'X-Client-Secret': settings.LFS_LAB_CERT_TRACKER_CLIENT_SECRET 
     }
-
-    certs = appFunc.get_certs()
+    
     users = appFunc.get_users('active')
     usernames = []
     
@@ -254,20 +250,20 @@ def check_user_certs_by_api():
     if len(usernames) > 0:
         paginator = Paginator(usernames, 5)
 
-        validation = []
-        data = []
+        user_trainings = []
+        form_checking = []
         has_next = True
         i = 1
         while has_next:
             sub_usernames = paginator.page(i)
-            items, v = func.pull_by_api(headers, certs, sub_usernames, validation)
-            data += items
-            validation = v
+            items, forms = func.pull_by_api(headers, sub_usernames, form_checking)
+            user_trainings += items
+            form_checking = forms
             has_next = sub_usernames.has_next()
             i += 1
-
-        UserCert.objects.bulk_create(data)
-        print('Updated the number of user certs:', len(data))
+        
+        UserCert.objects.bulk_create(user_trainings)
+        print('The number of user trainings have been updated:', len(user_trainings))
     else:
         print('API Calls: No users found to update')
 
@@ -311,6 +307,6 @@ def run():
 
 
     # Monday ~ Sunday at 3:00 AM
-    scheduler.add_job(check_user_certs_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
+    scheduler.add_job(check_user_trainings_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
 
     scheduler.start()
