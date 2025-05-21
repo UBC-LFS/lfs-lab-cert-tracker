@@ -237,7 +237,7 @@ def check_user_trainings_by_api():
         'X-Client-Id': settings.LFS_LAB_CERT_TRACKER_CLIENT_ID, 
         'X-Client-Secret': settings.LFS_LAB_CERT_TRACKER_CLIENT_SECRET 
     }
-    
+
     users = appFunc.get_users('active')
     usernames = []
     for user in users:
@@ -262,7 +262,7 @@ def check_user_trainings_by_api():
             has_next = sub_usernames.has_next()
             i += 1
         
-        # UserCert.objects.bulk_create(user_trainings)
+        UserCert.objects.bulk_create(user_trainings)
         print('The number of user trainings have been updated:', len(user_trainings))
     else:
         print('API Calls: No users found to update')
