@@ -5,7 +5,7 @@ import smtplib
 import requests
 from datetime import date
 
-from lfs_lab_cert_tracker.models  import Cert, UserCert, LabCert
+from lfs_lab_cert_tracker.models import Cert, UserCert, LabCert
 from django.db.models import Q, F, Max, OuterRef, Exists
 
 from app import functions as appFunc
@@ -292,13 +292,13 @@ def get_expiry_date(completion_date, cert):
     return date(year=expiry_year, month=completion_date.month, day=completion_date.day)
 
 
-def pull_by_api(headers, usernames, form_checking):
+def pull_by_api(headers, usernames, form_checking, multiple_trainings):
     user_trainings = []
     
     body = {'requestIdentifiers': [{'identifierType': 'CWL', 'identifier': username} for username in usernames]}
     next_url = get_next_url(1)
     hasNextPage = True
-
+    
     while hasNextPage:
         res = requests.post(next_url, json=body, headers=headers)
         if res.status_code != 200:
@@ -317,19 +317,30 @@ def pull_by_api(headers, usernames, form_checking):
 
             username = item['requestedIdentifier']['identifier']
             training_name = item['certificate']['trainingName'].strip()
-            training_id = item['certificate']['trainingId']
+            training_id = str(item['certificate']['trainingId']).strip()
             completion_date = item['certificate']['completionDate'].split('T')[0].split('-')
 
             if item['certificate']['status'] == 'active' and len(completion_date) == 3:
                 completion_date = date(year=int(completion_date[0]), month=int(completion_date[1]), day=int(completion_date[2]))
                 user = appFunc.get_user_by_username(username)
 
-                #cert = find_cert(certs, training_name)
-                found_training = Cert.objects.filter(unique_id__icontains=training_id)
-                if user and found_training.exists():
+                training = None
+                found_training = Cert.objects.filter(unique_id__iexact=training_id)                
+                if found_training.exists():
                     training = found_training.first()
+                else:
+                    if multiple_trainings.exists():
+                        for tr in multiple_trainings:
+                            unique_ids = tr.unique_id.split(',')
+                            for uid in unique_ids:
+                                if training_id == uid.strip():
+                                    training = tr
+                                    break
+                            if training:
+                                break
+                
+                if user and training:
                     form = '{0}_{1}_{2}'.format(user.id, training.id, completion_date)
-
                     user_certs = user.usercert_set.filter(cert_id=training.id, completion_date=completion_date)
                     if not user_certs.exists() and form not in form_checking:
                         user_trainings.append(UserCert(

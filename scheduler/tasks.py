@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, F, Max
 
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import UserCert, Lab, UserLab
+from lfs_lab_cert_tracker.models import UserCert, Lab, UserLab, Cert
 from app import functions as appFunc
 from . import functions as func
 
@@ -240,14 +240,14 @@ def check_user_trainings_by_api():
     
     users = appFunc.get_users('active')
     usernames = []
-    
     for user in users:
         missing_certs = appFunc.get_user_missing_certs(user.id)
         expired_certs = appFunc.get_user_expired_certs(user)
         if len(missing_certs) > 0 or len(expired_certs) > 0:
             usernames.append(user.username)
-    
+
     if len(usernames) > 0:
+        multiple_trainings = Cert.objects.filter(unique_id__icontains=',')
         paginator = Paginator(usernames, 5)
 
         user_trainings = []
@@ -256,13 +256,13 @@ def check_user_trainings_by_api():
         i = 1
         while has_next:
             sub_usernames = paginator.page(i)
-            items, forms = func.pull_by_api(headers, sub_usernames, form_checking)
+            items, forms = func.pull_by_api(headers, sub_usernames, form_checking, multiple_trainings)
             user_trainings += items
             form_checking = forms
             has_next = sub_usernames.has_next()
             i += 1
         
-        UserCert.objects.bulk_create(user_trainings)
+        # UserCert.objects.bulk_create(user_trainings)
         print('The number of user trainings have been updated:', len(user_trainings))
     else:
         print('API Calls: No users found to update')
