@@ -1,0 +1,119 @@
+{% extends "app/area_details/base.html" %}
+
+{% block sub_content %}
+
+<h4 class="text-info mt-5">Area Details</h4>
+
+<div class="card border-primary">
+  <div class="card-header bg-primary text-white">
+    Required Training Record
+    <small>(Total: {{ required_certs|length }})</small>
+  </div>
+
+  <div class="card-body">
+    <div class="card-text">
+      <table class="table table-borderless table-striped table-responsive-lg table-sm">
+        <tbody>
+          {% for cert in required_certs %}
+            <tr>
+              <td>{{ forloop.counter }}.</td>
+              <td class="text-left">{{ cert.name }}</td>
+              <td>
+                {% if is_admin %}
+                  <form class="d-inline float-right" action="{% url 'app:delete_training_in_area' %}" method="post" onsubmit="return confirm('Are you sure to remove {{ cert.name }}?');">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="area" value="{{ area.id }}" />
+                    <input type="hidden" name="training" value="{{ cert.id }}" />
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+                    <input class="btn btn-danger btn-sm" type="submit" value="Remove" />
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="100%">No required trainings found</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<section class="mt-5">
+  <h4>
+    Users in Area
+    <small class="text-secondary">(Total: {{ users_in_area|length }})</small>
+  </h4>
+
+  <table class="table table-bordered table-striped table-responsive-lg text-center"
+    data-toggle="table"
+    data-classes=""
+    data-sortable="true"
+    data-pagination="true"
+    data-search="true"
+    data-page-size="10"
+    data-page-list="[10, 20, 30, 50, 100, all]"
+  >
+    <thead>
+      <tr>
+        <th data-sortable="true">#</th>
+        <th>CWL</th>
+        <th data-sortable="true">First Name</th>
+        <th data-sortable="true">Last Name</th>
+        <th data-sortable="true">Supervisor?</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users_in_area %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>
+            <a href="{% url 'app:my_account' user_id=user.id %}?next={% url 'app:area_details' area_id=area.id %}">{{ user.username }}</a>
+
+            {% if not user.is_active %}
+              <span class="badge badge-secondary">Inactive</span>
+            {% endif %}
+          </td>
+          <td>{{ user.first_name }}</td>
+          <td>{{ user.last_name }}</td>
+          <td>
+            {% if user.is_pi %}
+              <span class="badge badge-success">Supervisor</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if is_admin or is_pi %}
+              <form class="list-form" action="{% url 'app:switch_user_role_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
+                {% csrf_token %}
+
+                <input type="hidden" name="user" value="{{ user.id }}" />
+                <input type="hidden" name="area" value="{{ area.id }}" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+                <input class="btn btn-info btn-sm" type="submit" value="Switch Role" />
+              </form>
+
+              <form class="list-form" action="{% url 'app:delete_user_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to remove User - {{user.username}}?');">
+                {% csrf_token %}
+
+                <input type="hidden" name="user" value="{{ user.id }}" />
+                <input type="hidden" name="area" value="{{ area.id }}" />
+                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+                <input class="btn btn-danger btn-sm" type="submit" value="Remove"/>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+
+{% endblock%}

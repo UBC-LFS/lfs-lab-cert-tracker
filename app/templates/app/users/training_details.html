@@ -1,0 +1,201 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+<section class="main-content">
+
+	<nav class="font-size-sm text-secondary">
+		{% if request.user.id == app_user.id %}
+			{% if request.GET.p == 'account' %}
+				<a href="{% url 'app:my_account' user_id=latest_user_cert.user.id %}">
+					{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+					My Account
+				</a>
+			{% elif request.GET.p == 'training' %}
+				<a href="{% url 'app:my_training_record' user_id=latest_user_cert.user.id %}">My Training Record</a>
+			{% endif %}
+		{% else %}
+			{% if request.GET.p == 'account' %}
+				<a href="{% url 'app:my_account' user_id=latest_user_cert.user.id %}">
+					{% include 'lfs_lab_cert_tracker/icons/home.html' %}
+					{{ app_user.first_name }}'s Account
+				</a>
+			{% elif request.GET.p == 'training' %}
+				<a href="{% url 'app:my_training_record' user_id=latest_user_cert.user.id %}">{{ app_user.first_name }}'s Training Record</a>
+			{% endif %}
+		{% endif %}
+
+		{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
+		Training Details
+	</nav>
+
+
+	<h3 class="title mb-4">
+		Training Details
+		<span class="text-secondary">({{ app_user.get_full_name }})</span>
+		<span class="h5 text-info">- Most Recent</span>
+	</h3>
+
+	<div class="row">
+		<div class="col-md-9">
+			<table class="table table-bordered table-striped table-responsive-lg text-left">
+				<tbody>
+					<tr>
+						<td><strong>Training Name</strong></td>
+						<td>
+							{% if latest_user_cert.by_api %}
+								{{ latest_user_cert.cert.name }}
+							{% else %}
+								<a href="/app{{ latest_user_cert.cert_file.url }}" target="_blank">{{ latest_user_cert.cert.name }}</a>
+								<br />
+								<small class="text-secondary">Filename: {{ latest_user_cert.filename }}</small>
+							{% endif %}
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Uploaded on</strong></td>
+						<td>{{ latest_user_cert.uploaded_date }}</td>
+					</tr>
+					<tr>
+						<td><strong>Completion Date</strong></td>
+						<td>{{ latest_user_cert.completion_date }}</td>
+					</tr>
+					<tr>
+						<td><strong>Expiry Date</strong></td>
+						<td>
+							{% if latest_user_cert.completion_date == latest_user_cert.expiry_date %}
+								No expiry date
+							{% else %}
+								{{ latest_user_cert.expiry_date }}
+							{% endif %}
+						</td>
+					</tr>
+					<tr>
+						<td><strong>Canvas Catalog</strong></td>
+						<td>
+							{% if latest_user_cert.by_api %}
+								<span class="badge badge-warning font-size-xs">YES</span>
+							{% endif %}
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			{% if not latest_user_cert.by_api %}
+				{% if request.user.id == app_user.id or request.user.is_superuser %}
+					<form class="d-inline" action="" method="post" onsubmit="return confirm('Are you sure to delete {{ latest_user_cert.cert.name }} (Filename: {{ latest_user_cert.filename }})?');">
+						{% csrf_token %}
+
+						<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+						<input type="hidden" name="user_cert" value="{{ latest_user_cert.id }}" />
+						<input class="btn btn-danger mt-3" type="submit" value="Delete Training" />
+					</form>
+				{% endif %}
+			{% endif %}
+
+		</div>
+		<div class="col-md-3">
+
+			<div class="card bg-light mt-0 p-3">
+				<h5 class="text-info">
+					{% include 'lfs_lab_cert_tracker/icons/info.html' %} NOTE
+				</h5>
+				<p class="mb-0">If a <strong>Canvas Catalog</strong> field is <span class="badge badge-warning font-size-xs">YES</span>, this Training information has been added automatically from <a href="https://login.cpe.ubc.ca/">UBC Canvas Catalog</a>, and you cannot view the certificate file in the TRMS website.</p>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="mt-5">
+		<h4 class="text-info mb-4">Training History</h4>
+
+		<table class="table table-bordered text-center table-responsive-lg table-vertical-middle">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Training Name</th>
+					<th>Uploaded on</th>
+					<th>Completion <br /> Date</th>
+					<th>Expiry Date</th>
+					<th>Canvas <br /> Catalog</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for user_cert in user_certs %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td class="text-left">
+							{% if user_cert.by_api %}
+								{{ user_cert.cert.name }}
+							{% else %}
+								<a href="/app{{ user_cert.cert_file.url }}" target="_blank">{{ user_cert.cert.name }}</a>
+								<br />
+								<small class="text-secondary">Filename: {{ user_cert.filename }}</small>
+							{% endif %}
+						</td>
+						<td>{{ user_cert.uploaded_date }}</td>
+						<td>{{ user_cert.completion_date }}</td>
+						<td>
+							{% if user_cert.completion_date == user_cert.expiry_date %}
+								No expiry date
+							{% else %}
+								{{ user_cert.expiry_date }}
+							{% endif %}
+						</td>
+						<td>
+							{% if user_cert.by_api %}
+								<span class="badge badge-warning font-size-xs">YES</span>
+							{% endif %}
+						</td>
+						<td>
+							{% if not user_cert.by_api %}
+								{% if request.user.id == app_user.id or request.user.is_superuser %}
+									<form class="d-inline" action="" method="post" onsubmit="return confirm('Are you sure to delete {{ user_cert.cert.name }} (Filename: {{ user_cert.filename }})?');">
+										{% csrf_token %}
+
+										<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+										<input type="hidden" name="user_cert" value="{{ user_cert.id }}" />
+										<input class="btn btn-danger btn-sm" type="submit" value="Delete" />
+									</form>
+								{% endif %}
+							{% endif %}
+						</td>
+					</tr>
+				{% empty %}
+					<tr>
+						<td colspan="100%">No previous Trainings found</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	<div class="mt-5">
+		{% if request.user.id == app_user.id %}
+			{% if request.GET.p == 'account' %}
+				<a class="btn btn-secondary d-inline" href="{% url 'app:my_account' request.user.id %}">Back to My Account</a>
+			{% elif request.GET.p == 'training' %}
+				<a class="btn btn-secondary d-inline" href="{% url 'app:my_training_record' user_id=latest_user_cert.user.id %}">Back to My Training Record</a>
+			{% endif %}
+		{% else %}
+			{% if request.GET.p == 'account' %}
+				<a class="btn btn-secondary d-inline" href="{% url 'app:my_account' user_id=latest_user_cert.user.id %}">Back to {{ app_user.first_name }}'s Account</a>
+			{% elif request.GET.p == 'training' %}
+				<a class="btn btn-secondary d-inline" href="{% url 'app:my_training_record' user_id=latest_user_cert.user.id %}">Back to {{ app_user.first_name }}'s Training Record</a>
+			{% endif %}
+		{% endif %}
+	</div>
+
+	{% if viewing %}
+		{% include 'app/subpages/viewing_info.html' with data=viewing %}
+	{% endif %}
+
+</section>
+
+{% endblock %}

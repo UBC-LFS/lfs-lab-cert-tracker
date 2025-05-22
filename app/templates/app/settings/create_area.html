@@ -1,0 +1,53 @@
+{% extends "app/settings/base.html" %}
+
+{% block sub_content %}
+
+<div class="row">
+  <div class="col-md-7">
+		<h3 class="title">Create Area</h3>
+
+		<div class="border bg-lighter-gray p-4">
+			{% include 'app/subpages/_form_note.html' %}
+
+      <form action="" method="post">
+        {% csrf_token %}
+
+        {% for field in form.visible_fields %}
+          <div class="field-wrapper">
+            <label for="{{ field.id_for_label }}">
+              {{ field.label }}
+              {% if field.name == 'name' %}
+                {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+              {% endif %}
+            </label>
+
+            {% if field.help_text %}
+              <div class="helptext">{{ field.help_text|safe }}</div>
+            {% endif %}
+            {{ field }}
+          </div>
+        {% endfor %}
+
+        <input class="btn btn-primary mt-3" type="submit" value="Create Area" />
+      </form>
+		</div>
+  </div>
+
+	<div class="col-md-5">
+    <section class="ml-5 mt-5">
+      <h5 class="text-info">
+        Recent Areas
+        <small class="text-secondary"> ({{ recent_areas|length }})</small>
+      </h5>
+      <ul>
+        {% for area in recent_areas %}
+          <li>{{ area.name }}</li>
+        {% empty %}
+          <li>No areas found</li>
+        {% endfor %}
+      </ul>
+    </section>
+	</div>
+</div>
+
+{% endblock %}

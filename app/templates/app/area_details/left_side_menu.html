@@ -1,0 +1,19 @@
+{% if request.user.is_superuser or is_pi %}
+
+<section id="left-side-menu" class="left-side-menu">
+  <h5 class="menu-title text-center mb-4">Menu</h5>
+  <ul class="list-no-bullets">
+    <li><a href="{% url 'app:area_details' area_id=area.id %}">Area Details</a></li>
+    <hr />
+    <li><a href="{% url 'app:users_missing_trainings' area_id=area.id %}">Users - Missing Training Record</a></li>
+    <li><a href="{% url 'app:users_expired_trainings' area_id=area.id %}">Users - Expired Training Record</a></li>
+    <hr />
+    <li><a href="{% url 'app:add_user_to_area' area_id=area.id %}">Add User to Area</a></li>
+
+    {% if request.user.is_superuser %}
+      <li><a href="{% url 'app:add_training_to_area' area_id=area.id %}">Add Training to Area</a></li>
+    {% endif %}
+  </ul>
+</section>
+
+{% endif %}

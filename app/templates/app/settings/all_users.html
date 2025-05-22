@@ -1,21 +1,15 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block content %}
-
-{% if request.user.is_superuser %}
-	{% include 'app/subpages/_admin_menu.html' %}
-{% endif %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
+{% block sub_content %}
 
 <div id="user-areas-message"></div>
 
-<h3 class="mt-5">
+<h3 class="title">
 	All Users
 	<small class="text-secondary">(Total: {{ total_users }})</small>
 </h3>
 
-{% include 'app/subpages/_search_note.html' with data=users %}
+{% include 'app/subpages/search_note.html' with data=users %}
 
 <div class="search-field mb-2">
 	<form method="GET">
@@ -46,7 +40,7 @@
       <tr>
 				<td>{{ user.id }}</td>
         <td>
-					<a href="{% url 'app:user_details' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
+					<a href="{% url 'app:my_account' user_id=user.id %}?next={{ request.get_full_path }}">{{ user.username }}</a>
 				</td>
         <td>{{ user.get_full_name }}</td>
 				<td>{{ user.email }}</td>
@@ -147,7 +141,7 @@
 				</td>
 				<td>
 					{% if user.is_superuser %}
-						<i class="material-icons text-primary">done</i>
+						<span class="material-symbols-outlined text-primary">done</span>
 					{% endif %}
 				</td>
 				<td>
@@ -170,7 +164,7 @@
                     <h4>{{ user.get_full_name }}</h4>
                     <h5 class="text-secondary">CWL: {{ user.username }}</h5>
 
-                    {% include 'app/subpages/_user_form_note.html' %}
+                    {% include 'app/subpages/_form_note.html' %}
 
                     <form action="" method="post">
                       {% csrf_token %}
@@ -282,7 +276,7 @@
   </tbody>
 </table>
 
-{% include 'app/subpages/_pagination.html' with data=users %}
+{% include 'app/subpages/pagination.html' with data=users %}
 
 {% endblock %}
 

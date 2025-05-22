@@ -8,5 +8,6 @@ urlpatterns = []
 
 if settings.LOCAL_LOGIN:
     urlpatterns += [
-        path('local-login/', views.local_login, name='local_login')
+        path('local-login/', views.local_login, name='local_login'),
+        path('local-logout/', views.local_logout, name='local_logout')
     ]

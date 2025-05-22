@@ -26,6 +26,16 @@ def get_user_by_username(username):
     user = User.objects.filter(username=username)
     return user.first() if user.exists() else None
 
+def get_user_name(user):
+    curr_user = ''
+    if user.first_name and user.last_name:
+        curr_user = user.get_full_name()
+    elif user.username:
+        curr_user = user.username
+    elif user.email:
+        curr_user = user.email
+    return curr_user
+
 
 # UserCert
 
@@ -41,9 +51,9 @@ def get_user_certs_with_info(user):
             user_cert = UserCert.objects.filter(user_id=user.id, cert_id=uc.cert.id, by_api=True)
             if user_cert.exists():
                 by_api = True
-            
+
             user_certs.append({
-                'cert_id': uc.cert.id, 
+                'cert_id': uc.cert.id,
                 'cert_name': uc.cert.name,
                 'by_api': by_api,
                 'num_certs': UserCert.objects.filter(user_id=user.id, cert_id=uc.cert.id).count()
@@ -72,6 +82,19 @@ def get_user_labs(user, is_pi=False):
 def required_certs_in_lab(lab_id):
     return Cert.objects.filter(labcert__lab_id=lab_id).order_by('name')
 
+
+def get_users_in_area(area):
+    users_in_area = []
+    for userlab in area.userlab_set.all():
+        user = userlab.user
+        if is_pi_in_area(user.id, area.id):
+            user.is_pi = True
+        else: 
+            user.is_pi = False
+        users_in_area.append(user)
+
+    users_in_area.sort(key=lambda a: a.date_joined, reverse=True)
+    return users_in_area
 
 # Cert
 
@@ -256,11 +279,11 @@ def get_viewing(next):
     viewing = {}
     if res.url_name == 'all_users' or res.url_name == 'api_updates':
         query = ''
-        if len(split_query) > 1: 
+        if len(split_query) > 1:
             query = split_query[1]
-        
-        viewing = { 
-            'page': res.url_name, 
+
+        viewing = {
+            'page': res.url_name,
             'query': query,
             'name': make_capital(res.url_name),
             'route': os.path.join(settings.SITE_URL, res.route)
@@ -268,13 +291,23 @@ def get_viewing(next):
 
     elif res.url_name == 'area_details':
         id = res.kwargs['area_id']
-        viewing = { 
-            'page': 'area_details', 
-            'id': id, 
-            'name': get_lab_by_id(id).name 
+        viewing = {
+            'page': 'area_details',
+            'id': id,
+            'name': get_lab_by_id(id).name
         }
 
     return viewing
+
+
+def check_email_valid(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError as e:
+        return False
+    
+        
 
 
 # Helper functions
@@ -285,7 +318,10 @@ def get_error_messages(errors):
     messages = ''
     for key in errors.keys():
         value = errors[key]
-        messages += key.replace('_', ' ').upper() + ': ' + value[0]['message'] + ' '
+        if key == '__all__':
+            messages += value[0]['message'] + ' '
+        else:
+            messages += '<strong>' + key.replace('_', ' ').upper() + ':</strong> ' + value[0]['message'] + ' '
     return messages.strip()
 
 def make_capital(name):
@@ -296,18 +332,10 @@ def make_capital(name):
         first = 'API'
 
     return '{0} {1}'.format(first, second)
-    
+
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')
-
-
-def check_email_valid(email):
-    try:
-        validate_email(email)
-        return True
-    except ValidationError as e:
-        return False
 
 """def get_expiry_date(completion_date, cert):
     expiry_year = completion_date.year + int(cert.expiry_in_years)

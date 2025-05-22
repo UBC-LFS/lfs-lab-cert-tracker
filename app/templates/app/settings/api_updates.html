@@ -1,12 +1,6 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block content %}
-
-{% if request.user.is_superuser %}
-	{% include 'app/subpages/_admin_menu.html' %}
-{% endif %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
+{% block sub_content %}
 
 <div class="mt-4" style="float:right;">
 	<h5 class="text-info text-center">Summary</h5>
@@ -24,14 +18,14 @@
 	</table>
 </div>
 
-<h3 class="mt-5">
+<h3 class="title">
 	API Updates
 	<small class="text-secondary">({{ today }} | Total: {{ total_user_certs }})</small>
 </h3>
 
-{% include 'app/subpages/_search_note.html' with data=user_certs %}
+{% include 'app/subpages/search_note.html' with data=user_certs %}
 
-<div class="search-field mt-5 mb-3">
+<div class="search-field my-3">
 	<form method="GET">
 		<div class="input-field">
 			<label for="date_from">From:</label>
@@ -62,12 +56,12 @@
     {% for uc in user_certs %}
       <tr>
 				<td>
-					<a href="{% url 'app:user_details' user_id=uc.user.id %}?next={{ request.get_full_path }}">{{ uc.user.username }}</a>
+					<a href="{% url 'app:my_account' user_id=uc.user.id %}?next={{ request.get_full_path }}">{{ uc.user.username }}</a>
 				</td>
 				<td>{{ uc.user.get_full_name }}</td>
 				<td>{{ uc.uploaded_date }}</td>
 				<td class="text-left">
-					<a href="{% url 'app:user_training_details' user_id=uc.user.id training_id=uc.cert.id %}?next={{ request.get_full_path }}&p=account">{{ uc.cert.name }}</a>
+					<a href="{% url 'app:training_details' user_id=uc.user.id training_id=uc.cert.id %}?next={{ request.get_full_path }}&p=account">{{ uc.cert.name }}</a>
 				</td>
       </tr>
 		{% empty %}
@@ -78,6 +72,6 @@
   </tbody>
 </table>
 
-{% include 'app/subpages/_pagination.html' with data=user_certs %}
+{% include 'app/subpages/pagination.html' with data=user_certs %}
 
 {% endblock %}

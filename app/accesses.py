@@ -6,7 +6,7 @@ def access_admin_only(view_func):
     """ Access an admin only """
 
     def wrap(request, *args, **kwargs):
-        if request.user.is_superuser is True:
+        if request.user.is_superuser:
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied
@@ -48,7 +48,7 @@ def access_all(view_func):
     """ Access for all users authenticated """
 
     def wrap(request, *args, **kwargs):
-        if request.user.is_authenticated != True:
+        if not request.user.is_authenticated:
             raise PermissionDenied
         return view_func(request, *args, **kwargs)
     return wrap
@@ -58,7 +58,7 @@ def access_loggedin_user_admin(view_func):
     """ Access for a logged-in user or an admin """
 
     def wrap(request, *args, **kwargs):
-        if request.user.is_superuser is True or request.user.id == kwargs['user_id']:
+        if request.user.is_superuser or request.user.id == kwargs['user_id']:
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied

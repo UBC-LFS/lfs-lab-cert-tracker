@@ -1,13 +1,6 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block content %}
-
-{% if request.user.is_superuser %}
-	{% include 'app/subpages/_admin_menu.html' %}
-{% endif %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
-
+{% block sub_content %}
 
 <h3 class="title">
 	All Areas
@@ -24,7 +17,7 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-vertical-middle">
+<table class="table table-bordered table-striped table-responsive-md text-center table-vertical-middle">
   <thead>
     <tr>
 			<th>ID</th>
@@ -39,7 +32,7 @@
 			<tr>
 				<td>{{ area.id }}</td>
 				<td class="text-left">
-					<a href="{% url 'app:area_details' area_id=area.id %}?t=users_in_area">{{ area.name }}</a>
+					<a href="{% url 'app:area_details' area_id=area.id %}">{{ area.name }}</a>
 				</td>
 				<td>{{ area.num_certs }}</td>
 				<td>{{ area.num_users }}</td>
@@ -63,14 +56,14 @@
 											<div class="mb-3">
 												<label for="id_name_{{ area.id }}" class="font-weight-bold">
 													Name:
-													<i class="material-icons text-danger font-size-xs">emergency</i>
+													{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 												</label>
 												<input id="id_name_{{ area.id }}" class="form-control" type="text" name="name" maxlength="256" value="{{ area.name }}" required />
 												<small class="text-muted">(Maximum characters: 256)</small>
 											</div>
 
 											<input type="hidden" name="area" value="{{ area.id }}" />
-											<input class="btn btn-warning d-block mx-auto" type="submit" value="Update"/>
+											<input class="btn btn-warning" type="submit" value="Update"/>
 										</form>
 									</div>
 								</div>
@@ -98,44 +91,6 @@
 	</tbody>
 </table>
 
-{% include 'app/subpages/_pagination.html' with data=areas %}
-
-
-{% if request.user.is_superuser %}
-
-	<div class="row">
-		<div class="col-md-8">
-			<h4 class="text-info mt-5 mb-3">New Area</h4>
-
-			<form action="" method="post">
-				{% csrf_token %}
-
-				<table class="form-table-width">
-					{% for field in form.visible_fields %}
-						<tr>
-							<th>
-								<label for="{{ field.id_for_label }}">
-									{{ field.label }}
-									{% if field.name == 'name' %}
-										<i class="material-icons text-danger font-size-xs">emergency</i>
-									{% endif %}
-								</label>
-							</th>
-							<td>
-								{{ field }}
-								{% if field.help_text %}
-									<div class="helptext">{{ field.help_text|safe }}</div>
-								{% endif %}
-							</td>
-						</tr>
-					{% endfor %}
-				</table>
-				<input class="btn btn-primary mt-3" type="submit" value="Create Area" />
-			</form>
-		</div>
-	</div>
-
-{% endif %}
-
+{% include 'app/subpages/pagination.html' with data=areas %}
 
 {% endblock %}

@@ -1,0 +1,43 @@
+{% extends "app/settings/base.html" %}
+
+{% block sub_content %}
+
+<div class="row">
+  <div class="col-md-7">
+		<h3 class="title">Create Training</h3>
+
+		<div class="border bg-lighter-gray p-4">
+			{% include 'app/subpages/_form_note.html' %}
+
+      <form action="" method="POST">
+				{% csrf_token %}
+
+				{% for field in form.visible_fields %}
+          <div class="field-wrapper">
+						<label for="{{ field.id_for_label }}">
+							{{ field.label }}
+							{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
+								{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+							{% endif %}
+						</label>
+
+            {% if field.help_text %}
+              <div class="helptext">{{ field.help_text|safe }}</div>
+            {% endif %}
+            {{ field }}
+          </div>
+				{% endfor %}
+
+				<input class="btn btn-primary mt-3" type="submit" value="Create Training" />
+			</form>
+		</div>
+  </div>
+
+	<div class="col-md-5">
+    <section class="ml-5 pt-5">
+      {% include 'app/settings/_display_trainings.html' with data=recent_trainings title='Recent Trainings' %}
+    </section>
+	</div>
+</div>
+
+{% endblock %}

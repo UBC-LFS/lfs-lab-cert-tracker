@@ -1,12 +1,6 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block content %}
-
-{% if request.user.is_superuser %}
-	{% include 'app/subpages/_admin_menu.html' %}
-{% endif %}
-
-{% include 'app/subpages/_return_message.html' with data=messages %}
+{% block sub_content %}
 
 <h3 class="title">
 	All Trainings
@@ -23,7 +17,7 @@
 	</form>
 </div>
 
-<table class="table table-bordered table-striped table-hover table-responsive-md text-center table-vertical-middle">
+<table class="table table-bordered table-striped table-responsive-md text-center table-vertical-middle">
   <thead>
     <tr>
 			<th>ID</th>
@@ -72,16 +66,16 @@
 													<div class="mb-3">
 														<label class="font-weight-bold">
 															Name:
-															<i class="material-icons text-danger font-size-xs p-0">emergency</i>
+															{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 														</label>
-														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" required />
+														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" maxlength="256" required />
 														<small class="text-muted">(Maximum characters: 256)</small>
 													</div>
 
 													<div class="mb-3">
 														<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">
 															Expiry in Years:
-															<i class="material-icons text-danger font-size-xs">emergency</i>
+															{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 														</label>
 														<input id="id_expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
 														<small class="text-muted">(0 means "NO Expiry Date")</small>
@@ -94,7 +88,7 @@
 												  </div>
 
 													<input type="hidden" name="training" value="{{ cert.id }}" />
-													<input class="btn btn-warning d-block mx-auto" type="submit" value="Update" />
+													<input class="btn btn-warning" type="submit" value="Update" />
 												</form>
 											</div>
 										</div>
@@ -123,41 +117,6 @@
 	</tbody>
 </table>
 
-{% include 'app/subpages/_pagination.html' with data=trainings %}
-
-{% if request.user.is_superuser %}
-	<div class="row">
-		<div class="col-md-8">
-			<h4 class="text-info mt-5 mb-3">Create Training</h4>
-
-			<form action="" method="POST">
-				{% csrf_token %}
-
-				<table class="form-table-width">
-					{% for field in form.visible_fields %}
-						<tr>
-							<th>
-								<label for="{{ field.id_for_label }}">
-									{{ field.label }}
-									{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
-										<i class="material-icons text-danger font-size-xs">emergency</i>
-									{% endif %}
-								</label>
-							</th>
-							<td>
-								{{ field }}
-								{% if field.help_text %}
-									<div class="helptext">{{ field.help_text|safe }}</div>
-								{% endif %}
-							</td>
-						</tr>
-					{% endfor %}
-				</table>
-
-				<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
-			</form>
-		</div>
-	</div>
-{% endif %}
+{% include 'app/subpages/pagination.html' with data=trainings %}
 
 {% endblock %}

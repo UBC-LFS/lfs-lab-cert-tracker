@@ -1,22 +1,16 @@
-{% extends "lfs_lab_cert_tracker/base.html" %}
+{% extends "app/settings/base.html" %}
 
-{% block content %}
+{% block sub_content %}
 
-{% if request.user.is_superuser %}
-	{% include 'app/subpages/_admin_menu.html' %}
-{% endif %}
-
-<div id="download-csv-message" class="container"></div>
-
-<h3 class="my-5">
+<h3 class="title">
 	User Report
 	<small class="text-secondary">Total: {{ total_users }}</small> <br />
 	<small class="text-danger">for Missing Training Records</small>
 </h3>
 
-<div class="text-primary float-right">
-	<i class="material-icons">cloud_download</i>
-	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
+<div class="text-primary float-right mb-3">
+	{% include 'lfs_lab_cert_tracker/icons/cloud_download.html' %}
+	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" style="margin-bottom: -7px;" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
 		Download All as CSV
 	</button>
 </div>
@@ -59,10 +53,9 @@
 	</tbody>
 </table>
 
-{% include 'app/subpages/_pagination.html' with data=users %}
+{% include 'app/subpages/pagination.html' with data=users %}
 
 {% endblock %}
-
 
 {% block js %}
   {% load static %}
