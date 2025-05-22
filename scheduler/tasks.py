@@ -101,17 +101,17 @@ def send_missing_trainings_pis():
 def send_to_pis(target_day, days, type):
     ''' Send it to Pis '''
     
-    filters = Q(user__is_active=True) & ~Q(completion_date=F('expiry_date')) & Q(user__userlab__lab=area.id) & Q(cert__labcert__lab=area.id)
-    if type == 'before':
-        filters &= Q(expiry_date=target_day)
-    elif type == 'after':
-        filters &= Q(expiry_date__lt=target_day)
-
     values = ['user', 'cert', 'user__first_name', 'user__last_name', 'cert__name']
 
     for area in Lab.objects.all():
         users = {}
 
+        filters = Q(user__is_active=True) & ~Q(completion_date=F('expiry_date')) & Q(user__userlab__lab=area.id) & Q(cert__labcert__lab=area.id)
+        if type == 'before':
+            filters &= Q(expiry_date=target_day)
+        elif type == 'after':
+            filters &= Q(expiry_date__lt=target_day)
+        
         user_trainings = UserCert.objects.filter(filters).order_by('id').values(*values).annotate(latest_expiry_date=Max('expiry_date'))
         if user_trainings.exists():
             for ut in user_trainings.iterator():
