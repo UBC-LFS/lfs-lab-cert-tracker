@@ -1,0 +1,116 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+{% load custom_tags %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'key_request/left_side_menu.html' %}
+
+<section class="main-content">
+	<h2 class="title">Dashboard</h2>
+
+	<p>This page includes a table to display all the applications for Key Request and update their status.</p>
+
+	<h3 class="text-info mt-5 mb-4">
+		Key Requests
+		<small class="text-secondary">(Total: {{ total_forms }})</small>
+	</h3>
+
+	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
+		<div class="col-md-9" style="border-right: 1px solid #bbb;">
+			{% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
+		</div>
+		<div class="col-md-3">
+			<div class="text-center">
+				<h5>Number of <br /> New Requests</h5>
+				<a class="h4" href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_forms }}</a>
+			</div>
+		</div>
+	</div>
+	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
+
+	<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
+	  <thead>
+	    <tr>
+				<th>
+					{% if request.user.is_superuser %}
+						Form ID
+					{% else %}
+						#
+					{% endif %}
+				</th>
+	      <th>Applicant <br /> Full Name</th>
+				<th>Building</th>
+				<th>Floor</th>
+	      <th>Room <br /> Number</th>
+	      <th>Details</th>
+				<th>Submitted at</th>
+	      <th>Status</th>
+	      <th>Action</th>
+				<th>
+					<input id="select-all-checkbox" type="checkbox" />
+				</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+	    {% for form in forms %}
+	      <tr>
+					<td>
+						{% if request.user.is_superuser %}
+							{{ form.id }}
+						{% else %}
+							{{ form.counter }}
+						{% endif %}
+					</td>
+	        <td>{{ form.user.get_full_name }}</td>
+	        <td>{{ form.room.building.code }}</td>
+					<td>{{ form.room.floor.name }}</td>
+					<td>{{ form.room.number }}</td>
+	        <td>
+						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
+	        </td>
+					<td>{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-xs' %}</td>
+	        <td>
+						{% if form.status.count > 0 %}
+							{% include 'key_request/subpages/request_status.html' with data=form.status.last.status|get_status_display %}
+							<span class="font-size-xs text-secondary d-block">
+							  {% include 'key_request/subpages/date_and_time.html' with data=form.status.last.created_at %}
+							</span>
+						{% else %}
+							<span class="badge">NEW</span>
+						{% endif %}
+	        </td>
+	        <td>
+	          {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
+	        </td>
+					<td>
+						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.status.count == 0 %}true{% else %}false{% endif %}"/>
+					</td>
+	      </tr>
+			{% empty %}
+				<tr>
+					<td colspan="100%">No key request forms found</td>
+				</tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
+
+	<div class="d-flex justify-content-between align-items-start">
+		{% include 'key_request/subpages/pagination.html' with data=forms %}
+
+		{% if total_forms > 0 %}
+			{% include 'key_request/subpages/modal_rooms_update_all.html' with path='manager_dashboard' %}
+		{% endif %}
+	</div>
+</section>
+
+{% endblock %}
+
+{% block js %}
+	{% load static %}
+	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/rooms_select_all.js' %}"></script>
+{% endblock %}

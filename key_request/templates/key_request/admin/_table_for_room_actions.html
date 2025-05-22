@@ -1,0 +1,90 @@
+<h3 class="title text-{% if path == 'add' %}primary{% elif path == 'delete' %}danger{% endif %}">
+  {{ title }}
+  <small class="text-secondary">(Total: {{ rooms|length }})</small>
+</h3>
+
+<div class="search-rooms mb-3">
+  <select id="select-building" name="building">
+    <option value="">Building</option>
+    {% for building in buildings %}
+      <option value="{{ building.code }}">{{ building.code }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="select-floor" name="floor">
+    <option value="">Floor</option>
+    {% for floor in floors %}
+      <option value="{{ floor.name }}" name="{{ floor.name }}">{{ floor.name }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="select-room" name="room">
+    <option value="">Room Number</option>
+    {% for room_number in room_numbers %}
+      <option value="{{ room_number }}" name="{{ room_number }}">{{ room_number }}</option>
+    {% endfor %}
+  </select>
+
+  {% if path == 'add' %}
+    <a class="btn btn-sm btn-secondary" href="{% url 'key_request:add_training_to_room' %}">Clear</a>
+  {% elif path == 'delete' %}
+    <a class="btn btn-sm btn-secondary" href="{% url 'key_request:delete_training_from_room' %}">Clear</a>
+  {% endif %}
+</div>
+
+<small class="d-block my-3">
+  Number of rows:
+  <span id="display-total-rooms" class="font-weight-bold text-chocolate"></span>
+</small>
+
+
+<table id="table-rooms" class="table table-bordered table-striped font-size-sm">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Building</th>
+      <th>Floor</th>
+      <th>Room <br /> Number</th>
+      <th>Areas</th>
+      <th>Required Trainings</th>
+      <th>
+        <input id="select-all-checkbox" type="checkbox" />
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for room in rooms %}
+      <tr>
+        <td>{{ room.id }}</td>
+        <td>{{ room.building.code }}</td>
+        <td>{{ room.floor.name }}</td>
+        <td>{{ room.number }}</td>
+        <td class="text-left">
+          <ul class="list-minus-20">
+            {% for area in room.areas.all %}
+              <li>{{ area.name }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td class="text-left">
+          <ul class="list-minus-20">
+          {% for training in room.trainings.all %}
+            <li>{{ training.name }}</li>
+          {% endfor %}
+          </ul>
+        </td>
+        <td>
+          <input class="room-checkbox" type="checkbox" name="room" value="{{ room.id }}" data-building="{{ room.building.code }}" data-floor="{{ room.floor.name }}" data-room_number="{{ room.number }}" data-is_new="{% if room.status|length == 0 %}true{% else %}false{% endif %}" />
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<nav class="pagination-container d-flex justify-content-center">
+  <button id="first-btn-rooms" class="page-item" type="button">First</button>
+  <button id="prev-btn-rooms" class="page-item" type="button">&lt;</button>
+  <div id="pagination-rooms" class="pagination"></div>
+  <button id="next-btn-rooms" class="page-item" type="button">&gt;</button>
+  <button id="last-btn-rooms" class="page-item" type="button">Last</button>
+</nav>

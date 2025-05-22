@@ -1,0 +1,60 @@
+<form method="GET">
+  <div class="search-filter">
+    <input type="hidden" name="page" value="1" />
+
+    <select name="building">
+      <option value="">Building</option>
+      {% for building in search_filter_options.buildings %}
+        <option value="{{ building.code }}" {% if request.GET.building == building.code %}selected{% endif %}>{{ building.code }}</option>
+      {% endfor %}
+    </select>
+
+    and
+
+    <select name="floor">
+      <option value="">Floor</option>
+      {% for floor in search_filter_options.floors %}
+        <option value="{{ floor.name }}" {% if request.GET.floor == floor.name %}selected{% endif %}>{{ floor.name }}</option>
+      {% endfor %}
+    </select>
+
+    and
+
+    <select name="number">
+      <option value="">Room Number</option>
+      {% for room_number in search_filter_options.rooms %}
+        <option value="{{ room_number }}" {% if request.GET.number == room_number %}selected{% endif %}>{{ room_number }}</option>
+      {% endfor %}
+    </select>
+
+    {% if path == 'all_requests' or path == 'manager_dashboard' %}
+      and
+      <input type="text" name="name" value="{{ request.GET.name }}" placeholder="Full Name" />
+    {% endif %}
+
+    {% if path == 'manager_dashboard' %}
+      <div class="mt-2">
+        <select name="status">
+          <option value="">Status</option>
+          <option value="New" {% if request.GET.status == 'New' %}selected{% endif %}>New</option>
+          {% for id, status in req_status_dict.items %}
+            <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    {% endif %}
+
+    <div class="mt-2">
+      <button class="btn btn-primary btn-sm" type="submit">Search</button>
+      {% if path == 'all_requests' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}">Clear</a>
+      {% elif path == 'manager_dashboard' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_dashboard' %}">Clear</a>
+      {% elif path == 'manager_rooms' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_rooms' %}">Clear</a>
+      {% elif path == 'all_rooms' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_rooms' %}">Clear</a>
+      {% endif %}
+    </div>
+  </div>
+</form>

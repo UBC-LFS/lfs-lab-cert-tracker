@@ -1,0 +1,116 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+{% load custom_tags %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'key_request/left_side_menu.html' %}
+
+<section class="main-content">
+	<h3 class="title">
+		All Rooms
+		<small class="text-secondary">(Total: {{ total_rooms }})</small>
+	</h3>
+
+	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
+		<div class="col-md-6" style="border-right: 1px solid #bbb;">
+			{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
+		</div>
+		<div class="col-md-6">
+			<strong>Note:</strong> Only <strong class="text-success">ACTIVE</strong> rooms will be displayed in the Key Request process.
+		</div>
+	</div>
+	{% include 'key_request/subpages/search_results.html' with total=num_filtered_rooms items=rooms %}
+
+	<table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
+	  <thead>
+	    <tr>
+				<th>ID</th>
+				<th>Building</th>
+				<th>Floor</th>
+	      <th>Room <br /> Number</th>
+				<th>PIs</th>
+	      <th>Areas</th>
+				<th>Required Trainings</th>
+				<th>
+					Active? <br />
+					Key? <br />
+					FOB? <br />
+					Alarm?
+				</th>
+				<th>Num of <br /> Reqs</th>
+				<th>Actions</th>
+	    </tr>
+	  </thead>
+	  <tbody>
+			{% for room in rooms %}
+	      <tr>
+	        <td>{{ room.id }}</td>
+					<td>{{ room.building.code }}</td>
+					<td>{{ room.floor.name }}</td>
+	        <td>{{ room.number }}</td>
+					<td class="text-left">
+						<ul class="list-minus-20">
+							{% for manager in room.managers.all %}
+		            <li>{{ manager.get_full_name }}</li>
+		          {% endfor %}
+						</ul>
+					</td>
+	        <td class="text-left">
+						<ul class="list-minus-20">
+		          {% for area in room.areas.all %}
+		            <li>{{ area.name }}</li>
+		          {% endfor %}
+						</ul>
+	        </td>
+					<td class="text-left">
+						<ul class="list-minus-20">
+						{% for training in room.trainings.all %}
+							<li>{{ training.name }}</li>
+						{% endfor %}
+						</ul>
+					</td>
+					<td>
+						{% include 'key_request/subpages/_yes_or_no.html' with data=room.is_active %} <br />
+						{% include 'key_request/subpages/_yes_or_no.html' with data=room.key %} <br />
+						{% include 'key_request/subpages/_yes_or_no.html' with data=room.fob %} <br />
+						{% include 'key_request/subpages/_yes_or_no.html' with data=room.alarm %}
+					</td>
+					<td>
+						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
+							{{ room.requestform_set.count }}
+						</a>
+					</td>
+	        <td>
+						<a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
+
+	          <form action="{% url 'key_request:delete_room' %}" method="post" onsubmit="return confirm('Are you sure to delete this room - {{ room.number }}?');">
+	            {% csrf_token %}
+
+	            <input type="hidden" name="room" value="{{ room.id }}"  />
+	            <input class="btn btn-danger btn-sm" type="submit" value="Delete" style="vertical-align:top;" />
+	          </form>
+	        </td>
+	      </tr>
+	    {% empty %}
+	      <tr>
+	        <td colspan="100%">No rooms found</td>
+	      </tr>
+	    {% endfor %}
+	  </tbody>
+	</table>
+
+	{% include 'key_request/subpages/pagination.html' with data=rooms %}
+
+</section>
+
+{% endblock %}
+
+{% block js %}
+	{% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
+{% endblock %}

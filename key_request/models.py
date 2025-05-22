@@ -1,0 +1,107 @@
+from django.db import models
+from django.utils.text import slugify
+from django.contrib.auth.models import User
+from lfs_lab_cert_tracker.models import Lab, Cert
+
+from datetime import datetime
+
+from .utils import AFFLIATIONS, AFTER_HOURS_ACCESS, REQUEST_STATUS
+
+
+class Building(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, unique=True)
+    slug = models.SlugField(max_length=20, unique=True)
+    created_on = models.DateField(auto_now_add=True)
+    updated_on = models.DateField(auto_now=True)
+
+    class Meta:
+        ordering = ['code']
+
+    def __str__(self):
+        return '{0} ({1})'.format(self.name, self.code)
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.code)
+        super(Building, self).save(*args, **kwargs)
+
+
+class Floor(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
+    created_on = models.DateField(auto_now_add=True)
+    updated_on = models.DateField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Floor, self).save(*args, **kwargs)
+
+
+class Room(models.Model):
+    building = models.ForeignKey(Building, on_delete=models.CASCADE)
+    floor = models.ForeignKey(Floor, on_delete=models.CASCADE)
+    number = models.CharField(max_length=100)
+    managers = models.ManyToManyField(User)
+    areas = models.ManyToManyField(Lab)
+    trainings = models.ManyToManyField(Cert)
+    key = models.BooleanField(default=False)
+    fob = models.BooleanField(default=False)
+    alarm = models.BooleanField(default=False)
+
+    is_active = models.BooleanField(default=True)
+
+    slug = models.SlugField(max_length=256, unique=True)
+    created_on = models.DateField(auto_now_add=True)
+    updated_on = models.DateField(auto_now=True)
+
+    class Meta:
+        ordering = ['building', 'floor', 'number']
+
+    def __str__(self):
+        return self.number
+    
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
+        super(Room, self).save(*args, **kwargs)
+
+
+class RequestForm(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rooms = models.ManyToManyField(Room)
+
+    role = models.CharField(max_length=100, null=True, blank=True)
+    affliation = models.CharField(max_length=1, choices=AFFLIATIONS, default='3')
+    employee_number = models.CharField(max_length=7, null=True, blank=True)
+    student_number = models.CharField(max_length=8, null=True, blank=True)
+    
+    supervisor_first_name = models.CharField(max_length=150)
+    supervisor_last_name = models.CharField(max_length=150)
+    supervisor_email = models.EmailField(max_length=254)
+    
+    after_hours_access = models.CharField(max_length=1, choices=AFTER_HOURS_ACCESS, default=None)
+    working_alone = models.BooleanField(default=False)
+    comment = models.TextField(null=True, blank=True)
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-id', '-submitted_at']
+
+
+class RequestFormStatus(models.Model):
+    form = models.ForeignKey(RequestForm, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
+    manager = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_manager_set')
+    operator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_operator_set')
+    status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['pk']

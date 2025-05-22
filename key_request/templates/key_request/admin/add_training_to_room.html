@@ -1,0 +1,58 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+{% load custom_tags %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'key_request/left_side_menu.html' %}
+
+<section class="main-content">
+	{% include 'key_request/admin/_table_for_room_actions.html' with title='Add Training to Room' path='add' %}
+
+  <button id="update-all-btn" class="btn btn-warning" type="button" disabled>Update All (<span id="update-all-num-1">0</span>)</button>
+
+  <div class="modal fade" id="select-all-modal" tabindex="-1" role="dialog" aria-labelledby="select-all-modal-label" aria-hidden="true">
+  	<div class="modal-dialog modal-lg">
+  		<div class="modal-content">
+  			<div class="modal-header">
+  				<h5 class="modal-title text-info">Update All</h5>
+  			</div>
+  			<div class="modal-body">
+  				<p>
+  					Number of selected rooms: <span id='update-all-num-2' class="font-weight-bold text-chocolate">0</span>
+  				</p>
+  				<form action="" method="post">
+  					{% csrf_token %}
+
+						<select class="form-control font-size-sm" name="training">
+  						<option value="">Required Training</option>
+  						{% for training in trainings %}
+  							<option value="{{ training.id }}">{{ training.name }}</option>
+  						{% endfor %}
+  					</select>
+
+  					<p class="text-danger mt-4">Before confirming the update for all, please review all the selected rooms carefully.</p>
+						<div class="mb-3">
+							<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+	  					<input class="btn btn-warning mt-2" type="submit" value="Confirm to update all" />
+						</div>
+						<ul id="update-all-list" class="mb-4"></ul>
+  				</form>
+  			</div>
+  		</div>
+  	</div>
+  </div>
+</section>
+
+{% endblock %}
+
+
+{% block js %}
+	{% load static %}
+	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_actions_helper.js' %}"></script>
+	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/add_training_to_room.js' %}"></script>
+{% endblock %}

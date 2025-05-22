@@ -1,0 +1,28 @@
+<section id="left-side-menu" class="left-side-menu">
+  <h5 class="menu-title text-center mb-4">Menu</h5>
+  <ul class="list-no-bullets">
+    <li><a href="{% url 'key_request:index' %}">Key Request</a></li>
+  </ul>
+
+  {% if has_manager_key_requests %}
+    <hr />
+    <ul class="list-no-bullets">
+    	<li><a href="{% url 'key_request:manager_dashboard' %}">Dashboard</a></li>
+    	<li><a href="{% url 'key_request:manager_rooms' %}">Rooms</a></li>
+    </ul>
+  {% endif %}
+
+  {% if request.user.is_superuser %}
+    <hr />
+    <ul class="list-no-bullets">
+      <li><a href="{% url 'key_request:all_requests' %}">All Requests</a></li>
+      <li><a href="{% url 'key_request:settings' model='buildings' %}">All Buildings</a></li>
+      <li><a href="{% url 'key_request:settings' model='floors' %}">All Floors</a></li>
+      <li><a href="{% url 'key_request:all_rooms' %}">All Rooms</a></li>
+      <li><a href="{% url 'key_request:create_room' %}?t=basic_info">Create Room</a></li>
+      <hr />
+      <li><a href="{% url 'key_request:add_training_to_room' %}">Add Training to Room</a></li>
+      <li><a href="{% url 'key_request:delete_training_from_room' %}">Delete Training from Room</a></li>
+    </ul>
+  {% endif %}
+</section>

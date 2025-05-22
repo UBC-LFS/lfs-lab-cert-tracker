@@ -1,0 +1,18 @@
+<form class="d-flex" action="" method="post">
+  {% csrf_token %}
+
+  <select class="form-control-xs" name="status">
+    <option value="">Select</option>
+    {% for id, status in req_status_dict.items %}
+      <option value="{{ id }}" {% if data.status.last.status == id %}selected{% endif %}>{{ status }}</option>
+    {% endfor %}
+  </select>
+
+  <input type="hidden" name="form" value="{{ data.id }}" />
+  <input type="hidden" name="room" value="{{ data.room.id }}" />
+  <input type="hidden" name="manager" value="{{ data.manager.id }}" />
+
+  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+  <input class="btn btn-{% if data.status.count > 0 %}secondary{% else %}warning{% endif %} btn-xs ml-2" type="submit" value="Update" />
+</form>

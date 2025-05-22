@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'lfs_lab_cert_tracker',
     'accounts',
     'app',
+    'key_request',
     'scheduler.apps.SchedulerConfig'
 ]
 
@@ -111,8 +112,7 @@ DATABASES = {
         'USER': os.environ['LFS_LAB_CERT_TRACKER_DB_USER'],
         'PASSWORD': os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD'],
         'HOST': os.environ['LFS_LAB_CERT_TRACKER_DB_HOST'],
-        'PORT': os.environ['LFS_LAB_CERT_TRACKER_DB_PORT'],
-        'CONN_MAX_AGE': 60
+        'PORT': os.environ['LFS_LAB_CERT_TRACKER_DB_PORT']
     }
 }
 
