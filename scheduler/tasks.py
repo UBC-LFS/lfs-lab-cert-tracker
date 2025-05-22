@@ -46,7 +46,7 @@ def send_missing_trainings():
 
 def send_before_expiry_date_user_pi():
     '''
-    Send a reminder email to Users and PIs 1 month (30 days) BEFORE Users' trainings expire.
+    Send an email to lab users and PIs who have expired trainings 1 month prior to expiry date
     Note: A PI represents a Principal Investigator
     '''
 
@@ -69,7 +69,7 @@ def send_before_expiry_date_user_pi():
 
 
 def send_before_expiry_date_admin():
-    ''' Send a reminder email to Admins 2 weeks (14 days) BEFORE Users' trainings expire. '''
+    ''' Send an email to admins who have expired trainings 2 weeks before the expiry date '''
 
     TYPE = 'before'
 
@@ -86,7 +86,7 @@ def send_before_expiry_date_admin():
 
 
 def send_after_expiry_date():
-    ''' Send a reminder email to Users, PIs, and Admins at 10:30 AM on the first and third Monday of every month AFTER Users' training expiration date. '''
+    ''' Send an email to all users if some expired trainings exist '''
 
     TYPE = 'after'
 
@@ -145,9 +145,6 @@ def check_user_certs_by_api():
         print('API Calls: No users found to update')
 
 
-def test():
-    print('runnings...')
-
 def run():
     print('Scheduling tasks running...')
 
@@ -156,20 +153,16 @@ def run():
     # 1st Monday, 3rd Monday at 10:00 AM
     scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
 
+    # 1st Monday, 3rd Monday at 10:30 AM
+    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=30)
+
     # Monday ~ Friday at 11:00 AM
     scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=11, minute=0)
 
     # Monday ~ Friday at 11:30 AM
     scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=11, minute=30)
 
-    # 1st Monday, 3rd Monday at 10:30 AM
-    scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=30)
-
     # Monday ~ Sunday at 3:00 AM
     scheduler.add_job(check_user_certs_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
 
     scheduler.start()
-
-
-if __name__ == '__main__':
-    test()
