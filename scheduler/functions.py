@@ -40,7 +40,7 @@ def get_users_missing_trainings():
     users = {}
     areas = {}
     if area_trainings.exists():
-        for at in area_trainings:
+        for at in area_trainings.iterator():
             user_id = str(at['user'])
             area_id = str(at['lab'])
 
@@ -119,39 +119,19 @@ def get_message_pis_missing_trainings(contents):
 def get_users_with_expired_trainings(target_date, type):
     ''' Get users with expired trainings '''
     
-    user_trainings = []
     users = {}
 
+    filters = Q(user__is_active=True) & ~Q(completion_date=F('expiry_date'))
     if type == 'before':
-        user_trainings = UserCert.objects.filter(
-            Q(user__is_active=True) & 
-            Q(expiry_date=target_date) & 
-            ~Q(completion_date=F('expiry_date'))
-        ).values(
-            'user', 
-            'cert', 
-            'user__first_name', 
-            'user__last_name', 
-            'user__email', 
-            'cert__name'
-        ).annotate(latest_expiry_date=Max('expiry_date'))
-    
+        filters &= Q(expiry_date=target_date)
     elif type == 'after':
-        user_trainings = UserCert.objects.filter(
-            Q(user__is_active=True) & 
-            Q(expiry_date__lt=target_date) & 
-            ~Q(completion_date=F('expiry_date'))
-        ).values(
-            'user', 
-            'cert', 
-            'user__first_name', 
-            'user__last_name', 
-            'user__email', 
-            'cert__name'
-        ).annotate(latest_expiry_date=Max('expiry_date'))
-
-    if len(user_trainings) > 0:
-        for ut in user_trainings:
+        filters &= Q(expiry_date__lt=target_date)
+    
+    values = ['user', 'cert', 'user__first_name', 'user__last_name', 'user__email', 'cert__name']
+    
+    user_trainings = UserCert.objects.filter(filters).order_by('id').values(*values).annotate(latest_expiry_date=Max('expiry_date'))
+    if user_trainings.exists():
+        for ut in user_trainings.iterator():
             user_id = str(ut['user'])
             if user_id not in users.keys():
                 users[user_id] = {

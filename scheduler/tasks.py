@@ -30,7 +30,7 @@ def send_to_users(users, path, days=None, type=None):
                 
                 if receiver and message:
                     template = func.html_template(user['first_name'], user['last_name'], message)
-                    func.send_email(receiver, template)
+                    # func.send_email(receiver, template)
             else:
                 print('{} is not valid.'.format(user['email']))
             
@@ -64,16 +64,15 @@ def send_after_expiry_date_users():
 
 # Pis
 
-
 def send_missing_trainings_pis():
     ''' Send an email to PIs if users have missing trainings in their areas '''
 
     users, areas = func.get_users_missing_trainings()
     memo = {}
-    if len(users.keys()) > 0 and len(areas) > 0:
+    if len(users.keys()) > 0 and len(areas.keys()) > 0:
         pis = UserLab.objects.filter(role=1, user__is_active=True).select_related('user', 'lab')
         if pis.exists():
-            for pi in pis:
+            for pi in pis.iterator():
                 area_id = str(pi.lab.id)                
                 if area_id in areas.keys():
 
@@ -95,49 +94,27 @@ def send_missing_trainings_pis():
                     message = func.get_message_pis_missing_trainings(''.join(contents))
                     if receiver and message:
                         template = func.html_template(pi.user.first_name, pi.user.last_name, message)
-                        func.send_email(receiver, template)
+                        # func.send_email(receiver, template)
                         print('Supervisor: Sent it to {0}'.format(receiver))
 
 
 def send_to_pis(target_day, days, type):
     ''' Send it to Pis '''
+    
+    filters = Q(user__is_active=True) & ~Q(completion_date=F('expiry_date')) & Q(user__userlab__lab=area.id) & Q(cert__labcert__lab=area.id)
+    if type == 'before':
+        filters &= Q(expiry_date=target_day)
+    elif type == 'after':
+        filters &= Q(expiry_date__lt=target_day)
+
+    values = ['user', 'cert', 'user__first_name', 'user__last_name', 'cert__name']
 
     for area in Lab.objects.all():
-        user_trainings = []
-
-        if type == 'before':
-            user_trainings = UserCert.objects.filter(
-                Q(expiry_date=target_day) & 
-                ~Q(completion_date=F('expiry_date')) & 
-                Q(user__userlab__lab=area.id) & 
-                Q(cert__labcert__lab=area.id) & 
-                Q(user__is_active=True)
-            ).values(
-                'user', 
-                'cert',
-                'user__first_name', 
-                'user__last_name',
-                'cert__name'
-            ).annotate(latest_expiry_date=Max('expiry_date'))
-        
-        elif type == 'after':
-            user_trainings = UserCert.objects.filter(
-                Q(expiry_date__lt=target_day) & 
-                ~Q(completion_date=F('expiry_date')) & 
-                Q(user__userlab__lab=area.id) & 
-                Q(cert__labcert__lab=area.id) &
-                Q(user__is_active=True)
-            ).values(
-                'user', 
-                'cert',
-                'user__first_name', 
-                'user__last_name',
-                'cert__name'
-            ).annotate(latest_expiry_date=Max('expiry_date'))
-
         users = {}
-        if len(user_trainings) > 0:
-            for ut in user_trainings:
+
+        user_trainings = UserCert.objects.filter(filters).order_by('id').values(*values).annotate(latest_expiry_date=Max('expiry_date'))
+        if user_trainings.exists():
+            for ut in user_trainings.iterator():
                 user_id = ut['user']
                 if user_id not in users.keys():
                     users[user_id] = {
@@ -168,7 +145,7 @@ def send_to_pis(target_day, days, type):
                     message = func.get_message_pis_expired_trainings(''.join(contents), days, type)
                     if receiver and message:
                         template = func.html_template(pi.user.first_name, pi.user.last_name, message)
-                        func.send_email(receiver, template)
+                        # func.send_email(receiver, template)
                         print('Supervisor: Sent it to {0}'.format(pi.user.email))
 
 
@@ -203,14 +180,14 @@ def send_to_admins(target_date, days, type):
             contents.append(content)
         
         admins = User.objects.filter(is_active=True, is_superuser=True)
-        if len(admins) > 0:
-            for admin in admins:
+        if admins.exists():
+            for admin in admins.iterator():
                 if appFunc.check_email_valid(user['email']):
                     receiver = func.get_receiver(admin.first_name, admin.last_name, admin.email)
                     message = func.get_message_pis_expired_trainings(''.join(contents), days, type)
                     if receiver and message:
                         template = func.html_template('LFS TRMS', 'administrators', message)
-                        func.send_email(receiver, template)
+                        # func.send_email(receiver, template)
                         print( 'Admin: Sent it to {0}'.format(admin.email) )
 
 
@@ -238,7 +215,7 @@ def check_user_trainings_by_api():
 
     users = appFunc.get_users('active')
     usernames = []
-    for user in users:
+    for user in users.iterator():
         missing_certs = appFunc.get_user_missing_certs(user.id)
         expired_certs = appFunc.get_user_expired_certs(user)
         if len(missing_certs) > 0 or len(expired_certs) > 0:

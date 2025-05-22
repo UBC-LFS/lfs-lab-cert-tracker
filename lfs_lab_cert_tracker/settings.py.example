@@ -112,6 +112,7 @@ DATABASES = {
         'PASSWORD': os.environ['LFS_LAB_CERT_TRACKER_DB_PASSWORD'],
         'HOST': os.environ['LFS_LAB_CERT_TRACKER_DB_HOST'],
         'PORT': os.environ['LFS_LAB_CERT_TRACKER_DB_PORT'],
+        'CONN_MAX_AGE': 60
     }
 }
 
