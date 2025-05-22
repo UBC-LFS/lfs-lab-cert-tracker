@@ -1,0 +1,68 @@
+[
+    {
+        "model": "key_request.building",
+        "pk": 1,
+        "fields": {
+        "name": "MacMillan",
+        "code": "MCML",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "mcml"
+        }
+    },
+    {
+        "model": "key_request.building",
+        "pk": 2,
+        "fields": {
+        "name": "Food, Nutrition, and Health",
+        "code": "FNH",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "fnh"
+        }
+    },
+    {
+        "model": "key_request.building",
+        "pk": 3,
+        "fields": {
+        "name": "Wesbrook",
+        "code": "WESB",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "wesb"
+        }
+    },
+    {
+        "model": "key_request.building",
+        "pk": 4,
+        "fields": {
+        "name": "UBC Farm",
+        "code": "UBC Farm",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "ubc-farm"
+        }
+    },
+    {
+        "model": "key_request.building",
+        "pk": 5,
+        "fields": {
+        "name": "Food and Beverage Innovation Centre",
+        "code": "FBIC",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "fbic"
+        }
+    },
+    {
+        "model": "key_request.building",
+        "pk": 6,
+        "fields": {
+        "name": "Agassiz",
+        "code": "Agassiz",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "agassiz"
+        }
+    }
+]

@@ -1,0 +1,114 @@
+[
+    {
+        "model": "key_request.room",
+        "pk": 1,
+        "fields": {
+            "building_id": 1,
+            "floor_id": 2,
+            "number": "100",
+            "key": true,
+            "fob": false,
+            "alarm": false,
+            "is_active": true,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "mcml-1st-100-1744846069-082841"
+        }
+    },
+    {
+        "model": "key_request.room",
+        "pk": 2,
+        "fields": {
+            "building_id": 1,
+            "floor_id": 2,
+            "number": "120",
+            "key": true,
+            "fob": true,
+            "alarm": true,
+            "is_active": true,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "mcml-1st-120-1744846069-082851"
+        }
+    },
+    {
+        "model": "key_request.room",
+        "pk": 3,
+        "fields": {
+            "building_id": 1,
+            "floor_id": 3,
+            "number": "200",
+            "key": true,
+            "fob": false,
+            "alarm": false,
+            "is_active": true,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "mcml-2nd-200-1744846069-082861"
+        }
+    },
+    {
+        "model": "key_request.room",
+        "pk": 4,
+        "fields": {
+            "building_id": 2,
+            "floor_id": 2,
+            "number": "105",
+            "key": true,
+            "fob": true,
+            "alarm": false,
+            "is_active": true,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "fnh-1st-105-1744846069-082871"
+        }
+    },
+    {
+        "model": "key_request.room",
+        "pk": 5,
+        "fields": {
+            "building_id": 2,
+            "floor_id": 3,
+            "number": "201",
+            "key": true,
+            "fob": false,
+            "alarm": true,
+            "is_active": true,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "fnh-2nd-201-1744846069-082881"
+        }
+    },
+    {
+        "model": "key_request.room",
+        "pk": 6,
+        "fields": {
+            "building_id": 2,
+            "floor_id": 4,
+            "number": "310",
+            "key": true,
+            "fob": true,
+            "alarm": false,
+            "is_active": true,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "fnh-3rd-310-1744846069-082891"
+        }
+    },
+    {
+        "model": "key_request.room",
+        "pk": 7,
+        "fields": {
+            "building_id": 5,
+            "floor_id": 2,
+            "number": "100",
+            "key": true,
+            "fob": false,
+            "alarm": false,
+            "is_active": false,
+            "created_on": "2025-01-01",
+            "updated_on": "2025-01-01",
+            "slug": "fbic-1st-100-1744846069-083841"
+        }
+    }
+]

@@ -1,0 +1,18 @@
+[
+    {
+        "model": "key_request.requestform_rooms",
+        "pk": 1,
+        "fields": {
+            "requestform_id": 1,
+            "room_id": 1
+        }
+    },
+    {
+        "model": "key_request.requestform_rooms",
+        "pk": 2,
+        "fields": {
+            "requestform_id": 2,
+            "room_id": 6
+        }
+    }
+]

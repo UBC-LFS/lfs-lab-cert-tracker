@@ -1,0 +1,58 @@
+[
+    {
+        "model": "key_request.room_areas",
+        "pk": 1,
+        "fields": {
+            "room_id": 1,
+            "lab_id": 1
+        }
+    },
+    {
+        "model": "key_request.room_areas",
+        "pk": 2,
+        "fields": {
+            "room_id": 2,
+            "lab_id": 2
+        }
+    },
+    {
+        "model": "key_request.room_areas",
+        "pk": 3,
+        "fields": {
+            "room_id": 3,
+            "lab_id": 3
+        }
+    },
+    {
+        "model": "key_request.room_areas",
+        "pk": 4,
+        "fields": {
+            "room_id": 4,
+            "lab_id": 4
+        }
+    },
+    {
+        "model": "key_request.room_areas",
+        "pk": 5,
+        "fields": {
+            "room_id": 5,
+            "lab_id": 5
+        }
+    },
+    {
+        "model": "key_request.room_areas",
+        "pk": 6,
+        "fields": {
+            "room_id": 6,
+            "lab_id": 1
+        }
+    },
+    {
+        "model": "key_request.room_areas",
+        "pk": 7,
+        "fields": {
+            "room_id": 7,
+            "lab_id": 2
+        }
+    }
+]
