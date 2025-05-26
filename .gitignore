@@ -12,3 +12,7 @@ saml/
 lfs_lab_cert_tracker/settings.py
 run
 app/fixtures/certs.json
+key_request/fixtures/dev_rooms.json
+key_request/fixtures/dev_room_areas.json
+key_request/fixtures/dev_room_trainings.json
+key_request/fixtures/dev_room_managers.json
