@@ -115,7 +115,7 @@ def edit_area(request):
     else:
         messages.error(request, 'Error! Form is invalid. {0}'.format(func.get_error_messages(form.errors.get_json_data())))
 
-    return redirect('app:all_areas')
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -131,7 +131,7 @@ def delete_area(request):
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(area.name))
 
-    return redirect('app:all_areas')
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 # Training
@@ -191,11 +191,11 @@ def edit_training(request):
             UserCert.objects.bulk_update(objs, ['expiry_date'])
             messages.success(request, 'Success! {0} training and {1} user training record(s) updated'.format(updated_training.name, len(objs)))
         else:
-            messages.success(request, 'Success! {0} training updated'.format(updated_training.name))
+            messages.success(request, 'Success! {0} training has been updated'.format(updated_training.name))
     else:
         messages.error(request, 'An error occurred. Form is invalid. {0}'.format(func.get_error_messages(form.errors.get_json_data())))
-
-    return redirect('app:all_trainings')
+    
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -208,11 +208,11 @@ def delete_training(request):
     training = func.get_cert_by_id(request.POST.get('training'))
 
     if training.delete():
-        messages.success(request, 'Success! {0} deleted.'.format(training.name))
+        messages.success(request, 'Success! {0} has been deleted.'.format(training.name))
     else:
         messages.error(request, 'Error! Failed to delete {0}.'.format(training.name))
 
-    return redirect('app:all_trainings')
+    return HttpResponseRedirect(request.POST.get('next'))
 
 
 

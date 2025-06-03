@@ -88,6 +88,7 @@
 												  </div>
 
 													<input type="hidden" name="training" value="{{ cert.id }}" />
+													<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 													<input class="btn btn-warning" type="submit" value="Update" />
 												</form>
 											</div>
@@ -100,6 +101,7 @@
 								{% csrf_token %}
 
 								<input type="hidden" name="training" value="{{ cert.id }}"  />
+								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 								<input class="btn btn-danger btn-sm" type="submit" value="Delete" />
 							</form>
 						</div>
