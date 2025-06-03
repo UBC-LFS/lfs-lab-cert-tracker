@@ -33,7 +33,7 @@
               <li>Number of Missing Trainings: <strong class="text-danger">{{ form.total_missing }}</strong></li>
               <li>Number of Expired Trainings: <strong class="text-danger">{{ form.total_expired }}</strong></li>
             </ul>
-            {% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings %}
+            {% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings id_visible='True' %}
           </div>
         </div>
       </div>

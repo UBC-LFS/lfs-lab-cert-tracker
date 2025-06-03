@@ -157,10 +157,12 @@ def send_email(form):
                 'submitted_at': submitted_at
             })
 
+    # Send an email to the user
     if len(user_rooms) > 0:
         subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
         send(form.user, subject, message)
 
+    # Send an email to the Room's PIs
     if len(pi_rooms.keys()) > 0:
         for key, value in pi_rooms.items():
             if len(value) > 0:
@@ -170,11 +172,11 @@ def send_email(form):
                 subject, message = get_message(value[0]['pi'], rooms, 'pi', value[0]['submitted_at'], value[0]['applicant'])
                 send(value[0]['pi'], subject, message)
 
-    admins = User.objects.filter(is_superuser=True)
-    if admins.count() > 0:
-        for admin in admins:
-            subject, message = get_message(admin, user_rooms, 'admin', submitted_at, form.user)
-            send(admin, subject, message)
+    # admins = User.objects.filter(is_superuser=True)
+    # if admins.count() > 0:
+    #     for admin in admins:
+    #         subject, message = get_message(admin, user_rooms, 'admin', submitted_at, form.user)
+    #         send(admin, subject, message)
             
 
 def get_message(receiver, rooms, option, submitted_at, applicant=None):

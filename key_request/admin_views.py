@@ -88,7 +88,6 @@ class AllRequests(LoginRequiredMixin, View):
         return HttpResponseRedirect(request.POST.get('next'))
 
 
-
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class ViewFormDetails(LoginRequiredMixin, View):
 
@@ -152,19 +151,31 @@ class ViewFormDetails(LoginRequiredMixin, View):
         room_id = request.POST.get('room')
         manager_id = request.POST.get('manager')
         status = request.POST.get('status')
+        next = request.POST.get('next')
 
-        if not room_id or not manager_id or not status:
+        if not status:
+            messages.error(request, 'Error: A status must be selected.')
+            if next:
+                return HttpResponseRedirect(next)
+            else:
+                return redirect('key_request:index')
+        
+        if not self.form or not room_id or not manager_id or not next:
             raise SuspiciousOperation
 
         RequestFormStatus.objects.create(
-            form = self.form,
+            form_id = self.form.id,
             room_id = room_id,
             manager_id = manager_id,
             operator_id = request.user.id,
             status = status
         )
-        messages.success(request, 'Success! Room {0} status has been updated.'.format(room_id))
-        return HttpResponseRedirect(request.POST.get('next'))
+
+        room = Room.objects.get(id=room_id)
+        func.count_approved_numbers(status, self.form, room)
+
+        messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
+        return HttpResponseRedirect(next)
 
 
 @login_required(login_url=settings.LOGIN_URL)

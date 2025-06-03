@@ -1,7 +1,13 @@
+{{ id_visible }}
+
 <table class="table table-bordered table-striped">
   <thead>
     <tr>
-      <th>ID</th>
+      {% if id_visible == 'True' %}
+        <th>ID</th>
+      {% else %}
+        <th>#</th>
+      {% endif %}
       <th>Training Name</th>
       <th>Missing?</th>
       <th>Expired?</th>
@@ -10,7 +16,11 @@
   <tbody>
     {% for tr in user_trainings %}
       <tr>
-        <td>{{ tr.id }}</td>
+        {% if id_visible == 'True' %}
+          <td>{{ tr.id }}</td>
+        {% else %}
+          <td>{{ forloop.counter }}</td>
+        {% endif %}
         <td class="text-left">
           {{ tr.name }}
           {% if not tr.is_missing and not tr.is_expired %}

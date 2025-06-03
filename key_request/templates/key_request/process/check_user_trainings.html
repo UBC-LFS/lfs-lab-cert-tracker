@@ -11,7 +11,7 @@
 
 	<h3 class="title mb-5">Step2 - Check Training Records</h3>
 
-	<p class="h5">
+	<p class="font-size-lg">
 	  You now have <span class="text-chocolate font-weight-bold">{{ rooms|length }}</span> selected room{{ rooms|pluralize }}. See the detailed information below.
 	</p>
 
@@ -75,7 +75,7 @@
 
 	<h5 class="text-info mt-5 mb-4">Summary of Training Records</h5>
 
-	{% include 'key_request/subpages/table_user_trainings.html' %}
+	{% include 'key_request/subpages/table_user_trainings.html' with user_trainings=user_trainings id_visible='False' %}
 
 	{% if total_missing > 0 or total_expired > 0 %}
 	  <div class="bd-callout bd-callout-danger mt-5">

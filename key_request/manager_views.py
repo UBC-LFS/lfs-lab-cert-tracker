@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.views.decorators.cache import never_cache
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
@@ -8,19 +7,15 @@ from django.urls import reverse
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET, require_POST
-from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
-import smtplib
-from email.mime.text import MIMEText
 
-from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 
 from .models import Room
 from .forms import RequestForm, RequestFormStatus
 from . import functions as func
-from .utils import APPROVED, REQUEST_STATUS_DICT, EMAIL_FOOTER
+from .utils import REQUEST_STATUS_DICT
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -89,7 +84,6 @@ class ManagerDashboard(LoginRequiredMixin, View):
                 return redirect('key_request:index')
         
         if not form_id or not room_id or not manager_id or not next:
-            print('here 2')
             raise SuspiciousOperation
         
         RequestFormStatus.objects.create(
@@ -102,114 +96,11 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
         form = RequestForm.objects.get(id=form_id)
         room = Room.objects.get(id=room_id)
-
-        if status == APPROVED:
-            cache = [0] * room.managers.count()
-            for i, manager in enumerate(room.managers.all()):
-                status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
-                if status_filtered.exists():
-                    for item in status_filtered:
-                        if item.status == APPROVED:
-                            cache[i] = 1
-                            break
-            
-            count = 0
-            for c in cache:
-                count += c
-
-            if count >= form.rooms.count():
-                send_email(form, room)
+        func.count_approved_numbers(status, form, room)
         
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
 
         return HttpResponseRedirect(next)
-
-
-def send_email(form, room):
-
-    # Applicant
-    subject, message = get_message(form, form.user, 'user')
-    send(form.user, subject, message)
-
-    # PI
-    room_info = '<ul><li>{0}</li></ul>'.format(func.display_room(room))
-    for manager in room.managers.all():
-        subject, message = get_message(form, manager, 'pi', room_info)
-        send(manager, subject, message)
-
-    # Admin
-    admins = User.objects.filter(is_superuser=True)
-    if admins.count() > 0:
-        room_info = '<ul>'
-        for item in RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id):
-            if item.status == APPROVED:
-                room_info += '<li>{0} approved by {1}, {2}</li>'.format(func.display_room(item.room), func.display_user_full_name(item.operator), func.convert_date_to_str(item.created_at))
-        room_info += '</ul>'
-                
-        for admin in admins:
-            subject, message = get_message(form, admin, 'admin', room_info)
-            send(admin, subject, message)
-
-
-def get_message(form, admin, option, room_info=None):
-    subject = ''
-    message = ''
-
-    if option == 'user':
-        subject = 'Your key request has been approved by UBC LFS'
-        message = '''\
-        <div>
-            <p>Hi {0},</p>
-            <div>We are delighted to inform you that your key request has been approved today. Please visit <a href={1}>{1}</a> to check the status of your key request. Thank you.</div>
-            {2}
-        </div>
-        '''.format(form.user.get_full_name(), settings.SITE_URL, EMAIL_FOOTER)
-    
-    elif option == 'pi':
-        subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(func.display_user_full_name(form.user))
-        message = '''\
-        <div>
-            <p>Hi {0},</p>
-            <div>This email is just a notification to inform you that {1}'s key request has been approved. Below are the details of the room.</div>
-            {2}
-            <div>Please visit <a href={3}>{3}</a> to check the latest status of key requests. Thank you.</div>
-            {4}
-        </div>
-        '''.format(func.display_user_first_name(admin), func.display_user_first_name(form.user), room_info, settings.SITE_URL, EMAIL_FOOTER)
-
-    elif option == 'admin':
-        subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(func.display_user_full_name(form.user))
-        message = '''\
-        <div>
-            <p>Hi {0},</p>
-            <div>This email is just a notification to inform you that {1}'s key request has been approved. Below are the details of the room.</div>
-            {2}
-            <div>Please visit <a href={3}>{3}</a> to check the latest status of key requests. Thank you.</div>
-            {4}
-        </div>
-        '''.format(func.display_user_first_name(admin), func.display_user_first_name(form.user), room_info, settings.SITE_URL, EMAIL_FOOTER)
-    return subject, message
-
-
-def send(user, subject, message):
-    if settings.EMAIL_FROM and appFunc.check_email_valid(user.email):
-        sender = settings.EMAIL_FROM
-        receiver = '{0} <{1}>'.format(func.display_user_full_name(user), user.email)
-
-        print(f'An email notification is sent to {receiver}')
-
-        msg = MIMEText(message, 'html')
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = receiver
-
-        try:
-            server = smtplib.SMTP(settings.EMAIL_HOST)
-            server.sendmail(sender, receiver, msg.as_string())
-        except Exception as e:
-            print(e)
-        finally:
-            server.quit()
 
 
 @method_decorator([never_cache], name='dispatch')

@@ -16,7 +16,7 @@
           <li>Number of Expired Trainings: <strong class="text-danger">{{ data.total_expired }}</strong></li>
         </ul>
 
-        {% include 'key_request/subpages/table_user_trainings.html' with required_trainings=data.user_trainings %}
+        {% include 'key_request/subpages/table_user_trainings.html' with required_trainings=data.user_trainings id_visible='True' %}
       </div>
     </div>
   </div>

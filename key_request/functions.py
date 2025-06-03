@@ -1,13 +1,18 @@
-import json
+from django.conf import settings
 from django.db.models import Q, F, Max
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from datetime import date
 import re
+import json
+import smtplib
+from email.mime.text import MIMEText
 
+from django.contrib.auth.models import User
+from app import functions as appFunc
 from lfs_lab_cert_tracker.models import Cert
 from .models import Building, Floor, Room, RequestForm, RequestFormStatus
-from .utils import APPROVED, REV_REQUEST_STATUS_DICT
+from .utils import APPROVED, REV_REQUEST_STATUS_DICT, EMAIL_FOOTER
 
 
 def get_headers(model):
@@ -234,21 +239,112 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
     return data, manager_ids, area_ids, training_ids
 
 
-def count_approved_status(form, room):
-    cache = [0] * room.managers.count()
-    for i, manager in enumerate(room.managers.all()):
-        status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
-        if status_filtered.exists():
-            for item in status_filtered:
-                if item.status == APPROVED:
-                    cache[i] = 1
-                    break
+def count_approved_numbers(status, form, room):
+    if status == APPROVED:
+        cache = [0] * room.managers.count()
+        for i, manager in enumerate(room.managers.all()):
+            status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
+            if status_filtered.exists():
+                for item in status_filtered:
+                    if item.status == APPROVED:
+                        cache[i] = 1
+                        break
+        
+        count = 0
+        for c in cache:
+            count += c
     
-    count = 0
-    for c in cache:
-        count += c
+        if count >= form.rooms.count():
+            send_email(form, room)
+
+
+def send_email(form, room):
+
+    # Applicant
+    subject, message = get_message(form, form.user, 'user')
+    send(form.user, subject, message)
+
+    # PI
+    room_info = '<ul><li>{0}</li></ul>'.format(display_room(room))
+    for manager in room.managers.all():
+        subject, message = get_message(form, manager, 'pi', room_info)
+        send(manager, subject, message)
+
+    # Admin
+    # admins = User.objects.filter(is_superuser=True)
+    # if admins.count() > 0:
+    #     room_info = '<ul>'
+    #     for item in RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id):
+    #         if item.status == APPROVED:
+    #             room_info += '<li>{0} approved by {1}, {2}</li>'.format(display_room(item.room), display_user_full_name(item.operator), convert_date_to_str(item.created_at))
+    #     room_info += '</ul>'
+                
+    #     for admin in admins:
+    #         subject, message = get_message(form, admin, 'admin', room_info)
+    #         send(admin, subject, message)
+
+
+def get_message(form, admin, option, room_info=None):
+    subject = ''
+    message = ''
+
+    if option == 'user':
+        subject = 'Your key request has been approved by UBC LFS'
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <div>We are delighted to inform you that your key request has been approved today. Please visit <a href={1}>{1}</a> to check the status of your key request. Thank you.</div>
+            {2}
+        </div>
+        '''.format(form.user.get_full_name(), settings.SITE_URL, EMAIL_FOOTER)
     
-    return count
+    elif option == 'pi':
+        subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(display_user_full_name(form.user))
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <div>This email is just a notification to inform you that {1}'s key request has been approved. Below are the details of the room.</div>
+            {2}
+            <div>Please visit <a href={3}>{3}</a> to check the latest status of key requests. Thank you.</div>
+            {4}
+        </div>
+        '''.format(display_user_first_name(admin), display_user_first_name(form.user), room_info, settings.SITE_URL, EMAIL_FOOTER)
+
+    elif option == 'admin':
+        subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(display_user_full_name(form.user))
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <div>This email is just a notification to inform you that {1}'s key request has been approved. Below are the details of the room.</div>
+            {2}
+            <div>Please visit <a href={3}>{3}</a> to check the latest status of key requests. Thank you.</div>
+            {4}
+        </div>
+        '''.format(display_user_first_name(admin), display_user_first_name(form.user), room_info, settings.SITE_URL, EMAIL_FOOTER)
+    return subject, message
+
+
+def send(user, subject, message):
+    if settings.EMAIL_FROM and appFunc.check_email_valid(user.email):
+        sender = settings.EMAIL_FROM
+        receiver = '{0} <{1}>'.format(display_user_full_name(user), user.email)
+
+        print(f'An email notification is sent to {receiver}')
+
+        msg = MIMEText(message, 'html')
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = receiver
+
+        try:
+            server = smtplib.SMTP(settings.EMAIL_HOST)
+            server.sendmail(sender, receiver, msg.as_string())
+        except Exception as e:
+            print(e)
+        finally:
+            server.quit()
+
+
 
 
 def natural_key(s):
@@ -311,3 +407,21 @@ def get_tab_urls(url, next=''):
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')
+
+
+# def count_approved_status(form, room):
+#     cache = [0] * room.managers.count()
+#     for i, manager in enumerate(room.managers.all()):
+#         status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
+#         if status_filtered.exists():
+#             for item in status_filtered:
+#                 if item.status == APPROVED:
+#                     cache[i] = 1
+#                     break
+    
+#     count = 0
+#     for c in cache:
+#         count += c
+    
+#     return count
+

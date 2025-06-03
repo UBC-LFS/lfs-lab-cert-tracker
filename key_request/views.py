@@ -46,12 +46,14 @@ class Index(LoginRequiredMixin, View):
             for room in form.rooms.all():
                 for manager in room.managers.all():
                     manager.status = None
-                    status_filtered = form.requestformstatus_set.filter(form_id=form.id, room_id=room.id, manager_id=manager.id, status=APPROVED)
+                    status_filtered = form.requestformstatus_set.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
                     if status_filtered.exists():
-                        manager_approvals += 1
-                        if not form.status_created_at or status_filtered.first().created_at > form.status_created_at:
-                            form.status_created_at = status_filtered.first().created_at
-
+                        status = status_filtered.last()
+                        if status.status == APPROVED:
+                            manager_approvals += 1
+                            if not form.status_created_at or status_filtered.last().created_at > form.status_created_at:
+                                form.status_created_at = status_filtered.last().created_at
+            
             if num_managers == manager_approvals:
                 form.status = 'Approved'
 
