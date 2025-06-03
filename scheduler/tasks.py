@@ -30,7 +30,7 @@ def send_to_users(users, path, days=None, type=None):
                 
                 if receiver and message:
                     template = func.html_template(user['first_name'], user['last_name'], message)
-                    # func.send_email(receiver, template)
+                    func.send_email(receiver, template)
             else:
                 print('{} is not valid.'.format(user['email']))
             
@@ -94,7 +94,7 @@ def send_missing_trainings_pis():
                     message = func.get_message_pis_missing_trainings(''.join(contents))
                     if receiver and message:
                         template = func.html_template(pi.user.first_name, pi.user.last_name, message)
-                        # func.send_email(receiver, template)
+                        func.send_email(receiver, template)
                         print('Supervisor: Sent it to {0}'.format(receiver))
 
 
@@ -145,7 +145,7 @@ def send_to_pis(target_day, days, type):
                     message = func.get_message_pis_expired_trainings(''.join(contents), days, type)
                     if receiver and message:
                         template = func.html_template(pi.user.first_name, pi.user.last_name, message)
-                        # func.send_email(receiver, template)
+                        func.send_email(receiver, template)
                         print('Supervisor: Sent it to {0}'.format(pi.user.email))
 
 
@@ -187,7 +187,7 @@ def send_to_admins(target_date, days, type):
                     message = func.get_message_pis_expired_trainings(''.join(contents), days, type)
                     if receiver and message:
                         template = func.html_template('LFS TRMS', 'administrators', message)
-                        # func.send_email(receiver, template)
+                        func.send_email(receiver, template)
                         print( 'Admin: Sent it to {0}'.format(admin.email) )
 
 
@@ -254,34 +254,34 @@ def run():
     scheduler.add_job(send_before_expiry_date_users, 'cron', day_of_week='mon-fri', hour=9, minute=0)
 
     # Monday ~ Friday at 9:30 AM
-    scheduler.add_job(send_before_expiry_date_pis, 'cron', day_of_week='mon-fri', hour=9, minute=30)
+    # scheduler.add_job(send_before_expiry_date_pis, 'cron', day_of_week='mon-fri', hour=9, minute=30)
 
     # Monday ~ Friday at 10:00 AM
-    scheduler.add_job(send_before_expiry_date_admins, 'cron', day_of_week='mon-fri', hour=10, minute=0)
+    # scheduler.add_job(send_before_expiry_date_admins, 'cron', day_of_week='mon-fri', hour=10, minute=0)
 
 
     # After expiry date
 
     # 1st Monday, 3rd Monday at 9:00 AM
-    scheduler.add_job(send_after_expiry_date_users, 'cron', day='1st mon,3rd mon', hour=9, minute=0)
+    # scheduler.add_job(send_after_expiry_date_users, 'cron', day='1st mon,3rd mon', hour=9, minute=0)
 
     # 1st Monday, 3rd Monday at 9:30 AM
-    scheduler.add_job(send_after_expiry_date_pis, 'cron', day='1st mon,3rd mon', hour=9, minute=30)
+    # scheduler.add_job(send_after_expiry_date_pis, 'cron', day='1st mon,3rd mon', hour=9, minute=30)
 
     # 1st Monday, 3rd Monday at 10:00 AM
-    scheduler.add_job(send_after_expiry_date_admins, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
+    # scheduler.add_job(send_after_expiry_date_admins, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
 
 
     # Missing
 
     # 1st Monday, 3rd Monday at 9:00 AM
-    scheduler.add_job(send_missing_trainings_users, 'cron', day='1st mon,3rd mon', hour=9, minute=0)
+    # scheduler.add_job(send_missing_trainings_users, 'cron', day='1st mon,3rd mon', hour=9, minute=0)
 
     # 1st Monday, 3rd Monday at 9:30 AM
-    scheduler.add_job(send_missing_trainings_pis, 'cron', day='1st mon,3rd mon', hour=9, minute=30)
+    # scheduler.add_job(send_missing_trainings_pis, 'cron', day='1st mon,3rd mon', hour=9, minute=30)
 
 
     # Monday ~ Sunday at 3:00 AM
-    scheduler.add_job(check_user_trainings_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
+    # scheduler.add_job(check_user_trainings_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
 
     scheduler.start()
