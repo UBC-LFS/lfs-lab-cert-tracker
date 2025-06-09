@@ -30,7 +30,7 @@ def send_to_users(users, path, days=None, type=None):
                 
                 if receiver and message:
                     template = func.html_template(user['first_name'], user['last_name'], message)
-                    func.send_email(receiver, template)
+                    # func.send_email(receiver, template)
             else:
                 print('{} is not valid.'.format(user['email']))
             
@@ -94,7 +94,7 @@ def send_missing_trainings_pis():
                     message = func.get_message_pis_missing_trainings(''.join(contents))
                     if receiver and message:
                         template = func.html_template(pi.user.first_name, pi.user.last_name, message)
-                        func.send_email(receiver, template)
+                        # func.send_email(receiver, template)
                         print('Supervisor: Sent it to {0}'.format(receiver))
 
 
@@ -145,7 +145,7 @@ def send_to_pis(target_day, days, type):
                     message = func.get_message_pis_expired_trainings(''.join(contents), days, type)
                     if receiver and message:
                         template = func.html_template(pi.user.first_name, pi.user.last_name, message)
-                        func.send_email(receiver, template)
+                        # func.send_email(receiver, template)
                         print('Supervisor: Sent it to {0}'.format(pi.user.email))
 
 
@@ -187,7 +187,7 @@ def send_to_admins(target_date, days, type):
                     message = func.get_message_pis_expired_trainings(''.join(contents), days, type)
                     if receiver and message:
                         template = func.html_template('LFS TRMS', 'administrators', message)
-                        func.send_email(receiver, template)
+                        # func.send_email(receiver, template)
                         print( 'Admin: Sent it to {0}'.format(admin.email) )
 
 
