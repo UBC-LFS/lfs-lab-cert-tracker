@@ -1,6 +1,5 @@
 import psycopg2
 import copy
-from datetime import datetime
 
 class CertTrackerDatabase:
 

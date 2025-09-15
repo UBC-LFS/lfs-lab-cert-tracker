@@ -259,7 +259,7 @@ class UserDetailsView(LoginRequiredMixin, View):
         return setup
 
     @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):                
+    def get(self, request, *args, **kwargs):
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),

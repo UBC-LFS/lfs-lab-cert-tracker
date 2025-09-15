@@ -35,6 +35,6 @@ if __name__ == "__main__":
     users = db.get_users()
     certs = db.get_certs()
     admin = db.get_admin()
-    #send_email_after(users, certs, admin, 'after')
+    send_email_after(users, certs, admin, 'after')
 
     db.close()

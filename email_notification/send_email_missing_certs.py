@@ -2,6 +2,7 @@ from cert_tracker_db import CertTrackerDatabase
 from send_email_settings import *
 from send_email_base import get_receiver, html_template, send_email
 
+
 # Send an email to persons who have some missing certificates
 
 def get_message_lab_users(certs, user_id, missing_certs):
@@ -10,12 +11,13 @@ def get_message_lab_users(certs, user_id, missing_certs):
         certificates.append("<li>" + certs[cert_id]['name'] + "</li>")
 
     message = '''\
-        <p>You have missing training(s). Please update it.</p>
+        <p>Our records indicate that you have missing training certification(s) required for each area. Please take a moment to update your records at your earliest convenience. Let us know if you need any assistance.</p>
         <ul>{0}</ul>
-        <p>See <a href="{1}/users/{2}/report">User report</a></p>
-    '''.format("".join(certificates), LFS_LAB_CERT_TRACKER_URL, user_id)
+        <p>See <a href="{1}/app/users/{2}/report.pdf/">User Report</a></p>
+    '''.format("".join(certificates), SITE_URL, user_id)
 
     return message
+
 
 def get_message_pis(users, lab_users):
     lab_users_list = []
@@ -23,11 +25,12 @@ def get_message_pis(users, lab_users):
         lab_users_list.append("<li>" + users[user_id]['first_name'] + " " + users[user_id]['last_name'] + "</li>")
 
     message = '''\
-        <p>The following users have missing training(s).</p>
+         <p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>
         <ul>{0}</ul>
     '''.format( "".join(lab_users_list) )
 
     return message
+
 
 def send_email_lab_users(users, certs, lab_users):
     for user in lab_users:
@@ -35,7 +38,7 @@ def send_email_lab_users(users, certs, lab_users):
         message = get_message_lab_users(certs, user['id'], user['missing_certs'])
         template = html_template(users[ user['id'] ]['first_name'], users[ user['id'] ]['last_name'], message)
 
-        send_email(receiver, template)
+        # send_email(receiver, template)
         print( "User: Sent it to {0}".format(receiver) )
 
 
@@ -46,7 +49,7 @@ def send_email_pis(users, pis):
             message = get_message_pis(users, lab_users)
             template = html_template(users[id]['first_name'], users[id]['last_name'], message)
 
-            send_email(receiver, template)
+            # send_email(receiver, template)
             print( "Supervisor: Sent it to {0}".format(receiver) )
 
 
@@ -83,7 +86,7 @@ if __name__ == "__main__":
     admin = db.get_admin()
 
     lab_users, pis = find_missing_cert_users(users, certs)
-    #send_email_lab_users(users, certs, lab_users)
-    #send_email_pis(users, pis)
+    send_email_lab_users(users, certs, lab_users)
+    send_email_pis(users, pis)
 
     db.close()
