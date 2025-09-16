@@ -1,6 +1,6 @@
-from cert_tracker_db import CertTrackerDatabase
-from send_email_settings import *
-from send_email_base import get_receiver, html_template, send_email
+from database import CertTrackerDatabase
+from settings import USER, PASSWORD, HOST, PORT, DATABASE, SITE_URL
+from base import get_receiver, html_template, send_email
 
 
 # Send an email to persons who have some missing certificates

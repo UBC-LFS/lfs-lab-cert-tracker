@@ -1,8 +1,10 @@
 from datetime import datetime
-from cert_tracker_db import CertTrackerDatabase
-from send_email_settings import *
-from send_email_base import send_email_to_lab_users, send_email_to_pis, send_email_to_admin
-from send_email_before_expiry_date import find_users_by_days
+from database import CertTrackerDatabase
+from settings import USER, PASSWORD, HOST, PORT, DATABASE, DAYS14
+from base import send_email_to_lab_users, send_email_to_pis, send_email_to_admin
+from before_expiry_date import find_users_by_days
+
+
 
 # It will keep sending an email to users (Admins, PIs, Lab Users)
 # after the expiry date every twice a month

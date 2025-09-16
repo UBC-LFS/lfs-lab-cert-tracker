@@ -1,6 +1,6 @@
 import smtplib, ssl
 from email.mime.text import MIMEText
-from send_email_settings import *
+from settings import SMTP_SERVER, SENDER, SITE_URL
 
 
 def send_email(receiver, message):
@@ -35,7 +35,9 @@ def html_template(first_name, last_name, message):
       <head></head>
       <body>
         <p>Hi {0} {1},</p>
-        <div>{2}</div>
+        <div>
+            {2}
+        </div>
         <br />
         <div>
             <b>Please note that if you try to access the LFS Training Record Management System off campus,
@@ -47,7 +49,7 @@ def html_template(first_name, last_name, message):
             If you are trying to enroll in a missing or expired training, or to retrieve the training completion record, please visit the following links to get to the appropriate sites:
             <p>
                 <b>UBC/LFS Mandatory Training</b><br />
-                <a href="https://my.landfood.ubc.ca/lfs-mandatory-training">https://my.landfood.ubc.ca/lfs-mandatory-training</a>
+                <a href="https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/">https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/</a>
             </p>
         </div>
         <br />
@@ -65,15 +67,15 @@ def get_message_lab_users(certificates, user, days, type):
 
     if type == 'before':
         message = '''\
-            <p>Your training(s) will expire in {0} days.</p>
+            <p>This is a friendly reminder that one or more of your trainings will expire in {0} days. Please update these certificates at your earliest convenience.</p>
             <ul>{1}</ul>
-            <p>See <a href="{2}/users/{3}/report">User report</a></p>
+            <p>See <a href="{2}/users/{3}/report.pdf">User Report</a></p>
             '''.format(days, "".join(certificates), SITE_URL, user['id'])
     else:
         message = '''\
-            <p>Your training expiration date has already passed. Please update it.</p>
+            <p>This is a friendly reminder that your training has passed its expiration date. Please log in and update your training as soon as possible.</p>
             <ul>{0}</ul>
-            <p>See <a href="{1}/users/{2}/report">User report</a></p>
+            <p>See <a href="{1}/users/{2}/report.pdf">User Report</a></p>
             '''.format("".join(certificates), SITE_URL, user['id'])
 
     return message
@@ -84,12 +86,12 @@ def get_message(days, lab_users_list, type):
 
     if type == 'before':
         message = '''\
-            <p>Trainings of the following users in your area will expire in {0} days.</p>
+            <p>Please be advised that the training certifications for the following users in your area will expire in {0} days. Please remind these individuals to complete the necessary renewal process before their certifications expire.</p>
             {1}
         '''.format(days, lab_users_list)
     else:
         message = '''\
-            <p>The following users have expired training(s).</p>
+            <p>Please be advised that the training certifications for the following users in your area have already expired. Please remind them to complete their renewal at the earliest convenience to prevent any area access issues.</p>
             <ul>{0}</ul>
         '''.format(lab_users_list)
 

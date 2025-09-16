@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from cert_tracker_db import CertTrackerDatabase
-from send_email_settings import *
-from send_email_base import send_email_to_lab_users, send_email_to_pis, send_email_to_admin
+from database import CertTrackerDatabase
+from settings import USER, PASSWORD, HOST, PORT, DATABASE, DAYS30, DAYS14
+from base import send_email_to_lab_users, send_email_to_pis, send_email_to_admin
 
 
 # There are two different types of an email remider, such as
