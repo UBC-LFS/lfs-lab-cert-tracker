@@ -3,7 +3,7 @@ import os
 # Global variables
 DAYS30 = 30
 DAYS14 = 14
-SITE_URL = os.environ['SITE_URL']
+SITE_URL = ''
 
 DATABASE = os.environ['LFS_LAB_CERT_TRACKER_DB_NAME']
 USER = os.environ['LFS_LAB_CERT_TRACKER_DB_USER']
@@ -24,7 +24,7 @@ $ crontab -l
 $ crontab -e
 
 # Add jobs
-00 09 * * * /usr/bin/python3 /[DIRECTORY]/trms/email_notification/before_expiry_date.py
-00 09 */15 * * /usr/bin/python3 /[DIRECTORY]/trms/email_notification/after_expiry_date.py
-00 09 */15 * * /usr/bin/python3 /[DIRECTORY]/trms/email_notification/missing_certs.py
+00 09 * * * . [ENV]; /venv/bin/python3 /[DIRECTORY]/trms/email_notification/before_expiry_date.py
+00 09 */15 * * . [ENV]; /venv/bin/python3 /[DIRECTORY]/trms/email_notification/after_expiry_date.py
+00 09 */15 * * . [ENV]; /venv/bin/python3 /[DIRECTORY]/trms/email_notification/missing_certs.py
 """
