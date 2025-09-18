@@ -5,19 +5,16 @@ from base import send_email_to_lab_users, send_email_to_pis, send_email_to_admin
 from before_expiry_date import find_users_by_days
 
 
-
 # It will keep sending an email to users (Admins, PIs, Lab Users)
 # after the expiry date every twice a month
 # Note: PI means Principal Investigator
-
 
 def send_email_after(users, certs, admin, type):
     """ Send an email to lab_users/Pis/admin every twice a month after the expiry date """
 
     print("Send email after expiry date")
 
-    #target_day = datetime.now()
-    target_day = datetime(2020, 1, 1)
+    target_day = datetime.now()
     print("target_day: ", target_day)
 
     lab_users, pis = find_users_by_days(users, target_day.date(), 'after')

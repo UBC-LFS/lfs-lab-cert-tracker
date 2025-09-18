@@ -38,7 +38,7 @@ def send_email_lab_users(users, certs, lab_users):
         message = get_message_lab_users(certs, user['id'], user['missing_certs'])
         template = html_template(users[ user['id'] ]['first_name'], users[ user['id'] ]['last_name'], message)
 
-        # send_email(receiver, template)
+        send_email(receiver, template)
         print( "User: Sent it to {0}".format(receiver) )
 
 
@@ -49,7 +49,7 @@ def send_email_pis(users, pis):
             message = get_message_pis(users, lab_users)
             template = html_template(users[id]['first_name'], users[id]['last_name'], message)
 
-            # send_email(receiver, template)
+            send_email(receiver, template)
             print( "Supervisor: Sent it to {0}".format(receiver) )
 
 
