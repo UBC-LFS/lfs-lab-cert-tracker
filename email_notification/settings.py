@@ -24,6 +24,6 @@ $ crontab -l
 $ crontab -e
 
 # Add jobs
-00 09 * * * /srv/trms/email_notification/run_everyday.sh
-15 09 */15 * * /srv/trms/email_notification/run_every_15days.sh
+00 09 * * * /[DIRECTORY]/trms/email_notification/run_everyday.sh
+15 09 */15 * * /[DIRECTORY]/trms/email_notification/run_every_15days.sh
 """
