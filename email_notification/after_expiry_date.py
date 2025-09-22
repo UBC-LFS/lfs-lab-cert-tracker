@@ -21,12 +21,15 @@ def send_email_after(users, certs, admin, type):
 
     if len(lab_users) > 0:
         send_email_to_lab_users(users, lab_users, DAYS14, type)
+        print( "User: Sent it. Total users: {0}".format(len(lab_users)) )
 
         if len(pis.keys()) > 0:
             send_email_to_pis(users, pis, DAYS14, type)
+            print( "Supervisor: Sent it. Total PIs: {0}".format(len(pis.keys())) )
 
         if len(admin) > 0:
             send_email_to_admin(users, admin, lab_users, DAYS14, type)
+            print( "Admin: Sent it. Total admins: {0}".format(len(admin)) )
 
 
 if __name__ == "__main__":

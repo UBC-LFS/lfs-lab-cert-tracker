@@ -67,9 +67,11 @@ def send_email_30days_before(users, certs, type):
     lab_users, pis = find_users_by_type(users, 1)
     if len(lab_users) > 0:
         send_email_to_lab_users(users, lab_users, DAYS30, type)
+        print( "User: Sent it. Total users: {0}".format(len(lab_users)) )
 
         if len(pis.keys()) > 0:
             send_email_to_pis(users, pis, DAYS30, type)
+            print( "Supervisor: Sent it. Total PIs: {0}".format(len(pis.keys())) )
 
 
 def send_email_14days_before(users, certs, admin, type):
@@ -79,6 +81,7 @@ def send_email_14days_before(users, certs, admin, type):
     lab_users, pis, = find_users_by_type(users, 2)
     if len(lab_users) > 0 and len(admin) > 0:
         send_email_to_admin(users, admin, lab_users, DAYS14, type)
+        print( "Admin: Sent it. Total admins: {0}".format(len(admin)) )
 
 
 # Helper functions
