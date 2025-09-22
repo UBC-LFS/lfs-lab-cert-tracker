@@ -12,3 +12,6 @@ saml/
 lfs_lab_cert_tracker/settings.py
 run
 key_request/fixtures/*
+email_notification/run_after_expiry_date.sh
+email_notification/run_before_expiry_date.sh
+email_notification/run_missing_certs.sh
