@@ -1,5 +1,5 @@
 #!/bin/bash
-LOGFILE=/srv/trms/email_notification/cron.log
+LOGFILE=/[DIRECTORY]/trms/email_notification/cron.log
 
 # source apache env
 . /etc/apache2/envvars
