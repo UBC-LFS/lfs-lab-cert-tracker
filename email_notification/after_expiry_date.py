@@ -34,6 +34,7 @@ def send_email_after(users, certs, admin, type):
 
 
 if __name__ == "__main__":
+    print("========= Start After expiry date =========")
     db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
     users = db.get_users()
     certs = db.get_certs()

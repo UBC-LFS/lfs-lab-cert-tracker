@@ -114,9 +114,6 @@ def send_email_to_lab_users(users, lab_users, days, type):
             template = html_template(user['first_name'], user['last_name'], message)
 
             send_email(receiver, template)
-    
-    print( "User: Sent it. Total users: {0}".format(len(lab_users)) )
-
 
 def send_email_to_pis(users, pis, days, type):
     """ Send an email to PIs"""
@@ -144,8 +141,6 @@ def send_email_to_pis(users, pis, days, type):
                 template = html_template(pi['first_name'], pi['last_name'], message)
 
                 send_email(receiver, template)
-    
-    print( "Supervisor: Sent it. Total PIs: {0}".format(len(pis.keys())) )
 
 
 def send_email_to_admin(users, admin, lab_users, days, type):
@@ -172,8 +167,6 @@ def send_email_to_admin(users, admin, lab_users, days, type):
 
         send_email(receiver, template)
     
-    print( "Admin: Sent it. Total admins: {0}".format(len(admin)) )
-
 
 # Helper functions
 

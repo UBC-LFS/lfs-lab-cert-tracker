@@ -82,6 +82,7 @@ def find_missing_cert_users(users, certs):
 
 
 if __name__ == "__main__":
+    print("========= Start Missing Certs =========")
     db = CertTrackerDatabase(USER, PASSWORD, HOST, PORT, DATABASE)
     users = db.get_users()
     certs = db.get_certs()

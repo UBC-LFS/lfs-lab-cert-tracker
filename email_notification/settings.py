@@ -24,6 +24,7 @@ $ crontab -l
 $ crontab -e
 
 # Add jobs
-00 09 * * * /[DIRECTORY]/trms/email_notification/run_everyday.sh
-15 09 */15 * * /[DIRECTORY]/trms/email_notification/run_every_15days.sh
+00 09 * * * /[DIRECTORY]/trms/email_notification/run_before_expiry_date.sh
+15 09 */15 * * /[DIRECTORY]/trms/email_notification/run_after_expiry_date.sh
+30 09 */15 * * /[DIRECTORY]/trms/email_notification/run_missing_certs.sh
 """
