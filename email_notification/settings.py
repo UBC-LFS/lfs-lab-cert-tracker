@@ -24,7 +24,6 @@ $ crontab -l
 $ crontab -e
 
 # Add jobs
-00 09 * * * . [ENV]; /venv/bin/python3 /[DIRECTORY]/trms/email_notification/before_expiry_date.py
-00 09 */15 * * . [ENV]; /venv/bin/python3 /[DIRECTORY]/trms/email_notification/after_expiry_date.py
-00 09 */15 * * . [ENV]; /venv/bin/python3 /[DIRECTORY]/trms/email_notification/missing_certs.py
+00 09 * * * /srv/trms/email_notification/run_everyday.sh
+15 09 */15 * * /srv/trms/email_notification/run_every_15days.sh
 """
