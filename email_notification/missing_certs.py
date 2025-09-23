@@ -15,7 +15,6 @@ def get_message_lab_users(certs, user_id, missing_certs):
         <ul>{0}</ul>
         <p>See <a href="{1}/app/users/{2}/report.pdf/">User Report</a></p>
     '''.format("".join(certificates), SITE_URL, user_id)
-
     return message
 
 
@@ -28,7 +27,6 @@ def get_message_pis(users, lab_users):
          <p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>
         <ul>{0}</ul>
     '''.format( "".join(lab_users_list) )
-
     return message
 
 
@@ -37,9 +35,7 @@ def send_email_lab_users(users, certs, lab_users):
         receiver = get_receiver(users[ user['id'] ])
         message = get_message_lab_users(certs, user['id'], user['missing_certs'])
         template = html_template(users[ user['id'] ]['first_name'], users[ user['id'] ]['last_name'], message)
-
         send_email(receiver, template)
-    
     print( "User: Sent it. Total users: {0}".format(len(lab_users)) )
 
 
@@ -49,9 +45,7 @@ def send_email_pis(users, pis):
             receiver = get_receiver(users[id])
             message = get_message_pis(users, lab_users)
             template = html_template(users[id]['first_name'], users[id]['last_name'], message)
-
             send_email(receiver, template)
-    
     print( "Supervisor: Sent it. Total PIs: {0}".format(len(pis.keys())) )
 
 
