@@ -57,7 +57,7 @@
 	      {% for field in form.visible_fields %}
 	        <tr width="100%" {% if field.name == 'employee_number' or  field.name == 'student_number' or field.name == 'working_alone' %}style="display:none;"{% endif %}>
 	          <td width="35%" class="vertical-top text-left">
-							<label for="{% if field.label == 'Applicant UBC Affliation' %}id_affliation{% elif field.label == 'After Hours Access' %}id_after_hours_access{% else %}{{ field.id_for_label }}{% endif %}">{{ field.label }}:</label>
+							<label for="{% if field.label == 'Applicant UBC Affiliation' %}id_affiliation{% elif field.label == 'After Hours Access' %}id_after_hours_access{% else %}{{ field.id_for_label }}{% endif %}">{{ field.label }}:</label>
 	            {% if field.name != 'role' and field.name != 'comment' %}
 	              {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 	            {% endif %}

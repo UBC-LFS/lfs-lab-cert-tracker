@@ -232,7 +232,7 @@ class KeyRequestTest(TestCase):
             'user': 16,
             'rooms[]': room_id,
             'role': 'Guest',
-            'affliation': 3,
+            'affiliation': 3,
             'employee_number': None,
             'student_number': None,
             'supervisor_first_name': 'John',

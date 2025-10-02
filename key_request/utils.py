@@ -1,6 +1,6 @@
 from django.utils.safestring import mark_safe
 
-AFFLIATIONS = [
+AFFILIATIONS = [
     ('0', 'I have a UBC employee ID'),
     ('1', 'I am an undergraduate student with a UBC student number'),
     ('2', 'I am a graduate student with a UBC student number'),

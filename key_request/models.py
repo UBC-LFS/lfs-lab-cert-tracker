@@ -5,7 +5,7 @@ from lfs_lab_cert_tracker.models import Lab, Cert
 
 from datetime import datetime
 
-from .utils import AFFLIATIONS, AFTER_HOURS_ACCESS, REQUEST_STATUS
+from .utils import AFFILIATIONS, AFTER_HOURS_ACCESS, REQUEST_STATUS
 
 
 class Building(models.Model):
@@ -76,7 +76,7 @@ class RequestForm(models.Model):
     rooms = models.ManyToManyField(Room)
 
     role = models.CharField(max_length=100, null=True, blank=True)
-    affliation = models.CharField(max_length=1, choices=AFFLIATIONS, default='3')
+    affiliation = models.CharField(max_length=1, choices=AFFILIATIONS, default='3')
     employee_number = models.CharField(max_length=7, null=True, blank=True)
     student_number = models.CharField(max_length=8, null=True, blank=True)
     

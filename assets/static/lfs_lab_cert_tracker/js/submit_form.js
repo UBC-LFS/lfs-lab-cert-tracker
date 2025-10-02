@@ -7,8 +7,8 @@ $(document).ready(function() {
   const stud_parent = stud.parent().parent();
   const working_alone_parent = working_alone.parent().parent();
 
-  // Affliation choices
-  $('#id_affliation input').on('change', function() {
+  // Affiliation choices
+  $('#id_affiliation input').on('change', function() {
     const id = this.value;
     if (id === '0') {
       empl_parent.css('display', 'table-row');

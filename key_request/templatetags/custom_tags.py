@@ -14,7 +14,7 @@ register = template.Library()
 @register.filter
 def get_fields(obj, arg=None):
     exclude = ['id', 'user', 'updated_at']
-    choices_fields = ['affliation', 'after_hours_access']
+    choices_fields = ['affiliation', 'after_hours_access']
 
     fields = []
     for field in obj._meta.fields:

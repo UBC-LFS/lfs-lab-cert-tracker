@@ -56,7 +56,7 @@ class RoomForm(forms.ModelForm):
 
 KEY_REQUEST_LABELS = {
     'role': 'Applicant Role in LFS',
-    'affliation': 'Applicant UBC Affliation',
+    'affiliation': 'Applicant UBC Affiliation',
     'employee_number': 'UBC Employee ID',
     'student_number': 'UBC Student Number',
     'supervisor_first_name': "Supervisor's First Name",
@@ -72,13 +72,13 @@ class KeyRequestForm(forms.ModelForm):
     class Meta:
         model = RequestForm
         exclude = ['rooms', 'submitted_at', 'updated_at']
-        # fields = ['user', 'role', 'affliation', 'employee_number', 'student_number', 'after_hours_access', 'working_alone', 'comment']
+        # fields = ['user', 'role', 'affiliation', 'employee_number', 'student_number', 'after_hours_access', 'working_alone', 'comment']
 
         labels = KEY_REQUEST_LABELS
         widgets = {
             'user': forms.HiddenInput(),
             'role': forms.TextInput(attrs={ 'class': 'form-control' }),
-            'affliation': forms.RadioSelect(),
+            'affiliation': forms.RadioSelect(),
             'employee_number': forms.TextInput(attrs={ 'class': 'form-control' }),
             'student_number': forms.TextInput(attrs={ 'class': 'form-control' }),
             'supervisor_first_name': forms.TextInput(attrs={ 'class': 'form-control' }),
@@ -99,7 +99,7 @@ class KeyRequestForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        affl = cleaned_data.get('affliation', None)
+        affl = cleaned_data.get('affiliation', None)
         empl = cleaned_data.get('employee_number', None)
         stud = cleaned_data.get('student_number', None)
         ahc = cleaned_data.get('after_hours_access', None)
