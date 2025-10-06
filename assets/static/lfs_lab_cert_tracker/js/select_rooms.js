@@ -7,6 +7,9 @@ $(document).ready(function() {
 
   if (sessionStorage.getItem('key-request-data')) {
     data = JSON.parse(sessionStorage.getItem('key-request-data'));
+    if (Object.keys(data.rooms).length > 0) {
+        $('#select-rooms-continue').removeAttr("disabled");
+    }
   }
 
   // Send a post data
@@ -102,13 +105,14 @@ $(document).ready(function() {
     if (buildingCode && floorName && id && number) {
       if (Object.keys(data['rooms']).includes('room_' + id)) {
         deleteSelectedRooms(data, 'room_' + id);
+        if (Object.keys(data.rooms).length === 0) {
+            $('#select-rooms-continue').prop('disabled', true);
+        }
       } else {
         appendSelectedRooms(data, buildingCode, floorName, id, number);
+        $('#select-rooms-continue').removeAttr("disabled");
       }
     }
-
-    // Enable the Continue button
-    $('#select-rooms-continue').removeAttr("disabled");
   });
 
   // Delete a room in the selected rooms
