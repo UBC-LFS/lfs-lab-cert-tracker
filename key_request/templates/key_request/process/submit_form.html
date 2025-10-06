@@ -113,7 +113,9 @@
 					Requirement to Proceed:
 					{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 				</h6>
-				I understand this request will not be processed until all my required training certificates have been uploaded to https://training-report.landfood.ubc.ca. -- For undergraduate students who need access to FNH labs, please contact your supervisor.
+				I understand this request will not be processed until all my required training certificates have been uploaded to <a href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a>.
+
+                <br>For undergraduate students who need access to FNH labs, please contact your supervisor.
 
 				<p class="font-size-lg mt-3 mb-0">
 					<input class="mr-2" type="checkbox" name="agree" value="yes" /> <strong>I agree</strong>
