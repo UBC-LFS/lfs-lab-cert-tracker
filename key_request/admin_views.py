@@ -17,7 +17,7 @@ from django.shortcuts import get_object_or_404
 from django.apps import apps
 
 from lfs_lab_cert_tracker.models import Lab, Cert
-from app.accesses import access_admin_only
+from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 
@@ -180,7 +180,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_admin_only
+@access_pi_admin_key_request
 @require_http_methods(['POST'])
 def update_all(request):
     rooms = request.POST.getlist('rooms[]')

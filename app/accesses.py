@@ -13,6 +13,20 @@ def access_admin_only(view_func):
     return wrap
 
 
+def access_pi_admin_key_request(view_func):
+    """
+    Access for an admin and a PI (not necessarily in the area)
+    Usage: used in update_all view (admin_views.py)
+    """
+
+    def wrap(request, *args, **kwargs):
+        if request.user.is_superuser or is_pi(request.user.id):
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    return wrap
+
 def access_pi_admin(view_func):
     """
     Access for an admin and PI in the area

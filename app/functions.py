@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import *
 
+from key_request.models import *
+
 from datetime import date
 
 
@@ -106,6 +108,10 @@ def get_cert_by_id(cert_id):
 
 
 # Lab
+
+def is_pi(user_id):
+    """ Check whether a user is a PI or not"""
+    return Room.objects.filter(managers__id=user_id).exists()
 
 def is_pi_in_area(user_id, area_id):
     """ Check whether an user is in the area or not """
