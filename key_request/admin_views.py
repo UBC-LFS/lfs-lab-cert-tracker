@@ -627,11 +627,12 @@ def update_room_data(queryset, data):
 @require_http_methods(['POST'])
 def delete_room(request):
     room_filtered = Room.objects.filter(id=request.POST.get('room'))
+    room_number = room_filtered.first().number
     if room_filtered.exists():
         room_filtered.delete()
-        messages.success(request, 'Success! Room Number {0} deleted.'.format(room_filtered.first().number))
+        messages.success(request, 'Success! Room Number {0} deleted.'.format(room_number))
     else:
-        messages.error(request, 'Error! Failed to delete Room Number {0}.'.format(room_filtered.first().number))
+        messages.error(request, 'Error! Failed to delete Room Number {0}.'.format(room_number))
     return redirect('key_request:all_rooms')
 
 

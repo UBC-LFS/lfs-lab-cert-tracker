@@ -18,16 +18,17 @@ urlpatterns += [
     path('forms/<int:form_id>/details/', admin_views.ViewFormDetails.as_view(), name='view_form_details'),
     path('func/update/all/', admin_views.update_all, name='update_all'),
 
-    # Settings - Building and Floors
-    path('all-<str:model>/view/', admin_views.Settings.as_view(), name='settings'),
-    path('all-<str:model>/edit/', admin_views.EditSetting.as_view(), name='edit_setting'),
-    path('all-<str:model>/delete/', admin_views.DeleteSetting.as_view(), name='delete_setting'),
-    
     # Rooms
     path('all-rooms/', admin_views.AllRooms.as_view(), name='all_rooms'),
     path('create-room/', admin_views.CreateRoom.as_view(), name='create_room'),
     path('<int:room_id>/edit-room/', admin_views.EditRoom.as_view(), name='edit_room'),
     path('all-rooms/delete/', admin_views.delete_room, name='delete_room'),
+
+    # Settings - Building and Floors
+    path('all-<str:model>/view/', admin_views.Settings.as_view(), name='settings'),
+    path('all-<str:model>/edit/', admin_views.EditSetting.as_view(), name='edit_setting'),
+    path('all-<str:model>/delete/', admin_views.DeleteSetting.as_view(), name='delete_setting'),
+
     
     path('add-training-to-room/', admin_views.AddTrainingToRoom.as_view(), name='add_training_to_room'),
     path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room')
