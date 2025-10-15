@@ -238,6 +238,100 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
 
     return data, manager_ids, area_ids, training_ids
 
+def count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, manager_id):
+    if status != APPROVED:
+        return
+    manager = User.objects.get(id=manager_id)
+
+    # Tracking info for PI email
+    room_info = '<ul>'
+    # Structure:
+    #   {user_id: {rooms_formatted: [], form: RequestForm, rooms_with_approval_formatted: []}}
+    user_details = {}
+    users = []
+
+    form = None
+
+    for fs in request_status_forms:
+        room = Room.objects.get(id=fs.room_id)
+        form = RequestForm.objects.get(id=fs.form_id)
+        formatted_room = '<li>{0}</li>'.format(display_room(room))
+        user = form.user
+
+        if not user.id in user_details.keys():
+            user_details[user.id] = {
+                'rooms_formatted': ['<ul>{0}'.format(formatted_room)],
+                'form': form,
+                'rooms_with_approval_formatted': []
+            }
+            users.append(user)
+        else:
+            user_details[user.id]['rooms_formatted'].append(formatted_room)
+
+        if all_managers_approved(form, room):
+            approved_rooms = user_details[user.id]['rooms_with_approval_formatted']
+            if len(approved_rooms) > 0:
+                user_details[user.id]['rooms_with_approval_formatted'].append(formatted_room)
+            else:
+                user_details[user.id]['rooms_with_approval_formatted'] = ['<ul>{0}'.format(formatted_room)]
+
+    # Send email to applicant if they have approved_rooms
+    for user_id in user_details.keys():
+        form = user_details[user_id]['form']
+        rooms = user_details[user_id]['rooms_with_approval_formatted']
+        if len(rooms) > 0:
+            rooms.append('</ul>')
+            room_info = ''.join(rooms)
+            subject, message = get_message(form, form.user, 'user', room_info)
+            send(form.user, subject, message)
+
+    # Send email to PI with all rooms
+    if len(users) > 1:
+        subject, message = get_custom_pi_message_multiple_users(users, user_details, manager)
+    elif len(users) > 0:
+        rooms = user_details[users[0].id]['rooms_formatted']
+        rooms.append('</ul>')
+        room_info = ''.join(rooms)
+        subject, message = get_message(form, manager, 'pi', room_info)
+    else:
+        return
+
+    send(manager, subject, message)
+
+
+def count_approved_numbers_by_id(status, form, room, manager_id):
+    if status != APPROVED:
+        return
+
+    status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id)
+    if not status_filtered.exists():
+        return
+
+    # Check if all managers have approved
+    all_approved = all_managers_approved(form, room)
+
+
+    room_info = '<ul><li>{0}</li></ul>'.format(display_room(room))
+    if all_approved:
+        subject, message = get_message(form, form.user, 'user', room_info)
+        send(form.user, subject, message)
+
+    manager = User.objects.get(id=manager_id)
+    subject, message = get_message(form, manager, 'pi', room_info)
+    send(manager, subject, message)
+
+def all_managers_approved(form, room):
+    for i, manager in enumerate(room.managers.all()):
+        status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
+        if status_filtered.exists():
+            latest_status = status_filtered.latest('created_at')
+
+            if latest_status.status != APPROVED:
+                return False
+        else:
+            return False
+    return True
+
 
 def count_approved_numbers(status, form, room):
     if status == APPROVED:
@@ -270,19 +364,30 @@ def send_email(form, room):
         subject, message = get_message(form, manager, 'pi', room_info)
         send(manager, subject, message)
 
-    # Admin
-    # admins = User.objects.filter(is_superuser=True)
-    # if admins.count() > 0:
-    #     room_info = '<ul>'
-    #     for item in RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id):
-    #         if item.status == APPROVED:
-    #             room_info += '<li>{0} approved by {1}, {2}</li>'.format(display_room(item.room), display_user_full_name(item.operator), convert_date_to_str(item.created_at))
-    #     room_info += '</ul>'
-                
-    #     for admin in admins:
-    #         subject, message = get_message(form, admin, 'admin', room_info)
-    #         send(admin, subject, message)
+def get_custom_pi_message_multiple_users(users, user_room_map, admin):
+    user_message = '<div>'
+    for i, user in enumerate(users):
+        user_rooms = user_room_map[user.id]['rooms_formatted']
+        user_rooms.append('</ul>')
+        room_info = ''.join(user_rooms)
+        user_message+=('''\
+        <div>{0}) <b>{1}</b>'s key request for the following room(s):</div>
+        {2}
+        '''.format(i+1, display_user_first_name(user), room_info))
+    user_message+='</div>'
 
+    subject = "Notification: You Have Approved Multiple Users' Key Requests at UBC LFS"
+    message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <div>This email is just a notification to inform you that you have approved multiple users' key requests.</div>
+            <br>
+            {1}
+            <div>Please visit <a href={2}>{2}</a> to check the latest status of key requests. Thank you.</div>
+            {3}
+        </div>
+        '''.format(display_user_first_name(admin), user_message, settings.SITE_URL, EMAIL_FOOTER)
+    return subject, message
 
 def get_message(form, admin, option, room_info=None):
     subject = ''
@@ -293,23 +398,24 @@ def get_message(form, admin, option, room_info=None):
         message = '''\
         <div>
             <p>Hi {0},</p>
-            <div>We are delighted to inform you that your key request has been approved today. Please visit <a href={1}>{1}</a> to check the status of your key request. Thank you.</div>
-            {2}
+            <div>We are delighted to inform you that your key request has been approved for the following room(s):</div>
+            {1}
+            <div>Please visit <a href={2}>{2}</a> to check the status of your key request. Thank you.</div>
+            {3}
         </div>
-        '''.format(form.user.get_full_name(), settings.SITE_URL, EMAIL_FOOTER)
+        '''.format(form.user.get_full_name(), room_info, settings.SITE_URL, EMAIL_FOOTER)
     
     elif option == 'pi':
-        subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(display_user_full_name(form.user))
+        subject = "Notification: You Have Approved {0}'s Key Request at UBC LFS".format(display_user_full_name(form.user))
         message = '''\
         <div>
             <p>Hi {0},</p>
-            <div>This email is just a notification to inform you that {1}'s key request has been approved. Below are the details of the room.</div>
+            <div>This email is just a notification to inform you that you have approved {1}'s key request. Below are the details of the room(s).</div>
             {2}
             <div>Please visit <a href={3}>{3}</a> to check the latest status of key requests. Thank you.</div>
             {4}
         </div>
         '''.format(display_user_first_name(admin), display_user_first_name(form.user), room_info, settings.SITE_URL, EMAIL_FOOTER)
-
     elif option == 'admin':
         subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(display_user_full_name(form.user))
         message = '''\
@@ -343,7 +449,6 @@ def send(user, subject, message):
             print(e)
         finally:
             server.quit()
-
 
 
 

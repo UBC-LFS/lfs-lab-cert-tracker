@@ -96,8 +96,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
         form = RequestForm.objects.get(id=form_id)
         room = Room.objects.get(id=room_id)
-        func.count_approved_numbers(status, form, room)
-        
+        func.count_approved_numbers_by_id(status, form, room, request.user.id)
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
 
         return HttpResponseRedirect(next)

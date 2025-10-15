@@ -201,7 +201,9 @@ def update_all(request):
             ))
 
         if len(objs) > 0:
-            RequestFormStatus.objects.bulk_create(objs)
+            request_status_forms = RequestFormStatus.objects.bulk_create(objs)
+            func.count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, request.user.id)
+
             messages.success(request, 'Success! The number of rooms ({0}) have been updated.'.format(len(objs)))
         else:
             messages.warning(request, 'There is no room to update.')
