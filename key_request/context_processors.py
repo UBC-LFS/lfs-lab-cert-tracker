@@ -5,5 +5,5 @@ def is_manager(request):
     if request.user.is_authenticated:
         exists = func.is_pi(request.user.id)
     return {
-        'has_manager_key_requests': exists
+        'is_manager': exists
     }
