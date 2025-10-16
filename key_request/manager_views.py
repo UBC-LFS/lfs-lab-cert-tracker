@@ -21,12 +21,13 @@ from .utils import REQUEST_STATUS_DICT
 @method_decorator([never_cache], name='dispatch')
 class ManagerDashboard(LoginRequiredMixin, View):
 
-    def setup(self, request, *args, **kwargs):
-        setup = super().setup(request, *args, **kwargs)
-        form_filtered = func.get_forms_per_manager(request.user)
-        if not form_filtered.exists():
-            raise PermissionDenied
-        return setup
+    # Removed setup since no longer doing permission checks
+    # def setup(self, request, *args, **kwargs):
+    #     setup = super().setup(request, *args, **kwargs)
+    #     form_filtered = func.get_forms_per_manager(request.user)
+    #     if not form_filtered.exists():
+    #         raise PermissionDenied
+    #     return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
