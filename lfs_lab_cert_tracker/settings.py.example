@@ -94,7 +94,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'lfs_lab_cert_tracker.context_processors.site_url',
-                'key_request.context_processors.has_manager_key_requests'
+                'key_request.context_processors.is_manager'
             ],
         },
     },
