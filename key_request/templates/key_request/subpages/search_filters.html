@@ -29,7 +29,7 @@
 
     {% if path == 'all_requests' or path == 'manager_dashboard' %}
       and
-      <input type="text" name="name" value="{{ request.GET.name }}" placeholder="Full Name" />
+      <input type="text" name="name" value="{{ request.GET.name }}" placeholder="Applicant Name" />
     {% endif %}
 
     {% if path == 'manager_dashboard' %}

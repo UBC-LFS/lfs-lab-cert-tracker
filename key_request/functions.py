@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.db.models import Q, F, Max
+from django.db.models.functions import Concat
+from django.db.models import Q, F, Max, CharField, Value
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from datetime import date
@@ -108,9 +109,18 @@ def search_filters_for_requests(query):
         if query['room']:
             forms = forms.filter(rooms__id__exact=query['room']).distinct()
         if query['name']:
-            forms = forms.filter(Q(user__first_name__icontains=query['name'].strip()) | Q(user__last_name__icontains=query['name'].strip())).distinct()
+            forms = filter_forms_by_full_name(forms, query.get('name'))
+            # forms = forms.filter(Q(user__first_name__icontains=query['name'].strip()) | Q(user__last_name__icontains=query['name'].strip())).distinct()
 
     return forms, total, new_forms
+
+# Takes the name search term and looks for partial matches of users' full names
+def filter_forms_by_full_name(forms, name):
+    return forms.annotate(
+        full_name = Concat(F('user__first_name'), Value(' '), F('user__last_name'), output_field=CharField())
+    ).filter(
+        Q(full_name__icontains=name)
+    ).distinct()
 
 
 def get_forms_per_manager(user):
@@ -130,29 +140,36 @@ def get_manager_dashboard(user, query=None):
             num_new_forms += 1
 
     if query:
-        if query['building']:
-            rooms_managed = rooms_managed.filter(building__code__exact=query['building'])
-        if query['floor']:
-            rooms_managed = rooms_managed.filter(floor__name__exact=query['floor'])
-        if query['number']:
-            rooms_managed = rooms_managed.filter(number__exact=query['number'])
+        if query.get('building'):
+            rooms_managed = rooms_managed.filter(building__code__exact=query.get('building'))
+        if query.get('floor'):
+            rooms_managed = rooms_managed.filter(floor__name__exact=query.get('floor'))
+        if query.get('number'):
+            rooms_managed = rooms_managed.filter(number__exact=query.get('number'))
 
     forms = []
+
     for room in rooms_managed.all():
         for form in room.requestform_set.all():
             form.manager = user
             form.room = room
             form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=user.id)
-
-            if query and query['status']:
-                if form.status.count() == 0:
-                    if query['status'] == 'New':
-                        forms.append(form)
-                else:
-                    if (query['status'] in REV_REQUEST_STATUS_DICT.keys()) and (form.status.last().status == REV_REQUEST_STATUS_DICT[query['status']]):
-                        forms.append(form)
-            else:
+            if not query or (not query.get('name') and not query.get('status')):
                 forms.append(form)
+                continue # no filters so add form
+
+            if query.get('status'):
+                form_status = form.status.last().status if form.status.count() > 0 else None
+                if not validate_status(query.get('status'), form_status):
+                    continue   # form status does not match
+
+            if query.get('name'):
+                name = query.get('name').lower()
+                full_name = f"{form.user.first_name.lower()} {form.user.last_name.lower()}"
+                if name not in full_name:
+                    continue # name does not match
+
+            forms.append(form)
 
     forms = sorted(forms, key=lambda x: x.id, reverse=True)
     for i, form in enumerate(forms):
@@ -160,6 +177,16 @@ def get_manager_dashboard(user, query=None):
 
     return total_forms, num_new_forms, forms
 
+# Returns true if the status of the form matches the query
+# If there is no form status, checks if the query_status is NEW
+def validate_status(query_status, form_status):
+    if not form_status:
+        return query_status == "New"
+
+    if query_status in REV_REQUEST_STATUS_DICT.keys():
+        return form_status == REV_REQUEST_STATUS_DICT.get(query_status)
+
+    return False
 
 def create_data_from_session(session, key, room=None):
     data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
