@@ -84,7 +84,7 @@
 	                                Name:
 	                                {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 	                              </label>
-	                              <div class="help">Maximum characters: 100</div>
+	                              <div class="help">Maximum characters: {% if raw_model == 'floors' %} 50 {% else %} 100 {% endif %}</div>
 	                              <input id="id_name_{{ item.id }}" class="form-control" type="text" name="name" maxlength="100" value="{{ item.name }}" required />
 	                            </div>
 
