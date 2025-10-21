@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, Http404
+from django.utils.html import format_html
+from django.db.utils import IntegrityError
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -312,10 +314,17 @@ class DeleteSetting(LoginRequiredMixin, View):
         obj = self.model_obj.objects.filter(id=id)
         if obj.exists():
             instance = obj.first()
-            obj.delete()
-            messages.success(request, 'Successfully {0} - {1} (ID: {2}) deleted'.format(self.model, instance.name, id))
+            try:
+                obj.delete()
+                messages.success(request, 'Successfully {0} - {1} (ID: {2}) deleted'.format(self.model, instance.name, id))
+            except IntegrityError:
+                msg = "Cannot delete {0} - {1} while it is still associated with rooms. ".format(self.model, instance.name)
+                model = str(self.model).lower()
+                filter = instance.name if model != 'building' else instance.code
+                msg += format_html('<a href="{0}">Click</a> to see all associated rooms.', reverse('key_request:all_rooms') + '?' + model + '=' + filter)
+                messages.error(request, msg)
         else:
-            messages.error(request, 'Error occured while deleting {0} - {1} (ID: {2}). Please try again.'.format(self.model, instance.name, id))
+            messages.error(request, 'Error occurred while deleting {0} (ID: {1}). Please try again.'.format(self.model, id))
 
         return redirect('key_request:settings', model=self.raw_model)
 
@@ -628,9 +637,18 @@ def update_room_data(queryset, data):
 def delete_room(request):
     room_filtered = Room.objects.filter(id=request.POST.get('room'))
     room_number = room_filtered.first().number
+    room_building = room_filtered.first().building.code
+    room_floor = room_filtered.first().floor.name
     if room_filtered.exists():
-        room_filtered.delete()
-        messages.success(request, 'Success! Room Number {0} deleted.'.format(room_number))
+        try:
+            room_filtered.delete()
+            messages.success(request, 'Success! Room Number {0} deleted.'.format(room_number))
+        except IntegrityError:
+            msg = "Cannot delete {0} {1} {2} as there are associated key requests. ".format(room_building, room_floor, room_number)
+            msg += format_html('<a href="{0}">Click</a> to see all associated requests.',
+                               reverse('key_request:all_requests') + '?building=' + room_building +
+                               '&floor=' + room_floor + '&number=' + room_number)
+            messages.error(request, msg)
     else:
         messages.error(request, 'Error! Failed to delete Room Number {0}.'.format(room_number))
     return redirect('key_request:all_rooms')

@@ -44,8 +44,8 @@ class Floor(models.Model):
 
 
 class Room(models.Model):
-    building = models.ForeignKey(Building, on_delete=models.CASCADE)
-    floor = models.ForeignKey(Floor, on_delete=models.CASCADE)
+    building = models.ForeignKey(Building, on_delete=models.DO_NOTHING)
+    floor = models.ForeignKey(Floor, on_delete=models.DO_NOTHING)
     number = models.CharField(max_length=100)
     managers = models.ManyToManyField(User)
     areas = models.ManyToManyField(Lab)
