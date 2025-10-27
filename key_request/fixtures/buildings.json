@@ -53,16 +53,5 @@
         "updated_on": "2025-01-01",
         "slug": "fbic"
         }
-    },
-    {
-        "model": "key_request.building",
-        "pk": 6,
-        "fields": {
-        "name": "Agassiz",
-        "code": "Agassiz",
-        "created_on": "2025-01-01",
-        "updated_on": "2025-01-01",
-        "slug": "agassiz"
-        }
     }
 ]
