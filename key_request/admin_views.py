@@ -174,7 +174,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
         )
 
         room = Room.objects.get(id=room_id)
-        func.count_approved_numbers(status, self.form, room)
+        func.count_approved_numbers_by_id(status, self.form, room, request.user.id, manager_id)
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
         return HttpResponseRedirect(next)
@@ -192,19 +192,27 @@ def update_all(request):
 
     if status:
         objs = []
+        manager_room_map = {}
         for room in rooms:
             room_sp = room.split('_')
+            form = RequestForm.objects.get(id=room_sp[0])
             objs.append(RequestFormStatus(
-                form = RequestForm.objects.get(id=room_sp[0]),
+                form = form,
                 room_id = room_sp[1],
                 manager_id = room_sp[2],
                 operator_id = request.user.id,
                 status = status
             ))
 
+            manager_id = room_sp[2]
+
+            # Check if the user is approving on behalf of another
+            if int(manager_id) != int(request.user.id):
+                manager_room_map.setdefault(manager_id, []).append(room_sp[1])
+
         if len(objs) > 0:
             request_status_forms = RequestFormStatus.objects.bulk_create(objs)
-            func.count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, request.user.id)
+            func.count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, request.user.id, manager_room_map)
 
             messages.success(request, 'Success! The number of rooms ({0}) have been updated.'.format(len(objs)))
         else:
