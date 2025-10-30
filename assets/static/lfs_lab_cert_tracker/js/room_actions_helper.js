@@ -63,15 +63,12 @@ $(document).ready(function() {
       $self = $(tr).find('input.room-checkbox');
       if ($(this).is(':checked')) {
 
-        // New rooms are checked
-        if ($self.data('is_new') === true) {
-          $self.prop('checked', true);
-          updateAllList[$self.val()] = {
-            'building': $self.data('building'),
-            'floor': $self.data('floor'),
-            'room_number': $self.data('room_number')
-          };
-        }
+        $self.prop('checked', true);
+        updateAllList[$self.val()] = {
+          'building': $self.data('building'),
+          'floor': $self.data('floor'),
+          'room_number': $self.data('room_number')
+        };
 
       } else {
         $self.prop('checked', false);

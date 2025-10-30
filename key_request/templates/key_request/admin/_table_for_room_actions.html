@@ -48,6 +48,7 @@
       <th>Areas</th>
       <th>Required Trainings</th>
       <th>
+          Select All Rooms
         <input id="select-all-checkbox" type="checkbox" />
       </th>
     </tr>
@@ -74,7 +75,7 @@
           </ul>
         </td>
         <td>
-          <input class="room-checkbox" type="checkbox" name="room" value="{{ room.id }}" data-building="{{ room.building.code }}" data-floor="{{ room.floor.name }}" data-room_number="{{ room.number }}" data-is_new="{% if room.status|length == 0 %}true{% else %}false{% endif %}" />
+          <input class="room-checkbox" type="checkbox" name="room" value="{{ room.id }}" data-building="{{ room.building.code }}" data-floor="{{ room.floor.name }}" data-room_number="{{ room.number }}"/>
         </td>
       </tr>
     {% endfor %}
