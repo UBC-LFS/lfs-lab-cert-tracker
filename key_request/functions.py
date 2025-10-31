@@ -281,16 +281,16 @@ def count_approved_numbers_by_id(status, form, room, manager_id, absent_pi=None)
 
     room_info = '<ul><li>{0}</li></ul>'.format(display_room(room))
     if all_approved:
-        subject, message = get_message(form, form.user, 'user', room_info)
+        subject, message = get_message(form.user, form.user, 'user', room_info)
         send(form.user, subject, message)
 
     manager = User.objects.get(id=manager_id)
-    subject, message = get_message(form, manager, 'pi', room_info)
+    subject, message = get_message(form.user, manager, 'pi', room_info)
     send(manager, subject, message)
 
     if absent_pi:
         pi = User.objects.get(id=absent_pi)
-        subject, message = get_message(form, pi, 'absent_pi', room_info, manager)
+        subject, message = get_message(form.user, pi, 'absent_pi', room_info, manager)
         send(pi, subject, message)
 
 def count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, manager_id, pi_room_map):
@@ -479,13 +479,13 @@ def get_message(user, pi, option, room_info=None, admin=None):
 def send_email(form, room):
 
     # Applicant
-    subject, message = get_message(form, form.user, 'user')
+    subject, message = get_message(form.user, form.user, 'user')
     send(form.user, subject, message)
 
     # PI
     room_info = '<ul><li>{0}</li></ul>'.format(display_room(room))
     for manager in room.managers.all():
-        subject, message = get_message(form, manager, 'pi', room_info)
+        subject, message = get_message(form.user, manager, 'pi', room_info)
         send(manager, subject, message)
 
 def send_multiple(contents):
