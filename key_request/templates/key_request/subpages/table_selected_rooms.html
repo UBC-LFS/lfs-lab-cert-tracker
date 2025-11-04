@@ -18,6 +18,7 @@
         <th>PIs</th>
       {% endif %}
       <th>Required Trainings</th>
+      <th>Approved?</th>
     </tr>
   </thead>
   {% for room in rooms %}
@@ -62,7 +63,18 @@
           {% endfor%}
         </ul>
       </td>
+    <td>
+        {% get_status_by_room_and_form form.id room.id as approved %}
+        {% if approved %}
+            <span class="material-symbols-outlined text-success">check_circle</span>
+        {% else %}
+            <span class="material-symbols-outlined text-danger">x_circle</span>
+        {% endif %}
+    </td>
+
+
     </tr>
+
   {% empty %}
     <tr>
       <td colspan="100%">No rooms found</td>

@@ -5,7 +5,7 @@ from key_request import functions as func
 from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
 from key_request.forms import KEY_REQUEST_LABELS
-from key_request.models import Room, RequestFormStatus
+from key_request.models import Room, RequestFormStatus, RequestForm
 
 
 register = template.Library()
@@ -69,6 +69,17 @@ def get_status_by_manager(form_id, args):
         obj = status_filtered.last()
         return REQUEST_STATUS_DICT[obj.status]
     return None
+
+@register.simple_tag
+def get_status_by_room_and_form(form_id, room_id):
+    try:
+        form = RequestForm.objects.get(id=form_id)
+        room = Room.objects.get(id=room_id)
+    except (RequestForm.DoesNotExist, Room.DoesNotExist):
+        return False
+
+    return func.all_pis_approved(form, room)
+
 
 
 @register.simple_tag
