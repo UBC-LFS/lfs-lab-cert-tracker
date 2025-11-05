@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q, F, Max
 from django.core.mail import send_mail
 from django.urls import resolve
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import *
@@ -298,6 +300,14 @@ def make_capital(name):
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')
+
+
+def check_email_valid(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError as e:
+        return False
 
 """def get_expiry_date(completion_date, cert):
     expiry_year = completion_date.year + int(cert.expiry_in_years)

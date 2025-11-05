@@ -17,8 +17,8 @@
 	<form method="GET" >
 		<div class="input-field">
 			<input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name" />
-			<button class="btn btn-secondary btn-sm" type="submit">Search</button>
-			<a class="btn btn-sm btn-light" href="{% url 'app:all_trainings' %}">Clear</a>
+			<button class="btn btn-primary btn-sm" type="submit">Search</button>
+			<a class="btn btn-sm btn-secondary" href="{% url 'app:all_trainings' %}">Clear</a>
 		</div>
 	</form>
 </div>
@@ -28,7 +28,8 @@
     <tr>
 			<th>ID</th>
       <th>Training Name</th>
-			<th>Expiry in year</th>
+			<th>Training <br /> Unique ID</th>
+			<th>Expiry in Year</th>
 			<th># of Users <br /> with this Training</th>
 			<th style="width:140px;">Actions</th>
     </tr>
@@ -39,8 +40,13 @@
 				<td>{{ cert.id }}</td>
 				<td class="text-left">{{ cert.name }}</td>
 				<td>
+					{% if cert.unique_id %}
+						{{ cert.unique_id }}
+					{% endif %}
+				</td>
+				<td>
 					{% if cert.expiry_in_years == 0 %}
-						None
+						No
 					{% else %}
 						{{ cert.expiry_in_years }} years
 					{% endif %}
@@ -49,7 +55,7 @@
 				<td>
 					{% if request.user.is_superuser %}
 						<div class="btn-toolbar">
-							<button class="btn btn-primary btn-sm mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
+							<button class="btn btn-warning btn-sm mr-2" type="button" data-toggle="modal" data-target="#cert-name-edit-modal-{{ cert.id }}">Edit</button>
 
 							<div class="modal fade" id="cert-name-edit-modal-{{ cert.id }}" tabindex="-1" role="dialog" aria-labelledby="cert-name-edit-modal-label-{{ cert.id }}" aria-hidden="true">
 								<div class="modal-dialog modal-lg" role="document">
@@ -64,20 +70,31 @@
 													{% csrf_token %}
 
 													<div class="mb-3">
-														<label for="id_name_{{ cert.id }}" class="font-weight-bold">Name:</label>
-														<small class="text-muted">(Maximum characters: 256)</small>
+														<label class="font-weight-bold">
+															Name:
+															<i class="material-icons text-danger font-size-xs p-0">emergency</i>
+														</label>
 														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" required />
+														<small class="text-muted">(Maximum characters: 256)</small>
 													</div>
 
 													<div class="mb-3">
-														<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">Expiry in years:</label>
-														<small class="text-muted">(0 means "NO Expiry Date")</small>
+														<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">
+															Expiry in Years:
+															<i class="material-icons text-danger font-size-xs">emergency</i>
+														</label>
 														<input id="id_expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
-
+														<small class="text-muted">(0 means "NO Expiry Date")</small>
 													</div>
 
+													<div class="mb-3">
+												    <label for="id_unique_id_{{ cert.id }}" class="font-weight-bold">Training Unique ID:</label>
+												    <input id="id_unique_id_{{ cert.id }}" class="form-control" type="text" name="unique_id" maxlength="50" value="{% if cert.unique_id %}{{ cert.unique_id }}{% endif %}" />
+														<small class="helptext">Note: Each training has an unique ID in Canvas Catalog</small>
+												  </div>
+
 													<input type="hidden" name="training" value="{{ cert.id }}" />
-													<input class="btn btn-primary btn-sm" type="submit" value="Update" />
+													<input class="btn btn-warning d-block mx-auto" type="submit" value="Update" />
 												</form>
 											</div>
 										</div>
@@ -108,7 +125,6 @@
 
 {% include 'app/subpages/_pagination.html' with data=trainings %}
 
-
 {% if request.user.is_superuser %}
 	<div class="row">
 		<div class="col-md-8">
@@ -117,7 +133,27 @@
 			<form action="" method="POST">
 				{% csrf_token %}
 
-				<table class="form-table-width">{{ form.as_table }}</table>
+				<table class="form-table-width">
+					{% for field in form.visible_fields %}
+						<tr>
+							<th>
+								<label for="{{ field.id_for_label }}">
+									{{ field.label }}
+									{% if field.name == 'name' or  field.name == 'expiry_in_years' %}
+										<i class="material-icons text-danger font-size-xs">emergency</i>
+									{% endif %}
+								</label>
+							</th>
+							<td>
+								{{ field }}
+								{% if field.help_text %}
+									<div class="helptext">{{ field.help_text|safe }}</div>
+								{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+				</table>
+
 				<input class="btn btn-primary mt-3" type="submit" value="Create New Training" />
 			</form>
 		</div>

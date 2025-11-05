@@ -179,7 +179,6 @@ class UserReportMissingTrainingsView(LoginRequiredMixin, View):
         })
 
 
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
@@ -259,7 +258,7 @@ class UserDetailsView(LoginRequiredMixin, View):
         return setup
 
     @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):                
+    def get(self, request, *args, **kwargs):
         return render(request, 'app/users/user_details.html', {
             'app_user': self.user,
             'user_labs': get_user_labs(self.user),
@@ -593,7 +592,6 @@ class AllAreasView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
         area_list = Lab.objects.all()
 
         # Pagination enables
@@ -665,11 +663,6 @@ class AreaDetailsView(LoginRequiredMixin, View):
         # if session has next value, delete it
         if request.session.get('next'):
             del request.session['next']
-
-        # required_trainings = []
-        # for labcert in self.area.labcert_set.all():
-        #     required_trainings.append(labcert.cert)
-        # is_pi = is_pi_in_area(request.user.id, self.area.id)
 
         required_certs = Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name')
 
@@ -958,7 +951,7 @@ class AllTrainingsView(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        training_list = Cert.objects.all()
+        training_list = Cert.objects.all().order_by('id')
 
         # Pagination enables
         query = request.GET.get('q')

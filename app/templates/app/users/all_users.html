@@ -157,7 +157,7 @@
 				</td>
 				<td>
 					<div class="btn-toolbar">
-            <button type="button" class="btn btn-primary btn-xs mr-2" data-toggle="modal" data-target="#user-edit-modal-{{ user.id }}">Edit</button>
+            <button type="button" class="btn btn-warning btn-xs mr-2" data-toggle="modal" data-target="#user-edit-modal-{{ user.id }}">Edit</button>
 
             <div id="user-edit-modal-{{ user.id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="user-edit-modal-{{ user.id }}-label" aria-hidden="true">
               <div class="modal-dialog">
@@ -233,7 +233,7 @@
 
       			 					<input type="hidden" name="user" value="{{ user.id }}" />
 											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
-                      <input class="btn btn-primary" type="submit" value="Update" />
+                      <input class="btn btn-warning d-block mx-auto" type="submit" value="Update" />
                     </form>
                   </div>
                 </div>
