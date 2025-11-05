@@ -391,6 +391,10 @@ def make_send_obj(user, subject, message):
 
 # Returns True if all PIs have approved a room
 def all_pis_approved(form, room):
+    # Check if there are no managers associated in a room
+    if len(room.managers.all()) == 0:
+        return False
+
     for i, manager in enumerate(room.managers.all()):
         status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
         if status_filtered.exists():
