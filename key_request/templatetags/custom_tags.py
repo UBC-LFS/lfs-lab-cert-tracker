@@ -72,6 +72,8 @@ def get_status_by_manager(form_id, args):
 
 @register.simple_tag
 def get_status_by_room_and_form(form_id, room_id):
+    if not form_id or not room_id:
+        return False
     try:
         form = RequestForm.objects.get(id=form_id)
         room = Room.objects.get(id=room_id)
