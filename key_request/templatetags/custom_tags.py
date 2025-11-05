@@ -32,6 +32,13 @@ def make_field_name_label(field):
     name_list = [sp.capitalize() for sp in field.name.split('_')]
     return ' '.join(name_list)
 
+@register.simple_tag
+def get_help_text_by_field(fields, field_name):
+    for f in fields:
+        if f.label == field_name:
+            return f.help_text
+    return None
+
 
 @register.filter
 def get_status_display(status):

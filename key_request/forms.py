@@ -26,7 +26,7 @@ class FloorForm(forms.ModelForm):
             'name': forms.TextInput(attrs={ 'class': 'form-control' })
         }
         help_texts = {
-            'name': 'Maximum characters: 50'
+            'name': 'It must be unique. Maximum characters: 50'
         }
 
 

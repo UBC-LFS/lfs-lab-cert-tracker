@@ -1,5 +1,5 @@
 {% extends "lfs_lab_cert_tracker/base.html" %}
-
+{% load custom_tags %}
 {% block top_menu_nav %}
 	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
 	{% include 'app/subpages/return_message.html' with data=messages %}
@@ -84,20 +84,25 @@
 	                                Name:
 	                                {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 	                              </label>
-	                              <div class="help">Maximum characters: {% if raw_model == 'floors' %} 50 {% else %} 100 {% endif %}</div>
+                                    {% get_help_text_by_field form.visible_fields "Name" as help %}
+                                    {% if help %}
+                                        <div class="help">{{ help|safe }}</div>
+                                    {% endif %}
 	                              <input id="id_name_{{ item.id }}" class="form-control" type="text" name="name" maxlength="100" value="{{ item.name }}" required />
 	                            </div>
-
-															{% if model == 'Building' %}
-																<div class="field-wrapper">
+									{% if model == 'Building' %}
+									<div class="field-wrapper">
 		                              <label for="id_code_{{ item.id }}">
 		                                Code:
 		                                {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 		                              </label>
-		                              <div class="help">It must be unique. Maximum characters: 20</div>
+                                        {% get_help_text_by_field form.visible_fields "Code" as help %}
+                                        {% if help %}
+                                            <div class="help">{{ help|safe }}</div>
+                                        {% endif %}
 		                              <input id="id_code_{{ item.id }}" class="form-control" type="text" name="code" maxlength="20" value="{{ item.code }}" required />
 		                            </div>
-															{% endif %}
+									{% endif %}
 
 	                            <input type="hidden" name="item" value="{{ item.id }}" />
 	                            <input class="btn btn-warning mt-2" type="submit" value="Update" />
