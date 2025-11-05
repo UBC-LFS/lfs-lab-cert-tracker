@@ -54,7 +54,7 @@ class Index(LoginRequiredMixin, View):
                             if not form.status_created_at or status_filtered.last().created_at > form.status_created_at:
                                 form.status_created_at = status_filtered.last().created_at
             
-            if num_managers == manager_approvals:
+            if num_managers > 0 and num_managers == manager_approvals:
                 form.status = 'Approved'
 
             user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, room_ids)
