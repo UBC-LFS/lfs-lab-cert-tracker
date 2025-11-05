@@ -63,7 +63,12 @@
 <div class="row mt-5">
 
 	<div class="col-md-8">
-		<h3>User: {{ app_user.get_full_name }}</h3>
+		<h3>
+			User: {{ app_user.get_full_name }} ({{ app_user.id }})
+			{% if not app_user.is_active %}
+				<span class="badge badge-secondary font-size-sm">INACTIVE</span>
+			{% endif %}
+		</h3>
 
 		<div class="box border-green mt-3">
 			<h5 class="text-success">

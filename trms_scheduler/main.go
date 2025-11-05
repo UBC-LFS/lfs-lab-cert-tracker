@@ -3,9 +3,9 @@ package main
 import "trms_scheduler/app"
 
 /*
-# Change the SSL mode
-DEV = disable
-PROD = verify-full
+# Change the SSL mode in production
+- DEV = disable
+- PROD = verify-full
 */
 
 var SSL_MODE = "disable"
