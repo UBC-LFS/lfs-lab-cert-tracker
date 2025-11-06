@@ -46,9 +46,6 @@ class AllRequests(LoginRequiredMixin, View):
 
         form_list, total_forms, new_forms = func.search_filters_for_requests(query)
 
-        if query['status']:
-            form_list = new_forms
-
         num_filtered_forms = len(form_list)
 
         page = request.GET.get('page', 1)

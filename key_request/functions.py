@@ -111,6 +111,11 @@ def search_filters_for_requests(query):
         if query['name']:
             forms = filter_forms_by_full_name(forms, query.get('name'))
             # forms = forms.filter(Q(user__first_name__icontains=query['name'].strip()) | Q(user__last_name__icontains=query['name'].strip())).distinct()
+        if query['status']:
+            if query['status'] == "New":
+                forms = forms.filter(requestformstatus__isnull=True)
+            else:
+                forms = forms.filter(requestformstatus__status__exact=REV_REQUEST_STATUS_DICT.get(query['status'])).distinct()
 
     return forms, total, new_forms
 
@@ -121,7 +126,6 @@ def filter_forms_by_full_name(forms, name):
     ).filter(
         Q(full_name__icontains=name)
     ).distinct()
-
 
 def get_forms_per_manager(user):
     # rooms_managed = Room.objects.filter(managers=user)
