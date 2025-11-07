@@ -205,13 +205,14 @@ def create_data_from_session(session, key, room=None):
             data['floor'] = session[key]['floor']
         if session[key]['number']:
             data['number'] = session[key]['number']
-        if session[key]['key']:
+
+        if 'key' in session[key]:
             data['key'] = session[key]['key']
-        if session[key]['fob']:
+        if 'fob' in session[key]:
             data['fob'] = session[key]['fob']
-        if session[key]['alarm']:
+        if 'alarm' in session[key]:
             data['alarm'] = session[key]['alarm']
-        if session[key]['is_active']:
+        if 'is_active' in session[key]:
             data['is_active'] = session[key]['is_active']
 
         if len(session[key]['managers']) > 0:
