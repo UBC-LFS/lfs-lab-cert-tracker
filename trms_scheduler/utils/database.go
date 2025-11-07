@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/lib/pq"
 	_ "github.com/lib/pq" // PostgreSQL driver
@@ -51,20 +52,20 @@ func (db *Database) Close() {
 	}
 }
 
-func (db *Database) GetUsers() (map[int]map[string]interface{}, error) {
-	q := `SELECT * FROM auth_user WHERE is_active = TRUE;`
-	rows, err := db.Conn.Query(q)
+func (db *Database) GetUsers() (map[int]map[string]interface{}, map[string]int, error) {
+	rows, err := db.Conn.Query(`SELECT * FROM auth_user WHERE is_active = TRUE;`)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get columns: %v", err)
+		return nil, nil, fmt.Errorf("failed to get columns: %v", err)
 	}
 
-	results := make(map[int]map[string]interface{})
+	items := make(map[int]map[string]interface{})
+	items_by_username := make(map[string]int)
 	for rows.Next() {
 		values := make([]interface{}, len(columns))
 		valuePtrs := make([]interface{}, len(columns))
@@ -74,16 +75,16 @@ func (db *Database) GetUsers() (map[int]map[string]interface{}, error) {
 
 		// Scan the row into value pointers
 		if err := rows.Scan(valuePtrs...); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %v", err)
+			return nil, nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 
 		rowMap := make(map[string]interface{})
-		var userID int
+		var id int
+		var username string
 		for i, col := range columns {
 			var v interface{}
 			val := values[i]
 
-			// Convert []byte to string for readability
 			b, ok := val.([]byte)
 			if ok {
 				v = string(b)
@@ -91,18 +92,77 @@ func (db *Database) GetUsers() (map[int]map[string]interface{}, error) {
 				v = val
 			}
 			if col == "id" {
-				// fmt.Printf("The type of myVar is: %T\n", v)
-				userID = int(v.(int64))
+				id = int(v.(int64))
+			} else if col == "username" {
+				username = v.(string)
 			}
+
 			rowMap[col] = v
 		}
-		results[userID] = rowMap
+
+		items[id] = rowMap
+		items_by_username[username] = id
 	}
 
-	return results, nil
+	return items, items_by_username, nil
 }
 
-func (db *Database) GetUsersWithMissingCerts() (map[int][]string, int, error) {
+func (db *Database) GetTrainings() (map[int]map[string]interface{}, map[string]int, error) {
+	rows, err := db.Conn.Query(`SELECT * FROM lfs_lab_cert_tracker_cert;`)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get columns: %v", err)
+	}
+
+	items := make(map[int]map[string]interface{})
+	items_by_unique_id := make(map[string]int)
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range columns {
+			valuePtrs[i] = &values[i]
+		}
+
+		// Scan the row into value pointers
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return nil, nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+
+		rowMap := make(map[string]interface{})
+		var id int
+		var unique_id string
+		for i, col := range columns {
+			var v interface{}
+			val := values[i]
+
+			b, ok := val.([]byte)
+			if ok {
+				v = string(b)
+			} else {
+				v = val
+			}
+			if col == "id" {
+				id = int(v.(int64))
+			} else if col == "unique_id" {
+				unique_id = v.(string)
+			}
+
+			rowMap[col] = v
+		}
+
+		items[id] = rowMap
+		items_by_unique_id[unique_id] = id
+	}
+
+	return items, items_by_unique_id, nil
+}
+
+func (db *Database) GetUsersWithMissingTrainings() (map[int][]string, int, error) {
 	q := `
 		SELECT
 			u.id AS user_id,
@@ -157,7 +217,73 @@ func (db *Database) GetUsersWithMissingCerts() (map[int][]string, int, error) {
 	return result, totalUsersWithMissing, nil
 }
 
-func (db *Database) GetUsersWithExpiredCerts() (map[int][]string, int, error) {
+func (db *Database) GetUsersWithExpiredTrainings() (map[int][]string, error) {
+	query := `
+		SELECT
+			u.id AS user_id,
+			u.username,
+			COALESCE(
+				array_remove(
+					array_agg(DISTINCT c.name)
+					FILTER (
+						WHERE latest.expiry_date IS NOT NULL
+						  AND latest.completion_date IS NOT NULL
+						  AND latest.expiry_date <> latest.completion_date
+						  AND latest.expiry_date < NOW()
+					),
+				NULL),
+				'{}'::text[]
+			) AS expired_certs,
+			COUNT(DISTINCT c.id)
+				FILTER (
+					WHERE latest.expiry_date IS NOT NULL
+					  AND latest.completion_date IS NOT NULL
+					  AND latest.expiry_date <> latest.completion_date
+					  AND latest.expiry_date < NOW()
+				) AS expired_count
+		FROM auth_user u
+		JOIN (
+			SELECT DISTINCT ON (uc.user_id, uc.cert_id)
+				uc.user_id,
+				uc.cert_id,
+				uc.expiry_date,
+				uc.completion_date
+			FROM lfs_lab_cert_tracker_usercert uc
+			ORDER BY uc.user_id, uc.cert_id, uc.expiry_date DESC
+		) AS latest
+			ON latest.user_id = u.id
+		JOIN lfs_lab_cert_tracker_cert c
+			ON c.id = latest.cert_id
+		WHERE u.is_active = TRUE
+		GROUP BY u.id, u.username
+		ORDER BY u.id;
+	`
+
+	rows, err := db.Conn.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results := make(map[int][]string)
+	for rows.Next() {
+		var userID int
+		var username string
+		var expiredCerts pq.StringArray
+		var expiredCount int
+
+		err := rows.Scan(&userID, &username, &expiredCerts, &expiredCount)
+		if err != nil {
+			return nil, err
+		}
+
+		certs := []string(expiredCerts)
+		results[userID] = certs
+	}
+	return results, nil
+}
+
+func (db *Database) GetUsersWithExpiredTrainings2() (map[int][]string, error) {
 	q := `
 		SELECT
 			u.id AS user_id,
@@ -167,7 +293,8 @@ func (db *Database) GetUsersWithExpiredCerts() (map[int][]string, int, error) {
 				array_agg(DISTINCT c.name)
 					FILTER (WHERE uc.expiry_date IS NOT NULL
 							AND uc.completion_date IS NOT NULL
-							AND uc.expiry_date <> uc.completion_date),
+							AND uc.expiry_date <> uc.completion_date
+							AND uc.expiry_date < NOW()),
 				NULL
 				),
 				'{}'::text[]
@@ -175,7 +302,8 @@ func (db *Database) GetUsersWithExpiredCerts() (map[int][]string, int, error) {
 			COUNT(DISTINCT c.id)
 				FILTER (WHERE uc.expiry_date IS NOT NULL
 						AND uc.completion_date IS NOT NULL
-						AND uc.expiry_date <> uc.completion_date) AS expired_count
+						AND uc.expiry_date <> uc.completion_date
+						AND uc.expiry_date < NOW()) AS expired_count
 		FROM auth_user u
 		JOIN lfs_lab_cert_tracker_usercert uc ON uc.user_id = u.id
 		JOIN lfs_lab_cert_tracker_cert c ON c.id = uc.cert_id
@@ -185,13 +313,11 @@ func (db *Database) GetUsersWithExpiredCerts() (map[int][]string, int, error) {
 
 	rows, err := db.Conn.Query(q)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	defer rows.Close()
 
 	result := make(map[int][]string)
-	totalUsers := 0
-
 	for rows.Next() {
 		var userID int
 		var username sql.NullString
@@ -199,21 +325,18 @@ func (db *Database) GetUsersWithExpiredCerts() (map[int][]string, int, error) {
 		var expiredCount sql.NullInt64
 
 		if err := rows.Scan(&userID, &username, &expiredCerts, &expiredCount); err != nil {
-			return nil, 0, fmt.Errorf("scan error: %w", err)
+			return nil, fmt.Errorf("scan error: %w", err)
 		}
 
 		certs := []string(expiredCerts)
 		result[userID] = certs
-		if expiredCount.Valid && expiredCount.Int64 > 0 {
-			totalUsers++
-		}
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	return result, totalUsers, nil
+	return result, nil
 }
 
 type UserLab struct {
@@ -295,61 +418,25 @@ func (db *Database) GetUserTrainings() ([]UserCert, error) {
 	return userCerts, nil
 }
 
-func (db *Database) QueryData(query string) ([]map[string]interface{}, error) {
-	if db.Conn == nil {
-		return nil, fmt.Errorf("database not connected")
-	}
+func (db *Database) GetUserTrainingKeys() (map[string]bool, error) {
+	existing := make(map[string]bool)
 
-	rows, err := db.Conn.Query(query)
+	rows, err := db.Conn.Query(`SELECT user_id, cert_id, completion_date FROM lfs_lab_cert_tracker_usercert;`)
 	if err != nil {
-		return nil, fmt.Errorf("query error: %v", err)
+		return nil, err
 	}
-
 	defer rows.Close()
 
-	columns, err := rows.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get columns: %v", err)
-	}
-
-	results := []map[string]interface{}{}
-
 	for rows.Next() {
-		// Create a slice of interface{}'s to represent each column
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
-		for i := range columns {
-			valuePtrs[i] = &values[i]
+		var userID, certID int64
+		var completionDate time.Time
+		if err := rows.Scan(&userID, &certID, &completionDate); err != nil {
+			return nil, err
 		}
 
-		// Scan the row into value pointers
-		if err := rows.Scan(valuePtrs...); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %v", err)
-		}
-
-		// Build a map for the row
-		rowMap := make(map[string]interface{})
-		for i, col := range columns {
-			var v interface{}
-			val := values[i]
-
-			// Convert []byte to string for readability
-			b, ok := val.([]byte)
-			if ok {
-				v = string(b)
-			} else {
-				v = val
-			}
-
-			rowMap[col] = v
-		}
-
-		results = append(results, rowMap)
+		key := fmt.Sprintf("%d-%d-%s", userID, certID, completionDate.Format("2006-01-02"))
+		existing[key] = true
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("row iteration error: %v", err)
-	}
-
-	return results, nil
+	return existing, nil
 }

@@ -8,10 +8,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"trms_scheduler/utils"
 )
+
+type TrainingModel struct {
+	UserID         int
+	TrainingID     int
+	CompletionDate string
+	ExpiryDate     string
+	UploadedDate   string
+	CertFile       string
+	ByApi          bool
+}
 
 func Update_by_API(ssl_mode string) {
 	var db utils.Database
@@ -20,32 +31,44 @@ func Update_by_API(ssl_mode string) {
 	}
 	defer db.Close()
 
-	usersWithMissingCerts, _, err := db.GetUsersWithMissingCerts()
+	usersWithMissingTrainings, _, err := db.GetUsersWithMissingTrainings()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	usersWithExpiredCerts, _, err := db.GetUsersWithExpiredCerts()
+	usersWithExpiredTrainings, err := db.GetUsersWithExpiredTrainings()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	keysA := getKeys(usersWithMissingCerts)
-	keysB := getKeys(usersWithExpiredCerts)
+	keysA := getKeys(usersWithMissingTrainings)
+	keysB := getKeys(usersWithExpiredTrainings)
 
 	setA := toSet(keysA)
 	setB := toSet(keysB)
 	allUserIDs := union(setA, setB)
 
-	users, err := db.GetUsers()
+	users, users_by_username, err := db.GetUsers()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	trainings, trainings_by_unique_id, err := db.GetTrainings()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	userTrainingKeys, err := db.GetUserTrainingKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var usernames []string
 	for userID := range allUserIDs {
 		usernames = append(usernames, users[userID]["username"].(string))
 	}
-	fmt.Println(usernames)
+
+	fmt.Println("The number of users:", len(usernames))
 
 	groupSize := 5
 	var groups [][]string
@@ -58,8 +81,12 @@ func Update_by_API(ssl_mode string) {
 		groups = append(groups, usernames[i:end])
 	}
 
-	for i, group := range groups {
-		fmt.Printf("Group %d: %v\n", i+1, group)
+	now := time.Now()
+	today := now.Format("2006-01-02")
+
+	var trainingModels []TrainingModel
+	for _, group := range groups {
+		// fmt.Printf("Group %d: %v\n", i+1, group)
 
 		var requestIdentifiers []map[string]string
 		for _, g := range group {
@@ -69,19 +96,15 @@ func Update_by_API(ssl_mode string) {
 			requestIdentifiers = append(requestIdentifiers, temp)
 		}
 
-		fmt.Println(requestIdentifiers)
-
 		page := 1
 		hasNextPage := true
 		for hasNextPage {
-			fmt.Println(page, hasNextPage)
-			apiURL := fmt.Sprintf("%s?page=%d&pageSize=%d", os.Getenv("LFS_LAB_CERT_TRACKER_API_URL"), page, 20)
+			apiURL := fmt.Sprintf("%s?page=%d&pageSize=%d", os.Getenv("LFS_LAB_CERT_TRACKER_API_URL"), page, 50)
 
 			payload := map[string][]map[string]string{
 				"requestIdentifiers": requestIdentifiers,
 			}
 
-			// Convert payload to JSON
 			jsonData, err := json.Marshal(payload)
 			if err != nil {
 				log.Fatal(err)
@@ -106,52 +129,103 @@ func Update_by_API(ssl_mode string) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Println("Status:", res.Status)
-			fmt.Printf("type %T\n", body)
 
 			var data map[string]interface{}
 			json.Unmarshal(body, &data)
 
 			hasNextPage = data["hasNextPage"].(bool)
 			page = int(data["page"].(float64)) + 1
-			fmt.Println("here ==", page, hasNextPage)
-			// fmt.Println(data["pageItems"])
-			// fmt.Printf("type %T\n", data["pageItems"])
 
-			for j, item := range data["pageItems"].([]interface{}) {
-				fmt.Println(j)
-
+			for _, item := range data["pageItems"].([]interface{}) {
+				var username string
 				var status string
-				var trainingID string
+				var trainingID float64
 				var trainingName string
 				var completionDate string
 				if subitem, ok := item.(map[string]interface{}); ok {
 					if reqId, ok := subitem["requestedIdentifier"]; ok {
-						fmt.Println(reqId.(map[string]interface{})["identifier"])
+						username = reqId.(map[string]interface{})["identifier"].(string)
 					}
 
 					if reqId, ok := subitem["certificate"]; ok {
 						status = reqId.(map[string]interface{})["status"].(string)
-						trainingID = strings.TrimSpace(reqId.(map[string]interface{})["trainingId"].(string))
+						trainingID = reqId.(map[string]interface{})["trainingId"].(float64)
 						trainingName = strings.TrimSpace(reqId.(map[string]interface{})["trainingName"].(string))
 						completionDate = reqId.(map[string]interface{})["completionDate"].(string)
 					}
 				}
 
-				if status == "active" && len(trainingID) > 0 && len(trainingName) > 0 && len(completionDate) > 0 {
+				if status == "active" && trainingID != 0 && len(trainingName) > 0 && len(completionDate) > 0 {
 					t, err := time.Parse(time.RFC3339, completionDate)
 					if err != nil {
 						log.Fatal(err)
 					}
-					date := t.Format("2006-01-02")
-					fmt.Println(status, trainingName, date)
-				} else {
-					log.Fatal("Warning: No status, trainingName or completionDate.")
-				}
 
+					date := t.Format("2006-01-02")
+					trainingID := strconv.FormatFloat(trainingID, 'f', -1, 64)
+
+					if foundTrainingID, ok := findValue(trainings_by_unique_id, trainingID); ok {
+						userID := users_by_username[username]
+						key := fmt.Sprintf("%d-%d-%s", userID, foundTrainingID, date)
+						if !userTrainingKeys[key] {
+							expiryDate := getExpiryDate(completionDate, foundTrainingID, trainings)
+							trainingModels = append(trainingModels, TrainingModel{
+								userID,
+								foundTrainingID,
+								date,
+								expiryDate,
+								today,
+								"None",
+								true,
+							})
+						}
+					}
+				}
 			}
 		}
 	}
+
+	fmt.Println("The number of trainings to be updated:", len(trainingModels))
+	if len(trainingModels) > 0 {
+		values := []string{}
+		for _, t := range trainingModels {
+			values = append(values, fmt.Sprintf("(%d,%d,'%s','%s','%s','%s',%t)", t.UserID, t.TrainingID, t.CompletionDate, t.ExpiryDate, t.UploadedDate, t.CertFile, t.ByApi))
+		}
+
+		query := fmt.Sprintf("INSERT INTO lfs_lab_cert_tracker_usercert (user_id, cert_id, completion_date, expiry_date, uploaded_date, cert_file, by_api) VALUES %s", strings.Join(values, ","))
+
+		_, err = db.Conn.Exec(query)
+		if err != nil {
+			log.Fatal("Bulk insert failed:", err)
+		}
+
+		fmt.Println("Bulk insert completed successfully!")
+	}
+	fmt.Println("Done!")
+}
+
+func getExpiryDate(completionDate string, traingID int, trainings map[int]map[string]interface{}) string {
+	t, err := time.Parse(time.RFC3339, completionDate)
+	if err != nil {
+		fmt.Println("Error parsing date:", err)
+		return ""
+	}
+
+	expiry_in_years := int(trainings[traingID]["expiry_in_years"].(int64))
+	newTime := t.AddDate(expiry_in_years, 0, 0)
+	newDateStr := newTime.Format("2006-01-02")
+	return newDateStr
+}
+
+func findValue(m map[string]int, target string) (int, bool) {
+	for key, val := range m {
+		for _, part := range strings.Split(key, ",") {
+			if strings.TrimSpace(part) == target {
+				return val, true
+			}
+		}
+	}
+	return 0, false
 }
 
 func getKeys(items map[int][]string) []int {
