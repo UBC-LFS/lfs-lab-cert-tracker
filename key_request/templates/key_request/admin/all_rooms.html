@@ -85,15 +85,18 @@
 							{{ room.requestform_set.count }}
 						</a>
 					</td>
-	        <td>
-						<a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
+	            <td>
+                    <a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
+                    <button class="btn btn-xs fs-8 btn-danger delete-room-btn" type="button"
+                            data-toggle="modal"
+                            data-target="#rooms-model-delete-modal"
+                            data-id="{{ room.id }}"
+                            data-name="{{ room.building.code}} {{room.floor.name}} {{room.number }}"
+                            data-num-reqs="{{ room.requestform_set.count }}"
+                    >
+                        Delete
+                    </button>
 
-	          <form action="{% url 'key_request:delete_room' %}" method="post" onsubmit="return confirm('Are you sure to delete this room - {{ room.number }}?');">
-	            {% csrf_token %}
-
-	            <input type="hidden" name="room" value="{{ room.id }}"  />
-	            <input class="btn btn-danger btn-sm" type="submit" value="Delete" style="vertical-align:top;" />
-	          </form>
 	        </td>
 	      </tr>
 	    {% empty %}
@@ -106,6 +109,38 @@
 
 	{% include 'key_request/subpages/pagination.html' with data=rooms %}
 
+    <div class="modal fade" id="rooms-model-delete-modal" tabindex="-1" role="dialog" aria-labelledby="rooms-model-delete-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-info" id="rooms-model-delete-modal-label">Delete Room</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body text-center">
+                    <h5 class="text-danger">Are you sure you want to delete this room?</h5>
+                   <div class="mb-3">Room: <span id="delete-room-name"></span> (ID: <span id="delete-room-id"></span>)</div>
+
+                    <div class="alert alert-danger font-size-20px" role="alert">
+                        <span class="material-symbols-outlined me-1">warning</span>
+                        Warning! This room has <strong id="delete-room-num-requests"></strong> key request(s) associated with it.
+                    </div>
+
+                    <div class="alert alert-primary d-none" role="alert">
+                        <span class="material-symbols-outlined me-1">info</span>
+                        There are no key requests associated with this room.
+                    </div>
+
+                    <form action="{% url 'key_request:delete_room' %}" method="post">
+                        {% csrf_token %}
+
+                        <input type="hidden" name="room" value="" />
+                        <input class="btn btn-danger mt-3" type="submit" value="Confirm to delete" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </section>
 
 {% endblock %}
@@ -113,4 +148,6 @@
 {% block js %}
 	{% load static %}
   <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/show_delete_modal.js' %}"></script>
+
 {% endblock %}
