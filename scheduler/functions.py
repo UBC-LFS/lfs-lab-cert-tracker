@@ -128,8 +128,11 @@ def get_users_with_expired_trainings(target_date, type):
         filters &= Q(expiry_date__lt=target_date)
     
     values = ['user', 'cert', 'user__first_name', 'user__last_name', 'user__email', 'cert__name']
+
+    user_trainings = UserCert.objects.filter(filters).order_by('id')
+    print('========== user trainings:', user_trainings.exists(), user_trainings.count())
     
-    user_trainings = UserCert.objects.filter(filters).order_by('id').values(*values).annotate(latest_expiry_date=Max('expiry_date'))
+    """user_trainings = UserCert.objects.filter(filters).order_by('id').values(*values).annotate(latest_expiry_date=Max('expiry_date'))
     if user_trainings.exists():
         for ut in user_trainings.iterator():
             user_id = str(ut['user'])
@@ -145,7 +148,7 @@ def get_users_with_expired_trainings(target_date, type):
             users[user_id]['expired_trainings'].append({
                 'name': ut['cert__name'],
                 'expiry_date': appFunc.convert_date_to_str(ut['latest_expiry_date'])
-            })
+            })"""
 
     return users
 

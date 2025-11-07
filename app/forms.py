@@ -95,7 +95,7 @@ class TrainingForm(forms.ModelForm):
             'unique_id': 'Note: Each training has an unique ID in Canvas Catalog'
         }
         error_messages = {
-            'name': { 'required': 'Enter a valid name.' },
+            'name': { 'required': 'Enter a valid name.' }
         }
 
 

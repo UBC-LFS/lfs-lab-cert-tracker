@@ -1,0 +1,59 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+<section id="left-side-menu" class="left-side-menu">
+  <h5 class="menu-title text-center mb-4">Menu</h5>
+  <ul class="list-no-bullets">
+    <li>
+      <a href="{% url 'app:my_training_record' user_id=app_user.id %}">
+        My Training Record
+        {% if request.user.id != app_user.id %}
+          ({{ app_user.get_full_name }})
+        {% endif %}
+      </a>
+    </li>
+		<li><a href="{% url 'app:add_training_record' user_id=app_user.id %}">Add Training Record</a></li>
+  </ul>
+</section>
+
+<section class="main-content">
+	<nav class="font-size-sm text-secondary">
+    <a href="{% url 'app:my_account' user_id=app_user.id %}">
+      {% include 'lfs_lab_cert_tracker/icons/home.html' %}
+      {% if request.user.id == app_user.id %}
+        My
+      {% else %}
+        {{ app_user.first_name }}'s
+      {% endif %}
+      Account
+    </a>
+
+    {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
+
+    My Training Record
+    {% if request.user.id != app_user.id %}
+      ({{ app_user.get_full_name }})
+    {% endif %}
+	</nav>
+
+	<h3 class="title">
+    My Training Record
+    {% if request.user.id != app_user.id %}
+      <span class="text-secondary">({{ app_user.get_full_name }})</span>
+    {% endif %}
+	</h3>
+
+  {% block sub_content %}{% endblock %}
+
+	{% if viewing %}
+		{% include 'app/subpages/viewing_info.html' with data=viewing %}
+	{% endif %}
+</section>
+
+{% endblock %}

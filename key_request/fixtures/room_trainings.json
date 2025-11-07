@@ -1,0 +1,162 @@
+[
+    {
+        "model": "key_request.room_trainings",
+        "pk": 1,
+        "fields": {
+            "room_id": 1,
+            "cert_id": 16
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 2,
+        "fields": {
+            "room_id": 1,
+            "cert_id": 20
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 3,
+        "fields": {
+            "room_id": 1,
+            "cert_id": 1
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 4,
+        "fields": {
+            "room_id": 1,
+            "cert_id": 23
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 5,
+        "fields": {
+            "room_id": 1,
+            "cert_id": 22
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 6,
+        "fields": {
+            "room_id": 1,
+            "cert_id": 3
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 7,
+        "fields": {
+            "room_id": 2,
+            "cert_id": 2
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 8,
+        "fields": {
+            "room_id": 2,
+            "cert_id": 10
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 9,
+        "fields": {
+            "room_id": 3,
+            "cert_id": 21
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 10,
+        "fields": {
+            "room_id": 4,
+            "cert_id": 24
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 11,
+        "fields": {
+            "room_id": 5,
+            "cert_id": 9
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 12,
+        "fields": {
+            "room_id": 6,
+            "cert_id": 13
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 13,
+        "fields": {
+            "room_id": 7,
+            "cert_id": 17
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 14,
+        "fields": {
+            "room_id": 3,
+            "cert_id": 20
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 15,
+        "fields": {
+            "room_id": 3,
+            "cert_id": 24
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 16,
+        "fields": {
+            "room_id": 2,
+            "cert_id": 5
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 17,
+        "fields": {
+            "room_id": 4,
+            "cert_id": 9
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 18,
+        "fields": {
+            "room_id": 6,
+            "cert_id": 2
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 19,
+        "fields": {
+            "room_id": 7,
+            "cert_id": 1
+        }
+    },
+    {
+        "model": "key_request.room_trainings",
+        "pk": 20,
+        "fields": {
+            "room_id": 5,
+            "cert_id": 7
+        }
+    }
+]

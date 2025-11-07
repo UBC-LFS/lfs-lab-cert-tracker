@@ -1,0 +1,82 @@
+[
+    {
+        "model": "key_request.room_managers",
+        "pk": 1,
+        "fields": {
+            "room_id": 1,
+            "user_id": 4
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 2,
+        "fields": {
+            "room_id": 2,
+            "user_id": 5
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 3,
+        "fields": {
+            "room_id": 3,
+            "user_id": 6
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 4,
+        "fields": {
+            "room_id": 4,
+            "user_id": 7
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 5,
+        "fields": {
+            "room_id": 1,
+            "user_id": 8
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 6,
+        "fields": {
+            "room_id": 5,
+            "user_id": 9
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 7,
+        "fields": {
+            "room_id": 6,
+            "user_id": 10
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 8,
+        "fields": {
+            "room_id": 3,
+            "user_id": 4
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 9,
+        "fields": {
+            "room_id": 7,
+            "user_id": 4
+        }
+    },
+    {
+        "model": "key_request.room_managers",
+        "pk": 10,
+        "fields": {
+            "room_id": 3,
+            "user_id": 10
+        }
+    }
+]

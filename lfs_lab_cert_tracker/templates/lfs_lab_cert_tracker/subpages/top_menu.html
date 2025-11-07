@@ -1,0 +1,21 @@
+<nav class="container top-menu-nav">
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'app:my_account' user_id=request.user.id %}">My Account</a>
+  </div>
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'app:my_work_area' user_id=request.user.id %}">My Work Area</a>
+  </div>
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'app:my_training_record' user_id=request.user.id %}">My Training Record</a>
+  </div>
+
+  {% if request.user.is_superuser %}
+    <div class="dropdown">
+      <a class="btn dropdown-item" href="{% url 'app:setting_index' %}">Settings</a>
+    </div>
+  {% endif %}
+
+  <div class="dropdown">
+    <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
+  </div>
+</nav>

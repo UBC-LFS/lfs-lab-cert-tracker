@@ -1,0 +1,63 @@
+{% extends "app/settings/base.html" %}
+
+{% block sub_content %}
+
+<h3 class="title">
+	User Report
+	<small class="text-secondary">Total: {{ total_users }}</small> <br />
+	<small class="text-danger">for Missing Training Records</small>
+</h3>
+
+<div class="text-primary float-right mb-3">
+	{% include 'lfs_lab_cert_tracker/icons/cloud_download.html' %}
+	<button id="download-user-report-missing-trainings" class="btn btn-link pl-0" type="button" style="margin-bottom: -7px;" data-url='{{ download_user_report_missing_trainings_url }}' data-next='{{ request.get_full_path }}'>
+		Download All as CSV
+	</button>
+</div>
+
+<table class="table table-bordered table-striped table-hover table-responsive-md text-center font-size-sm table-vertical-middle">
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>CWL</th>
+			<th>First Name</th>
+			<th>Last Name</th>
+			<th>Number of <br /> Missing <br /> Trainings</th>
+			<th>Missing Trainings</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for user in users %}
+			<tr>
+				<td>{{ user.id }}</td>
+				<td>{{ user.username }}</td>
+				<td>{{ user.first_name }}</td>
+				<td>{{ user.last_name }}</td>
+				<td>{{ user.missing_certs.count }}</td>
+				<td class="text-left">
+					<ul>
+						{% for missing_cert in user.missing_certs %}
+							<li>{{ missing_cert.name }}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+
+		{% empty %}
+
+			<tr>
+				<td colspan="5">No users found</td>
+			</tr>
+
+		{% endfor %}
+	</tbody>
+</table>
+
+{% include 'app/subpages/pagination.html' with data=users %}
+
+{% endblock %}
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/download_user_report_missing_trainings.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "app/users/training_base.html" %}
+
+{% block sub_content %}
+
+<p class="mb-4">
+	Please click <a href="{% url 'app:add_training_record' user_id=app_user.id %}">Add Training Record</a> to upload your certificates.
+</p>
+
+<div class="box border-green mt-3">
+	<h5 class="text-success">
+		<span class="material-symbols-outlined">verified_user</span> Training Record
+		<small class="text-secondary">(Total: {{ user_certs|length }})</small>
+	</h5>
+	<div class="text-secondary">
+		{% if user_certs %}
+			<ul class="list-minus-20">
+				{% for user_cert in user_certs %}
+					<li>
+						<a href="{% url 'app:training_details' user_id=app_user.id training_id=user_cert.cert_id %}?p=training">
+							{{ user_cert.cert_name }}
+						</a>
+
+						{% if user_cert.num_certs > 1 %}
+							<span class="text-secondary">(Total: {{ user_cert.num_certs }})</span>
+						{% endif %}
+
+						{% if user_cert.by_api %}
+							<span class="badge badge-warning font-size-xs">CANVAS</span>
+						{% endif %}
+					</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			You do not have any training records
+		{% endif %}
+	</div>
+</div>
+
+<div class="box border-red mt-5">
+	<h5 class="text-danger">
+		<span class="material-symbols-outlined">notification_important</span> Missing Training Record
+		<small class="text-secondary">(Total: {{ missing_certs|length }})</small>
+	</h5>
+	<div class="text-secondary">
+    {% if missing_certs %}
+			<ul class="list-minus-20">
+				{% for missing_cert in missing_certs %}
+					<li>{{ missing_cert.name }}</li>
+				{% endfor %}
+			</ul>
+    {% else %}
+			No missing training record found
+    {% endif %}
+	</div>
+</div>
+
+<div class="box border-gray mt-5">
+	<h5 class="text-secondary">
+		<span class="material-symbols-outlined">warning</span> Expired Training Record
+		<small class="text-secondary">(Total: {{ expired_certs|length }})</small>
+	</h5>
+	<div class="text-secondary">
+    {% if expired_certs %}
+			<ul class="list-minus-20">
+				{% for expired_cert in expired_certs %}
+					<li>{{ expired_cert.name }}</li>
+				{% endfor %}
+			</ul>
+    {% else %}
+			No expired training record found
+    {% endif %}
+	</div>
+</div>
+
+{% endblock %}

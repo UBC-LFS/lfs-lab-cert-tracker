@@ -1,0 +1,33 @@
+<button id="update-all-btn" class="btn btn-warning" type="button" disabled>Update All (<span id="update-all-num-1">0</span>)</button>
+
+<div class="modal fade" id="select-all-modal" tabindex="-1" role="dialog" aria-labelledby="select-all-modal-label" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title text-info">Update All</h5>
+			</div>
+			<div class="modal-body">
+				<p class="font-size-lg">
+					Number of selected rooms: <span id='update-all-num-2' class="text-chocolate">0</span>
+				</p>
+				<form action="{% url 'key_request:update_all' %}" method="post">
+					{% csrf_token %}
+
+					<ul id="update-all-list" class="mb-4"></ul>
+
+					<select class="form-control" name="status">
+						<option value="">Select</option>
+						{% for id, status in req_status_dict.items %}
+							<option value="{{ id }}">{{ status }}</option>
+						{% endfor %}
+					</select>
+
+					<p class="text-danger mt-4">Before confirming the update for all, please review all the selected rooms carefully.</p>
+
+					<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+					<input class="btn btn-warning mt-2" type="submit" value="Confirm to update all" />
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,86 @@
+<nav class="table-paginator" aria-label="Page navigation Search results pages">
+  <ul class="pagination justify-content-center">
+
+    {% if data.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.room %}&room={{ request.GET.room }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}
+{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+        >First</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ data.previous_page_number }}
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.room %}&room={{ request.GET.room }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}
+{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+        >&lt;</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">First</span>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link">&lt;</span>
+      </li>
+    {% endif %}
+
+    {% for i in data.paginator.page_range %}
+      {% if data.number == i %}
+        <li class="page-item active">
+          <span class="page-link" >{{ i }} <span class="sr-only">(current)</span></span>
+        </li>
+      {% else %}
+        <li class="page-item">
+          {% if i|add:"-3" <= data.number and data.number <= i|add:"3" %}
+            <a class="page-link" href="?page={{ i }}
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.room %}&room={{ request.GET.room }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}
+{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+            >{{ i }}</a>
+          {% endif %}
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    {% if data.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ data.next_page_number }}
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.room %}&room={{ request.GET.room }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}
+{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+        >&gt;</a>
+      </li>
+      <li class="page-item">
+        <a class="page-link" href="?page={{ data.paginator.num_pages }}
+{% if request.GET.building %}&building={{ request.GET.building }}{% endif %}
+{% if request.GET.floor %}&floor={{ request.GET.floor }}{% endif %}
+{% if request.GET.number %}&number={{ request.GET.number }}{% endif %}
+{% if request.GET.room %}&room={{ request.GET.room }}{% endif %}
+{% if request.GET.name %}&name={{ request.GET.name }}{% endif %}
+{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+        >Last</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link">&gt;</span>
+      </li>
+      <li class="page-item disabled">
+        <span class="page-link">Last</span>
+      </li>
+    {% endif %}
+
+  </ul>
+</nav>

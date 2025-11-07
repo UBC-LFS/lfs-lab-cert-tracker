@@ -1,0 +1,53 @@
+{% load custom_tags %}
+
+<button class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#key-request-status-history-modal-{{ id }}">View</button> <br />
+
+<div class="modal fade" id="key-request-status-history-modal-{{ id }}" tabindex="-1" role="dialog" aria-labelledby="key-request-status-history-modal-label-{{ id }}" aria-hidden="true">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="key-request-status-history-modal-label-{{ id }}">Status History</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+          <table class="table table-bordered table-hover table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Form ID</th>
+                <th>Building</th>
+                <th>Floor</th>
+                <th>Room</th>
+                <th>PI</th>
+                <th>Operator</th>
+                <th>Status</th>
+                <th>Updated At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for st in data %}
+
+                <tr>
+                  <td>{{ st.id }}</td>
+                  <td>{{ st.form.id }}</td>
+                  {% with room=st.room_id|get_room %}
+                    <td>{{ room.building.code }}</td>
+                    <td>{{ room.floor.name }}</td>
+                    <td>{{ room.number }}</td>
+                  {% endwith %}
+                  <td>{{ st.manager_id|get_user_full_name }}</td>
+                  <td>{{ st.operator_id|get_user_full_name }}</td>
+                  <td>
+                    {% include 'key_request/subpages/request_status.html' with data=st.status|get_status_display %}
+                  </td>
+                  <td>
+                    {% include 'key_request/subpages/date_and_time.html' with data=st.created_at %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+      </div>
+    </div>
+  </div>
+</div>

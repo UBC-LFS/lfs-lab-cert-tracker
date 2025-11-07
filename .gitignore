@@ -15,3 +15,12 @@ key_request/fixtures/*
 email_notification/run_after_expiry_date.sh
 email_notification/run_before_expiry_date.sh
 email_notification/run_missing_certs.sh
+app/fixtures/certs.json
+key_request/fixtures/dev_rooms.json
+key_request/fixtures/dev_room_areas.json
+key_request/fixtures/dev_room_trainings.json
+key_request/fixtures/dev_room_managers.json
+*.xml
+.idea/
+/venv
+.env

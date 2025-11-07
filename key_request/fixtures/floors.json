@@ -1,0 +1,42 @@
+[
+    {
+        "model": "key_request.floor",
+        "pk": 1,
+        "fields": {
+        "name": "Basement",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "basement"
+        }
+    },
+    {
+        "model": "key_request.floor",
+        "pk": 2,
+        "fields": {
+        "name": "1st",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "1st"
+        }
+    },
+    {
+        "model": "key_request.floor",
+        "pk": 3,
+        "fields": {
+        "name": "2nd",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "2nd"
+        }
+    },
+    {
+        "model": "key_request.floor",
+        "pk": 4,
+        "fields": {
+        "name": "3rd",
+        "created_on": "2025-01-01",
+        "updated_on": "2025-01-01",
+        "slug": "3rd"
+        }
+    }
+]
