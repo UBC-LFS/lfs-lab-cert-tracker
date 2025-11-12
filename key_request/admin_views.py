@@ -171,7 +171,11 @@ class ViewFormDetails(LoginRequiredMixin, View):
         )
 
         room = Room.objects.get(id=room_id)
-        func.count_approved_numbers_by_id(status, self.form, room, request.user.id, manager_id)
+
+        # Check if the admin is approving of behalf of another manager
+        absent_pi = manager_id if int(manager_id) != int(request.user.id) else None
+
+        func.count_approved_numbers_by_id(status, self.form, room, request.user.id, absent_pi)
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
         return HttpResponseRedirect(next)
