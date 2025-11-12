@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"bytes"
@@ -14,6 +14,18 @@ import (
 	"trms_scheduler/utils"
 )
 
+/*
+# How to run this app
+$ go run ./update_by_api
+
+
+# Change the SSL mode in production
+- DEV = disable
+- PROD = verify-full
+*/
+
+var SSL_MODE = "disable"
+
 type TrainingModel struct {
 	UserID         int
 	TrainingID     int
@@ -24,12 +36,29 @@ type TrainingModel struct {
 	ByApi          bool
 }
 
-func Update_by_API(ssl_mode string) {
+func main() {
+	fmt.Println("Start - Update by API")
+
 	var db utils.Database
-	if err := db.Connect(ssl_mode); err != nil {
+	if err := db.Connect(SSL_MODE); err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	users, users_by_username, err := db.GetUsers()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	trainings, trainings_by_unique_id, err := db.GetTrainings()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	userTrainingKeys, err := db.GetUserTrainingKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	usersWithMissingTrainings, _, err := db.GetUsersWithMissingTrainings()
 	if err != nil {
@@ -47,21 +76,6 @@ func Update_by_API(ssl_mode string) {
 	setA := toSet(keysA)
 	setB := toSet(keysB)
 	allUserIDs := union(setA, setB)
-
-	users, users_by_username, err := db.GetUsers()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	trainings, trainings_by_unique_id, err := db.GetTrainings()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	userTrainingKeys, err := db.GetUserTrainingKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	var usernames []string
 	for userID := range allUserIDs {
@@ -186,6 +200,7 @@ func Update_by_API(ssl_mode string) {
 	}
 
 	fmt.Println("The number of trainings to be updated:", len(trainingModels))
+
 	if len(trainingModels) > 0 {
 		values := []string{}
 		for _, t := range trainingModels {
@@ -202,59 +217,4 @@ func Update_by_API(ssl_mode string) {
 		fmt.Println("Bulk insert completed successfully!")
 	}
 	fmt.Println("Done!")
-}
-
-func getExpiryDate(completionDate string, traingID int, trainings map[int]map[string]interface{}) string {
-	t, err := time.Parse(time.RFC3339, completionDate)
-	if err != nil {
-		fmt.Println("Error parsing date:", err)
-		return ""
-	}
-
-	expiry_in_years := int(trainings[traingID]["expiry_in_years"].(int64))
-	newTime := t.AddDate(expiry_in_years, 0, 0)
-	newDateStr := newTime.Format("2006-01-02")
-	return newDateStr
-}
-
-func findValue(m map[string]int, target string) (int, bool) {
-	for key, val := range m {
-		for _, part := range strings.Split(key, ",") {
-			if strings.TrimSpace(part) == target {
-				return val, true
-			}
-		}
-	}
-	return 0, false
-}
-
-func getKeys(items map[int][]string) []int {
-	var keys []int
-	for key := range items {
-		if len(items[key]) > 0 {
-			keys = append(keys, key)
-		}
-	}
-	return keys
-}
-
-// Convert a slice to a set
-func toSet[T comparable](arr []T) map[T]struct{} {
-	set := make(map[T]struct{})
-	for _, v := range arr {
-		set[v] = struct{}{}
-	}
-	return set
-}
-
-// Union of two sets
-func union[T comparable](a, b map[T]struct{}) map[T]struct{} {
-	union := make(map[T]struct{})
-	for k := range a {
-		union[k] = struct{}{}
-	}
-	for k := range b {
-		union[k] = struct{}{}
-	}
-	return union
 }

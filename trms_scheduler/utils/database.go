@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
+// Database Settings
 var USER = os.Getenv("LFS_LAB_CERT_TRACKER_DB_USER")
 var PASSWORD = os.Getenv("LFS_LAB_CERT_TRACKER_DB_PASSWORD")
 var HOST = os.Getenv("LFS_LAB_CERT_TRACKER_DB_HOST")
