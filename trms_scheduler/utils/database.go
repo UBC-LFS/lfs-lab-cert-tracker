@@ -25,7 +25,7 @@ type Database struct {
 
 // Connect opens the database connection
 func (db *Database) Connect(ssl_mode string) error {
-	DB_URL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", USER, PASSWORD, HOST, PORT, DATABASE, ssl_mode)
+	DB_URL := fmt.Sprintf("host=%s port=%s user=%s password='%s' dbname=%s sslmode=%s", HOST, PORT, USER, PASSWORD, DATABASE, ssl_mode)
 
 	if DB_URL == "" {
 		return fmt.Errorf("DB_URL environment variable not set")

@@ -15,17 +15,9 @@ import (
 )
 
 /*
-
-# How to run this app
-$ go run ./update_by_api
-
-# How to build this app
-update_by_api $ go build -o ./
-
 # Change the SSL mode in production
 - DEV = disable
-- PROD = verify-full
-
+- PROD = require
 */
 
 var SSL_MODE = "disable"
