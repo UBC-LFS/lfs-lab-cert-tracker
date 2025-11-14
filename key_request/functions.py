@@ -283,27 +283,34 @@ def count_approved_numbers_by_id(status, form, room, manager_id, absent_pi=None)
     # Check if all PIs have approved
     all_approved = all_pis_approved(form, room)
 
-
     room_info = '<ul><li>{0}</li></ul>'.format(display_room(room))
     if all_approved:
         subject, message = get_message(form.user, form.user, 'user', room_info)
         send(form.user, subject, message)
 
     manager = User.objects.get(id=manager_id)
-    subject, message = get_message(form.user, manager, 'pi', room_info)
-    send(manager, subject, message)
 
     if absent_pi:
         pi = User.objects.get(id=absent_pi)
         subject, message = get_message(form.user, pi, 'absent_pi', room_info, manager)
         send(pi, subject, message)
+        subject, message = get_message(form.user, pi, 'admin', room_info, manager)
+        send(manager, subject, message)
+    else:
+        subject, message = get_message(form.user, manager, 'pi', room_info)
+        send(manager, subject, message)
+
+# Count approval numbers for "Update All";
+# Manager_id is the id of the operator (the approving user)
+# pi_room_map includes all rooms associated with each PI
+#   CASE 1: If the pi_room_map has a size == 1 (a single PI) AND the pi_id matches the manager_id -> the user is approving their own requests
+#   CASE 2: If the pi_room_map has a size > 1 OR the pi_id does NOT match the manager_id -> the user is approving on behalf of another PI
+#           note that this will only ever be for a single user
 
 def count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, manager_id, pi_room_map):
     if status != APPROVED:
         return
 
-
-    # Manager could be admin on behalf of a pi or the pi
     manager = User.objects.get(id=manager_id)
 
     # get the list of users and the rooms associated with them
@@ -321,11 +328,30 @@ def count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, ma
             send_list.append(make_send_obj(details['user'], subject, message))
 
 
-    # manager email summarizing all rooms
+    if approving_on_behalf_of_pis(pi_room_map, manager_id):
+        #admin message
+        prepare_admin_message(pi_room_map, manager_id, users[0], manager, send_list)
+    else:
+        # pi message
+        prepare_pi_message(users, user_details, manager, send_list)
+
+    # Bulk send emails
+    if send_list:
+        print(f"Sending {len(send_list)} message(s)")
+        send_multiple(send_list)
+
+
+def approving_on_behalf_of_pis(pi_room_map, id):
+    if len(pi_room_map) > 1:
+        return True
+    first_key = next(iter(pi_room_map.keys()))
+    return int(first_key) != int(id)
+
+def prepare_pi_message(users, user_details, manager, send_list):
     if len(users) > 1:
         subject, message = get_custom_pi_message_multiple_users(users, user_details, manager)
         send_list.append(make_send_obj(manager, subject, message))
-    elif users:
+    elif len(users) > 0:
         first_details = user_details[users[0].id]
         rooms = first_details.get('rooms_formatted', [])
         user = first_details['user']
@@ -334,30 +360,29 @@ def count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, ma
         subject, message = get_message(user, manager, 'pi', room_info)
         send_list.append(make_send_obj(manager, subject, message))
 
-    # absent PI notifications (admin acting on behalf of PIs) - only for single applicant
-    if pi_room_map and len(users) == 1:
-        user = users[0]
-        for pi_id, room_ids in pi_room_map.items():
-            rooms = ['<ul>']
-            for room_id in room_ids:
-                rooms.append('<li>{0}</li>'.format(display_room(Room.objects.get(id=room_id))))
-            room_info =  ''.join(rooms) + '</ul>'
-            pi = User.objects.get(id=pi_id)
-            subject, message = get_message(user, pi, 'absent_pi', room_info, manager)
-            send_list.append(make_send_obj(pi, subject, message))
+def prepare_admin_message(pi_room_map, manager_id, user, manager, send_list):
+    pi_list = []
 
-    # Bulk send emails
-    if send_list:
-        send_multiple(send_list)
+    for pi_id, room_ids in pi_room_map.items():
+        rooms = []
+        for room_id in room_ids:
+            rooms.append('<li>{0}</li>'.format(display_room(Room.objects.get(id=room_id))))
+        room_info =  '<ul>' + ''.join(rooms) + '</ul>'
+        pi_room_map[pi_id] = rooms
+
+        if int(pi_id) != int(manager_id):
+            pi = User.objects.get(id=pi_id)
+            pi_list.append(pi)
+            subject, message = get_message(user, pi, 'absent_pi', room_info, manager)
+            send_obj = make_send_obj(pi, subject, message)
+            send_list.append(send_obj)
+
+    subject, message = get_custom_admin_message_multiple_pis(pi_list, pi_room_map, user, manager)
+    send_list.append(make_send_obj(manager, subject, message))
 
 # Processes the request_status_forms where each user is associated with a formatted room (list)
 # and rooms that have full approval (e.g. all PIs have approved)
-# Structure:
-#   user_id:
-#       user: User,
-#       room_ids: [],
-#       rooms_formatted: [],
-#       rooms_with_approval_formatted: []
+# Structure:{ user_id: { user: User, room_ids: [], rooms_formatted: [], rooms_with_approval_formatted: []}}
 def process_request_forms(request_status_forms):
     user_details = {}
     for fs in request_status_forms:
@@ -410,6 +435,51 @@ def all_pis_approved(form, room):
             return False
     return True
 
+def get_custom_admin_message_multiple_pis(pis, pi_room_map, user, admin):
+
+    admin_id = str(admin.id)
+    if pi_room_map.get(admin_id, None):
+        admin_rooms = pi_room_map.get(admin_id)
+        room_info = '<ul>' + ''.join(admin_rooms) + '</ul>'
+    else:
+        room_info = '<br>'
+
+    message = '''\
+            <div>
+                <p>Hi {0},</p>
+                <div>This email is just a notification to inform you that you have approved {1}'s key request(s).</div>
+                {2}
+            '''.format(display_user_first_name(admin), display_user_first_name(user), room_info)
+
+    if not pis:
+        pi_message = ''
+    else:
+        msg = '<ol>'
+        for i, pi in enumerate(pis):
+            pi_id = str(pi.id)
+            pi_rooms = pi_room_map.get(pi_id, None)
+            room_info = '<ul>' + ''.join(pi_rooms) + '</ul>'
+
+            msg+=('''\
+                <li><b>{0}</b>:</li>
+                {1}
+            '''.format(display_user_first_name(pi), room_info))
+        msg += '</ol>'
+        pi_message = '''\
+            <div> You have approved {0}'s key request(s) on behalf of the following PIs:</div>
+            {1}
+        '''.format(display_user_first_name(user), msg)
+
+    subject = f"Notification: You Have Approved Multiple Key Requests at UBC LFS"
+
+    message += '''\
+            {0}
+            <div>Please visit <a href={1}>{1}</a> to check the latest status of key requests. Thank you.</div>
+            {2}
+        </div>
+        '''.format(pi_message, settings.SITE_URL, EMAIL_FOOTER)
+    return subject, message
+
 def get_custom_pi_message_multiple_users(users, user_room_map, manager):
     user_message = '<div>'
     for i, user in enumerate(users):
@@ -421,7 +491,9 @@ def get_custom_pi_message_multiple_users(users, user_room_map, manager):
         '''.format(i+1, display_user_first_name(user), room_info))
     user_message+='</div>'
 
+
     subject = "Notification: You Have Approved Multiple Users' Key Requests at UBC LFS"
+
     message = '''\
         <div>
             <p>Hi {0},</p>
@@ -466,12 +538,12 @@ def get_message(user, pi, option, room_info=None, admin=None):
         message = '''\
         <div>
             <p>Hi {0},</p>
-            <div>This email is just a notification to inform you that {1}'s key request has been approved. Below are the details of the room.</div>
-            {2}
-            <div>Please visit <a href={3}>{3}</a> to check the latest status of key requests. Thank you.</div>
-            {4}
+            <div>This email is just a notification to inform you that {1}'s key request has been approved on behalf of {2}. Below are the details of the room.</div>
+            {3}
+            <div>Please visit <a href={4}>{4}</a> to check the latest status of key requests. Thank you.</div>
+            {5}
         </div>
-        '''.format(display_user_first_name(pi), display_user_first_name(user), room_info, settings.SITE_URL, EMAIL_FOOTER)
+        '''.format(display_user_first_name(admin), display_user_first_name(user), display_user_first_name(pi), room_info, settings.SITE_URL, EMAIL_FOOTER)
     elif option == 'absent_pi':
         subject = "Notification: {0}'s Key Request Approval at UBC LFS".format(display_user_full_name(user))
         message = '''\

@@ -207,9 +207,7 @@ def update_all(request):
 
             manager_id = room_sp[2]
 
-            # Check if the user is approving on behalf of another
-            if int(manager_id) != int(request.user.id):
-                manager_room_map.setdefault(manager_id, []).append(room_sp[1])
+            manager_room_map.setdefault(manager_id, []).append(room_sp[1])
 
         if len(objs) > 0:
             request_status_forms = RequestFormStatus.objects.bulk_create(objs)
