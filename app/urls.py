@@ -48,7 +48,7 @@ urlpatterns += [
     path('create-user/', settings_views.CreateUser.as_view(), name='create_user'),
     path('user-report/', settings_views.UserReportMissingTrainings.as_view(), name='user_report_missing_trainings'),
     path('users/report/missing-trainings/download.pdf/', settings_views.download_user_report_missing_trainings, name='download_user_report_missing_trainings'),
-    path('api-updates/', settings_views.APIUpdates.as_view(), name='api_updates')
+    path('api-update-dashboard/', settings_views.APIUpdates.as_view(), name='api_updates')
 ]
 
 

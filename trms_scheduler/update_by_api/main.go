@@ -36,6 +36,7 @@ func main() {
 	fmt.Println("Start - Update by API")
 
 	var db utils.Database
+
 	if err := db.Connect(SSL_MODE); err != nil {
 		log.Fatal(err)
 	}
@@ -51,27 +52,27 @@ func main() {
 		log.Fatal(err)
 	}
 
-	userTrainingKeys, err := db.GetUserTrainingKeys()
+	userTrainingKeys, err := GetUserTrainingKeys(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	usersWithMissingTrainings, _, err := db.GetUsersWithMissingTrainings()
+	usersWithMissingTrainings, _, err := GetUsersWithMissingTrainings(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	usersWithExpiredTrainings, err := db.GetUsersWithExpiredTrainings()
+	usersWithExpiredTrainings, err := GetUsersWithExpiredTrainings(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	keysA := getKeys(usersWithMissingTrainings)
-	keysB := getKeys(usersWithExpiredTrainings)
+	keysA := utils.GetKeys(usersWithMissingTrainings)
+	keysB := utils.GetKeys(usersWithExpiredTrainings)
 
-	setA := toSet(keysA)
-	setB := toSet(keysB)
-	allUserIDs := union(setA, setB)
+	setA := utils.ToSet(keysA)
+	setB := utils.ToSet(keysB)
+	allUserIDs := utils.Union(setA, setB)
 
 	var usernames []string
 	for userID := range allUserIDs {
@@ -174,11 +175,11 @@ func main() {
 					date := t.Format("2006-01-02")
 					trainingID := strconv.FormatFloat(trainingID, 'f', -1, 64)
 
-					if foundTrainingID, ok := findValue(trainings_by_unique_id, trainingID); ok {
+					if foundTrainingID, ok := utils.FindValue(trainings_by_unique_id, trainingID); ok {
 						userID := users_by_username[username]
 						key := fmt.Sprintf("%d-%d-%s", userID, foundTrainingID, date)
 						if !userTrainingKeys[key] {
-							expiryDate := getExpiryDate(completionDate, foundTrainingID, trainings)
+							expiryDate := utils.GetExpiryDate(completionDate, foundTrainingID, trainings)
 							trainingModels = append(trainingModels, TrainingModel{
 								userID,
 								foundTrainingID,

@@ -13,6 +13,7 @@ $ go get github.com/lib/pq
 ### Run each app locally
 ```
 $ go run ./update_by_api
+$ go run ./missing_training
 ```
 
 ### Change the SSL mode in production
