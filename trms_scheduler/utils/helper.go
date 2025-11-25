@@ -133,8 +133,8 @@ func SendToUsers(users map[string][]string, days int, path string) {
 
 		body := EmailTemplate(recipientName, content)
 
-		fmt.Println(recipientEmail, body)
-		// SendEmail(recipientEmail, body)
+		// fmt.Println(recipientEmail, body)
+		SendEmail(recipientEmail, body)
 	}
 	fmt.Println("Sent to Users:", len(users))
 }
@@ -168,8 +168,8 @@ func SendToPIs(pis map[string][]map[string]interface{}, days int, path string) {
 
 		body := EmailTemplate(recipientName, content)
 
-		fmt.Println(recipientEmail, body)
-		// SendEmail(recipientEmail, body)
+		// fmt.Println(recipientEmail, body)
+		SendEmail(recipientEmail, body)
 	}
 
 	fmt.Println("Sent to PIs:", len(pis))
@@ -207,8 +207,8 @@ func SendToAdmins(db Database, users map[string][]string, days int, path string)
 
 		body := EmailTemplate(recipientName, content)
 
-		fmt.Println(recipientEmail, body)
-		// SendEmail(recipientEmail, body)
+		// fmt.Println(recipientEmail, body)
+		SendEmail(recipientEmail, body)
 	}
 
 	fmt.Println("Sent to Admins:", len(admins))
