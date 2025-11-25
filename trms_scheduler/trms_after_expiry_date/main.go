@@ -6,18 +6,10 @@ import (
 	"trms_scheduler/utils"
 )
 
-func send15days(db utils.Database, allUsers map[int]map[string]interface{}) {
-	expiredTrainings, err := utils.GetExpiredTrainings(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	users, pis := utils.GetUsersAndPIsForExpiryDate(expiredTrainings, allUsers)
-
-	sendToUsers(users)
-	sendToPIs(pis)
-	sendToAdmins(db, users)
-}
+/*
+# Send for training records after the expiry date
+- Check on 1st Monday and 3rd Monday at 10:00 AM
+*/
 
 func sendToUsers(users map[string][]string) {
 	utils.SendToUsers(users, 0, "after-expiry-date")
@@ -46,5 +38,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	send15days(db, allUsers)
+	expiredTrainings, err := utils.GetExpiredTrainings(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	users, pis := utils.GetUsersAndPIsForExpiryDate(expiredTrainings, allUsers)
+
+	sendToUsers(users)
+	sendToPIs(pis)
+	sendToAdmins(db, users)
 }

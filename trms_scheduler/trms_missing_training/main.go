@@ -3,9 +3,21 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"trms_scheduler/utils"
 )
+
+/*
+# Send for Missing Training records
+- Check on 1st Monday and 3rd Monday at 10:30 AM
+*/
+
+func sendToUsers(users map[string][]string) {
+	utils.SendToUsers(users, 0, "missing")
+}
+
+func sendToPIs(pis map[string][]map[string]interface{}) {
+	utils.SendToPIs(pis, 0, "missing")
+}
 
 func main() {
 	fmt.Println("Start - Missing Training")
@@ -36,11 +48,7 @@ func main() {
 		users[userName] = append(users[userName], value.MissingCerts...)
 
 		for _, piID := range value.Supervisors {
-			piID_int, err := strconv.Atoi(piID)
-			if err != nil {
-				log.Fatalf("Error converting string to int: %v", err)
-			}
-
+			piID_int := utils.StrToInt(piID)
 			pi := allUsers[piID_int]
 			piName := utils.DisplayUserInfo(pi, "")
 
@@ -55,12 +63,4 @@ func main() {
 
 	sendToUsers(users)
 	sendToPIs(pis)
-}
-
-func sendToUsers(users map[string][]string) {
-	utils.SendToUsers(users, 0, "missing")
-}
-
-func sendToPIs(pis map[string][]map[string]interface{}) {
-	utils.SendToPIs(pis, 0, "missing")
 }

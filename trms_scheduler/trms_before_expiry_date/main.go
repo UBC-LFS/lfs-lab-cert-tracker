@@ -9,9 +9,8 @@ import (
 )
 
 /*
-Two different types
-1. Users/PIs: 1 month before the expiry date
-2. Admin: 2 weeks before the expiry date
+# Send for training records before the expiry date
+- Check everyday at 9:00 AM
 */
 
 func send30days(db utils.Database, allUsers map[int]map[string]interface{}) {

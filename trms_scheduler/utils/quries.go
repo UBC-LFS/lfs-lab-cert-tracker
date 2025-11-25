@@ -21,7 +21,6 @@ type MissingTrainingResult struct {
 func GetUsersWithMissingCerts(db Database) ([]MissingTrainingResult, error) {
 	query := `
 		WITH latest_usercert AS (
-			-- pick the most recent completion_date per user+cert
 			SELECT DISTINCT ON (uc.user_id, uc.cert_id)
 				uc.user_id,
 				uc.cert_id,
@@ -47,8 +46,6 @@ func GetUsersWithMissingCerts(db Database) ([]MissingTrainingResult, error) {
 				ul.lab_id,
 				ul.user_id,
 				l.name AS lab_name,
-				
-				-- collect required certs that the user is missing
 				array_agg(c.name) FILTER (
 					WHERE luc.cert_id IS NULL
 				) AS missing_cert_names
@@ -63,7 +60,6 @@ func GetUsersWithMissingCerts(db Database) ([]MissingTrainingResult, error) {
 			WHERE u.is_active = TRUE
 			GROUP BY ul.lab_id, ul.user_id, l.name
 		)
-
 		SELECT
 			m.lab_id,
 			m.lab_name,
@@ -118,26 +114,38 @@ type ExpirySearchResult struct {
 
 // Before the expiry date
 func GetExpiringTrainings(db Database, days int) ([]ExpirySearchResult, error) {
-	query := `
-    SELECT
-		u.id AS user_id,
-        l.name AS lab_name,
-        c.name AS cert_name,
-        uc.expiry_date AS user_expiry_date,
-        sup.id AS supervisor_id
-    FROM lfs_lab_cert_tracker_lab l
-    JOIN lfs_lab_cert_tracker_labcert lc ON lc.lab_id = l.id
-    JOIN lfs_lab_cert_tracker_cert c ON c.id = lc.cert_id
-    JOIN lfs_lab_cert_tracker_userlab ul ON ul.lab_id = l.id
-    JOIN auth_user u ON u.id = ul.user_id AND u.is_active = TRUE
-    JOIN lfs_lab_cert_tracker_usercert uc ON uc.user_id = u.id AND uc.cert_id = c.id
-    LEFT JOIN lfs_lab_cert_tracker_userlab ul_sup
-        ON ul_sup.lab_id = l.id AND ul_sup.role = 1
-    LEFT JOIN auth_user sup
-        ON sup.id = ul_sup.user_id AND sup.is_active = TRUE
-    WHERE uc.completion_date <> uc.expiry_date AND uc.expiry_date = CURRENT_DATE + ($1 || ' days')::interval
-    ORDER BY l.id, u.id;
-    `
+	query := `WITH latest_user_certs AS (
+        SELECT
+            uc.*,
+            ROW_NUMBER() OVER (
+                PARTITION BY uc.user_id, uc.cert_id
+                ORDER BY uc.completion_date DESC
+            ) AS rn
+        FROM lfs_lab_cert_tracker_usercert uc
+		)
+		SELECT
+			u.id AS user_id,
+			l.name AS lab_name,
+			c.name AS cert_name,
+			luc.expiry_date AS user_expiry_date,
+			sup.id AS supervisor_id
+		FROM lfs_lab_cert_tracker_lab l
+		JOIN lfs_lab_cert_tracker_labcert lc 
+			ON lc.lab_id = l.id
+		JOIN lfs_lab_cert_tracker_cert c 
+			ON c.id = lc.cert_id
+		JOIN lfs_lab_cert_tracker_userlab ul 
+			ON ul.lab_id = l.id
+		JOIN auth_user u 
+			ON u.id = ul.user_id AND u.is_active = TRUE
+		JOIN latest_user_certs luc
+			ON luc.user_id = u.id AND luc.cert_id = c.id AND luc.rn = 1
+		LEFT JOIN lfs_lab_cert_tracker_userlab ul_sup
+			ON ul_sup.lab_id = l.id AND ul_sup.role = 1
+		LEFT JOIN auth_user sup
+			ON sup.id = ul_sup.user_id AND sup.is_active = TRUE
+		WHERE luc.expiry_date = CURRENT_DATE + ($1 || ' days')::interval
+		ORDER BY l.id, u.id;`
 
 	rows, err := db.Conn.Query(query, days)
 	if err != nil {
@@ -165,31 +173,48 @@ func GetExpiringTrainings(db Database, days int) ([]ExpirySearchResult, error) {
 	return results, nil
 }
 
-// AFter the expiry date
+// After the expiry date
 func GetExpiredTrainings(db Database) ([]ExpirySearchResult, error) {
 	query := `
-        WITH expired_users AS (
+        WITH latest_user_certs AS (
+			SELECT
+				uc.*,
+				ROW_NUMBER() OVER(
+					PARTITION BY uc.user_id, uc.cert_id
+					ORDER BY uc.completion_date DESC
+				) AS rn
+			FROM lfs_lab_cert_tracker_usercert uc
+		),
+		expired_users AS (
             SELECT
                 ul.lab_id,
                 ul.user_id AS expired_user_id,
-                uc.cert_id,
-                uc.expiry_date
+                luc.cert_id,
+                luc.expiry_date
             FROM lfs_lab_cert_tracker_userlab ul
 			JOIN auth_user au 
         		ON au.id = ul.user_id
-            JOIN lfs_lab_cert_tracker_labcert lc ON lc.lab_id = ul.lab_id
-            JOIN lfs_lab_cert_tracker_usercert uc 
-                ON uc.user_id = ul.user_id 
-                AND uc.cert_id = lc.cert_id
-            WHERE au.is_active = TRUE AND uc.completion_date <> uc.expiry_date AND uc.expiry_date < CURRENT_DATE
+            JOIN lfs_lab_cert_tracker_labcert lc 
+				ON lc.lab_id = ul.lab_id
+            JOIN latest_user_certs luc
+                ON luc.user_id = ul.user_id
+       			AND luc.cert_id = lc.cert_id
+            WHERE
+				luc.rn = 1 AND
+				au.is_active = TRUE AND 
+				luc.completion_date <> luc.expiry_date AND 
+				luc.expiry_date < CURRENT_DATE
         ),
-        lab_supervisors AS (
-            SELECT
-                lab_id,
-                user_id AS supervisor_id
-            FROM lfs_lab_cert_tracker_userlab
-            WHERE role = 1
-        )
+		lab_supervisors AS (
+			SELECT
+				ul.lab_id,
+				ul.user_id AS supervisor_id
+			FROM lfs_lab_cert_tracker_userlab ul
+			JOIN auth_user au 
+				ON au.id = ul.user_id
+			WHERE 
+				ul.role = 1 AND au.is_active = TRUE
+		)
         SELECT
 			eu.expired_user_id,
             l.name AS lab_name,
@@ -203,8 +228,7 @@ func GetExpiredTrainings(db Database) ([]ExpirySearchResult, error) {
     		ON c.id = eu.cert_id    
         LEFT JOIN lab_supervisors ls
             ON ls.lab_id = eu.lab_id
-        ORDER BY eu.lab_id, eu.expired_user_id;
-    `
+        ORDER BY eu.lab_id, eu.expired_user_id;`
 
 	rows, err := db.Conn.Query(query)
 	if err != nil {

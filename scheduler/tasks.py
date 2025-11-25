@@ -251,7 +251,7 @@ def run():
     # Before expiry date
 
     # Monday ~ Friday at 9:00 AM
-    scheduler.add_job(send_before_expiry_date_users, 'cron', day_of_week='mon-fri', hour=9, minute=0)
+    # scheduler.add_job(send_before_expiry_date_users, 'cron', day_of_week='mon-fri', hour=9, minute=0)
 
     # Monday ~ Friday at 9:30 AM
     # scheduler.add_job(send_before_expiry_date_pis, 'cron', day_of_week='mon-fri', hour=9, minute=30)
@@ -269,19 +269,8 @@ def run():
     # scheduler.add_job(send_after_expiry_date_pis, 'cron', day='1st mon,3rd mon', hour=9, minute=30)
 
     # 1st Monday, 3rd Monday at 10:00 AM
-<<<<<<< HEAD
-    # scheduler.add_job(send_missing_trainings, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
-=======
     # scheduler.add_job(send_after_expiry_date_admins, 'cron', day='1st mon,3rd mon', hour=10, minute=0)
->>>>>>> origin/key-request-process-bugs
 
-    # 1st Monday, 3rd Monday at 10:30 AM
-    # scheduler.add_job(send_after_expiry_date, 'cron', day='1st mon,3rd mon', hour=10, minute=30)
-
-<<<<<<< HEAD
-    # Monday ~ Friday at 11:00 AM
-    # scheduler.add_job(send_before_expiry_date_user_pi, 'cron', day_of_week='mon-fri', hour=11, minute=0)
-=======
     # Missing
 
     # 1st Monday, 3rd Monday at 9:00 AM
@@ -289,10 +278,8 @@ def run():
 
     # 1st Monday, 3rd Monday at 9:30 AM
     # scheduler.add_job(send_missing_trainings_pis, 'cron', day='1st mon,3rd mon', hour=9, minute=30)
->>>>>>> origin/key-request-process-bugs
 
-    # Monday ~ Friday at 11:30 AM
-    # scheduler.add_job(send_before_expiry_date_admin, 'cron', day_of_week='mon-fri', hour=11, minute=30)
+
 
     # Monday ~ Sunday at 3:00 AM
     # scheduler.add_job(check_user_trainings_by_api, 'cron', day_of_week='mon-sun', hour=3, minute=0)
