@@ -19,7 +19,7 @@
               <td>{{ forloop.counter }}.</td>
               <td class="text-left">{{ cert.name }}</td>
               <td>
-                {% if is_admin %}
+                {% if request.user.is_superuser %}
                   <form class="d-inline float-right" action="{% url 'app:delete_training_in_area' %}" method="post" onsubmit="return confirm('Are you sure to remove {{ cert.name }}?');">
                     {% csrf_token %}
 
@@ -87,7 +87,7 @@
             {% endif %}
           </td>
           <td>
-            {% if is_admin or is_pi %}
+            {% if request.user.is_superuser or is_pi %}
               <form class="list-form" action="{% url 'app:switch_user_role_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
                 {% csrf_token %}
 

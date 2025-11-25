@@ -205,8 +205,7 @@ func GetUsersWithExpiredTrainings(db utils.Database) (map[int][]string, error) {
 			ON c.id = latest.cert_id
 		WHERE u.is_active = TRUE
 		GROUP BY u.id, u.username
-		ORDER BY u.id;
-	`
+		ORDER BY u.id;`
 
 	rows, err := db.Conn.Query(query)
 	if err != nil {

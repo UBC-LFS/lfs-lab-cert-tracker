@@ -106,6 +106,61 @@ func (db *Database) GetUsers() (map[int]map[string]interface{}, map[string]int, 
 	return items, items_by_username, nil
 }
 
+func (db *Database) GetAdmins() (map[int]map[string]interface{}, error) {
+	rows, err := db.Conn.Query(`SELECT * FROM auth_user WHERE is_active = TRUE AND is_superuser = TRUE;`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get columns: %v", err)
+	}
+
+	items := make(map[int]map[string]interface{})
+	items_by_username := make(map[string]int)
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range columns {
+			valuePtrs[i] = &values[i]
+		}
+
+		// Scan the row into value pointers
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+
+		rowMap := make(map[string]interface{})
+		var id int
+		var username string
+		for i, col := range columns {
+			var v interface{}
+			val := values[i]
+
+			b, ok := val.([]byte)
+			if ok {
+				v = string(b)
+			} else {
+				v = val
+			}
+			if col == "id" {
+				id = int(v.(int64))
+			} else if col == "username" {
+				username = v.(string)
+			}
+
+			rowMap[col] = v
+		}
+
+		items[id] = rowMap
+		items_by_username[username] = id
+	}
+
+	return items, nil
+}
+
 func (db *Database) GetTrainings() (map[int]map[string]interface{}, map[string]int, error) {
 	rows, err := db.Conn.Query(`SELECT * FROM lfs_lab_cert_tracker_cert;`)
 	if err != nil {

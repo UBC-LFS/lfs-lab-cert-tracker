@@ -14,6 +14,7 @@ $ go get github.com/lib/pq
 ```
 $ go run ./update_by_api
 $ go run ./missing_training
+$ go run ./before_expiry_date
 ```
 
 ### Change the SSL mode in production

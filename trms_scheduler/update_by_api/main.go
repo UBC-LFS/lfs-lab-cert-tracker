@@ -14,14 +14,6 @@ import (
 	"trms_scheduler/utils"
 )
 
-/*
-# Change the SSL mode in production
-- DEV = disable
-- PROD = require
-*/
-
-var SSL_MODE = "disable"
-
 type TrainingModel struct {
 	UserID         int
 	TrainingID     int
@@ -37,7 +29,7 @@ func main() {
 
 	var db utils.Database
 
-	if err := db.Connect(SSL_MODE); err != nil {
+	if err := db.Connect(utils.SSL_MODE); err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()

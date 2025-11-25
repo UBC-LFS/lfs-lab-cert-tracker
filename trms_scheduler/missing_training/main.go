@@ -4,24 +4,15 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"trms_scheduler/utils"
 )
-
-/*
-# Change the SSL mode in production
-- DEV = disable
-- PROD = require
-*/
-
-var SSL_MODE = "disable"
 
 func main() {
 	fmt.Println("Start - Missing Training")
 
 	var db utils.Database
 
-	if err := db.Connect(SSL_MODE); err != nil {
+	if err := db.Connect(utils.SSL_MODE); err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
@@ -31,7 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	usersWithMissingCerts, err := GetUsersWithMissingCerts(db)
+	usersWithMissingCerts, err := utils.GetUsersWithMissingCerts(db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +32,7 @@ func main() {
 
 	for _, value := range usersWithMissingCerts {
 		user := allUsers[value.UserID]
-		userName := fmt.Sprintf("%s %s|%s", user["first_name"], user["last_name"], user["email"])
+		userName := utils.DisplayUserInfo(user, "")
 		users[userName] = append(users[userName], value.MissingCerts...)
 
 		for _, piID := range value.Supervisors {
@@ -51,14 +42,14 @@ func main() {
 			}
 
 			pi := allUsers[piID_int]
-			piName := fmt.Sprintf("%s %s|%s", pi["first_name"], pi["last_name"], pi["email"])
+			piName := utils.DisplayUserInfo(pi, "")
 
-			temp := map[string]interface{}{
+			item := map[string]interface{}{
 				"area":      value.LabName,
-				"user":      fmt.Sprintf("%s %s", user["first_name"], user["last_name"]),
+				"user":      utils.DisplayUserInfo(pi, "no-email"),
 				"trainings": value.MissingCerts,
 			}
-			pis[piName] = append(pis[piName], temp)
+			pis[piName] = append(pis[piName], item)
 		}
 	}
 
@@ -67,49 +58,9 @@ func main() {
 }
 
 func sendToUsers(users map[string][]string) {
-	for key, value := range users {
-		userInfo := strings.Split(key, "|")
-		recipientName := userInfo[0]
-		recipientEmail := userInfo[1]
-
-		var trainings []string
-		for _, training := range value {
-			trainings = append(trainings, "<li>"+training+"</li>")
-		}
-
-		content := "<p>Our records indicate that you have missing training certification(s) required for each area. Please take a moment to update your records at your earliest convenience. Let us know if you need any assistance.</p>" +
-			"<ul>" + strings.Join(trainings, "") + "</ul>"
-
-		body := utils.EmailTemplate(recipientName, content)
-
-		fmt.Println(recipientEmail, body)
-		// utils.SendEmail(recipientEmail, body)
-	}
+	utils.SendToUsers(users, 0, "missing")
 }
 
 func sendToPIs(pis map[string][]map[string]interface{}) {
-	for key, value := range pis {
-		userInfo := strings.Split(key, "|")
-		recipientName := userInfo[0]
-		recipientEmail := userInfo[1]
-
-		var items string
-		for _, item := range value {
-			items += "<li>" + item["area"].(string) + ": " + item["user"].(string) + "</li>"
-
-			var trainings []string
-			for _, training := range item["trainings"].([]string) {
-				trainings = append(trainings, "<li>"+training+"</li>")
-			}
-			items += "<ul>" + strings.Join(trainings, "") + "</ul>"
-		}
-
-		content := "<p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>" +
-			"<ul>" + items + "</ul>"
-
-		body := utils.EmailTemplate(recipientName, content)
-
-		fmt.Println(recipientEmail, body)
-		// utils.SendEmail(recipientEmail, body)
-	}
+	utils.SendToPIs(pis, 0, "missing")
 }
