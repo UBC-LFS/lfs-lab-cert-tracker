@@ -20,7 +20,7 @@ $ go run ./trms_after_expiry_date
 
 ### Change the SSL mode in production
 - DEV = disable
-- PROD = verify-full
+- PROD = require
 
 
 ## For cronjob and the Golang builder
@@ -39,18 +39,23 @@ export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 $ go env GOCACHE
 ```
 
-### 2. Build the *update_by_api* app
+### 2. Build apps
 
 ```
 $ cd update_by_api
-
-update_by_api $ go build -o ./
+trms_update_by_api $ go build -o ./
+trms_missing_training $ go build -o ./
+trms_before_expiry_date $ go build -o ./
+trms_after_expiry_date $ go build -o ./
 ```
 
 ### 3. Move the executable application (e.g., update_by_api) to the */usr/local/bin/* folder
 
 ```
-$ mv update_by_api /usr/local/bin/
+$ mv trms_update_by_api /usr/local/bin/
+$ mv trms_missing_training /usr/local/bin/
+$ mv trms_before_expiry_date /usr/local/bin/
+$ mv trms_after_expiry_date /usr/local/bin/
 ```
 
 ### 4. Add a job to the crontab
@@ -58,5 +63,13 @@ $ mv update_by_api /usr/local/bin/
 ```
 $ crontab -e
 
-0 5 * * * . /etc/apache2/envvars; /usr/local/bin/update_by_api >> /[FOLDER PATH]/log/cron.log 2>&1
+0 5 * * * . /etc/apache2/envvars; /usr/local/bin/trms_update_by_api >> /[FOLDER PATH]/log/cron.log 2>&1
+
+30 10 1 * * . /etc/apache2/envvars; /usr/local/bin/trms_missing_training >> /[FOLDER PATH]/log/cron.log 2>&1
+30 10 15 * * . /etc/apache2/envvars; /usr/local/bin/trms_missing_training >> /[FOLDER PATH]/log/cron.log 2>&1
+
+0 9 * * * . /etc/apache2/envvars; /usr/local/bin/trms_before_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
+
+0 10 1 * * . /etc/apache2/envvars; /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
+0 10 15 * * . /etc/apache2/envvars; /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
 ```
