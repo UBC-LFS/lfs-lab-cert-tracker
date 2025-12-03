@@ -127,7 +127,7 @@ func SendToUsers(users map[string][]string, days int, path string) {
 			content = "<p>This is a friendly reminder that one or more of your trainings will expire in " + IntToStr(days) + " days. Please update these certificates at your earliest convenience.</p>" +
 				"<ul>" + strings.Join(trainings, "") + "</ul>"
 		} else if path == "after-expiry-date" {
-			content = "<p>This is a friendly reminder that your training has passed its expiration date. Please log in and update your training as soon as possible.</p>" +
+			content = "<p>This is a friendly reminder that the below training record(s) have expired. Please re-take the training(s) to meet the training requirement(s).</p>" +
 				"<ul>" + strings.Join(trainings, "") + "</ul>"
 		}
 
