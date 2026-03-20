@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"slices"
+	"sort"
+	"strings"
 	"trms_scheduler/utils"
 )
 
@@ -11,12 +14,73 @@ import (
 - Check on 1st Monday and 3rd Monday at 10:30 AM
 */
 
-func sendToUsers(users map[string][]string) {
+/* Users */
+func sendToUsers(db utils.Database, allUsers map[int]map[string]interface{}) {
+	fmt.Println("Start - Missing Training for Users")
+
+	data, err := utils.GetUsersWithMissingCerts(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	users := make(map[string][]string)
+
+	for _, value := range data {
+		user := allUsers[value.UserID]
+		userName := utils.DisplayUserInfo(user, "")
+
+		for _, cert := range value.MissingCerts {
+			if !slices.Contains(users[userName], cert) {
+				users[userName] = append(users[userName], cert)
+			}
+		}
+		sort.Strings(users[userName])
+	}
+
 	utils.SendToUsers(users, 0, "missing")
 }
 
-func sendToPIs(pis map[string][]map[string]interface{}) {
-	utils.SendToPIs(pis, 0, "missing")
+/* Supervisors */
+func sendToPIs(db utils.Database, allUsers map[int]map[string]interface{}, allUsers_by_usernmae map[string]int) {
+	fmt.Println("Start - Missing Training for Supervisors")
+
+	data, err := utils.GetSupervisorsWithMissingCerts(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	numPis := 0
+	for piUsername, labs := range data {
+		piID := allUsers_by_usernmae[piUsername]
+		pi := allUsers[piID]
+
+		var areas []string
+		for lab, items := range labs {
+			areas = append(areas, "<div><strong>"+lab+"</strong><br />")
+
+			var users []string
+			for _, item := range items {
+				users = append(users, "<li>"+item.LastName+", "+item.FirstName+"<br />")
+
+				var certs []string
+				for _, cert := range item.Certs {
+					certs = append(certs, "<li>"+cert+"</li>")
+				}
+				users = append(users, "<ul>"+strings.Join(certs, "")+"</ul></li>")
+			}
+			areas = append(areas, "<ul>"+strings.Join(users, "")+"</ul></div>")
+		}
+
+		message := "<p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>" + strings.Join(areas, "")
+		body := utils.EmailTemplate(utils.DisplayUserInfo(pi, "no-email"), message)
+
+		// fmt.Println(pi["email"], body)
+		utils.SendEmail(pi["email"].(string), body)
+
+		numPis++
+	}
+
+	fmt.Println("Sent to PIs:", numPis)
 }
 
 func main() {
@@ -29,38 +93,11 @@ func main() {
 	}
 	defer db.Close()
 
-	allUsers, _, err := db.GetUsers()
+	allUsers, allUsers_by_username, err := db.GetUsers()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	usersWithMissingCerts, err := utils.GetUsersWithMissingCerts(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	users := make(map[string][]string)
-	pis := make(map[string][]map[string]interface{})
-
-	for _, value := range usersWithMissingCerts {
-		user := allUsers[value.UserID]
-		userName := utils.DisplayUserInfo(user, "")
-		users[userName] = append(users[userName], value.MissingCerts...)
-
-		for _, piID := range value.Supervisors {
-			piID_int := utils.StrToInt(piID)
-			pi := allUsers[piID_int]
-			piName := utils.DisplayUserInfo(pi, "")
-
-			item := map[string]interface{}{
-				"area":      value.LabName,
-				"user":      utils.DisplayUserInfo(pi, "no-email"),
-				"trainings": value.MissingCerts,
-			}
-			pis[piName] = append(pis[piName], item)
-		}
-	}
-
-	sendToUsers(users)
-	sendToPIs(pis)
+	sendToUsers(db, allUsers)
+	sendToPIs(db, allUsers, allUsers_by_username)
 }

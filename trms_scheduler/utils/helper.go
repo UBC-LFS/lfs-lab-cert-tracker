@@ -17,7 +17,7 @@ import (
 - PROD = require
 */
 
-var SSL_MODE = "disable"
+var SSL_MODE = os.Getenv("LFS_LAB_CERT_TRACKER_SCHEDULER_SSL_MODE")
 
 func GetUsersAndPIsForExpiryDate(data []ExpirySearchResult, allUsers map[int]map[string]interface{}) (map[string][]string, map[string][]map[string]interface{}) {
 	users := make(map[string][]string)
@@ -79,7 +79,7 @@ func GetUsersAndPIsForExpiryDate(data []ExpirySearchResult, allUsers map[int]map
 func EmailTemplate(recipientName string, content string) string {
 	body := "<p>Hi " + recipientName + ",</p>" +
 		content +
-		"<p>To enroll in a missing or expired  training, please visit the below link and select the category that best describes your LFS affiliation for training links.<p/>" +
+		"<p>To enroll in a missing or expired training, please visit the below link and select the category that best describes your LFS affiliation for training links.<p/>" +
 		"<p><b>UBC/LFS Mandatory Training</b><br /><a href='https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/'>https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/</a></p>" +
 		"<p>Best regards,</p><p>LFS Training Record Management System</p>"
 
@@ -132,7 +132,6 @@ func SendToUsers(users map[string][]string, days int, path string) {
 		}
 
 		body := EmailTemplate(recipientName, content)
-
 		// fmt.Println(recipientEmail, body)
 		SendEmail(recipientEmail, body)
 	}
@@ -155,10 +154,7 @@ func SendToPIs(pis map[string][]map[string]interface{}, days int, path string) {
 		}
 
 		var content string
-		if path == "missing" {
-			content = "<p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>" +
-				"<ul>" + items + "</ul>"
-		} else if path == "before-expiry-date" {
+		if path == "before-expiry-date" {
 			content = "<p>Please be advised that the training certifications for the following users in your area will expire in " + IntToStr(days) + " days. Please remind these individuals to complete the necessary renewal process before their certifications expire.</p>" +
 				"<ul>" + items + "</ul>"
 		} else if path == "after-expiry-date" {
@@ -167,7 +163,6 @@ func SendToPIs(pis map[string][]map[string]interface{}, days int, path string) {
 		}
 
 		body := EmailTemplate(recipientName, content)
-
 		// fmt.Println(recipientEmail, body)
 		SendEmail(recipientEmail, body)
 	}
@@ -206,7 +201,6 @@ func SendToAdmins(db Database, users map[string][]string, days int, path string)
 		recipientEmail := admin["email"].(string)
 
 		body := EmailTemplate(recipientName, content)
-
 		// fmt.Println(recipientEmail, body)
 		SendEmail(recipientEmail, body)
 	}
