@@ -106,7 +106,7 @@ func SendEmail(recipient string, body string) {
 	if err != nil {
 		fmt.Println("Error sending to", recipient, ":", err)
 	} else {
-		fmt.Println("Email sent to", recipient)
+		// fmt.Println("Email sent to", recipient)
 	}
 }
 
@@ -118,6 +118,7 @@ func SendToUsers(users map[string][]string, days int, path string) {
 		for _, training := range value {
 			trainings = append(trainings, "<li>"+training+"</li>")
 		}
+		slices.Sort(trainings)
 
 		var content string
 		if path == "missing" {
@@ -144,12 +145,13 @@ func SendToPIs(pis map[string][]map[string]interface{}, days int, path string) {
 
 		var items string
 		for _, item := range value {
-			items += "<li>" + item["area"].(string) + ": " + item["user"].(string) + "</li>"
+			items += "<li>" + item["area"].(string) + ": <strong>" + item["user"].(string) + "</strong></li>"
 
 			var trainings []string
 			for _, training := range item["trainings"].([]string) {
 				trainings = append(trainings, "<li>"+training+"</li>")
 			}
+			slices.Sort(trainings)
 			items += "<ul>" + strings.Join(trainings, "") + "</ul>"
 		}
 
@@ -184,7 +186,9 @@ func SendToAdmins(db Database, users map[string][]string, days int, path string)
 		for _, training := range trainings {
 			temp = append(temp, "<li>"+training+"</li>")
 		}
-		items += "<li>" + userName + "<ul>" + strings.Join(temp, "") + "</ul></li>"
+
+		slices.Sort(temp)
+		items += "<li><strong>" + userName + "</strong><ul>" + strings.Join(temp, "") + "</ul></li>"
 	}
 
 	var content string

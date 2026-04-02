@@ -24,7 +24,6 @@ func sendToUsers(db utils.Database, allUsers map[int]map[string]interface{}) {
 	}
 
 	users := make(map[string][]string)
-
 	for _, value := range data {
 		user := allUsers[value.UserID]
 		userName := utils.DisplayUserInfo(user, "")
@@ -37,7 +36,10 @@ func sendToUsers(db utils.Database, allUsers map[int]map[string]interface{}) {
 		sort.Strings(users[userName])
 	}
 
-	utils.SendToUsers(users, 0, "missing")
+	if len(users) > 0 {
+		// fmt.Println(len(users))
+		utils.SendToUsers(users, 0, "missing")
+	}
 }
 
 /* Supervisors */
@@ -54,8 +56,10 @@ func sendToPIs(db utils.Database, allUsers map[int]map[string]interface{}, allUs
 		piID := allUsers_by_usernmae[piUsername]
 		pi := allUsers[piID]
 
+		var userLength int
 		var areas []string
 		for lab, items := range labs {
+			userLength = len(items)
 			areas = append(areas, "<div><strong>"+lab+"</strong><br />")
 
 			var users []string
@@ -71,13 +75,15 @@ func sendToPIs(db utils.Database, allUsers map[int]map[string]interface{}, allUs
 			areas = append(areas, "<ul>"+strings.Join(users, "")+"</ul></div>")
 		}
 
-		message := "<p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>" + strings.Join(areas, "")
-		body := utils.EmailTemplate(utils.DisplayUserInfo(pi, "no-email"), message)
+		if userLength > 0 {
+			message := "<p>Please be advised that the following users have missing required training certification(s) for your area. Kindly review the list and ensure appropriate actions are taken.</p>" + strings.Join(areas, "")
+			body := utils.EmailTemplate(utils.DisplayUserInfo(pi, "no-email"), message)
 
-		// fmt.Println(pi["email"], body)
-		utils.SendEmail(pi["email"].(string), body)
+			// fmt.Println(pi["email"], body)
+			utils.SendEmail(pi["email"].(string), body)
 
-		numPis++
+			numPis++
+		}
 	}
 
 	fmt.Println("Sent to PIs:", numPis)

@@ -23,7 +23,6 @@ func send30days(db utils.Database, allUsers map[int]map[string]interface{}) {
 
 	users := make(map[string][]string)
 	temp_pis := make(map[string][]map[string]interface{})
-
 	for _, value := range expiringTrainings {
 		user := allUsers[value.UserID]
 		userName := fmt.Sprintf("%s %s|%s", user["first_name"], user["last_name"], user["email"])
@@ -73,16 +72,13 @@ func send30days(db utils.Database, allUsers map[int]map[string]interface{}) {
 		}
 	}
 
-	sendToUsers(users, DAYS)
-	sendToPIs(pis, DAYS)
-}
+	if len(users) > 0 {
+		utils.SendToUsers(users, DAYS, "before-expiry-date")
+	}
 
-func sendToUsers(users map[string][]string, days int) {
-	utils.SendToUsers(users, days, "before-expiry-date")
-}
-
-func sendToPIs(pis map[string][]map[string]interface{}, days int) {
-	utils.SendToPIs(pis, days, "before-expiry-date")
+	if len(pis) > 0 {
+		utils.SendToPIs(pis, DAYS, "before-expiry-date")
+	}
 }
 
 func send15days(db utils.Database, allUsers map[int]map[string]interface{}) {
@@ -101,12 +97,14 @@ func send15days(db utils.Database, allUsers map[int]map[string]interface{}) {
 		trainingInfo := utils.DisplayExpiryInfo(value.CertName, value.ExpiryDate)
 
 		found := slices.Contains(users[userInfo], trainingInfo)
-
 		if !found {
 			users[userInfo] = append(users[userInfo], trainingInfo)
 		}
 	}
-	utils.SendToAdmins(db, users, DAYS, "before-expiry-date")
+
+	if len(users) > 0 {
+		utils.SendToAdmins(db, users, DAYS, "before-expiry-date")
+	}
 }
 
 func main() {
