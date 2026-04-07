@@ -12,10 +12,10 @@ $ go get github.com/lib/pq
 
 ### Run each app locally
 ```
-$ go run ./trms_update_by_api
 $ go run ./trms_missing_training
 $ go run ./trms_before_expiry_date
 $ go run ./trms_after_expiry_date
+$ go run ./trms_update_by_api
 ```
 
 ### Change the SSL mode in production

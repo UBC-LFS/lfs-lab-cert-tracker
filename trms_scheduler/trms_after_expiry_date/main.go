@@ -38,14 +38,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	expiredTrainings, err := utils.GetExpiredTrainings(db)
+	expiredTrainings, err := GetExpiredTrainings(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	users, pis := utils.GetUsersAndPIsForExpiryDate(expiredTrainings, allUsers)
+	users, pis := GetUsersAndPIsForExpiryDate(expiredTrainings, allUsers)
 
-	sendToUsers(users)
-	sendToPIs(pis)
-	sendToAdmins(db, users)
+	if len(users) > 0 {
+		utils.SendToUsers(users, 0, "after-expiry-date")
+		utils.SendToAdmins(db, users, 0, "after-expiry-date")
+	}
+
+	if len(pis) > 0 {
+		utils.SendToPIs(pis, 0, "after-expiry-date")
+	}
 }

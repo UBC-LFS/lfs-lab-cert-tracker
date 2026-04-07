@@ -19,61 +19,6 @@ import (
 
 var SSL_MODE = os.Getenv("LFS_LAB_CERT_TRACKER_SCHEDULER_SSL_MODE")
 
-func GetUsersAndPIsForExpiryDate(data []ExpirySearchResult, allUsers map[int]map[string]interface{}) (map[string][]string, map[string][]map[string]interface{}) {
-	users := make(map[string][]string)
-	temp_pis := make(map[string][]map[string]interface{})
-
-	for _, value := range data {
-		user := allUsers[value.UserID]
-		userName := DisplayUserInfo(user, "")
-		trainingInfo := DisplayExpiryInfo(value.CertName, value.ExpiryDate)
-
-		found := slices.Contains(users[userName], trainingInfo)
-		if !found {
-			users[userName] = append(users[userName], trainingInfo)
-		}
-
-		if value.SupervisorID.Valid {
-			pi := allUsers[int(value.SupervisorID.Int64)]
-			piName := DisplayUserInfo(pi, "")
-
-			item := map[string]interface{}{
-				"user":     value.UserID,
-				"area":     value.LabName,
-				"training": trainingInfo,
-			}
-
-			temp_pis[piName] = append(temp_pis[piName], item)
-		}
-	}
-
-	pis := make(map[string][]map[string]interface{})
-	for pi, items := range temp_pis {
-		trainings := make(map[string][]string)
-		for _, item := range items {
-			key := CombineAreaAndUser(item["area"].(string), item["user"].(int))
-			trainings[key] = append(trainings[key], item["training"].(string))
-		}
-
-		for key, value := range trainings {
-			info := strings.Split(key, "|")
-			areaName := info[0]
-			userID_int := StrToInt(info[1])
-
-			user := allUsers[userID_int]
-			userName := DisplayUserInfo(user, "no-email")
-
-			item := map[string]interface{}{
-				"area":      areaName,
-				"user":      userName,
-				"trainings": value,
-			}
-			pis[pi] = append(pis[pi], item)
-		}
-	}
-	return users, pis
-}
-
 /* Email */
 
 func EmailTemplate(recipientName string, content string) string {
@@ -158,9 +103,11 @@ func SendToPIs(pis map[string][]map[string]interface{}, days int, path string) {
 		var content string
 		if path == "before-expiry-date" {
 			content = "<p>Please be advised that the training certifications for the following users in your area will expire in " + IntToStr(days) + " days. Please remind these individuals to complete the necessary renewal process before their certifications expire.</p>" +
+				"<p>Number of Users: <strong>" + strconv.Itoa(len(value)) + "</strong></p>" +
 				"<ul>" + items + "</ul>"
 		} else if path == "after-expiry-date" {
 			content = "<p>Please be advised that the training certifications for the following users in your area have already expired. Please remind them to complete their renewal at the earliest convenience to prevent any area access issues.</p>" +
+				"<p>Number of Users: <strong>" + strconv.Itoa(len(value)) + "</strong></p>" +
 				"<ul>" + items + "</ul>"
 		}
 
@@ -194,9 +141,11 @@ func SendToAdmins(db Database, users map[string][]string, days int, path string)
 	var content string
 	if path == "before-expiry-date" {
 		content = "<p>Please be advised that the training certifications for the following users in your area will expire in " + IntToStr(days) + " days. Please remind these individuals to complete the necessary renewal process before their certifications expire.</p>" +
+			"<p>Number of Users: <strong>" + strconv.Itoa(len(users)) + "</strong></p>" +
 			"<ul>" + items + "</ul>"
 	} else if path == "after-expiry-date" {
 		content = "<p>Please be advised that the training certifications for the following users in your area have already expired. Please remind them to complete their renewal at the earliest convenience to prevent any area access issues.</p>" +
+			"<p>Number of Users: <strong>" + strconv.Itoa(len(users)) + "</strong></p>" +
 			"<ul>" + items + "</ul>"
 	}
 

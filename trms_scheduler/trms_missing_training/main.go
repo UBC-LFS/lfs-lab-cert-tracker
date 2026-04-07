@@ -5,6 +5,7 @@ import (
 	"log"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"trms_scheduler/utils"
 )
@@ -18,7 +19,7 @@ import (
 func sendToUsers(db utils.Database, allUsers map[int]map[string]interface{}) {
 	fmt.Println("Start - Missing Training for Users")
 
-	data, err := utils.GetUsersWithMissingCerts(db)
+	data, err := GetUsersWithMissingCerts(db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +47,7 @@ func sendToUsers(db utils.Database, allUsers map[int]map[string]interface{}) {
 func sendToPIs(db utils.Database, allUsers map[int]map[string]interface{}, allUsers_by_usernmae map[string]int) {
 	fmt.Println("Start - Missing Training for Supervisors")
 
-	data, err := utils.GetSupervisorsWithMissingCerts(db)
+	data, err := GetSupervisorsWithMissingCerts(db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +61,7 @@ func sendToPIs(db utils.Database, allUsers map[int]map[string]interface{}, allUs
 		var areas []string
 		for lab, items := range labs {
 			userLength = len(items)
-			areas = append(areas, "<div><strong>"+lab+"</strong><br />")
+			areas = append(areas, "<div><strong>"+lab+"</strong> (Total: "+strconv.Itoa(userLength)+")<br />")
 
 			var users []string
 			for _, item := range items {

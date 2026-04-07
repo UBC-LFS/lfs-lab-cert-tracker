@@ -16,7 +16,7 @@ import (
 func send30days(db utils.Database, allUsers map[int]map[string]interface{}) {
 	DAYS := 30
 
-	expiringTrainings, err := utils.GetExpiringTrainings(db, DAYS)
+	expiringTrainings, err := GetExpiringTrainings(db, DAYS)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func send30days(db utils.Database, allUsers map[int]map[string]interface{}) {
 func send15days(db utils.Database, allUsers map[int]map[string]interface{}) {
 	DAYS := 15
 
-	expiringTrainings, err := utils.GetExpiringTrainings(db, DAYS)
+	expiringTrainings, err := GetExpiringTrainings(db, DAYS)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func send15days(db utils.Database, allUsers map[int]map[string]interface{}) {
 			users[userInfo] = append(users[userInfo], trainingInfo)
 		}
 	}
-
+	fmt.Println(len(users))
 	if len(users) > 0 {
 		utils.SendToAdmins(db, users, DAYS, "before-expiry-date")
 	}
