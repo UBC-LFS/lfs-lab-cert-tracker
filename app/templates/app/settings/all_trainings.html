@@ -23,6 +23,7 @@
 			<th>ID</th>
       <th>Training Name</th>
 			<th>Training <br /> Unique ID</th>
+			<th>LFS <br /> Training?</th>
 			<th>Expiry in Year</th>
 			<th># of Users <br /> with this Training</th>
 			<th style="width:140px;">Actions</th>
@@ -36,6 +37,11 @@
 				<td>
 					{% if cert.unique_id %}
 						{{ cert.unique_id }}
+					{% endif %}
+				</td>
+				<td>
+					{% if cert.is_lfs %}
+						<span class="material-symbols-outlined text-success">check</span>
 					{% endif %}
 				</td>
 				<td>
@@ -68,24 +74,30 @@
 															Name:
 															{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 														</label>
-														<input id="id_name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" maxlength="256" required />
+														<input id="name_{{ cert.id }}" class="form-control" type="text" name="name" value="{{ cert.name }}" maxlength="256" required />
 														<small class="text-muted">(Maximum characters: 256)</small>
 													</div>
 
 													<div class="mb-3">
-														<label for="id_expiry_in_years_{{ cert.id }}" class="font-weight-bold">
+														<label class="font-weight-bold">
 															Expiry in Years:
 															{% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
 														</label>
-														<input id="id_expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
+														<input id="expiry_in_years_{{ cert.id }}" class="form-control" type="number" name="expiry_in_years" value="{{ cert.expiry_in_years }}" required="" />
 														<small class="text-muted">(0 means "NO Expiry Date")</small>
 													</div>
 
 													<div class="mb-3">
-												    <label for="id_unique_id_{{ cert.id }}" class="font-weight-bold">Training Unique ID:</label>
-												    <input id="id_unique_id_{{ cert.id }}" class="form-control" type="text" name="unique_id" maxlength="50" value="{% if cert.unique_id %}{{ cert.unique_id }}{% endif %}" />
+												    <label class="font-weight-bold">Training Unique ID:</label>
+												    <input id="unique_id_{{ cert.id }}" class="form-control" type="text" name="unique_id" maxlength="50" value="{% if cert.unique_id %}{{ cert.unique_id }}{% endif %}" />
 														<small class="helptext">Note: Each training has an unique ID in Canvas Catalog</small>
 												  </div>
+
+													<div class="mb-3">
+														<label class="font-weight-bold">LFS Training?</label>
+								            <input id="is_lfs_{{ cert.id }}" type="checkbox" name="is_lfs" {% if cert.is_lfs %}checked{% endif %} />
+								          </div>
+
 
 													<input type="hidden" name="training" value="{{ cert.id }}" />
 													<input type="hidden" name="next" value="{{ request.get_full_path }}" />

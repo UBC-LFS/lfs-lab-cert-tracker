@@ -24,7 +24,7 @@ def local_login(request):
         else:
             messages.error('Error! Form is not valid.')
 
-        redirect('accounts:local_login')
+        return redirect('accounts:local_login')
 
     return render(request, 'accounts/local_login.html', {
         'form': LocalLoginForm()

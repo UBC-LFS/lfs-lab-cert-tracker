@@ -35,7 +35,7 @@ def get_headers(model):
 def preprocess_rooms(rooms):
     by_building = {}
     for room in rooms:
-        if room.is_active and room.key:
+        if room.is_active:
             r = model_to_dict(room)
             building_id = r['building']
             floor_id = r['floor']

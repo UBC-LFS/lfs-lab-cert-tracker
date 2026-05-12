@@ -78,11 +78,12 @@ class TrainingForm(forms.ModelForm):
 
     class Meta:
         model = Cert
-        fields = ['name', 'expiry_in_years', 'unique_id']
+        fields = ['name', 'expiry_in_years', 'unique_id', 'is_lfs']
         labels = {
             'name': 'Training Name',
             'expiry_in_years': 'Expiry in Years',
-            'unique_id': 'Training Unique ID'
+            'unique_id': 'Training Unique ID',
+            'is_lfs': 'LFS Training?'
         }
         widgets = {
             'name': forms.TextInput(attrs={ 'class': 'form-control' }),
