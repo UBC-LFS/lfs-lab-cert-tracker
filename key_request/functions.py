@@ -215,6 +215,9 @@ def create_data_from_session(session, key, room=None):
         if 'is_active' in session[key]:
             data['is_active'] = session[key]['is_active']
 
+        if session[key]['note']:
+            data['note'] = session[key]['note']
+
         if len(session[key]['managers']) > 0:
             manager_ids = session[key]['managers']
 
@@ -251,6 +254,9 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
         is_active = True if post.get('is_active') else False
         if data['is_active'] != is_active:
             data['is_active'] = is_active
+
+        if data['note'] != post.get('note'):
+            data['note'] = post.get('note')
 
     elif tab == 'pis':
         managers = str_to_int(post.getlist('managers[]'))

@@ -53,8 +53,8 @@ class Room(models.Model):
     key = models.BooleanField(default=False)
     fob = models.BooleanField(default=False)
     alarm = models.BooleanField(default=False)
-
     is_active = models.BooleanField(default=True)
+    note = models.TextField(null=True, blank=True)
 
     slug = models.SlugField(max_length=256, unique=True)
     created_on = models.DateField(auto_now_add=True)

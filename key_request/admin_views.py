@@ -336,8 +336,6 @@ class DeleteSetting(LoginRequiredMixin, View):
         return redirect('key_request:settings', model=self.raw_model)
 
 
-import re
-
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRooms(LoginRequiredMixin, View):
     """ Display all rooms """
@@ -444,6 +442,7 @@ class CreateRoom(LoginRequiredMixin, View):
                 'fob': None,
                 'alarm': None,
                 'is_active': None,
+                'note': None,
                 'managers': [],
                 'areas': [],
                 'trainings': []
@@ -460,6 +459,7 @@ class CreateRoom(LoginRequiredMixin, View):
                 data['fob'] = True if request.POST.get('fob') else False
                 data['alarm'] = True if request.POST.get('alarm') else False
                 data['is_active'] = True if request.POST.get('is_active') else False
+                data['note'] = request.POST.get('note')
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
@@ -470,6 +470,7 @@ class CreateRoom(LoginRequiredMixin, View):
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
 
+            print(data)
             request.session[CREATE_ROOM_KEY] = data
 
 
@@ -557,6 +558,7 @@ class EditRoom(LoginRequiredMixin, View):
                 'fob': True if self.room.is_active else False,
                 'alarm': True if self.room.is_active else False,
                 'is_active': True if self.room.is_active else False,
+                'note': self.room.note,
                 'managers': [manager.id for manager in self.room.managers.all()],
                 'areas': [area.id for area in self.room.areas.all()],
                 'trainings': [training.id for training in self.room.trainings.all()]
@@ -573,6 +575,7 @@ class EditRoom(LoginRequiredMixin, View):
                 data['fob'] = True if request.POST.get('fob') else False
                 data['alarm'] = True if request.POST.get('alarm') else False
                 data['is_active'] = True if request.POST.get('is_active') else False
+                data['note'] = request.POST.get('note')
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))

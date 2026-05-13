@@ -14,13 +14,20 @@
       <th>Floor</th>
       <th>Room <br /> Number</th>
       <th>Areas</th>
+
       {% if is_admin %}
         <th>PIs</th>
       {% endif %}
-      <th>Required Trainings</th>
-    {% if form %}
-      <th>Approved?</th>
-    {% endif %}
+
+      <th>Required <br /> Trainings</th>
+
+      {% if is_admin %}
+        <th>Note</th>
+      {% endif %}
+
+      {% if form %}
+        <th>Approved?</th>
+      {% endif %}
     </tr>
   </thead>
   {% for room in rooms %}
@@ -42,6 +49,7 @@
           {% endfor%}
         </ul>
       </td>
+
       {% if is_admin %}
         <td class="text-left">
           <ul class="list-minus-20">
@@ -58,6 +66,7 @@
           </ul>
         </td>
       {% endif %}
+
       <td class="text-left">
         <ul class="list-minus-20">
           {% for training in room.trainings.all %}
@@ -65,16 +74,23 @@
           {% endfor%}
         </ul>
       </td>
-    {% if form %}
-    <td>
-        {% get_status_by_room_and_form form.id room.id as approved %}
-        {% if approved %}
-            <span class="material-symbols-outlined text-success">check_circle</span>
-        {% endif %}
-    </td>
-    {% endif %}
 
+      {% if is_admin %}
+        <td>
+          {% if room.note %}
+            {{ room.note|linebreaks }}
+          {% endif %}
+        </td>
+      {% endif %}
 
+      {% if form %}
+        <td>
+          {% get_status_by_room_and_form form.id room.id as approved %}
+          {% if approved %}
+              <span class="material-symbols-outlined text-success">check_circle</span>
+          {% endif %}
+        </td>
+      {% endif %}
     </tr>
 
   {% empty %}

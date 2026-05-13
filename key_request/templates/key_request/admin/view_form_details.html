@@ -40,6 +40,7 @@
 						<th>Areas</th>
 						<th>PI</th>
 						<th>Operator</th>
+						<th>Note</th>
 						<th>Status <br /> History</th>
 						<th>Action</th>
 						<th>
@@ -65,6 +66,11 @@
 						<td>
 							{% if item.status|length > 0 %}
 								{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
+							{% endif %}
+						</td>
+						<td>
+							{% if item.room.note %}
+								{{ item.room.note|linebreaks }}
 							{% endif %}
 						</td>
 						<td>

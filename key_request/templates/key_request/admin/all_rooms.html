@@ -42,14 +42,20 @@
 					Alarm? <br />
 					Active?
 				</th>
-				<th>Num of <br /> Reqs</th>
+				<th>Note</th>
 				<th>Actions</th>
 	    </tr>
 	  </thead>
 	  <tbody>
 			{% for room in rooms %}
 	      <tr>
-	        <td>{{ room.id }}</td>
+	        <td>
+						{{ room.id }} <br />
+						
+						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
+							{{ room.requestform_set.count }}
+						</a>
+					</td>
 					<td>{{ room.building.code }}</td>
 					<td>{{ room.floor.name }}</td>
 	        <td>{{ room.number }}</td>
@@ -81,22 +87,21 @@
 						{% include 'key_request/subpages/_yes_or_no.html' with data=room.is_active %}
 					</td>
 					<td>
-						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
-							{{ room.requestform_set.count }}
-						</a>
+						{% if room.note %}
+							{{ room.note|linebreaks }}
+						{% endif %}
 					</td>
-	            <td>
-                    <a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
-                    <button class="btn btn-xs fs-8 btn-danger delete-room-btn" type="button"
-                            data-toggle="modal"
-                            data-target="#rooms-model-delete-modal"
-                            data-id="{{ room.id }}"
-                            data-name="{{ room.building.code}} {{room.floor.name}} {{room.number }}"
-                            data-num-reqs="{{ room.requestform_set.count }}"
-                    >
-                        Delete
-                    </button>
-
+	        <td>
+            <a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
+            <button class="btn btn-xs fs-8 btn-danger delete-room-btn" type="button"
+              data-toggle="modal"
+              data-target="#rooms-model-delete-modal"
+              data-id="{{ room.id }}"
+              data-name="{{ room.building.code}} {{room.floor.name}} {{room.number }}"
+              data-num-reqs="{{ room.requestform_set.count }}"
+            >
+            	Delete
+            </button>
 	        </td>
 	      </tr>
 	    {% empty %}

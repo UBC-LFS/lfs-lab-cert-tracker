@@ -33,7 +33,7 @@ class FloorForm(forms.ModelForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['building', 'floor', 'number', 'key', 'fob' , 'alarm', 'is_active']
+        fields = ['building', 'floor', 'number', 'key', 'fob' , 'alarm', 'is_active', 'note']
         labels = {
             'number': 'Room Number',
             'key': 'Key?',
@@ -44,7 +44,8 @@ class RoomForm(forms.ModelForm):
         widgets = {
             'building': forms.Select(attrs={ 'class': 'form-control' }),
             'floor': forms.Select(attrs={ 'class': 'form-control' }),
-            'number': forms.TextInput(attrs={ 'class': 'form-control' })
+            'number': forms.TextInput(attrs={ 'class': 'form-control' }),
+            'note': forms.Textarea(attrs={ 'class': 'form-control', 'rows': 6 })
         }
         help_texts = {
             'number': 'Maximum characters: 100'
