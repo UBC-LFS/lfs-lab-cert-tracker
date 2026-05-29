@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db.models.functions import Concat
-from django.db.models import Q, F, Max, CharField, Value
+from django.db.models import Q, F, Max, CharField, Value, Count
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from datetime import date
@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from django.contrib.auth.models import User
 from app import functions as appFunc
 from lfs_lab_cert_tracker.models import Cert
-from .models import Building, Floor, Room, RequestForm, RequestFormStatus
+from .models import Building, Floor, Room, RequestForm, RequestFormStatus, RoomGroup
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT, EMAIL_FOOTER
 
 
@@ -181,16 +181,7 @@ def get_manager_dashboard(user, query=None):
 
     return total_forms, num_new_forms, forms
 
-# Returns true if the status of the form matches the query
-# If there is no form status, checks if the query_status is NEW
-def validate_status(query_status, form_status):
-    if not form_status:
-        return query_status == "New"
 
-    if query_status in REV_REQUEST_STATUS_DICT.keys():
-        return form_status == REV_REQUEST_STATUS_DICT.get(query_status)
-
-    return False
 
 def create_data_from_session(session, key, room=None):
     data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
@@ -618,7 +609,77 @@ def send(user, subject, message):
         finally:
             server.quit()
 
+# GROUPS
 
+# For creating the default group
+
+def get_all_groups():
+    return RoomGroup.objects.all()
+
+def create_group_from_ids_list(group_name, member_ids):
+    users = User.objects.filter(id__in=member_ids)
+    return create_custom_group(group_name, users)
+
+def create_custom_group(group_name, members):
+    group = RoomGroup.objects.create(name=group_name)
+    group.members.add(*members)
+    group.save()
+    return group
+
+def add_member_to_group(group, member):
+    group.members.add(member)
+
+def remove_member_from_group(group, member):
+    group.members.remove(member)
+
+def get_group_members(group):
+    return group.members.all()
+
+def get_group_member_ids(group):
+    id_arr = group.members.values_list('id', flat=True)
+    return [str(id) for id in id_arr]
+
+def get_groups_with_matching_composition(member_ids, group_id=None):
+    # Normalize and deduplicate member ids (handles strings and duplicates)
+    if not member_ids:
+        return RoomGroup.objects.none()
+
+    try:
+        member_ids = [int(m) for m in member_ids]
+    except Exception:
+        member_ids = list(member_ids)
+
+    seen = set()
+    unique_member_ids = []
+    for m in member_ids:
+        if m not in seen:
+            seen.add(m)
+            unique_member_ids.append(m)
+
+    num_members = len(unique_member_ids)
+
+
+    group_matches = RoomGroup.objects.annotate(
+        total_members=Count('members', distinct=True)
+    ).filter(total_members=num_members)
+
+    for member_id in unique_member_ids:
+        group_matches = group_matches.filter(members__id=member_id)
+
+    if group_id:
+        group_matches = group_matches.exclude(id=group_id)
+
+    return group_matches.prefetch_related('members').distinct()
+
+def get_group_with_matching_name(group_name, group_id=None):
+    matching_groups = RoomGroup.objects.filter(name__iexact=group_name)
+
+    if group_id:
+        matching_groups = matching_groups.exclude(id=group_id)
+
+    return matching_groups
+
+# END GROUPS
 
 def natural_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
@@ -675,6 +736,12 @@ def get_tab_urls(url, next=''):
         'pis': url + 'pis&next=' + next,
         'areas': url + 'areas&next=' + next,
         'trainings': url + 'trainings&next=' + next
+    }
+
+def get_group_creation_urls(url, next=''):
+    return {
+        'select_pi': url + 'select_pi&next=' + next,
+        'group_members': url + 'group_members&next=' + next,
     }
 
 

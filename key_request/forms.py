@@ -1,8 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
-
+from django.urls import reverse
 from .models import *
-
 
 class BuildingForm(forms.ModelForm):
     class Meta:
@@ -28,6 +27,62 @@ class FloorForm(forms.ModelForm):
         help_texts = {
             'name': 'It must be unique. Maximum characters: 50'
         }
+
+class RoomGroupForm(forms.ModelForm):
+
+    search_name = forms.CharField(
+        label="User Search",
+        widget=
+        forms.TextInput(
+            attrs={
+                'id': 'id_user_name_search',
+                'data-url': '',
+                'class': 'form-control form-control-sm',
+                'placeholder': 'Type the user\'s name to search...'
+            }
+        ),
+        required=False)
+
+    member_ids = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=True
+    )
+
+    class Meta:
+        model = RoomGroup
+        fields = ['name']
+        labels = {
+            'name': "Room Group Name"
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. Jane_Doe's Room Group"
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        autofill_url = kwargs.pop('autofill_url', '')
+
+        super().__init__(*args, **kwargs)
+
+        if autofill_url:
+            self.fields['search_name'].widget.attrs.update({'data-url': autofill_url})
+
+    def clean_group_name(self):
+        return self.cleaned_data['name'].strip()
+
+    def clean_member_ids(self):
+
+        data = self.cleaned_data['member_ids']
+
+        if not data:
+            raise forms.ValidationError("A Room Group must consist of at least one user.")
+
+        try:
+            return [int(x.strip()) for x in data.split(',') if x.strip().isdigit()]
+        except ValueError:
+            raise forms.ValidationError("Invalid user ID detected.")
 
 
 class RoomForm(forms.ModelForm):

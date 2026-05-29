@@ -1,0 +1,98 @@
+<div id="group-message"></div>
+
+<div class="bd-callout bd-callout-warning mb-4">
+    <ul>
+        <li>Group names should follow the convention of <strong><code style="font-size: 100%">&ltPI's First Name&gt_&ltPI's Last Name&gt's Room Group</code></strong>
+        </li>
+    </ul>
+</div>
+
+<input type="hidden" name="validate_group_url" id="validate_group_url" value="{{ validate_group_url }}">
+
+<form action="" method="POST" id="room-group-form">
+    {% csrf_token %}
+
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <label for="{{ form.name.id_for_label }}">
+                {{ form.name.label }}
+                {% include 'lfs_lab_cert_tracker/icons/asterisk.html' %}
+            </label>
+            {{ form.name }}
+            {% if form.name.help_text %}
+                <div class="helptext">{{ form.name.help_text|safe }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <div class="row">
+
+
+        <div class="col-md-8">
+            <label for="{{ form.search_name.id_for_label }}">
+                {{ form.search_name.label }}
+            </label>
+            {{ form.search_name }}
+
+            <div class="user-search-results-container shadow-sm border rounded mt-4" style="max-height: 350px; overflow-y: auto; overflow-x: hidden; position: relative;">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light sticky-top">
+                    <tr>
+                        <th class="text-center" style="width: 30%;">First Name</th>
+                        <th class="text-center" style="width: 40%;">Last Name</th>
+                        <th class="text-center" style="width: 30%;">Add User</th>
+                    </tr>
+                    </thead>
+                    <tbody id="select-user">
+                    <tr>
+                        <td colspan="100%">Type either a first or last name to find users</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="col-md-4">
+            <h5 class="text-info text-center mb-4">Your Selected Group Members</h5>
+            <div class="selected-users-container shadow-sm border rounded mt-4" style="max-height: 350px; overflow-y: auto; overflow-x: hidden; position: relative;">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light sticky-top">
+                    <tr>
+                        <th class="text-center" style="width: 30%;">User</th>
+                        <th class="text-center" style="width: 40%;">Remove?</th>
+                    </tr>
+                    </thead>
+                    <tbody id="display-selected-users">
+                    {% if group_members %}
+                        {% for user in group_members %}
+                            <tr>
+                                <td data-id="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</td>
+                                <td><button type="button" class="btn btn-danger btn-sm remove-btn" data-id="{{ user.id }}">Remove</button></td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="100%">Your selected users will be displayed here.</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {{ form.member_ids }}
+        </div>
+
+        <div class="col-12 mt-3">
+            <a class="btn btn-outline-secondary" href="{% url 'key_request:all_groups' %}">Cancel</a>
+            {% if path == 'create_group' %}
+                <input class="btn btn-primary mx-2" type="submit" value="Create Group" />
+            {% elif path == 'edit_group' %}
+                <input class="btn btn-primary mx-2" type="submit" value="Update Group" />
+            {% endif %}
+        </div>
+
+    </div>
+</form>
+

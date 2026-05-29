@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from lfs_lab_cert_tracker.models import Lab, Cert
 
 from datetime import datetime
@@ -48,6 +48,7 @@ class Room(models.Model):
     floor = models.ForeignKey(Floor, on_delete=models.DO_NOTHING)
     number = models.CharField(max_length=100)
     managers = models.ManyToManyField(User)
+
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
     key = models.BooleanField(default=False)
@@ -69,6 +70,19 @@ class Room(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
         super(Room, self).save(*args, **kwargs)
+
+class RoomGroup(models.Model):
+    """ Represents a group of users associated with a room. """
+
+    # TODO: Future Extension: Make RoomGroup -> Group; Add a TYPE field (RoomGroup, WorkTagGroup)
+
+    members = models.ManyToManyField(User, related_name='room_groups')
+    name = models.TextField(null=False, blank=False, max_length=150)
+    rooms = models.ManyToManyField(Room, null=True, blank=True)
+
+    class Meta:
+        ordering = ['name']
+#         TODO: Add a constraint for name, type (one shared name per group type)
 
 
 class RequestForm(models.Model):
@@ -105,3 +119,6 @@ class RequestFormStatus(models.Model):
 
     class Meta:
         ordering = ['pk']
+
+
+

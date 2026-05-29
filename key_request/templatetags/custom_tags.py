@@ -112,3 +112,26 @@ def concat_strings_dash(*args):
 @register.filter
 def display_room(room, args=None):
     return func.display_room(room, args)
+
+
+@register.filter
+def join_attribute_with_comma(queryset, attr_name):
+
+    if not queryset:
+        return ""
+
+    attr_name, separator = attr_name, ", "
+
+    attr_name = attr_name.strip()
+    strings = []
+
+    for obj in queryset:
+        val = getattr(obj, attr_name, None)
+
+        if callable(val):
+            val = val()
+
+        if val:
+            strings.append(str(val))
+
+    return separator.join(strings)

@@ -2,9 +2,11 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, JsonResponse, QueryDict
 from django.utils.html import format_html
 from django.db.utils import IntegrityError
+
+from django.db.models import Q, Case, When, IntegerField, Value
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -23,8 +25,8 @@ from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 
-from .models import Room
-from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
+from .models import Room, RoomGroup
+from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, RoomGroupForm
 from .mixins import RoomActionsMixin
 from . import functions as func
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
@@ -335,7 +337,6 @@ class DeleteSetting(LoginRequiredMixin, View):
 
         return redirect('key_request:settings', model=self.raw_model)
 
-
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRooms(LoginRequiredMixin, View):
     """ Display all rooms """
@@ -620,7 +621,6 @@ class EditRoom(LoginRequiredMixin, View):
 
         return HttpResponseRedirect(next)
 
-
 def update_room_data(queryset, data):
     old_data = set(queryset.all().values_list('id', flat=True))
     new_data = set([int(d) for d in data])
@@ -638,7 +638,6 @@ def update_room_data(queryset, data):
             if len(new_diff) > 0:
                 queryset.add(*new_diff)
     return True
-
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -662,7 +661,6 @@ def delete_room(request):
     else:
         messages.error(request, 'Error! Failed to delete Room Number {0}.'.format(room_number))
     return redirect('key_request:all_rooms')
-
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AddTrainingToRoom(LoginRequiredMixin, RoomActionsMixin, View):
@@ -707,7 +705,6 @@ class AddTrainingToRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
         return HttpResponseRedirect(request.POST.get('next'))
 
-
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
@@ -750,6 +747,268 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
             messages.error(request, "Error! Please select the Required Training, and try again.")
 
         return HttpResponseRedirect(request.POST.get('next'))
+
+# ROOM GROUPS START
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class ViewRoomGroups(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        all_groups = func.get_all_groups()
+        total_groups = all_groups.count()
+
+        if total_groups == 0:
+            return render(request, 'key_request/admin/all_groups.html', {
+                'total_groups': 0,
+                'num_filtered_groups': 0,
+                'groups': [],
+            })
+
+        selected_ids = request.GET.getlist('members[]', [])
+        if selected_ids:
+            all_groups = func.get_groups_with_matching_composition(selected_ids)
+
+        group_name = request.GET.get('name')
+        member_first_name = request.GET.get('member_first_name')
+        member_last_name = request.GET.get('member_last_name')
+        room_pk = request.GET.get('room_pk')
+
+        if group_name:
+            all_groups = all_groups.filter(name__icontains=group_name)
+        if member_first_name:
+            all_groups = all_groups.filter(members__first_name__icontains=member_first_name).distinct()
+        if member_last_name:
+            all_groups = all_groups.filter(members__last_name__icontains=member_last_name).distinct()
+        if room_pk:
+            all_groups = all_groups.filter(manager_groups__pk=room_pk).distinct()
+
+        num_filtered_groups = all_groups.count()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(all_groups, 10)
+
+        try:
+            groups = paginator.page(page)
+        except PageNotAnInteger:
+            groups = paginator.page(1)
+        except EmptyPage:
+            groups = paginator.page(paginator.num_pages)
+
+
+        return render(request, 'key_request/admin/all_groups.html', {
+            'total_groups': total_groups,
+            'num_filtered_groups': num_filtered_groups,
+            'groups': groups,
+        })
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class CreateRoomGroup(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        return render(request, 'key_request/admin/create_group.html', {
+            'form': RoomGroupForm(autofill_url=reverse('key_request:user_autofill')),
+            'validate_group_url': reverse('key_request:validate_room_group')
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+
+        form = RoomGroupForm(request.POST)
+        if form.is_valid():
+            id_list = form.cleaned_data['member_ids']
+
+            group_name = form.cleaned_data['name']
+
+            group = func.create_group_from_ids_list(group_name, id_list)
+            messages.success(request, 'Success! {0} has been created.'.format(group.name))
+
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
+
+        return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class EditRoomGroups(LoginRequiredMixin, View):
+
+    def setup(self, request, *args, **kwargs):
+
+        setup = super().setup(request, *args, **kwargs)
+        group_id = kwargs.get('group_id')
+
+        try:
+            self.group = RoomGroup.objects.get(id=group_id)
+        except RoomGroup.DoesNotExist:
+            self.group = None
+
+        return setup
+
+    def _make_member_string(self):
+        member_ids = func.get_group_member_ids(self.group)
+        return ','.join(member_ids)
+
+    def _make_member_dict(self):
+        group_members = self.group.members.all()
+        return [
+            {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'id': user.id
+            } for user in group_members
+        ]
+
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        if not self.group:
+            messages.error(request, 'Error! No group matches the id specified. It may have been deleted.')
+            return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+
+        return render(request, 'key_request/admin/edit_group.html', {
+            'form': RoomGroupForm(
+                autofill_url=reverse('key_request:user_autofill'),
+                initial={
+                    'member_ids': self._make_member_string(),
+                    'name': self.group.name}
+            ),
+            'validate_group_url': reverse('key_request:validate_room_group'),
+            'group': self.group,
+            'group_members': self.group.members.all(),
+            'group_members_dict': self._make_member_dict()
+        })
+
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form = RoomGroupForm(request.POST, instance=self.group)
+        if form.is_valid():
+            id_list = form.cleaned_data['member_ids']
+
+            group_name = form.cleaned_data['name']
+
+            self.group.members.set(id_list)
+            self.group.name = group_name
+            self.group.save()
+            messages.success(request, 'Success! {0} has been updated.'.format(self.group.name))
+
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
+
+        return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def user_autofill_suggestions(request):
+    name_q = request.GET.get('name_q', '')
+
+    users = (User.objects
+    .filter(
+        Q(first_name__icontains=name_q) | Q(last_name__icontains=name_q)
+    ).annotate(
+        priority=Case(
+            When(first_name__startswith=name_q, then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+    )).order_by('priority', 'first_name', 'last_name')
+    data = [
+        {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        } for user in users
+    ]
+
+    return JsonResponse({'data' : data}, status=200)
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def validate_room_group(request):
+    group_id = request.GET.get('group_id', None)
+    selected_name = request.GET.get('name', '').strip()
+    selected_ids = request.GET.getlist('members[]', [])
+
+    if group_id:
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            group_id = None
+
+    # First checks name, then if no match, checks group composition
+
+    name_matches = func.get_group_with_matching_name(selected_name, group_id)
+    if name_matches.exists():
+        # name is a unique field
+        matching_group = name_matches.first()
+        q = QueryDict(mutable=True)
+        q.setlist('members[]', [matching_group.id])
+        view_url = reverse('key_request:all_groups') + "?" + q.urlencode()
+        group_member_names = [user.get_full_name() for user in matching_group.members.all()]
+
+        return JsonResponse({
+            'has_duplicate': True,
+            'match_type': 'name',
+            'data': {
+                'view_url': view_url,
+                'group_members': group_member_names,
+                'group_members_string': ", ".join(group_member_names)
+            }},
+            status=200
+        )
+
+    group_matches = func.get_groups_with_matching_composition(selected_ids, group_id)
+
+    if group_matches.exists():
+        num_matches = group_matches.count()
+        q = QueryDict(mutable=True)
+        q.setlist('members[]', selected_ids)
+        view_url = reverse('key_request:all_groups') + "?" + q.urlencode()
+
+        group_names = [group.name for group in group_matches]
+
+        return JsonResponse({
+            'has_duplicate': True,
+            'match_type': 'composition',
+            'data': {
+                'num_matches': num_matches,
+                'view_url': view_url,
+                'group_names': group_names,
+            }},
+            status=200
+        )
+    else:
+        return JsonResponse({
+            'has_duplicate': False,
+            'match_type': None,
+            'data': None
+            },
+            status=200
+        )
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def delete_group(request):
+    id = request.POST.get('group')
+    try:
+        group = RoomGroup.objects.get(id=id)
+        group_name = group.name
+        group.delete()
+        messages.success(request, 'Success! Lab Room Group {0} has been deleted.'.format(group_name))
+    except RoomGroup.DoesNotExist:
+        messages.error(request, 'Error! Failed to delete Lab Room Group Number {0}. It may have already been deleted.'.format(id))
+    return redirect('key_request:all_groups')
+
+# ROOM GROUPS END
 
 
 # Helpers
