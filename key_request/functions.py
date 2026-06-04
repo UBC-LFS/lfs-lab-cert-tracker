@@ -12,8 +12,9 @@ from email.mime.text import MIMEText
 from django.contrib.auth.models import User
 from app import functions as appFunc
 from lfs_lab_cert_tracker.models import Cert
-from .models import Building, Floor, Room, RequestForm, RequestFormStatus, RoomGroup
+from .models import Building, Floor, Room, RequestForm, RequestFormStatus, Group, UserGroup
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT, EMAIL_FOOTER
+from django.db import IntegrityError
 
 
 def get_headers(model):
@@ -614,69 +615,59 @@ def send(user, subject, message):
 # For creating the default group
 
 def get_all_groups():
-    return RoomGroup.objects.all()
+    return Group.objects.all()
 
-def create_group_from_ids_list(group_name, member_ids):
-    users = User.objects.filter(id__in=member_ids)
-    return create_custom_group(group_name, users)
+def get_all_groups_of_type(type):
+    return Group.objects.filter(type=type)
 
-def create_custom_group(group_name, members):
-    group = RoomGroup.objects.create(name=group_name)
-    group.members.add(*members)
-    group.save()
+def create_group_from_ids_list(group_name, group_type, member_ids, member_roles):
+    id_role_pairs = zip(member_ids, member_roles)
+    users_by_id = User.objects.in_bulk(member_ids)
+
+    group = Group.objects.create(name=group_name, type=group_type)
+    for user_id, role in id_role_pairs:
+        user = users_by_id.get(int(user_id))
+        if user:
+            UserGroup.objects.create(group=group, user=user, role=int(role))
     return group
 
-def add_member_to_group(group, member):
-    group.members.add(member)
-
-def remove_member_from_group(group, member):
-    group.members.remove(member)
 
 def get_group_members(group):
-    return group.members.all()
+    return UserGroup.objects.filter(group=group)
 
 def get_group_member_ids(group):
-    id_arr = group.members.values_list('id', flat=True)
-    return [str(id) for id in id_arr]
+    ids = UserGroup.objects.filter(group=group).values_list('user_id', flat=True)
+    return [str(id) for id in ids]
 
-def get_groups_with_matching_composition(member_ids, group_id=None):
+def get_groups_with_matching_composition(member_ids, group_type, group_id=None):
     # Normalize and deduplicate member ids (handles strings and duplicates)
     if not member_ids:
-        return RoomGroup.objects.none()
+        return Group.objects.none()
 
     try:
         member_ids = [int(m) for m in member_ids]
     except Exception:
         member_ids = list(member_ids)
 
-    seen = set()
-    unique_member_ids = []
-    for m in member_ids:
-        if m not in seen:
-            seen.add(m)
-            unique_member_ids.append(m)
-
+    unique_member_ids = list(dict.fromkeys(member_ids))
     num_members = len(unique_member_ids)
 
-
-    group_matches = RoomGroup.objects.annotate(
-        total_members=Count('members', distinct=True)
+    group_matches = Group.objects.filter(type=group_type).annotate(
+        total_members=Count('usergroup', distinct=True)
     ).filter(total_members=num_members)
 
     for member_id in unique_member_ids:
-        group_matches = group_matches.filter(members__id=member_id)
+        group_matches = group_matches.filter(usergroup__user__id=member_id)
 
     if group_id:
         group_matches = group_matches.exclude(id=group_id)
 
-    return group_matches.prefetch_related('members').distinct()
+    return group_matches.prefetch_related('usergroup_set').distinct()
 
-def get_group_with_matching_name(group_name, group_id=None):
-    matching_groups = RoomGroup.objects.filter(name__iexact=group_name)
-
+def get_group_with_matching_name(group_name, group_type, group_id=None):
+    matching_groups = Group.objects.filter(name__iexact=group_name, type=group_type)
     if group_id:
         matching_groups = matching_groups.exclude(id=group_id)
-
     return matching_groups
 
 # END GROUPS

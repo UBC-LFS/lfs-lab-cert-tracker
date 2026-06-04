@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.http import HttpResponseRedirect, JsonResponse
 from django.views import View
@@ -16,12 +16,13 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from django.contrib.auth.models import User
+
 from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, UserInactive
 from .forms import AreaForm, TrainingForm, UserForm
 from .accesses import access_admin_only
 
 from . import functions as func
-from .utils import NUM_PER_PAGE
+from .utils import NUM_PER_PAGE, Role
 
 from datetime import datetime
 
@@ -313,6 +314,14 @@ class AllUsers(LoginRequiredMixin, View):
 
         return HttpResponseRedirect( request.POST.get('next') )
 
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def get_edit_user_form(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    form = UserForm(instance=user, initial={'role': func.get_user_role(user)})
+    return render(request, 'app/settings/edit_user_form.html', {'form': form})
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -426,7 +435,9 @@ class CreateUser(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         return render(request, 'app/settings/create_user.html', {
-            'form': UserForm(),
+            'form': UserForm(initial={
+                'role': 'user'
+            }),
             'recent_users': User.objects.all().order_by('-date_joined')[:20]
         })
 
@@ -436,6 +447,9 @@ class CreateUser(LoginRequiredMixin, View):
         if form.is_valid():
             user = form.save()
             if user:
+                role = form.cleaned_data.get('role')
+                func.set_user_role(user, role)
+
                 if request.POST.get('send_email') == 'yes':
                     email_error = None
                     try:

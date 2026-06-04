@@ -40,8 +40,11 @@
             <td>{{ group.name }}</td>
             <td class="text-left">
             <ul class="mb-0">
-                {% for member in group.members.all %}
-                    <li>{{ member.get_full_name }}</li>
+                {% for ug in group.usergroup_set.all %}
+                    <li>
+                        {{ ug.user.get_full_name }}
+                        {% include 'key_request/subpages/role_badge.html' with role=ug.role %}
+                    </li>
                 {% endfor %}
             </ul>
             </td>

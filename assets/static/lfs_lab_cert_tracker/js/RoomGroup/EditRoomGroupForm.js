@@ -12,8 +12,6 @@ export default class EditRoomGroupForm extends RoomGroupForm {
     initializeMap() {
         const $jsonContent = $('#group_members_json')
 
-        const groupMap = new Map()
-
         if ($jsonContent.length === 0) {
             return groupMap
         }
@@ -21,11 +19,10 @@ export default class EditRoomGroupForm extends RoomGroupForm {
         const groupMembers = JSON.parse($jsonContent.text())
 
         for (const member of groupMembers) {
-            this.addMemberToMap(groupMap, member.id, member.first_name, member.last_name, )
+            this.addMemberToMap(this.selected_members, member.id, member.first_name, member.last_name, member.role)
         }
 
-
-        return groupMap
+        this.refreshUserList()
     }
 
     // Edit form only cares about checking for invalid name;

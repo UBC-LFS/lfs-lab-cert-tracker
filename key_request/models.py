@@ -1,11 +1,11 @@
 from django.db import models
 from django.utils.text import slugify
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Lab, Cert
 
 from datetime import datetime
 
-from .utils import AFFILIATIONS, AFTER_HOURS_ACCESS, REQUEST_STATUS
+from .utils import AFFILIATIONS, AFTER_HOURS_ACCESS, REQUEST_STATUS, UserRole
 
 
 class Building(models.Model):
@@ -71,19 +71,52 @@ class Room(models.Model):
         self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
         super(Room, self).save(*args, **kwargs)
 
-class RoomGroup(models.Model):
+class Group(models.Model):
     """ Represents a group of users associated with a room. """
 
-    # TODO: Future Extension: Make RoomGroup -> Group; Add a TYPE field (RoomGroup, WorkTagGroup)
+    class GroupType(models.TextChoices):
+        LAB = 'LAB', 'LabGroup'
+        PAYMENT = 'PAYMENT', 'PaymentGroup'
 
-    members = models.ManyToManyField(User, related_name='room_groups')
     name = models.TextField(null=False, blank=False, max_length=150)
     rooms = models.ManyToManyField(Room, null=True, blank=True)
+    type = models.CharField(
+        max_length=50,
+        choices=GroupType.choices,
+        null=False,
+        blank=False
+    )
+
 
     class Meta:
         ordering = ['name']
 #         TODO: Add a constraint for name, type (one shared name per group type)
 
+class GroupCert(models.Model):
+    """
+    Keeps track of what certificate the labs require
+    """
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    cert = models.ForeignKey(Cert, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('group', 'cert')
+
+    def __str__(self):
+        return self.cert.name
+
+class UserGroup(models.Model):
+    """
+    Keeps track of which users belong to which group
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    role = models.IntegerField(choices=UserRole.CHOICES)
+
+    class Meta:
+        unique_together = ('user', 'group')
+        ordering = ['role']
 
 class RequestForm(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

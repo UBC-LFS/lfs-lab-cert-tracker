@@ -23,5 +23,8 @@
 
 {% block js %}
     {% load static %}
+    <script>
+        const USER_ROLES = {{ user_roles_json|safe }}
+    </script>
     <script type="module" src="{% static 'lfs_lab_cert_tracker/js/RoomGroup/EditRoomGroupForm.js' %}"></script>
 {% endblock %}

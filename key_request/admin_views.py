@@ -25,11 +25,13 @@ from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 
-from .models import Room, RoomGroup
-from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, RoomGroupForm
+from .models import Room, Group, UserGroup
+from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, GroupForm
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
+from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, UserRole
+
+import json
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
@@ -755,7 +757,7 @@ class ViewRoomGroups(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        all_groups = func.get_all_groups()
+        all_groups = func.get_all_groups_of_type(type=Group.GroupType.LAB)
         total_groups = all_groups.count()
 
         if total_groups == 0:
@@ -767,7 +769,7 @@ class ViewRoomGroups(LoginRequiredMixin, View):
 
         selected_ids = request.GET.getlist('members[]', [])
         if selected_ids:
-            all_groups = func.get_groups_with_matching_composition(selected_ids)
+            all_groups = func.get_groups_with_matching_composition(selected_ids, Group.GroupType.LAB)
 
         group_name = request.GET.get('name')
         member_first_name = request.GET.get('member_first_name')
@@ -777,9 +779,9 @@ class ViewRoomGroups(LoginRequiredMixin, View):
         if group_name:
             all_groups = all_groups.filter(name__icontains=group_name)
         if member_first_name:
-            all_groups = all_groups.filter(members__first_name__icontains=member_first_name).distinct()
+            all_groups = all_groups.filter(usergroup__user__first_name__icontains=member_first_name).distinct()
         if member_last_name:
-            all_groups = all_groups.filter(members__last_name__icontains=member_last_name).distinct()
+            all_groups = all_groups.filter(usergroup__user__last_name__icontains=member_last_name).distinct()
         if room_pk:
             all_groups = all_groups.filter(manager_groups__pk=room_pk).distinct()
 
@@ -799,6 +801,11 @@ class ViewRoomGroups(LoginRequiredMixin, View):
         return render(request, 'key_request/admin/all_groups.html', {
             'total_groups': total_groups,
             'num_filtered_groups': num_filtered_groups,
+            'user_roles': {
+                'PRINCIPAL_INVESTIGATOR': UserRole.PRINCIPAL_INVESTIGATOR,
+                'PI_PROXY': UserRole.PI_PROXY,
+                'LAB_USER': UserRole.LAB_USER,
+            },
             'groups': groups,
         })
 
@@ -809,20 +816,22 @@ class CreateRoomGroup(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
 
         return render(request, 'key_request/admin/create_group.html', {
-            'form': RoomGroupForm(autofill_url=reverse('key_request:user_autofill')),
-            'validate_group_url': reverse('key_request:validate_room_group')
+            'form': GroupForm(autofill_url=reverse('key_request:user_autofill')),
+            'validate_group_url': reverse('key_request:validate_room_group'),
+            'user_roles_json': json.dumps(UserRole.CHOICES),
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
 
-        form = RoomGroupForm(request.POST)
+        form = GroupForm(request.POST)
         if form.is_valid():
             id_list = form.cleaned_data['member_ids']
 
             group_name = form.cleaned_data['name']
+            role_list = request.POST.get('member_roles', '').split(',')
+            group = func.create_group_from_ids_list(group_name, Group.GroupType.LAB, id_list, role_list)
 
-            group = func.create_group_from_ids_list(group_name, id_list)
             messages.success(request, 'Success! {0} has been created.'.format(group.name))
 
         else:
@@ -839,8 +848,8 @@ class EditRoomGroups(LoginRequiredMixin, View):
         group_id = kwargs.get('group_id')
 
         try:
-            self.group = RoomGroup.objects.get(id=group_id)
-        except RoomGroup.DoesNotExist:
+            self.group = Group.objects.get(id=group_id)
+        except Group.DoesNotExist:
             self.group = None
 
         return setup
@@ -850,13 +859,14 @@ class EditRoomGroups(LoginRequiredMixin, View):
         return ','.join(member_ids)
 
     def _make_member_dict(self):
-        group_members = self.group.members.all()
+        user_groups = UserGroup.objects.filter(group=self.group).select_related('user')
         return [
             {
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'id': user.id
-            } for user in group_members
+                'first_name': ug.user.first_name,
+                'last_name': ug.user.last_name,
+                'role': ug.role,
+                'id': ug.user.id
+            } for ug in user_groups
         ]
 
 
@@ -869,7 +879,7 @@ class EditRoomGroups(LoginRequiredMixin, View):
 
 
         return render(request, 'key_request/admin/edit_group.html', {
-            'form': RoomGroupForm(
+            'form': GroupForm(
                 autofill_url=reverse('key_request:user_autofill'),
                 initial={
                     'member_ids': self._make_member_string(),
@@ -877,22 +887,34 @@ class EditRoomGroups(LoginRequiredMixin, View):
             ),
             'validate_group_url': reverse('key_request:validate_room_group'),
             'group': self.group,
-            'group_members': self.group.members.all(),
-            'group_members_dict': self._make_member_dict()
+            'group_members': func.get_group_members(self.group),
+            'group_members_dict': self._make_member_dict(),
+            'user_roles_json': json.dumps(UserRole.CHOICES),
         })
 
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form = RoomGroupForm(request.POST, instance=self.group)
+        form = GroupForm(request.POST, instance=self.group)
         if form.is_valid():
-            id_list = form.cleaned_data['member_ids']
-
             group_name = form.cleaned_data['name']
 
-            self.group.members.set(id_list)
+            id_list = form.cleaned_data['member_ids']
+            role_list = request.POST.get('member_roles', '').split(',')
+            id_role_pairs = zip(id_list, role_list)
+
+            users_by_id = User.objects.in_bulk(id_list)
+
+            UserGroup.objects.filter(group=self.group).delete()
+
+            for user_id, role in id_role_pairs:
+                user = users_by_id.get(int(user_id))
+                if user:
+                    UserGroup.objects.create(group=self.group, user=user, role=int(role))
+
             self.group.name = group_name
             self.group.save()
+
             messages.success(request, 'Success! {0} has been updated.'.format(self.group.name))
 
         else:
@@ -951,7 +973,12 @@ def validate_room_group(request):
         q = QueryDict(mutable=True)
         q.setlist('members[]', [matching_group.id])
         view_url = reverse('key_request:all_groups') + "?" + q.urlencode()
-        group_member_names = [user.get_full_name() for user in matching_group.members.all()]
+
+        group_member_names = [
+            ug.user.get_full_name()
+            for ug in UserGroup.objects.filter(group=matching_group).select_related('user')
+        ]
+
 
         return JsonResponse({
             'has_duplicate': True,
@@ -964,7 +991,7 @@ def validate_room_group(request):
             status=200
         )
 
-    group_matches = func.get_groups_with_matching_composition(selected_ids, group_id)
+    group_matches = func.get_groups_with_matching_composition(selected_ids, Group.GroupType.LAB, group_id)
 
     if group_matches.exists():
         num_matches = group_matches.count()
@@ -1000,14 +1027,13 @@ def validate_room_group(request):
 def delete_group(request):
     id = request.POST.get('group')
     try:
-        group = RoomGroup.objects.get(id=id)
+        group = Group.objects.get(id=id)
         group_name = group.name
         group.delete()
         messages.success(request, 'Success! Lab Room Group {0} has been deleted.'.format(group_name))
-    except RoomGroup.DoesNotExist:
+    except Group.DoesNotExist:
         messages.error(request, 'Error! Failed to delete Lab Room Group Number {0}. It may have already been deleted.'.format(id))
     return redirect('key_request:all_groups')
-
 # ROOM GROUPS END
 
 

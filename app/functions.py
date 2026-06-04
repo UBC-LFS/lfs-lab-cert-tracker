@@ -7,9 +7,13 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group as AuthGroup
+
 from lfs_lab_cert_tracker.models import *
 
 from key_request.models import *
+
+from .utils import Role
 
 from datetime import date
 
@@ -38,6 +42,21 @@ def get_user_name(user):
         curr_user = user.email
     return curr_user
 
+def set_user_role(user, role):
+    if role == Role.PI:
+        pi_group = AuthGroup.objects.get(name="PI")
+        pi_group.users.add(user)
+    elif role == Role.ADMIN:
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
+
+def get_user_role(user):
+    if user.is_superuser:
+        return Role.ADMIN
+    if user.groups.filter(name='PI').exists():
+        return Role.PI
+    return Role.USER
 
 # UserCert
 
@@ -111,7 +130,7 @@ def get_cert_by_id(cert_id):
 
 def is_pi(user_id):
     """ Check whether a user is a PI or not"""
-    return Room.objects.filter(managers__id=user_id).exists()
+    return User.objects.filter(pk=user_id, groups__name='PI').exists()
 
 def is_pi_in_area(user_id, area_id):
     """ Check whether an user is in the area or not """

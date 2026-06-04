@@ -28,7 +28,7 @@ class FloorForm(forms.ModelForm):
             'name': 'It must be unique. Maximum characters: 50'
         }
 
-class RoomGroupForm(forms.ModelForm):
+class GroupForm(forms.ModelForm):
 
     search_name = forms.CharField(
         label="User Search",
@@ -48,8 +48,13 @@ class RoomGroupForm(forms.ModelForm):
         required=True
     )
 
+    member_roles = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=True
+    )
+
     class Meta:
-        model = RoomGroup
+        model = Group
         fields = ['name']
         labels = {
             'name': "Room Group Name"
@@ -57,19 +62,17 @@ class RoomGroupForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': "e.g. Jane_Doe's Room Group"
+                'placeholder': "e.g. Jane Doe's Room Group"
             }),
         }
 
     def __init__(self, *args, **kwargs):
         autofill_url = kwargs.pop('autofill_url', '')
-
         super().__init__(*args, **kwargs)
-
         if autofill_url:
             self.fields['search_name'].widget.attrs.update({'data-url': autofill_url})
 
-    def clean_group_name(self):
+    def clean_name(self):
         return self.cleaned_data['name'].strip()
 
     def clean_member_ids(self):
@@ -77,12 +80,25 @@ class RoomGroupForm(forms.ModelForm):
         data = self.cleaned_data['member_ids']
 
         if not data:
-            raise forms.ValidationError("A Room Group must consist of at least one user.")
+            raise forms.ValidationError("A Group must consist of at least one user.")
 
         try:
             return [int(x.strip()) for x in data.split(',') if x.strip().isdigit()]
         except ValueError:
             raise forms.ValidationError("Invalid user ID detected.")
+
+    def clean_member_roles(self):
+        data = self.cleaned_data['member_roles']
+        valid_roles = {choice[0] for choice in UserGroup.ROLE_CHOICES}
+        if not data:
+            raise forms.ValidationError("Role data is missing.")
+        roles = [x.strip() for x in data.split(',') if x.strip()]
+        if not all(x.isdigit() for x in roles):
+            raise forms.ValidationError("Invalid role value detected.")
+        roles = [int(x) for x in roles]
+        if not all(r in valid_roles for r in roles):
+            raise forms.ValidationError("Invalid role value detected.")
+        return roles
 
 
 class RoomForm(forms.ModelForm):

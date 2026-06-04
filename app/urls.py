@@ -44,6 +44,7 @@ urlpatterns += [
     path('func/user/switch-admin/', settings_views.switch_admin, name='switch_admin'),
     path('func/user/switch-inactive/', settings_views.switch_inactive, name='switch_inactive'),
     path('func/users/assign/areas/', settings_views.assign_user_areas, name='assign_user_areas'),
+    path('func/users/<int:pk>/edit/', settings_views.get_edit_user_form, name='get_edit_user_form'),
 
     path('create-user/', settings_views.CreateUser.as_view(), name='create_user'),
     path('user-report/', settings_views.UserReportMissingTrainings.as_view(), name='user_report_missing_trainings'),

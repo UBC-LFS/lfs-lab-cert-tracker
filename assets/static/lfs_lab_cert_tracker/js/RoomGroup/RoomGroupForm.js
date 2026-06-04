@@ -18,8 +18,11 @@ export default class RoomGroupForm {
         this.no_matching_results_row = `<tr></tr><td colSpan="100%">No matches</td></tr>`
         this.empty_selected_users_msg =`<tr></tr><td colSpan="100%">Your selected users will be displayed here.</td></tr>`
 
+        this.roleOptions = USER_ROLES.map(([value, label]) => ({ value, label }))
         // User tracking list
-        this.selected_members = this.initializeMap()
+        this.selected_members = new Map()
+
+        this.initializeMap()
 
         this.$validate_form_input = $('#validate_group_url')
 
@@ -27,7 +30,7 @@ export default class RoomGroupForm {
     }
 
     initializeMap() {
-        return new Map()
+        throw Error("Subclass must implement this method")
     }
 
     addListeners() {
@@ -63,8 +66,16 @@ export default class RoomGroupForm {
 
     prepareAndSubmitForm() {
         const ids_list = [...this.selected_members.keys()]
+        const roles_list = ids_list.map(id => this.selected_members.get(id).role)
 
         this.$member_ids_input.val(ids_list.join(','));
+
+        let $roles_input = $('#id_member_roles')
+        if ($roles_input.length === 0) {
+            $roles_input = $('<input type="hidden" id="id_member_roles" name="member_roles">')
+            this.$form.append($roles_input)
+        }
+        $roles_input.val(roles_list.join(','))
 
         // need to remove the old submit listener (validation check)
         this.$form.off('submit')
@@ -152,8 +163,6 @@ export default class RoomGroupForm {
             return
         }
 
-        console.log("Selected users: ", this.selected_members)
-
         let content = ''
         for (const user of users) {
 
@@ -201,14 +210,45 @@ export default class RoomGroupForm {
         })
 
         let htmlBuffer = userArray.map(([id, user]) => {
-            return `<tr><td data-id="${id}">${user.first_name} ${user.last_name}</td><td><button class="btn btn-danger btn-sm remove-btn" data-id="${id}">Remove</button></td></tr>`;
-        });
+
+            const options = this.roleOptions.map(r =>
+                `<option value="${r.value}" ${user.role === r.value ? 'selected' : ''}>${r.label}</option>`
+            ).join('')
+
+            return `
+            <tr>
+                <td>${user.first_name} ${user.last_name}</td>
+                <td>
+                    <select class="form-select form-control role-select" data-id="${id}">
+                        ${options}
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm remove-btn" data-id="${id}">Remove</button>
+                </td>
+            </tr>`
+        })
 
         this.$display_selected_users_table.html(`${htmlBuffer.join('')}`)
+        this.addRoleListeners()
 
     }
 
-    addMemberToMap(map, id, first_name, last_name) {
+    addRoleListeners() {
+        this.$display_selected_users_table.on('change', '.role-select', (e) => {
+            const $select = $(e.currentTarget)
+            const id = parseInt($select.data('id'))
+            const role = parseInt($select.val())
+
+            if (this.selected_members.has(id)) {
+                const user = this.selected_members.get(id)
+                user.role = role
+            }
+        })
+    }
+
+
+    addMemberToMap(map, id, first_name, last_name, role = 2) {
         if (typeof id === "string") {
             id = parseInt(id)
         }
@@ -218,13 +258,7 @@ export default class RoomGroupForm {
             return
         }
 
-        map.set(
-            id,
-            {
-                "first_name": first_name,
-                "last_name": last_name
-            }
-        )
+        map.set(id, { first_name, last_name, role })
     }
 
     removeUserFromMap(user_id) {

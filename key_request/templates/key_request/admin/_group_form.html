@@ -62,22 +62,15 @@
                     <thead class="table-light sticky-top">
                     <tr>
                         <th class="text-center" style="width: 30%;">User</th>
+                        <th class="text-center">Role</th>
                         <th class="text-center" style="width: 40%;">Remove?</th>
                     </tr>
                     </thead>
                     <tbody id="display-selected-users">
-                    {% if group_members %}
-                        {% for user in group_members %}
-                            <tr>
-                                <td data-id="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</td>
-                                <td><button type="button" class="btn btn-danger btn-sm remove-btn" data-id="{{ user.id }}">Remove</button></td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
+
                         <tr>
                             <td colspan="100%">Your selected users will be displayed here.</td>
                         </tr>
-                    {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -95,4 +88,5 @@
 
     </div>
 </form>
+
 

@@ -12,6 +12,17 @@ AFTER_HOURS_ACCESS = [
     ('1', 'No, I will not need after hours access')
 ]
 
+class UserRole:
+    PRINCIPAL_INVESTIGATOR = 0
+    PI_PROXY = 1
+    LAB_USER = 2
+
+    CHOICES = [
+        (PRINCIPAL_INVESTIGATOR, "Supervisor"),
+        (PI_PROXY, "Supervisor Proxy"),
+        (LAB_USER, "User"),
+    ]
+
 APPROVED = '0'
 DECLINED = '1'
 INSUFFICIENT = '2'

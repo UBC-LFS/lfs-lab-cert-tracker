@@ -1,11 +1,19 @@
 from django import forms
 from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.models import Group as AuthGroup
 from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
+from app.utils import Role
 from datetime import datetime
 import datetime as dt
 
 class UserForm(forms.ModelForm):
     """ Create a new user """
+
+    role = forms.TypedChoiceField(
+        choices=Role.choices,
+        coerce=int,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
 
 
     class Meta:

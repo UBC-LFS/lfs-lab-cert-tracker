@@ -1,8 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-# Replace this with your actual Group/Room model names
-from key_request.models import RoomGroup
+from key_request.models import Group
 
 LOGIN_URL = reverse('accounts:local_login')
 
@@ -22,10 +21,10 @@ class RoomGroupCRUDAndFilterTests(TestCase):
         self.user3 = User.objects.create_user(username='charlie', first_name='Charlie', last_name='Brown')
 
         # 2. Create Existing Test Groups
-        self.group_alpha = RoomGroup.objects.create(name="Alpha Lab")
+        self.group_alpha = Group.objects.create(name="Alpha Lab")
         self.group_alpha.members.set([self.user1.id, self.user2.id])
 
-        self.group_beta = RoomGroup.objects.create(name="Beta Team")
+        self.group_beta = Group.objects.create(name="Beta Team")
         self.group_beta.members.set([self.user3.id])
 
         # 3. Login

@@ -1,0 +1,7 @@
+{% if role == user_roles.PRINCIPLE_INVESTIGATOR %}
+    <span class="badge badge-success">Supervisor</span>
+{% elif role == user_roles.PI_PROXY %}
+    <span class="badge badge-warning">Proxy</span>
+{% else %}
+    <span class="badge badge-secondary">User</span>
+{% endif %}

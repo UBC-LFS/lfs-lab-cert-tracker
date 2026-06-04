@@ -1,5 +1,13 @@
 [
   {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "PI"
+    }
+  },
+
+  {
     "model": "auth.user",
     "pk": 1,
     "fields": {
@@ -44,7 +52,8 @@
       "username": "testpi1",
       "first_name": "test",
       "last_name": "pi1",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
@@ -56,7 +65,8 @@
       "username": "testpi2",
       "first_name": "test",
       "last_name": "pi2",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
@@ -68,7 +78,8 @@
       "username": "testpi3",
       "first_name": "test",
       "last_name": "pi3",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
@@ -80,7 +91,8 @@
       "username": "testpi4",
       "first_name": "test",
       "last_name": "pi4",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
@@ -92,7 +104,8 @@
       "username": "testpi5",
       "first_name": "test",
       "last_name": "pi5",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
@@ -104,7 +117,8 @@
       "username": "testpi6",
       "first_name": "test",
       "last_name": "pi6",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
@@ -116,7 +130,8 @@
       "username": "testpi7",
       "first_name": "test",
       "last_name": "pi7",
-      "email": "email address"
+      "email": "email address",
+      "groups": [1]
     }
   },
   {
