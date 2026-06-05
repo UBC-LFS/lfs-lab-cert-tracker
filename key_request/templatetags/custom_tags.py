@@ -1,11 +1,14 @@
 from django import template
 from django.contrib.auth.models import User
+from django.utils.html import format_html
 
 from key_request import functions as func
 from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
 from key_request.forms import KEY_REQUEST_LABELS
 from key_request.models import Room, RequestFormStatus, RequestForm
+from app.utils import UserRole
+
 
 
 register = template.Library()
@@ -112,3 +115,15 @@ def concat_strings_dash(*args):
 @register.filter
 def display_room(room, args=None):
     return func.display_room(room, args)
+
+# Areas
+
+@register.simple_tag
+def role_badge(role):
+    role = int(role)
+    if role == UserRole.PRINCIPAL_INVESTIGATOR:
+        return format_html('<span class="badge badge-success">Supervisor</span>')
+    elif role == UserRole.PI_PROXY:
+        return format_html('<span class="badge badge-warning">Proxy</span>')
+    else:
+        return format_html('<span class="badge badge-secondary">User</span>')

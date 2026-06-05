@@ -1,10 +1,12 @@
 from django.conf import settings
+import os
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, F, Max
 from django.core.mail import send_mail
 from django.urls import resolve
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.db.models import Case, When, Value, IntegerField
 
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import *
@@ -12,6 +14,7 @@ from lfs_lab_cert_tracker.models import *
 from key_request.models import *
 
 from datetime import date
+from app.utils import UserRole
 
 
 # User
@@ -78,25 +81,27 @@ def get_user_expired_certs(user):
 
 def get_user_labs(user, is_pi=False):
     if is_pi:
-        return user.userlab_set.filter(role=UserLab.PRINCIPAL_INVESTIGATOR).order_by('lab__name')
+        return user.userlab_set.filter(role=UserRole.PRINCIPAL_INVESTIGATOR).order_by('lab__name')
     return user.userlab_set.all().order_by('lab__name')
 
 def required_certs_in_lab(lab_id):
     return Cert.objects.filter(labcert__lab_id=lab_id).order_by('name')
 
 
-def get_users_in_area(area):
-    users_in_area = []
-    for userlab in area.userlab_set.all():
-        user = userlab.user
-        if is_pi_in_area(user.id, area.id):
-            user.is_pi = True
-        else: 
-            user.is_pi = False
-        users_in_area.append(user)
-
-    users_in_area.sort(key=lambda a: a.date_joined, reverse=True)
-    return users_in_area
+# def get_users_in_area(area):
+#     users_in_area = []
+#
+#
+#     for userlab in area.userlab_set.all():
+#         user = userlab.user
+#         if is_pi_in_area(user.id, area.id):
+#             user.role = UserRole.PRINCIPAL_INVESTIGATOR
+#         else:
+#             user.is_pi = False
+#         users_in_area.append(user)
+#
+#     users_in_area.sort(key=lambda a: a.date_joined, reverse=True)
+#     return users_in_area
 
 # Cert
 
@@ -116,7 +121,25 @@ def is_pi(user_id):
 def is_pi_in_area(user_id, area_id):
     """ Check whether an user is in the area or not """
 
-    return UserLab.objects.filter( Q(user=user_id) & Q(lab=area_id) & Q(role=UserLab.PRINCIPAL_INVESTIGATOR) ).exists()
+    return UserLab.objects.filter( Q(user=user_id) & Q(lab=area_id) & Q(role=UserRole.PRINCIPAL_INVESTIGATOR) ).exists()
+
+def get_users_in_area(area_id):
+
+    role_order = [UserRole.PRINCIPAL_INVESTIGATOR, UserRole.PI_PROXY, UserRole.USER]
+
+    custom_order = Case(*[When(role=role, then=Value(i)) for i, role in enumerate(role_order)], output_field=IntegerField())
+
+    users = (
+        User.objects.filter(userlab__lab_id=area_id)
+        .annotate(role=F("userlab__role"),
+                  custom_order=custom_order
+              )
+    ).order_by('custom_order')
+
+    return users
+
+
+
 
 
 def get_users_in_area_by_pi(user_id):
@@ -124,7 +147,7 @@ def get_users_in_area_by_pi(user_id):
 
     users = set()
 
-    userlabs = UserLab.objects.filter( Q(user_id=user_id) & Q(role=UserLab.PRINCIPAL_INVESTIGATOR) )
+    userlabs = UserLab.objects.filter( Q(user_id=user_id) & Q(role=UserRole.PRINCIPAL_INVESTIGATOR) )
     if userlabs.exists():
         for userlab in userlabs:
             labs = UserLab.objects.filter(lab=userlab.lab.id)

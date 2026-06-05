@@ -1,4 +1,5 @@
 {% extends "app/area_details/base.html" %}
+{% load custom_tags %}
 
 {% block sub_content %}
 
@@ -50,6 +51,7 @@
   </h4>
 
   <table class="table table-bordered table-striped table-responsive-lg text-center"
+         id="area-users-table"
     data-toggle="table"
     data-classes=""
     data-sortable="true"
@@ -64,12 +66,12 @@
         <th>CWL</th>
         <th data-sortable="true">First Name</th>
         <th data-sortable="true">Last Name</th>
-        <th data-sortable="true">Supervisor?</th>
+        <th data-sortable="true">Role</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      {% for user in users_in_area %}
+      {% for user, role_form in users_in_area %}
         <tr>
           <td>{{ forloop.counter }}</td>
           <td>
@@ -82,21 +84,36 @@
           <td>{{ user.first_name }}</td>
           <td>{{ user.last_name }}</td>
           <td>
-            {% if user.is_pi %}
-              <span class="badge badge-success">Supervisor</span>
-            {% endif %}
+              {% if request.user.is_superuser or is_pi %}
+                  <form class="role-form" id="{{ user.id }}" action="{% url 'app:switch_user_role_in_area' area_id=area.id %}" method="post">
+                      <div class="row">
+                          {% csrf_token %}
+
+                          <input type="hidden" name="user" value="{{ user.id }}" />
+                          <input type="hidden" name="next" value="{{ request.path }}" />
+                          <div class="col-lg-8">{{ role_form.role }}</div>
+                          <div class="col-lg-4">
+                              <input
+                                  class="btn btn-info btn-sm"
+                                  id="btn-{{ user.id }}"
+                                  disabled
+                                  type="submit"
+                                  value="Save Role"
+                                  data-toggle="tooltip"
+                                  data-placement="top"
+                                  title="Nothing to change"
+
+                              />
+                          </div>
+                      </div>
+                  </form>
+
+              {% else %}
+                {% role_badge user.role %}
+              {% endif %}
           </td>
           <td>
             {% if request.user.is_superuser or is_pi %}
-              <form class="list-form" action="{% url 'app:switch_user_role_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to switch a role for this user - {{user.username}} {% if user.is_pi %} from Supervisor to User {% else %} from User to Supervisor {% endif %}?');">
-                {% csrf_token %}
-
-                <input type="hidden" name="user" value="{{ user.id }}" />
-                <input type="hidden" name="area" value="{{ area.id }}" />
-                <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-
-                <input class="btn btn-info btn-sm" type="submit" value="Switch Role" />
-              </form>
 
               <form class="list-form" action="{% url 'app:delete_user_in_area' area_id=area.id %}" method="post" onsubmit="return confirm('Are you sure to remove User - {{user.username}}?');">
                 {% csrf_token %}
@@ -117,3 +134,12 @@
 
 
 {% endblock%}
+
+{% block js %}
+    {{ block.super }}
+    {% load static %}
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/switch_role_toggle.js' %}"></script>
+{% endblock %}
+
+
+

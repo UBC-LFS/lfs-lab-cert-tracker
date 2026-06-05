@@ -4,6 +4,8 @@ from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, LabCert
 from datetime import datetime
 import datetime as dt
 
+from app.utils import UserRole
+
 class UserForm(forms.ModelForm):
     """ Create a new user """
 
@@ -99,17 +101,29 @@ class TrainingForm(forms.ModelForm):
             'name': { 'required': 'Enter a valid name.' }
         }
 
+class RoleForm(forms.Form):
+    role = forms.ChoiceField(
+        widget=forms.Select(attrs={ 'class': 'form-control role-selector' }),
+        choices=UserRole.CHOICES,
+        initial=UserRole.USER,
+        required=True
+    )
 
-class UserAreaForm(forms.ModelForm):
+    def __init__(self, *args, user_id=None, role_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].widget.attrs['data-role-id'] = role_id
+        self.fields['role'].widget.attrs['data-user-id'] = user_id
+
+class UserAreaForm(forms.ModelForm, RoleForm):
     ''' Add a user to an area '''
+
 
     class Meta:
         model = UserLab
-        fields = ['user', 'lab', 'role']
+        fields = ['user', 'lab']
         labels = { 'user': 'CWL' }
         widgets = {
             'user': forms.TextInput(attrs={ 'class': 'form-control' }),
-            'role': forms.Select(attrs={ 'class': 'form-control' }),
             'lab': forms.HiddenInput()
         }
 

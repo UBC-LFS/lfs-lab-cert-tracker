@@ -4,6 +4,13 @@
 
 {% if request.user.is_superuser or is_pi %}
 
+    <div class="bd-callout bd-callout-warning mb-4">
+        Role is one of <strong><code style="font-size: 100%">Supervisor</code></strong>,
+        <strong><code style="font-size: 100%">Supervisor's Proxy</code></strong> or <strong><code style="font-size: 100%">User</code></strong>
+
+    <p>Supervisors are responsible for approving requests for the area and its related rooms. Proxy's can approve on the Supervisor's behalf </p>
+    </div>
+
   <div class="row">
   	<div class="col-md-7">
       <h4 class="text-info">Add User to Area</h4>
@@ -18,7 +25,7 @@
     </div>
     <div class="col-md-5">
       <section class="ml-5">
-        {% include 'app/settings/_display_users.html' with data=recent_users path='area' %}
+        {% include 'app/area_details/_display_users.html' with data=recent_users path='area' %}
       </section>
   	</div>
   </div>

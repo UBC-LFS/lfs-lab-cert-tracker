@@ -14,6 +14,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
 
+from app.utils import UserRole
+
 
 class Lab(models.Model):
     """ Lab Model """
@@ -135,19 +137,14 @@ class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
     """
-    
-    LAB_USER = 0
-    PRINCIPAL_INVESTIGATOR = 1
-    
-    ROLE_CHOICES = [ (LAB_USER, "User"), (PRINCIPAL_INVESTIGATOR, "Supervisor") ]
-    
+
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
-    role = models.IntegerField(choices=ROLE_CHOICES)
+    role = models.IntegerField(choices=UserRole.CHOICES)
 
     class Meta:
-        unique_together = (('user', 'lab'))
-        ordering = ['user']
+        unique_together = ('user', 'lab')
+        ordering = ['role', 'user']
 
 
 # Send an email when adding a user to a lab

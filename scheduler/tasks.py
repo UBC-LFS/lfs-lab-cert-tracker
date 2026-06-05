@@ -9,6 +9,8 @@ from lfs_lab_cert_tracker.models import UserCert, Lab, UserLab, Cert
 from app import functions as appFunc
 from . import functions as func
 
+from app.utils import UserRole
+
 
 # Users
 
@@ -70,7 +72,7 @@ def send_missing_trainings_pis():
     users, areas = func.get_users_missing_trainings()
     memo = {}
     if len(users.keys()) > 0 and len(areas.keys()) > 0:
-        pis = UserLab.objects.filter(role=1, user__is_active=True).select_related('user', 'lab')
+        pis = UserLab.objects.filter(role=UserRole.PRINCIPAL_INVESTIGATOR, user__is_active=True).select_related('user', 'lab')
         if pis.exists():
             for pi in pis.iterator():
                 area_id = str(pi.lab.id)                
@@ -138,7 +140,7 @@ def send_to_pis(target_day, days, type):
                 contents.append(content)
 
         if len(contents) > 0:
-            pis = UserLab.objects.filter(lab_id=area.id, role=1)
+            pis = UserLab.objects.filter(lab_id=area.id, role=UserRole.PRINCIPAL_INVESTIGATOR)
             if pis.exists():
                 for pi in pis:
                     receiver = func.get_receiver(pi.user.first_name, pi.user.last_name, pi.user.email)

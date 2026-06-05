@@ -19,6 +19,8 @@ from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Lab, Cert, UserLab, UserCert, UserInactive
 from .forms import AreaForm, TrainingForm, UserForm
 from .accesses import access_admin_only
+from app.utils import UserRole
+
 
 from . import functions as func
 from .utils import NUM_PER_PAGE
@@ -283,8 +285,8 @@ class AllUsers(LoginRequiredMixin, View):
 
         areas = []
         for area in Lab.objects.all():
-            area.has_lab_users = area.userlab_set.filter(role=UserLab.LAB_USER).values_list('user_id', flat=True)
-            area.has_pis = area.userlab_set.filter(role=UserLab.PRINCIPAL_INVESTIGATOR).values_list('user_id', flat=True)
+            area.has_lab_users = area.userlab_set.filter(role=UserRole.USER).values_list('user_id', flat=True)
+            area.has_pis = area.userlab_set.filter(role=UserRole.PRINCIPAL_INVESTIGATOR).values_list('user_id', flat=True)
             areas.append(area)
 
         return render(request, 'app/settings/all_users.html', {
@@ -292,8 +294,8 @@ class AllUsers(LoginRequiredMixin, View):
             'users': users,
             'areas': areas,
             'roles': { 
-                'LAB_USER': UserLab.LAB_USER, 
-                'PI': UserLab.PRINCIPAL_INVESTIGATOR 
+                'LAB_USER': UserRole.USER,
+                'PI': UserRole.PRINCIPAL_INVESTIGATOR
             }
         })
 

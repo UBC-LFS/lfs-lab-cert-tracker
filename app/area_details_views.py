@@ -15,9 +15,12 @@ from django.core.validators import validate_email
 
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Cert, LabCert, UserLab
-from .forms import UserAreaForm, AreaTrainingForm
+from .forms import UserAreaForm, AreaTrainingForm, RoleForm
 from .accesses import access_admin_only, access_pi_admin
 from . import functions as func
+from .utils import UserRole
+
+
 # from .utils import *
 
 
@@ -39,11 +42,18 @@ class Index(LoginRequiredMixin, View):
         if request.session.get('next'):
             del request.session['next']
 
+        users = func.get_users_in_area(self.area)
+
+        user_forms = [
+            (user, RoleForm(user_id=user.id, role_id=user.role, initial={"role": user.role}, prefix=f"user_{user.id}"))
+        for user in users
+        ]
+
         return render(request, 'app/area_details/index.html', {
             'area': self.area,
             'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
             'required_certs': Cert.objects.filter(labcert__lab_id=self.area.id).order_by('name'),
-            'users_in_area': func.get_users_in_area(self.area)
+            'users_in_area': user_forms
         })
     
 
@@ -87,7 +97,6 @@ def switch_user_role_in_area(request, area_id):
     """ Switch a user's role in the area """
 
     user_id = request.POST.get('user', None)
-    area_id = request.POST.get('area', None)
 
     if not user_id:
         messages.error(request, 'Error! Something went wrong. User is required.')
@@ -97,31 +106,31 @@ def switch_user_role_in_area(request, area_id):
         messages.error(request, 'Error! Something went wrong. Area is required.')
         return HttpResponseRedirect(request.POST.get('next'))
 
-    user = func.get_user_by_id(user_id)
+    form = RoleForm(request.POST, prefix=f'user_{user_id}')
+
+
+    if not form.is_valid():
+        messages.error(request, f'Error! Something when wrong. Role is required.{form.errors}')
+        return HttpResponseRedirect(request.POST.get('next'))
+
+    role = form.cleaned_data['role']
+
+
     user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
 
     if user_lab.exists():
         user_lab_obj = user_lab.first()
 
-        role = ''
-        prev_role = user_lab_obj.role
-
-        if user_lab_obj.role == UserLab.LAB_USER:
-            user_lab_obj.role = UserLab.PRINCIPAL_INVESTIGATOR
-            role = 'Supervisor'
-        else:
-            user_lab_obj.role = UserLab.LAB_USER
-            role = 'User'
+        user_lab_obj.role=role
 
         user_lab_obj.save(update_fields=['role'])
 
-        if user_lab_obj.role != prev_role:
-            messages.success(request, 'Success! {0} is now a {1}.'.format(user.get_full_name(), role))
-        else:
-            messages.error(request, 'Error! Failed to switch a role of {0}.'.format(user.get_full_name()))
+        messages.success(request, 'Success! {0} is now a {1}.'.format(user_lab_obj.user.get_full_name(), UserRole.get_role_text(user_lab_obj.role)))
+
     else:
         messages.error(request, 'Error! A user or an area data does not exist.')
-    
+
+
     return HttpResponseRedirect(request.POST.get('next'))
 
 
@@ -242,7 +251,7 @@ class AddUserToArea(LoginRequiredMixin, View):
             'area': self.area,
             'is_pi': func.is_pi_in_area(request.user.id, self.area.id),
             'user_area_form': UserAreaForm(initial={ 'lab': self.area.id }),
-            'recent_users': func.get_users_in_area(self.area)[:15]
+            'recent_users': func.get_users_in_area(self.area)
         })
 
     @method_decorator(require_POST)
