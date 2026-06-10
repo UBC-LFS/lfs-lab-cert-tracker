@@ -11,7 +11,8 @@ from email.mime.text import MIMEText
 
 from django.contrib.auth.models import User
 from app import functions as appFunc
-from lfs_lab_cert_tracker.models import Cert
+from app.utils import UserRole
+from lfs_lab_cert_tracker.models import Cert, UserLab
 from .models import Building, Floor, Room, RequestForm, RequestFormStatus
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT, EMAIL_FOOTER
 
@@ -30,7 +31,6 @@ def get_headers(model):
             headers.append(name)
     headers.append('Actions')
     return headers
-
 
 def preprocess_rooms(rooms):
     by_building = {}
@@ -60,7 +60,6 @@ def preprocess_rooms(rooms):
             })
 
     return json.dumps(by_building)
-
 
 def check_user_trainings(user, selected_rooms):
     required_trainings = []
@@ -92,7 +91,6 @@ def check_user_trainings(user, selected_rooms):
             total_expired += 1
 
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
-
 
 def search_filters_for_requests(query):
     forms = RequestForm.objects.all()
@@ -127,22 +125,35 @@ def filter_forms_by_full_name(forms, name):
         Q(full_name__icontains=name)
     ).distinct()
 
-def get_forms_per_manager(user):
-    # rooms_managed = Room.objects.filter(managers=user)
-    # return RequestForm.objects.filter(rooms__in=rooms_managed)
-    return RequestForm.objects.filter(rooms__managers=user)
+# ============== MANAGER/ADMIN =====================
 
+def get_rooms_managed(user):
+    """ Get all rooms in which the user has a role of PI or PI proxy of areas associated with a room """
+
+    areas = (user.userlab_set.all()
+             .filter(role__in=[UserRole.PI_PROXY, UserRole.PRINCIPAL_INVESTIGATOR])
+             .values_list('lab_id', flat=True)
+             .distinct())
+
+    return Room.objects.filter(areas__in=areas).distinct()
 
 def get_manager_dashboard(user, query=None):
-    rooms_managed = Room.objects.filter(managers=user)
-    form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed)
+
+    # SET-UP
+    rooms_managed = get_rooms_managed(user)
+    form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed).distinct()
+
+
+    # PART 1: Stats
     total_forms = form_filtered.count()
 
-    num_new_forms = 0
-    for form in form_filtered.all():
-        if form.requestformstatus_set.filter(manager_id=user.id).count() == 0:
-            num_new_forms += 1
+    num_new_forms = form_filtered.exclude(
+        requestformstatus__manager=user
+    ).count()
 
+
+    # PART 2: Filtering
+    # a) Filter the rooms
     if query:
         if query.get('building'):
             rooms_managed = rooms_managed.filter(building__code__exact=query.get('building'))
@@ -151,33 +162,47 @@ def get_manager_dashboard(user, query=None):
         if query.get('number'):
             rooms_managed = rooms_managed.filter(number__exact=query.get('number'))
 
+    # b) Filter the forms
     forms = []
 
-    for room in rooms_managed.all():
-        for form in room.requestform_set.all():
+    rooms_managed = rooms_managed.prefetch_related(
+        'requestform_set__requestformstatus_set',
+        'requestform_set__user',
+    )
+
+    apply_form_filters = query and (query.get('name') or query.get('status'))
+
+    for room in rooms_managed:
+
+        form_qs = room.requestform_set.all()
+
+        if apply_form_filters:
+            if name := query.get('name'):
+                form_qs = form_qs.filter(
+                    Q(user__first_name__icontains=name) |
+                    Q(user__last_name__icontains=name)
+                )
+            if status := query.get('status'):
+                form_qs = form_qs.filter(
+                    requestformstatus__status=status,
+                    requestformstatus__room=room,
+                    requestformstatus__manager=user,
+                )
+
+        for form in form_qs:
             form.manager = user
             form.room = room
-            form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=user.id)
-            if not query or (not query.get('name') and not query.get('status')):
-                forms.append(form)
-                continue # no filters so add form
-
-            if query.get('status'):
-                form_status = form.status.last().status if form.status.count() > 0 else None
-                if not validate_status(query.get('status'), form_status):
-                    continue   # form status does not match
-
-            if query.get('name'):
-                name = query.get('name').lower()
-                full_name = f"{form.user.first_name.lower()} {form.user.last_name.lower()}"
-                if name not in full_name:
-                    continue # name does not match
-
+            form.status = next(
+                (s for s in form.requestformstatus_set.all()
+                 if s.room_id == room.id and s.manager_id == user.id),
+                None
+            )
             forms.append(form)
 
-    forms = sorted(forms, key=lambda x: x.id, reverse=True)
-    for i, form in enumerate(forms):
-        form.counter = len(forms) - i
+
+    forms.sort(key=lambda x: x.id, reverse=True)
+    for i, form in enumerate(forms, 1):
+        form.counter = i
 
     return total_forms, num_new_forms, forms
 
@@ -194,7 +219,6 @@ def validate_status(query_status, form_status):
 
 def create_data_from_session(session, key, room=None):
     data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
-    manager_ids = [manager.id for manager in room.managers.all()] if room else []
     area_ids = [area.id for area in room.areas.all()] if room else []
     training_ids = [training.id for training in room.trainings.all()] if room else []
 
@@ -218,19 +242,16 @@ def create_data_from_session(session, key, room=None):
         if session[key]['note']:
             data['note'] = session[key]['note']
 
-        if len(session[key]['managers']) > 0:
-            manager_ids = session[key]['managers']
-
         if len(session[key]['areas']) > 0:
             area_ids = session[key]['areas']
 
         if len(session[key]['trainings']) > 0:
             training_ids = session[key]['trainings']
 
-    return data, manager_ids, area_ids, training_ids
+    return data, area_ids, training_ids
 
 def update_data_from_post_and_session(post, session, key, tab, room=None):
-    data, manager_ids, area_ids, training_ids = create_data_from_session(session, key, room)
+    data, area_ids, training_ids = create_data_from_session(session, key, room)
     if tab == 'basic_info':
         if data['building'] != post.get('building'):
             data['building'] = post.get('building')
@@ -258,11 +279,6 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
         if data['note'] != post.get('note'):
             data['note'] = post.get('note')
 
-    elif tab == 'pis':
-        managers = str_to_int(post.getlist('managers[]'))
-        if not is_two_lists_equal(manager_ids, managers):
-            manager_ids = managers
-
     elif tab == 'areas':
         areas = str_to_int(post.getlist('areas[]'))
         if not is_two_lists_equal(area_ids, areas):
@@ -273,7 +289,7 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
         if not is_two_lists_equal(training_ids, trainings):
             training_ids = trainings
 
-    return data, manager_ids, area_ids, training_ids
+    return data, area_ids, training_ids
 
 # SENDING EMAIL NOTIFICATIONS
 
@@ -672,7 +688,6 @@ def get_next(request):
 def get_tab_urls(url, next=''):
     return {
         'basic_info': url + 'basic_info&next=' + next,
-        'pis': url + 'pis&next=' + next,
         'areas': url + 'areas&next=' + next,
         'trainings': url + 'trainings&next=' + next
     }
@@ -680,21 +695,3 @@ def get_tab_urls(url, next=''):
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')
-
-
-# def count_approved_status(form, room):
-#     cache = [0] * room.managers.count()
-#     for i, manager in enumerate(room.managers.all()):
-#         status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
-#         if status_filtered.exists():
-#             for item in status_filtered:
-#                 if item.status == APPROVED:
-#                     cache[i] = 1
-#                     break
-    
-#     count = 0
-#     for c in cache:
-#         count += c
-    
-#     return count
-

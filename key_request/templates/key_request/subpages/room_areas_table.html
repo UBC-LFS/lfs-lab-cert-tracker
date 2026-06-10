@@ -5,6 +5,7 @@
     <tr>
       <th>ID</th>
       <th>Area</th>
+      <th>Supervisors/PIs</th>
       <th>Select</th>
     </tr>
   </thead>
@@ -13,6 +14,17 @@
       <tr>
         <td>{{ area.id }}</td>
         <td class="text-left">{{ area.name }}</td>
+        <td class="text-left">
+          {% if area.managers %}
+              <ul class="mb-0">
+                  {% for manager in area.managers %}
+                      <li>{{  manager.get_full_name }}</li>
+                  {% endfor %}
+              </ul>
+          {% else %}
+              <p>No supervisors/PIs in this area</p>
+          {% endif %}
+      </td>
         <td>
           <input type="checkbox" name="areas[]" value="{{ area.id }}" {% if area.id in area_ids %}checked{% endif %} />
         </td>

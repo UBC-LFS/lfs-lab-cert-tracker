@@ -13,6 +13,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
+from django.db.models import F
 
 from app.utils import UserRole
 
@@ -27,6 +28,13 @@ class Lab(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def managers(self):
+        return (AuthUser.objects.filter(
+            userlab__lab=self,
+            userlab__role=UserRole.PRINCIPAL_INVESTIGATOR
+        ).annotate(role=F('userlab__role')).distinct())
 
 class Cert(models.Model):
     """ Certificate Model """

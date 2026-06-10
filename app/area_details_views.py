@@ -18,6 +18,7 @@ from lfs_lab_cert_tracker.models import Cert, LabCert, UserLab
 from .forms import UserAreaForm, AreaTrainingForm, RoleForm
 from .accesses import access_admin_only, access_pi_admin
 from . import functions as func
+from django.urls import reverse
 from .utils import UserRole
 
 
@@ -96,6 +97,8 @@ def delete_training_in_area(request):
 def switch_user_role_in_area(request, area_id):
     """ Switch a user's role in the area """
 
+    operator = User.objects.filter(id=request.user.id).first()
+
     user_id = request.POST.get('user', None)
 
     if not user_id:
@@ -115,7 +118,6 @@ def switch_user_role_in_area(request, area_id):
 
     role = form.cleaned_data['role']
 
-
     user_lab = UserLab.objects.filter( Q(user_id=user_id) & Q(lab_id=area_id) )
 
     if user_lab.exists():
@@ -130,6 +132,10 @@ def switch_user_role_in_area(request, area_id):
     else:
         messages.error(request, 'Error! A user or an area data does not exist.')
 
+
+    # If the user is not an admin and has demoted themselves, redirect to MyWorkArea to avoid permission error
+    if int(user_id) == int(operator.id) and not operator.is_superuser and int(role) == int(UserRole.USER):
+        return HttpResponseRedirect(reverse('app:my_work_area', kwargs={'user_id': operator.id}))
 
     return HttpResponseRedirect(request.POST.get('next'))
 

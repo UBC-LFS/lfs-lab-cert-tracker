@@ -1,7 +1,9 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import Lab, Cert
+from django.db.models import F
+from app.utils import UserRole
+from lfs_lab_cert_tracker.models import Lab, Cert, UserLab
 
 from datetime import datetime
 
@@ -47,7 +49,6 @@ class Room(models.Model):
     building = models.ForeignKey(Building, on_delete=models.DO_NOTHING)
     floor = models.ForeignKey(Floor, on_delete=models.DO_NOTHING)
     number = models.CharField(max_length=100)
-    managers = models.ManyToManyField(User)
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
     key = models.BooleanField(default=False)
@@ -65,6 +66,15 @@ class Room(models.Model):
 
     def __str__(self):
         return self.number
+
+    @property
+    def managers(self):
+        return (User.objects.filter(
+            userlab__lab__in=self.areas.all(),
+            userlab__role__in=[UserRole.PRINCIPAL_INVESTIGATOR, UserRole.PI_PROXY]
+        ).annotate(role=F('userlab__role')).distinct())
+
+
     
     def save(self, *args, **kwargs):
         self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))

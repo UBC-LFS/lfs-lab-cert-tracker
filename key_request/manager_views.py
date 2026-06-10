@@ -1,5 +1,6 @@
+from django.contrib.auth.models import User
 from django.views.decorators.cache import never_cache
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -10,6 +11,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from app.accesses import access_pi_admin_key_request
 from app.utils import NUM_PER_PAGE
 
 from .models import Room
@@ -17,17 +19,8 @@ from .forms import RequestForm, RequestFormStatus
 from . import functions as func
 from .utils import REQUEST_STATUS_DICT
 
-
-@method_decorator([never_cache], name='dispatch')
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ManagerDashboard(LoginRequiredMixin, View):
-
-    # Removed setup since no longer doing permission checks
-    # def setup(self, request, *args, **kwargs):
-    #     setup = super().setup(request, *args, **kwargs)
-    #     form_filtered = func.get_forms_per_manager(request.user)
-    #     if not form_filtered.exists():
-    #         raise PermissionDenied
-    #     return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -40,6 +33,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
         }
 
         total_forms, num_new_forms, form_list = func.get_manager_dashboard(request.user, query)
+
         num_filtered_forms = len(form_list)
 
         page = request.GET.get('page', 1)
@@ -103,12 +97,14 @@ class ManagerDashboard(LoginRequiredMixin, View):
         return HttpResponseRedirect(next)
 
 
-@method_decorator([never_cache], name='dispatch')
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ManagerRooms(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        room_list = Room.objects.filter(managers__in=[request.user.id])
+        user = get_object_or_404(User, id=request.user.id)
+
+        room_list = func.get_rooms_managed(user)
         total = len(room_list)
 
         query = {
