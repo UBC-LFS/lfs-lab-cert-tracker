@@ -2,9 +2,11 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, JsonResponse
 from django.utils.html import format_html
 from django.db.utils import IntegrityError
+from django.db.models import F
+from django.contrib.postgres.aggregates import ArrayAgg
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -18,7 +20,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.apps import apps
 
-from lfs_lab_cert_tracker.models import Lab, Cert
+from lfs_lab_cert_tracker.models import Lab, Cert, LabCert
 from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
@@ -622,6 +624,82 @@ def update_room_data(queryset, data):
             if len(new_diff) > 0:
                 queryset.add(*new_diff)
     return True
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def get_room_training(request, room_id):
+    room = Room.objects.filter(id=room_id).first()
+    if room:
+        page_number = request.GET.get('room_page', 1)
+
+        # Step 1: get the training associated with the room directly
+        trainings = room.trainings.all()
+        room_paginator = Paginator(trainings, 10)
+        room_page_obj = room_paginator.get_page(page_number)
+
+        room_data = []
+        for training in room_page_obj:
+            # table structure is: Id, training name (cert)
+            room_data.append({
+                'id': training.id,
+                'name': training.name
+            })
+
+        # Step 2: get the training associated with each area
+        areas = room.areas.all()
+        trainings = (
+            Cert.objects.filter(
+                labcert__lab__in=areas
+            )
+            .annotate(
+                area_names=ArrayAgg('labcert__lab__name', distinct=True)
+            )
+            .distinct()
+        )
+
+        page_number = request.GET.get('area_page', 1)
+
+        area_paginator = Paginator(trainings, 10)
+        area_page_obj = area_paginator.get_page(page_number)
+
+        area_data = []
+        for training in area_page_obj:
+            # table structure is: Id, training name (cert)
+            area_data.append({
+                'id': training.id,
+                'name': training.name,
+                'area_name': ", ".join(training.area_names)
+            })
+
+        response = {
+            'data': [
+                {
+                    'key': 'room',
+                    'data': room_data,
+                    'total_count': room_paginator.count,
+                    'num_pages': room_paginator.num_pages,
+                    'current_page': room_page_obj.number
+                },
+                {
+                    'key': 'area',
+                    'data': area_data,
+                    'total_count': area_paginator.count,
+                    'num_pages': area_paginator.num_pages,
+                    'current_page': area_page_obj.number
+                },
+
+            ],
+            'total_training': 0,
+            'status': 'success'
+        }
+        return JsonResponse(response)
+
+    response = {
+        'data': [], 'status': 'failure'
+    }
+    return JsonResponse(response)
 
 
 @login_required(login_url=settings.LOGIN_URL)

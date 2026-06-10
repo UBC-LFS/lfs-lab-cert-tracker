@@ -1,0 +1,96 @@
+<div class="modal fade" id="training-modal" tabindex="-1" role="dialog" aria-labelledby="training-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-info" id="training-modal-title-label">Training Requirements</h5>
+                <button type="button" class="close"
+                        data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body text-left font-size-nl">
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                        <button
+                                class="nav-link active"
+                                id="nav-room-training-tab"
+                                data-toggle="tab"
+                                data-target="#nav-room-training"
+                                type="button"
+                                role="tab"
+                                aria-controls="nav-room-training"
+                        >
+                            Room Training</button>
+                        <button
+                                class="nav-link"
+                                id="nav-area-training-tab"
+                                data-toggle="tab"
+                                data-target="#nav-area-training"
+                                type="button"
+                                role="tab"
+                                aria-controls="nav-area-training"
+                        >
+                            Area Training
+                        </button>
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                    <div
+                            class="tab-pane fade show active pt-5"
+                            id="nav-room-training"
+                            role="tabpanel"
+                            aria-labelledby="nav-room-training-tab"
+                    >
+                        <div class="text-dark-gray fs-7 mt-1 d-inline-block text-center"
+                             id="room-training-summary" style="display: none"></div>
+                        <table class="table text-center table-fs-09rem">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th> Training Name</th>
+
+                            </tr>
+                            </thead>
+                            <tbody id="room-training-table">
+
+                            </tbody>
+                        </table>
+                        <nav class="table-paginator">
+                            <ul class="pagination justify-content-center" id="pagination-room-training">
+
+                            </ul>
+                        </nav>
+                    </div>
+
+                    <div
+                            class="tab-pane fade pt-5"
+                            id="nav-area-training"
+                            role="tabpanel"
+                            aria-labelledby="nav-area-training-tab"
+                    >
+                        <div class="text-dark-gray fs-7 mt-1 d-inline-block text-center"
+                             id="area-training-summary" style="display: none"></div>
+                        <table class="table text-center table-fs-09rem">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Training Name</th>
+                                <th>Area Name</th>
+
+                            </tr>
+                            </thead>
+                            <tbody id="area-training-table">
+
+                            </tbody>
+                        </table>
+                        <nav class="table-paginator">
+                            <ul class="pagination justify-content-center" id="pagination-area-training">
+
+                            </ul>
+                        </nav>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

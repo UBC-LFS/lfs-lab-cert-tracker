@@ -29,7 +29,7 @@ urlpatterns += [
     path('all-<str:model>/edit/', admin_views.EditSetting.as_view(), name='edit_setting'),
     path('all-<str:model>/delete/', admin_views.DeleteSetting.as_view(), name='delete_setting'),
 
-    
+    path('<int:room_id>/get-training/', admin_views.get_room_training, name='get_room_training'),
     path('add-training-to-room/', admin_views.AddTrainingToRoom.as_view(), name='add_training_to_room'),
     path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room')
 ]

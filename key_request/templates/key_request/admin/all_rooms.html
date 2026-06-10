@@ -66,19 +66,20 @@
 		          {% endfor %}
 						</ul>
 					</td>
-	        <td class="text-left">
-						<ul class="list-minus-20">
-		          {% for area in room.areas.all %}
-		            <li>{{ area.name }}</li>
-		          {% endfor %}
-						</ul>
-	        </td>
-					<td class="text-left">
-						<ul class="list-minus-20">
-						{% for training in room.trainings.all %}
-							<li>{{ training.name }}</li>
-						{% endfor %}
-						</ul>
+                    <td class="text-left">
+                                <ul class="list-minus-20">
+                          {% for area in room.areas.all %}
+                            <li>{{ area.name }}</li>
+                          {% endfor %}
+                                </ul>
+                    </td>
+					<td>
+                        <button class="btn btn-info btn-sm mr-2 view-training-btn"
+                                type="button" data-toggle="modal"
+                                data-training-url="{% url 'key_request:get_room_training' room_id=room.id %}"
+                                data-room-id="{{ room.id }}">
+                            View
+                        </button>
 					</td>
 					<td>
 						{% include 'key_request/subpages/_yes_or_no.html' with data=room.key %} <br />
@@ -113,6 +114,9 @@
 	</table>
 
 	{% include 'key_request/subpages/pagination.html' with data=rooms %}
+
+    {% include 'key_request/admin/room_training_modal.html' %}
+
 
     <div class="modal fade" id="rooms-model-delete-modal" tabindex="-1" role="dialog" aria-labelledby="rooms-model-delete-modal-label" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -152,7 +156,8 @@
 
 {% block js %}
 	{% load static %}
+
   <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
   <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/show_delete_modal.js' %}"></script>
-
+    <script type="module" src="{% static 'lfs_lab_cert_tracker/js/RoomTrainingModal.js' %}"></script>
 {% endblock %}
