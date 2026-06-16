@@ -63,8 +63,8 @@
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 	        </td>
 	        <td>
-						{% if form.requestformstatus_set.all|length > 0 %}
-							{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+						{% if form.status.count > 0 %}
+							{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.status %}
 						{% else %}
 							<span class="badge">NEW</span>
 						{% endif %}

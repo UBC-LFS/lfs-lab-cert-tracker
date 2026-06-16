@@ -65,6 +65,7 @@ class AllRequests(LoginRequiredMixin, View):
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
+            form.status = form.requestformstatus_set.order_by('-created_at')
         
         return render(request, 'key_request/admin/all_requests.html', {
             'total_forms': total_forms,

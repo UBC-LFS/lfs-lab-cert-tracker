@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db.models.functions import Concat
-from django.db.models import Q, F, Max, CharField, Value
+from django.db.models import Q, F, Max, CharField, Value, OuterRef, Exists, Subquery
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from datetime import date
@@ -182,21 +182,37 @@ def get_manager_dashboard(user, query=None):
                     Q(user__first_name__icontains=name) |
                     Q(user__last_name__icontains=name)
                 )
-            if status := query.get('status'):
-                form_qs = form_qs.filter(
-                    requestformstatus__status=status,
-                    requestformstatus__room=room,
-                    requestformstatus__manager=user,
-                )
+            if query_status := query.get('status'):
+                # handle the case that status is New (therefore there is no requestformstatus for that user)
+                status_history_ordered = RequestFormStatus.objects.filter(
+                    form_id=OuterRef('pk'),
+                    room_id=room.id,
+                    manager_id=user.id
+                ).order_by('-created_at')
+
+                if query_status == "New":
+                    form_qs = form_qs.filter(~Exists(status_history_ordered))
+                else:
+                    status = REV_REQUEST_STATUS_DICT.get(query_status)
+
+                    latest_status = status_history_ordered.values('status')[:1]
+
+                    form_qs = form_qs.annotate(
+                        latest_status=Subquery(latest_status)
+                    ).filter(
+                        latest_status = status
+                    )
 
         for form in form_qs:
+
             form.manager = user
             form.room = room
-            form.status = next(
-                (s for s in form.requestformstatus_set.all()
-                 if s.room_id == room.id and s.manager_id == user.id),
-                None
-            )
+
+            statuses = form.requestformstatus_set.filter(room_id=room.id, manager_id=user.id)
+            current_status = statuses.order_by('-created_at').first()
+            form.status = statuses
+            form.current_status = current_status
+
             forms.append(form)
 
 
