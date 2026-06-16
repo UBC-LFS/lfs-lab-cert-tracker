@@ -61,7 +61,7 @@
 	        <td>{{ room.number }}</td>
 					<td class="text-left">
 						<ul class="list-minus-20">
-							{% for manager in room.managers.all %}
+							{% for manager in room.principal_investigators%}
 		            <li>{{ manager.get_full_name }}</li>
 		          {% endfor %}
 						</ul>

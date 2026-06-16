@@ -56,7 +56,7 @@ class CheckUserTrainings(LoginRequiredMixin, View):
             room = Room.objects.get(id=room_id)
             rooms.append(room)
 
-        user_trainings, total_missing, total_expired = func.check_user_trainings(request.user, self.selected_rooms)
+        user_trainings, total_missing, total_expired = func.check_user_trainings_for_rooms(request.user, Room.objects.filter(id__in=self.selected_rooms))
 
         return render(request, 'key_request/process/check_user_trainings.html', {
             'rooms': rooms,
@@ -75,7 +75,7 @@ class SubmitForm(LoginRequiredMixin, View):
         if not selected_rooms:
             raise SuspiciousOperation
 
-        _, total_missing, total_expired = func.check_user_trainings(request.user, selected_rooms)
+        _, total_missing, total_expired = func.check_user_trainings_for_rooms(request.user, Room.objects.filter(id__in=selected_rooms))
         if total_missing != 0 or total_expired != 0:
             raise Http404
 
@@ -146,7 +146,7 @@ def send_email(form):
         room_info = '<li>{0}</li>'.format(func.display_room(room))
         user_rooms += room_info
 
-        for manager in room.managers.all():
+        for manager in room.principal_investigators:
             if manager.id not in pi_rooms.keys():
                 pi_rooms[manager.id] = []
 

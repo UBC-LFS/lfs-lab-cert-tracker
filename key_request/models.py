@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
-from django.db.models import F
+from django.db.models import Q, Case, When, BooleanField
 from app.utils import UserRole
 from lfs_lab_cert_tracker.models import Lab, Cert, UserLab
+from django.contrib.postgres.aggregates import ArrayAgg
 
 from datetime import datetime
 
@@ -68,12 +69,42 @@ class Room(models.Model):
         return self.number
 
     @property
-    def managers(self):
-        return (User.objects.filter(
-            userlab__lab__in=self.areas.all(),
-            userlab__role__in=[UserRole.PRINCIPAL_INVESTIGATOR, UserRole.PI_PROXY]
-        ).annotate(role=F('userlab__role')).distinct())
+    def principal_investigators(self):
+        return (
+            User.objects
+            .filter(
+                userlab__lab__in=self.areas.all(),
+                userlab__role=UserRole.PRINCIPAL_INVESTIGATOR
+            )
+            .annotate(labs=ArrayAgg('userlab__lab__name', distinct=True))
+            .distinct()
+        )
 
+    @property
+    def pi_proxies(self):
+        return (
+            User.objects
+            .filter(
+                userlab__lab__in=self.areas.all(),
+                userlab__role=UserRole.PI_PROXY
+            )
+            .annotate(labs=ArrayAgg('userlab__lab__name', distinct=True))
+            .distinct()
+        )
+
+    @property
+    def all_trainings(self):
+        return Cert.objects.filter(
+            Q(id__in=self.trainings.all()) |
+            Q(labcert__lab__in=self.areas.all())
+        ).annotate(
+            lab=ArrayAgg('labcert__lab__name', distinct=True, filter=Q(labcert__lab__isnull=False)),
+            is_room=Case(
+                When(id__in=self.trainings.all(), then=True),
+                default=False,
+                output_field=BooleanField()
+            )
+        ).distinct().order_by('name')
 
     
     def save(self, *args, **kwargs):

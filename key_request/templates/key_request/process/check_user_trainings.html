@@ -56,7 +56,7 @@
 	                <div class="modal-body text-left">
 	                  <div class="modal-item">
 	                    <ul class="list-minus-20">
-	                      {% for training in room.trainings.all %}
+	                      {% for training in room.all_trainings %}
 	                        <li>{{ training.name }}</li>
 	                      {% endfor %}
 	                    </ul>

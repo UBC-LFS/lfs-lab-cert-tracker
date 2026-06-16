@@ -61,7 +61,7 @@ class AllRequests(LoginRequiredMixin, View):
             forms = paginator.page(paginator.num_pages)
 
         for form in forms:
-            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, [room.id for room in form.rooms.all()])
+            user_trainings, total_missing, total_expired = func.check_user_trainings_for_rooms(form.user, form.rooms.all())
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
@@ -112,7 +112,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        user_trainings, total_missing, total_expired = func.check_user_trainings(self.form.user, [room.id for room in self.form.rooms.all()])
+        user_trainings, total_missing, total_expired = func.check_user_trainings_for_rooms(self.form.user, self.form.rooms.all())
 
         self.form.user_trainings = user_trainings
         self.form.total_missing = total_missing
@@ -120,7 +120,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         items = []
         for room in self.form.rooms.all():
-            for manager in room.managers:
+            for manager in room.principal_investigators:
                 status = None
                 status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, manager_id=manager.id)
                 if status_filtered.exists():
@@ -384,7 +384,7 @@ class AllRooms(LoginRequiredMixin, View):
             rooms = paginator.page(paginator.num_pages)
 
         for room in rooms:
-            room.manager_ids = list(room.managers.values_list('id', flat=True))
+            room.manager_ids = list(room.principal_investigators.values_list('id', flat=True))
             room.area_ids = list(room.areas.all().values_list('id', flat=True))
             room.training_ids = list(room.trainings.all().values_list('id', flat=True))
         

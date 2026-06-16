@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db.models.functions import Concat
-from django.db.models import Q, F, Max, CharField, Value, OuterRef, Exists, Subquery
+from django.db.models import Q, F, Max, CharField, Value, OuterRef, Exists, Subquery, BooleanField, Case, When
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from datetime import date
@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from django.contrib.auth.models import User
 from app import functions as appFunc
 from app.utils import UserRole
-from lfs_lab_cert_tracker.models import Cert, UserLab
+from lfs_lab_cert_tracker.models import Cert, Lab
 from .models import Building, Floor, Room, RequestForm, RequestFormStatus
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT, EMAIL_FOOTER
 
@@ -61,6 +61,9 @@ def preprocess_rooms(rooms):
 
     return json.dumps(by_building)
 
+# ================= TRAINING CHECKS =========================
+
+# OUTDATED
 def check_user_trainings(user, selected_rooms):
     required_trainings = []
     for room_id in selected_rooms:
@@ -91,6 +94,57 @@ def check_user_trainings(user, selected_rooms):
             total_expired += 1
 
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
+
+
+def check_user_trainings_for_rooms(user, rooms):
+    all_trainings = get_all_training(rooms)
+    return get_required_certs_with_labels(user, all_trainings)
+
+def get_all_training(rooms):
+
+    related_areas = Lab.objects.filter(
+        room__in=rooms
+    ).distinct()
+
+    certs = Cert.objects.filter(
+        Q(id__in=rooms.values('trainings')) |
+        Q(labcert__lab__in=related_areas)
+    ).distinct()
+
+    return certs
+
+
+def get_required_certs_with_labels(user, required_certs):
+
+    user_cert_ids = Cert.objects.filter(
+        usercert__user__id=user.id
+    ).values_list('id', flat=True).distinct()
+
+    # Note: if the expiry date= the completion date, it is a cert without an expiry date
+    expired_cert_ids = (user
+                        .usercert_set
+                        .values('cert_id')
+                        .annotate(max_expiry_date=Max('expiry_date'))
+                        .filter(Q(max_expiry_date__lt=date.today()) & ~Q(completion_date=F('expiry_date')) )
+                        .values_list('cert_id', flat=True)
+                    )
+
+    annotated = required_certs.annotate(
+        is_missing=Case(
+            When(id__in=user_cert_ids, then=Value(False)),
+            default=Value(True),
+            output_field=BooleanField()
+        ),
+        is_expired=Case(
+            When(id__in=expired_cert_ids, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        )
+    ).order_by('name')
+
+    return annotated, annotated.filter(is_missing=True).count(), annotated.filter(is_expired=True).count()
+
+
 
 def search_filters_for_requests(query):
     forms = RequestForm.objects.all()
@@ -151,9 +205,7 @@ def get_manager_dashboard(user, query=None):
         requestformstatus__manager=user
     ).count()
 
-
-    # PART 2: Filtering
-    # a) Filter the rooms
+    # Room
     if query:
         if query.get('building'):
             rooms_managed = rooms_managed.filter(building__code__exact=query.get('building'))
@@ -162,7 +214,7 @@ def get_manager_dashboard(user, query=None):
         if query.get('number'):
             rooms_managed = rooms_managed.filter(number__exact=query.get('number'))
 
-    # b) Filter the forms
+    # Form (user & status)
     forms = []
 
     rooms_managed = rooms_managed.prefetch_related(
@@ -460,10 +512,13 @@ def make_send_obj(user, subject, message):
 # Returns True if all PIs have approved a room
 def all_pis_approved(form, room):
     # Check if there are no managers associated in a room
-    if len(room.managers.all()) == 0:
+
+    managers = list(room.principal_investigators)
+
+    if not managers:
         return False
 
-    for i, manager in enumerate(room.managers.all()):
+    for manager in managers:
         status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
         if status_filtered.exists():
             latest_status = status_filtered.latest('created_at')
@@ -603,9 +658,11 @@ def send_email(form, room):
 
     # PI
     room_info = '<ul><li>{0}</li></ul>'.format(display_room(room))
-    for manager in room.managers.all():
+    for manager in room.principal_investigators:
         subject, message = get_message(form.user, manager, 'pi', room_info)
         send(manager, subject, message)
+
+    # TODO: Add email for PI-Proxy
 
 def send_multiple(contents):
     try:

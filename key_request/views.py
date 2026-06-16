@@ -44,10 +44,10 @@ class Index(LoginRequiredMixin, View):
             manager_approvals = 0
             for room in form.rooms.all():
                 room_ids.append(room.id)
-                num_managers += room.managers.count()
+                num_managers += len(list(room.principal_investigators))
 
             for room in form.rooms.all():
-                for manager in room.managers:
+                for manager in room.principal_investigators:
                     manager.status = None
                     status_filtered = form.requestformstatus_set.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
                     if status_filtered.exists():
@@ -60,7 +60,7 @@ class Index(LoginRequiredMixin, View):
             if num_managers > 0 and num_managers == manager_approvals:
                 form.status = 'Approved'
 
-            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, room_ids)
+            user_trainings, total_missing, total_expired = func.check_user_trainings_for_rooms(form.user, Room.objects.filter(id__in=room_ids))
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired

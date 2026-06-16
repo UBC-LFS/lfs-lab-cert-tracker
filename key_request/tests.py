@@ -124,8 +124,11 @@ class KeyRequestTest(TestCase):
         form = RequestForm.objects.get(id=data['form'])
         room = Room.objects.get(id=data['room'])
 
-        cache = [0] * room.managers.count()
-        for i, manager in enumerate(room.managers.all()):
+        managers = list(room.principal_investigators)
+
+        cache = [0] * len(managers)
+
+        for i, manager in enumerate(managers):
             status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
             if status_filtered.exists():
                 for item in status_filtered:
