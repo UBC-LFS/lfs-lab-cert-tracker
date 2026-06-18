@@ -110,8 +110,13 @@ class SubmitForm(LoginRequiredMixin, View):
         if not request.POST.get('agree'):
             messages.error(request, 'Error! Please read the <strong>Requirement to Proceed</strong>, and try again.')
             return redirect('key_request:submit_form')
-
+        
+        print(request.POST)
+        print(KeyRequestForm(request.POST))
         form = KeyRequestForm(request.POST)
+        print(form.is_valid())
+
+
         rooms = request.POST.getlist('rooms[]')
         operator = appFunc.get_user_name(request.user)
 

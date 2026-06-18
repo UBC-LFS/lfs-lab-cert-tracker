@@ -60,21 +60,35 @@ KEY_REQUEST_LABELS = {
     'affiliation': 'Applicant UBC Affiliation',
     'employee_number': 'UBC Employee ID',
     'student_number': 'UBC Student Number',
-    'supervisor_first_name': "Supervisor's First Name",
-    'supervisor_last_name': "Supervisor's Last Name",
-    'supervisor_email': "Supervisor's Email",
     'after_hours_access': 'After Hours Access',
     'working_alone': 'Working alone and/or in isolation',
     'comment': 'Additional Comments'
 }
 
 
+def get_room_managers():
+    manager_set = set()
+    for room in Room.objects.all():
+        for m in room.managers.all():
+            manager_set.add((int(m.id), m.get_full_name()))
+    
+    manager_sorted = sorted(manager_set, key=lambda x: x[1])
+    managers = list(manager_sorted)
+    managers.insert(0, ('', 'Select'))
+    return managers
+        
+
 class KeyRequestForm(forms.ModelForm):
+    supervisor = forms.ChoiceField(
+        required=True,
+        label='Supervisor',
+        choices=get_room_managers(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+
     class Meta:
         model = RequestForm
         exclude = ['rooms', 'submitted_at', 'updated_at']
-        # fields = ['user', 'role', 'affiliation', 'employee_number', 'student_number', 'after_hours_access', 'working_alone', 'comment']
-
         labels = KEY_REQUEST_LABELS
         widgets = {
             'user': forms.HiddenInput(),
@@ -82,9 +96,6 @@ class KeyRequestForm(forms.ModelForm):
             'affiliation': forms.RadioSelect(),
             'employee_number': forms.TextInput(attrs={ 'class': 'form-control' }),
             'student_number': forms.TextInput(attrs={ 'class': 'form-control' }),
-            'supervisor_first_name': forms.TextInput(attrs={ 'class': 'form-control' }),
-            'supervisor_last_name': forms.TextInput(attrs={ 'class': 'form-control' }),
-            'supervisor_email': forms.EmailInput(attrs={ 'class': 'form-control' }),
             'after_hours_access': forms.RadioSelect(),
             'comment': forms.Textarea(attrs={ 'class':'form-control', 'rows': 5 })
         }
@@ -92,9 +103,6 @@ class KeyRequestForm(forms.ModelForm):
             'role': 'Maximum characters: 100',
             'employee_number': 'Maximum characters: 7',
             'student_number': 'Maximum characters: 8',
-            'supervisor_first_name': 'Maximum characters: 150',
-            'supervisor_last_name': 'Maximum characters: 150',
-            'supervisor_email': 'Maximum characters: 254',
             'after_hours_access': 'Regular building hours are from 7:30AM- 5PM Monday to Friday. If after hours access is required, please be sure to request entrance access.',
         }
 

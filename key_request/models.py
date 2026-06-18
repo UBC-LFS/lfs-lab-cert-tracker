@@ -72,7 +72,7 @@ class Room(models.Model):
 
 
 class RequestForm(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='request_forms')
     rooms = models.ManyToManyField(Room)
 
     role = models.CharField(max_length=100, null=True, blank=True)
@@ -80,9 +80,7 @@ class RequestForm(models.Model):
     employee_number = models.CharField(max_length=7, null=True, blank=True)
     student_number = models.CharField(max_length=8, null=True, blank=True)
     
-    supervisor_first_name = models.CharField(max_length=150)
-    supervisor_last_name = models.CharField(max_length=150)
-    supervisor_email = models.EmailField(max_length=254)
+    supervisor = models.ForeignKey(User,  on_delete=models.SET_NULL, null=True, related_name='supervised_request_forms')
     
     after_hours_access = models.CharField(max_length=1, choices=AFTER_HOURS_ACCESS, default=None)
     working_alone = models.BooleanField(default=False)
