@@ -24,7 +24,7 @@ class Index(LoginRequiredMixin, View):
             return redirect('key_request:manager_dashboard')
 
 
-        form_list = request.user.requestform_set.all()
+        form_list = request.user.request_forms.all()
 
         for i, form in enumerate(form_list):
             form.counter = len(form_list) - i

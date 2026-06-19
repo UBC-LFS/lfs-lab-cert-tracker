@@ -1,14 +1,24 @@
 from django import template
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
 from key_request import functions as func
 from app import functions as appFunc
-from key_request.utils import REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
+from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
 from key_request.models import Room, RequestFormStatus, RequestForm
 
+from django.template.defaultfilters import pluralize
+from datetime import date
+
 
 register = template.Library()
+
+
+@register.filter
+def get_user(username):
+    user = get_object_or_404(User, username=username)
+    return user.get_full_name()
 
 
 @register.filter
@@ -25,12 +35,14 @@ def get_fields(obj, arg=None):
             fields.append( (make_field_name_label(field), value) )
     return fields
 
+
 def make_field_name_label(field):
     if field.name in KEY_REQUEST_LABELS:
         return KEY_REQUEST_LABELS[field.name]
     
     name_list = [sp.capitalize() for sp in field.name.split('_')]
     return ' '.join(name_list)
+
 
 @register.simple_tag
 def get_help_text_by_field(fields, field_name):
@@ -76,6 +88,21 @@ def get_status_by_manager(form_id, args):
         obj = status_filtered.last()
         return REQUEST_STATUS_DICT[obj.status]
     return None
+
+
+@register.filter
+def date_to_str(d):
+    return func.convert_date_to_str(d)
+
+
+@register.filter
+def remaining_days(d):
+    duration = d - date.today()
+    print(d, date.today())
+    print(duration.days)
+    suffix = pluralize(duration.days)
+    return '<strong>{0}</strong> day{1} left'.format(duration.days, suffix)
+
 
 @register.simple_tag
 def get_status_by_room_and_form(form_id, room_id):

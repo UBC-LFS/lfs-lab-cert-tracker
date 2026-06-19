@@ -70,7 +70,7 @@ def get_room_managers():
     manager_set = set()
     for room in Room.objects.all():
         for m in room.managers.all():
-            manager_set.add((int(m.id), m.get_full_name()))
+            manager_set.add((m.id, m.get_full_name()))
     
     manager_sorted = sorted(manager_set, key=lambda x: x[1])
     managers = list(manager_sorted)
@@ -82,7 +82,7 @@ class KeyRequestForm(forms.ModelForm):
     supervisor = forms.ChoiceField(
         required=True,
         label='Supervisor',
-        choices=get_room_managers(),
+        choices=get_room_managers,
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
 
@@ -105,6 +105,17 @@ class KeyRequestForm(forms.ModelForm):
             'student_number': 'Maximum characters: 8',
             'after_hours_access': 'Regular building hours are from 7:30AM- 5PM Monday to Friday. If after hours access is required, please be sure to request entrance access.',
         }
+
+    def clean_supervisor(self):
+        supervisor_id = self.cleaned_data.get('supervisor')
+
+        if not supervisor_id:
+            raise forms.ValidationError("Please select a supervisor.")
+
+        try:
+            return User.objects.get(id=supervisor_id)
+        except User.DoesNotExist:
+            raise forms.ValidationError("Invalid supervisor selected.")
 
     def clean(self):
         cleaned_data = super().clean()

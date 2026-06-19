@@ -38,6 +38,7 @@ urlpatterns += [
 # Managers
 urlpatterns += [
     path('rooms/', manager_views.ManagerRooms.as_view(), name='manager_rooms'),
+    path('dashboard/expiry-date/update/', manager_views.UpdateExpiryDate.as_view(), name='update_expiry_date'),
     path('dashboard/', manager_views.ManagerDashboard.as_view(), name='manager_dashboard')
 ]
 

@@ -12,8 +12,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from app.utils import NUM_PER_PAGE
 
-from .models import Room
-from .forms import RequestForm, RequestFormStatus
+from .models import Room, RequestForm, RequestFormStatus
+from .forms import KeyRequestForm
 from . import functions as func
 from .utils import REQUEST_STATUS_DICT
 
@@ -71,11 +71,11 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form_id = request.POST.get('form')
-        room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager')
-        status = request.POST.get('status')
-        next = request.POST.get('next')
+        form_id = request.POST.get('form', None)
+        room_id = request.POST.get('room', None)
+        manager_id = request.POST.get('manager', None)
+        status = request.POST.get('status', None)
+        next = request.POST.get('next', None)
 
         if not status:
             messages.error(request, 'Error: A status must be selected.')
@@ -101,6 +101,28 @@ class ManagerDashboard(LoginRequiredMixin, View):
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
 
         return HttpResponseRedirect(next)
+
+
+
+@method_decorator([never_cache], name='dispatch')
+class UpdateExpiryDate(LoginRequiredMixin, View):
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form_id = request.POST.get('form', None)
+        expiry_date = request.POST.get('expiry_date', None)
+        next = request.POST.get('next', None)
+
+        if not form_id or not next:
+            raise SuspiciousOperation
+        
+        if not expiry_date:
+            messages.error(request, 'An error occurred. Please enter the Expiry Date')
+        else:
+            RequestForm.objects.filter(id=form_id).update(expiry_date=expiry_date)
+        
+        return HttpResponseRedirect(next)
+
 
 
 @method_decorator([never_cache], name='dispatch')

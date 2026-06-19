@@ -81,7 +81,8 @@ class RequestForm(models.Model):
     student_number = models.CharField(max_length=8, null=True, blank=True)
     
     supervisor = models.ForeignKey(User,  on_delete=models.SET_NULL, null=True, related_name='supervised_request_forms')
-    
+    expiry_date = models.DateField(null=True, blank=True)
+
     after_hours_access = models.CharField(max_length=1, choices=AFTER_HOURS_ACCESS, default=None)
     working_alone = models.BooleanField(default=False)
     comment = models.TextField(null=True, blank=True)

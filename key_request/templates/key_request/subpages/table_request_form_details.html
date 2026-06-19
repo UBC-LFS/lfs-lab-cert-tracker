@@ -4,7 +4,15 @@
   {% for field in form|get_fields %}
     <tr>
       <td class="text-left">{{ field.0 }}</td>
-      <td class="text-left">{{ field.1 }}</td>
+      <td class="text-left">
+        {% if field.0 == 'Supervisor' %}
+          {{ field.1|get_user }}
+        {% elif field.0 == 'Additional Comments' %}
+          {{ field.1|linebreaks }}
+        {% else %}
+          {{ field.1 }}
+        {% endif %}
+      </td>
     </tr>
   {% endfor %}
 </table>

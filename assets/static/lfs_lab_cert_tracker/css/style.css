@@ -620,6 +620,12 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   flex: auto;
 }
 
+input[type="date"] {
+  font-size: 0.85rem;
+  padding: 5px;
+}
+
+
 /* Responsive design */
 
 @media (max-width: 575.98px) {
