@@ -88,6 +88,17 @@ class AllRequests(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
+class ExpiredRequests(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        return render(request, 'key_request/admin/expired_requests.html', {
+
+        })
+
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
 class ViewFormDetails(LoginRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):

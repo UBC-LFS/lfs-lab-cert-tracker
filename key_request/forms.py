@@ -88,7 +88,7 @@ class KeyRequestForm(forms.ModelForm):
 
     class Meta:
         model = RequestForm
-        exclude = ['rooms', 'submitted_at', 'updated_at']
+        exclude = ['rooms', 'expiry_date', 'submitted_at', 'updated_at']
         labels = KEY_REQUEST_LABELS
         widgets = {
             'user': forms.HiddenInput(),

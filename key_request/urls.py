@@ -14,7 +14,8 @@ urlpatterns = [
 
 # Admin
 urlpatterns += [
-    path('all-requests/', admin_views.AllRequests.as_view(), name='all_requests'),
+    path('requests/all/', admin_views.AllRequests.as_view(), name='all_requests'),
+    path('requests/expired/', admin_views.ExpiredRequests.as_view(), name='expired_requests'),
     path('forms/<int:form_id>/details/', admin_views.ViewFormDetails.as_view(), name='view_form_details'),
     path('func/update/all/', admin_views.update_all, name='update_all'),
 

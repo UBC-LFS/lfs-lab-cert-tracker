@@ -3,7 +3,7 @@ from django.db.models.functions import Concat
 from django.db.models import Q, F, Max, CharField, Value
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
-from datetime import date
+from datetime import datetime, date
 import re
 import json
 import smtplib
@@ -680,6 +680,10 @@ def get_tab_urls(url, next=''):
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')
+
+
+def convert_str_to_date(s):
+    return datetime.strptime(s, "%Y-%m-%d").date()
 
 
 # def count_approved_status(form, room):

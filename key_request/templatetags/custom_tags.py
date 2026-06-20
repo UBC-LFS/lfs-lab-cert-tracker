@@ -92,16 +92,16 @@ def get_status_by_manager(form_id, args):
 
 @register.filter
 def date_to_str(d):
-    return func.convert_date_to_str(d)
+    if d:
+        return func.convert_date_to_str(d)
 
 
 @register.filter
 def remaining_days(d):
-    duration = d - date.today()
-    print(d, date.today())
-    print(duration.days)
-    suffix = pluralize(duration.days)
-    return '<strong>{0}</strong> day{1} left'.format(duration.days, suffix)
+    if d:
+        duration = d - date.today()
+        suffix = pluralize(duration.days)
+        return '<strong>{0}</strong> day{1} left'.format(duration.days, suffix)
 
 
 @register.simple_tag

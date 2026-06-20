@@ -17,6 +17,8 @@ from .forms import KeyRequestForm
 from . import functions as func
 from .utils import REQUEST_STATUS_DICT
 
+from datetime import date
+
 
 @method_decorator([never_cache], name='dispatch')
 class ManagerDashboard(LoginRequiredMixin, View):
@@ -103,7 +105,6 @@ class ManagerDashboard(LoginRequiredMixin, View):
         return HttpResponseRedirect(next)
 
 
-
 @method_decorator([never_cache], name='dispatch')
 class UpdateExpiryDate(LoginRequiredMixin, View):
 
@@ -117,12 +118,17 @@ class UpdateExpiryDate(LoginRequiredMixin, View):
             raise SuspiciousOperation
         
         if not expiry_date:
-            messages.error(request, 'An error occurred. Please enter the Expiry Date')
-        else:
-            RequestForm.objects.filter(id=form_id).update(expiry_date=expiry_date)
+            messages.error(request, 'An error occurred. <strong>Expiry Date:</strong> This field is required.')
+            return HttpResponseRedirect(next)
         
+        duration = func.convert_str_to_date(expiry_date) - date.today()
+        if duration.days < 0:
+            messages.error(request, 'An error occurred. Please enter a valid <strong>Expiry Date</strong>.')
+            return HttpResponseRedirect(next)
+        
+        RequestForm.objects.filter(id=form_id).update(expiry_date=expiry_date)
+        messages.success(request, 'Success! <strong>Expiry Date</strong> has been updated.')
         return HttpResponseRedirect(next)
-
 
 
 @method_decorator([never_cache], name='dispatch')

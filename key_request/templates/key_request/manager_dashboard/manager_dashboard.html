@@ -66,7 +66,7 @@
 					</td>
 	        <td>{{ form.user.get_full_name }}</td>
 	        <td>
-						{{ form.room.building.code }} {{ form.room.floor.name }} <br />
+						{{ form.room.building.code }} - {{ form.room.floor.name }} <br />
 						Room: {{ form.room.number }}
 					</td>
 	        <td>
@@ -89,11 +89,15 @@
 						{% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
 	        </td>
 	        <td>
-						<span class="text-chocolate">{{ form.expiry_date|remaining_days|safe }}</span>
-
-						<hr />
-
 						{% if form.supervisor.id == request.user.id %}
+							{% if form.expiry_date %}
+								<span class="text-chocolate">{{ form.expiry_date|remaining_days|safe }}</span>
+							{% else %}
+								0 day
+							{% endif %}
+
+							<hr />
+
 							<form action="{% url 'key_request:update_expiry_date' %}" method="post">
 								{% csrf_token %}
 
@@ -102,7 +106,7 @@
 								<input type="hidden" name="form" value="{{ form.id }}" />
 								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 
-								<input class="btn btn-{% if data.status.count > 0 %}secondary{% else %}warning{% endif %} btn-xs" type="submit" value="Update" />
+								<input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs" type="submit" value="Update" />
 							</form>
 						{% else %}
 							N/A
