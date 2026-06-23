@@ -1,6 +1,7 @@
 from django import template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 from key_request import functions as func
 from app import functions as appFunc
@@ -104,6 +105,11 @@ def remaining_days(d):
         return '<strong>{0}</strong> day{1} left'.format(duration.days, suffix)
 
 
+@register.filter
+def display_room(room, args=None):
+    return func.display_room(room, args)
+
+
 @register.simple_tag
 def get_status_by_room_and_form(form_id, room_id):
     if not form_id or not room_id:
@@ -115,7 +121,6 @@ def get_status_by_room_and_form(form_id, room_id):
         return False
 
     return func.all_pis_approved(form, room)
-
 
 
 @register.simple_tag
@@ -135,7 +140,19 @@ def concat_strings_dash(*args):
             s += '-'
     return s
 
+from key_request.models import UserFilter
+import json
 
-@register.filter
-def display_room(room, args=None):
-    return func.display_room(room, args)
+@register.simple_tag
+def all_requests_url(uid):
+    user_filter = UserFilter.objects.filter(user_id=uid)
+    params = '?page=1'
+    if user_filter.exists():
+        uf = user_filter.last()
+        
+        for filter in ['building', 'floor', 'number', 'name', 'status']:
+            value = uf.json.get(filter, None)
+            if value:
+                params += '&' + filter + '=' + value
+    
+    return reverse('key_request:all_requests') + params

@@ -104,3 +104,8 @@ class RequestFormStatus(models.Model):
 
     class Meta:
         ordering = ['pk']
+
+
+class UserFilter(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    json = models.JSONField()

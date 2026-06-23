@@ -23,7 +23,7 @@ from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 
-from .models import Room
+from .models import Room, UserFilter
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
@@ -35,6 +35,9 @@ class AllRequests(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        # print(request.GET)
+        method = request.GET.get('method', None)
+
         query = {
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
@@ -43,6 +46,24 @@ class AllRequests(LoginRequiredMixin, View):
             'name': request.GET.get('name'),
             'status': request.GET.get('status')
         }
+        
+        if method == 'save':
+            user_filter = UserFilter.objects.filter(user_id=request.user.id)
+            if user_filter.exists():
+                user_filter.update(json = query)
+                messages.success(request, 'Your filter has been updated successfully.')
+            else:
+                UserFilter.objects.create(user=request.user, json=query)
+                messages.success(request, 'Your filter has been saved successfully.')
+            
+            # Create a new url
+            query_params = request.GET.copy()
+            query_params.pop('method', None)
+            encoded_params = query_params.urlencode()
+            base_url = request.path
+            new_url = f"{base_url}?{encoded_params}" if encoded_params else base_url
+    
+            return redirect(new_url)
 
         form_list, total_forms, new_forms = func.search_filters_for_requests(query)
 
