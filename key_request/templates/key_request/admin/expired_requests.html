@@ -16,6 +16,70 @@
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h3>
 
+  <div class="row bg-light-gray border p-4 font-size-sm">
+		{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
+	</div>
+
+	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
+
+  <table class="table table-bordered table-striped font-size-sm">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Full Name</th>
+        <th>Building & Room Info</th>
+        <th>Supervisor</th>
+        <th>Details</th>
+        <th>Status <br /> History</th>
+        <th>Expiry Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for form in forms %}
+        <tr>
+          <td>{{ form.id }}</td>
+          <td>{{ form.user.get_full_name }}</td>
+          <td class="text-left">
+            <ul class="list-minus-20">
+              {% for room in form.rooms.all %}
+                <li>
+                  {% if room.is_active %}
+                    {{ room|display_room }}
+                  {% else %}
+                    <s>{{ room|display_room }}</s>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+          <td>{{ form.supervisor.get_full_name }}</td>
+          <td>
+            {% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
+          </td>
+          <td>
+            {% if form.requestformstatus_set.all|length > 0 %}
+              {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+            {% else %}
+              <span class="badge">NEW</span>
+            {% endif %}
+          </td>
+          <td>
+            {{ form.expiry_date }} <br />
+            <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="100%">No key request forms found</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% include 'key_request/subpages/pagination.html' with data=forms %}
+
+
+
 </section>
 
 {% endblock %}

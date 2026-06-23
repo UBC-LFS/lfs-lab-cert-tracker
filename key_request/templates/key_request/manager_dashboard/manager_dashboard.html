@@ -45,11 +45,12 @@
 				</th>
 	      <th>Applicant <br /> Full Name</th>
 				<th>Building & <br /> Room Info</th>
+				<th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status</th>
-	      <th>Expriy Date</th>
+	      <th>Expiry Date</th>
 				<th>
-          <div>Select All <br /> <span class="text-danger">NEW</span> Requests</div>
+          <div>Select <br /> All</div>
           <input id="select-all-checkbox" type="checkbox" />
 				</th>
 	    </tr>
@@ -66,9 +67,10 @@
 					</td>
 	        <td>{{ form.user.get_full_name }}</td>
 	        <td>
-						{{ form.room.building.code }} - {{ form.room.floor.name }} <br />
-						Room: {{ form.room.number }}
+						{{ form.room.building.code }} {{ form.room.floor.name }} <br />
+						Room {{ form.room.number }}
 					</td>
+					<td>{{ form.supervisor.get_full_name }}</td>
 	        <td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 						<br />

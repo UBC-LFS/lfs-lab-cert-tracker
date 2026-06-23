@@ -92,10 +92,36 @@ class ExpiredRequests(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        query = {
+            'building': request.GET.get('building'),
+            'floor': request.GET.get('floor'),
+            'number': request.GET.get('number'),
+            'room': request.GET.get('room'),
+            'name': request.GET.get('name'),
+            'status': request.GET.get('status')
+        }
+
+        form_list, total_forms, _ = func.search_filters_for_requests(query, 'expiry')
+        num_filtered_forms = len(form_list)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(form_list, NUM_PER_PAGE)
+
+        try:
+            forms = paginator.page(page)
+        except PageNotAnInteger:
+            forms = paginator.page(1)
+        except EmptyPage:
+            forms = paginator.page(paginator.num_pages)
+        
         return render(request, 'key_request/admin/expired_requests.html', {
-
+            'total_forms': total_forms,
+            'num_filtered_forms': num_filtered_forms,
+            'forms': forms,
+            'req_status_dict': REQUEST_STATUS_DICT,
+            'search_filter_options': func.search_filter_options,
+            'is_admin': True if request.user.is_superuser else False
         })
-
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')

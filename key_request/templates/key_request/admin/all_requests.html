@@ -27,6 +27,7 @@
 			</div>
 		</div>
 	</div>
+
 	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
 
 	<table class="table table-bordered table-striped font-size-sm">
@@ -35,6 +36,7 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
+				<th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted At</th>
@@ -59,6 +61,7 @@
 							{% endfor %}
 						</ul>
 					</td>
+					<td>{{ form.supervisor.get_full_name }}</td>
 	        <td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 	        </td>

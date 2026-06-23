@@ -3,6 +3,7 @@ from django.db.models.functions import Concat
 from django.db.models import Q, F, Max, CharField, Value
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
+from django.utils import timezone
 from datetime import datetime, date
 import re
 import json
@@ -94,8 +95,15 @@ def check_user_trainings(user, selected_rooms):
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
 
 
-def search_filters_for_requests(query):
+def search_filters_for_requests(query, option=None):
     forms = RequestForm.objects.all()
+
+    if option == 'expiry':
+        forms = RequestForm.objects.select_related('user', 'supervisor').filter(
+            expiry_date__isnull=False, 
+            expiry_date__lt=timezone.localdate()
+        ).order_by('-expiry_date', '-id')
+
     new_forms = forms.filter(requestformstatus__isnull=True)
 
     total = len(forms)
