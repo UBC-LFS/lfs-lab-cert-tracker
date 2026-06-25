@@ -45,11 +45,11 @@
                 {% endfor %}
             </ul>
             </td>
-	        <td>
+	        <td class="text-left">
             {% if group.room_set.all|length > 0 %}
-                <ul>
+                <ul class="mb-0">
                     {% for room in group.room_set.all %}
-                        <li>{{ room }}</li>
+                        <li>{{ room.building.code }} {{ room.floor }} {{ room.number }}</li>
                     {% endfor %}
                 </ul>
             {% else %}

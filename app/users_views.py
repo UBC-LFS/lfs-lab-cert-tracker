@@ -20,6 +20,7 @@ from html import escape
 from xhtml2pdf import pisa
 from datetime import date
 
+from key_request.dashboard_coordinators import DashboardCoordinator
 from lfs_lab_cert_tracker.models import UserCert
 from .forms import UserTrainingForm
 from .accesses import access_loggedin_user_pi_admin, access_loggedin_user_admin
@@ -43,7 +44,8 @@ class MyAccount(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        _, num_new_forms, _  = kFunc.get_manager_dashboard(request.user)
+        coordinator = DashboardCoordinator(request.user, {})
+        coordinator.run()
 
         return render(request, 'app/users/my_account.html', {
             'app_user': self.user,
@@ -54,7 +56,7 @@ class MyAccount(LoginRequiredMixin, View):
             'expired_certs': func.get_user_expired_certs(self.user),
             'welcome_message': func.welcome_message(),
             'viewing': func.add_next_str_to_session(request, self.user),
-            'num_new_forms': num_new_forms
+            'num_new_forms': coordinator.get_num_new_forms()
         })
 
 

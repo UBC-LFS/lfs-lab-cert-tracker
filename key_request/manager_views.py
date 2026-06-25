@@ -11,10 +11,13 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from app.utils import NUM_PER_PAGE
+from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room
 from .forms import RequestForm, RequestFormStatus
 from . import functions as func
+from key_request.api import email_api as email_api
+from .dashboard_coordinators import DashboardCoordinator
 from .utils import REQUEST_STATUS_DICT
 
 
@@ -39,11 +42,12 @@ class ManagerDashboard(LoginRequiredMixin, View):
             'status': request.GET.get('status')
         }
 
-        total_forms, num_new_forms, form_list = func.get_manager_dashboard(request.user, query)
-        num_filtered_forms = len(form_list)
+        # NOTE: there is one form PER group and one form PER manager
+        coordinator = DashboardCoordinator(request.user, query)
+        coordinator.run()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(form_list, NUM_PER_PAGE)
+        paginator = Paginator(coordinator.get_forms(), NUM_PER_PAGE)
 
         try:
             forms = paginator.page(page)
@@ -59,9 +63,9 @@ class ManagerDashboard(LoginRequiredMixin, View):
             form.total_expired = total_expired
         
         return render(request, 'key_request/manager_dashboard/manager_dashboard.html', {
-            'total_forms': total_forms,
-            'num_new_forms': num_new_forms,
-            'num_filtered_forms': num_filtered_forms,
+            'total_forms': coordinator.get_total_forms(),
+            'num_new_forms': coordinator.get_num_new_forms(),
+            'num_filtered_forms': coordinator.get_num_filtered_forms(),
             'forms': forms,
             'post_url': reverse('key_request:manager_dashboard'),
             'req_status_dict': REQUEST_STATUS_DICT,
@@ -73,7 +77,8 @@ class ManagerDashboard(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form_id = request.POST.get('form')
         room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager')
+        manager_id = request.POST.get('manager_id', None)
+        group_id = request.POST.get('group_id', None)
         status = request.POST.get('status')
         next = request.POST.get('next')
 
@@ -84,20 +89,23 @@ class ManagerDashboard(LoginRequiredMixin, View):
             else:
                 return redirect('key_request:index')
         
-        if not form_id or not room_id or not manager_id or not next:
+        if not form_id or not room_id or (not manager_id and not group_id) or not next:
             raise SuspiciousOperation
         
-        RequestFormStatus.objects.create(
+        request_form_status = RequestFormStatus.objects.create(
             form_id = form_id,
             room_id = room_id,
             manager_id = manager_id,
+            group_id = group_id,
             operator_id = request.user.id,
             status = status
         )
 
-        form = RequestForm.objects.get(id=form_id)
-        room = Room.objects.get(id=room_id)
-        func.count_approved_numbers_by_id(status, form, room, request.user.id)
+        room = Room.objects.filter(id=room_id).first()
+
+        email_manager = ApprovalNotificationManager([request_form_status], status, request.user)
+        email_manager.send_email_notification()
+
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
 
         return HttpResponseRedirect(next)
@@ -108,26 +116,22 @@ class ManagerRooms(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        room_list = Room.objects.filter(managers__in=[request.user.id])
-        total = len(room_list)
-
         query = {
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
             'number': request.GET.get('number'),
             'name': request.GET.get('name')
         }
-        if query['building']:
-            room_list = room_list.filter(building__code__icontains=query['building'])
-        if query['floor']:
-            room_list = room_list.filter(floor__name__icontains=query['floor'])
-        if query['number']:
-            room_list = room_list.filter(number__icontains=query['number'])
 
-        num_filtered_rooms = len(room_list)
+        coordinator = DashboardCoordinator(request.user, query)
+        room_list = coordinator.get_all_rooms()
+        total = len(room_list)
+
+        filtered_room_list = coordinator.get_all_filtered_rooms()
+        num_filtered_rooms = len(filtered_room_list)
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(room_list, NUM_PER_PAGE)
+        paginator = Paginator(filtered_room_list, NUM_PER_PAGE)
 
         try:
             rooms = paginator.page(page)
@@ -140,5 +144,6 @@ class ManagerRooms(LoginRequiredMixin, View):
             'total_rooms': total,
             'num_filtered_rooms': num_filtered_rooms,
             'manager_rooms': rooms,
-            'search_filter_options': func.search_filter_options
+            'search_filter_options': func.search_filter_options,
+            'is_admin': True if request.user.is_superuser else False
         })

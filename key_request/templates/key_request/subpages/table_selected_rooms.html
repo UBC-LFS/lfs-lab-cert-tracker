@@ -56,13 +56,29 @@
             {% for manager in room.managers.all %}
               <li>
                 {% concat_strings room.id manager.id as args %}
-                {% if form.id|get_status_by_manager:args %}
-                  <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+                {% with manager_status_string=form.id|get_status_by_manager:args %}
+                {% if manager_status_string %}
+                  <span class="font-weight-600 text-{% if manager_status_string == 'Approved' %}success{% elif manager_status_string == 'Declined' %}danger{% elif manager_status_string == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }} (PI)</span>
                 {% else %}
-                  <span>{{ manager.get_full_name }}</span>
+                  <span>{{ manager.get_full_name }} (PI)</span>
                 {% endif %}
+                {% endwith %}
               </li>
             {% endfor%}
+
+              {% for group in room.groups.all %}
+                  <li>
+                      {% concat_strings room.id group.id as args %}
+                  {% with group_status_string=form.id|get_status_by_group:args %}
+                      {% if group_status_string %}
+                          <span class="font-weight-600 text-{% if group_status_string == 'Approved' %}success{% elif group_status_string == 'Declined' %}danger{% elif group_status_string == 'Insufficient Info' %}orange{% endif %}">{{ group.name }}</span>
+                      {% else %}
+                          <span>{{ group.name }} </span>
+                      {% endif %}
+                  </li>
+                  {% endwith %}
+              {% endfor%}
+
           </ul>
         </td>
       {% endif %}
@@ -100,7 +116,7 @@
   {% endfor %}
 </table>
 
-{% if is_admin %}
+{% if is_admin and form %}
   <div class="mt-4">
     <p class="mb-0">Note: Different colours indicate the status of key requests in the <strong>PIs</strong> column.</p>
     <ul>

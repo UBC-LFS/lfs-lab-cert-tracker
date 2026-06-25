@@ -10,7 +10,7 @@
 				<p class="font-size-lg">
 					Number of selected rooms: <span id='update-all-num-2' class="text-chocolate">0</span>
 				</p>
-				<form action="{% url 'key_request:update_all' %}" method="post">
+				<form id="update-all-form" action="{% url 'key_request:update_all' %}" method="post">
 					{% csrf_token %}
 
 					<ul id="update-all-list" class="mb-4"></ul>

@@ -111,7 +111,7 @@ def get_cert_by_id(cert_id):
 
 def is_pi(user_id):
     """ Check whether a user is a PI or not"""
-    return Room.objects.filter(managers__id=user_id).exists()
+    return Room.objects.filter(Q(managers__id=user_id) | Q(groups__members__id=user_id)).exists()
 
 def is_pi_in_area(user_id, area_id):
     """ Check whether an user is in the area or not """

@@ -67,6 +67,8 @@ def get_room(room_id):
 
 @register.filter
 def get_status_by_manager(form_id, args):
+    if not form_id:
+        return None
     args_splited = args.split(',')
     room_id = args_splited[0]
     manager_id = args_splited[1]
@@ -74,6 +76,20 @@ def get_status_by_manager(form_id, args):
     status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, manager_id=manager_id)
     if status_filtered.exists():
         obj = status_filtered.last()
+        return REQUEST_STATUS_DICT[obj.status]
+    return None
+
+@register.filter
+def get_status_by_group(form_id, args):
+    if not form_id:
+        return None
+    args_splited = args.split(',')
+    room_id = args_splited[0]
+    group_id = args_splited[1]
+
+    status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, group_id=group_id).order_by('-created_at')
+    if status_filtered.exists():
+        obj = status_filtered.first()
         return REQUEST_STATUS_DICT[obj.status]
     return None
 

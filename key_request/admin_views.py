@@ -23,12 +23,15 @@ from django.apps import apps
 from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
+from key_request.api import email_api as email_api
 from app.utils import NUM_PER_PAGE
+from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room, RoomGroup
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, RoomGroupForm
 from .mixins import RoomActionsMixin
 from . import functions as func
+from .dashboard_coordinators import DashboardCoordinator, AdminGroupFormProcessor, AdminManagerFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
 
 
@@ -46,9 +49,10 @@ class AllRequests(LoginRequiredMixin, View):
             'status': request.GET.get('status')
         }
 
-        form_list, total_forms, new_forms = func.search_filters_for_requests(query)
+        coordinator = DashboardCoordinator(request.user, query, [AdminGroupFormProcessor, AdminManagerFormProcessor])
+        coordinator.run()
 
-        num_filtered_forms = len(form_list)
+        form_list = coordinator.get_forms()
 
         page = request.GET.get('page', 1)
         paginator = Paginator(form_list, NUM_PER_PAGE)
@@ -67,10 +71,10 @@ class AllRequests(LoginRequiredMixin, View):
             form.total_expired = total_expired
         
         return render(request, 'key_request/admin/all_requests.html', {
-            'total_forms': total_forms,
-            'num_filtered_forms': num_filtered_forms,
+            'total_forms': coordinator.get_total_forms(),
+            'num_filtered_forms': coordinator.get_num_filtered_forms(),
             'forms': forms,
-            'num_new_forms': new_forms.count(),
+            'num_new_forms': coordinator.get_num_new_forms(),
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
             'is_admin': True if request.user.is_superuser else False
@@ -79,9 +83,11 @@ class AllRequests(LoginRequiredMixin, View):
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         form_id = request.POST.get('form')
+        manager_id = request.POST.get('manager_id', None)
+        group_id = request.POST.get('group_id', None)
         operator = appFunc.get_user_name(request.user)
         status = request.POST.get('status')
-        fs = RequestFormStatus.objects.create(form_id=form_id, operator=operator, status=status)
+        fs = RequestFormStatus.objects.create(form_id=form_id, operator=operator, manager_id=manager_id, group_id=group_id, status=status)
         if fs:
             messages.success(request, "Success! {0}'s status has been updated.".format(operator))
         else:
@@ -117,21 +123,17 @@ class ViewFormDetails(LoginRequiredMixin, View):
         self.form.total_expired = total_expired
 
         items = []
-        for room in self.form.rooms.all():
-            for manager in room.managers.all():
-                status = None
-                status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, manager_id=manager.id)
-                if status_filtered.exists():
-                    status = status_filtered
 
-                items.append({
-                    'id': self.form.id,
-                    'form': self.form,
-                    'room': room,
-                    'areas': [area.name for area in room.areas.all()],
-                    'manager': {'id': manager.id, 'full_name': manager.get_full_name()},
-                    'status': status
-                })
+        # Need both the managers and the groups
+
+        for room in self.form.rooms.all():
+            areas = [area.name for area in room.areas.all()]
+
+            items += self._create_item_obj(room, areas, 'manager', room.managers.all(), 1)
+            items += self._create_item_obj(room, areas, 'group', room.groups.all(), 2)
+
+        items = sorted(items, key=lambda x: (x['priority'], x['sorting_key']), reverse=False)
+
 
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
@@ -147,10 +149,54 @@ class ViewFormDetails(LoginRequiredMixin, View):
             'next': self.next
         })
 
+    def _create_item_obj(self, room, areas, entity_label, entities, priority):
+        items = []
+        if entity_label not in ['group', 'manager']:
+            return []
+
+        entity_filter_label = f"{entity_label}_id"
+
+        for entity in entities:
+            entity_filter = {
+                entity_filter_label: entity.id
+            }
+            status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, **entity_filter).order_by('-created_at')
+            is_new = not status_filtered.exists()
+            status = status_filtered
+
+            if is_new:
+                status = None
+
+            if entity_label == 'group':
+                sorting_key = entity.name
+
+            if entity_label == 'manager':
+                sorting_key = entity.get_full_name()
+
+            items.append({
+                'id': self.form.id,
+                'label': f'{entity_label.capitalize()} Form',
+                'form': self.form,
+                'room': room,
+                'areas': areas,
+                 entity_label: entity,
+                'status': status,
+                'is_new': is_new,
+                # Update all expects the format: <entity_label>:<entity_id>__<form.id>:<room_id>
+                'request_form_identifier': func.make_request_form_identifier(room, self.form, entity_filter_label, entity.id),
+                # For sorting the list of PI/Group (PI=prio_1; group=prio_2); sorting key is then name/get_full_name()
+                'priority': priority,
+                'sorting_key': sorting_key
+            })
+        return items
+
+
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager')
+        manager_id = request.POST.get('manager_id', None)
+        group_id = request.POST.get('group_id', None)
+
         status = request.POST.get('status')
         next = request.POST.get('next')
 
@@ -161,23 +207,22 @@ class ViewFormDetails(LoginRequiredMixin, View):
             else:
                 return redirect('key_request:index')
         
-        if not self.form or not room_id or not manager_id or not next:
+        if not self.form or not room_id or (not manager_id and not group_id) or not next:
             raise SuspiciousOperation
 
-        RequestFormStatus.objects.create(
+        rfs = RequestFormStatus.objects.create(
             form_id = self.form.id,
             room_id = room_id,
             manager_id = manager_id,
+            group_id = group_id,
             operator_id = request.user.id,
             status = status
         )
 
         room = Room.objects.get(id=room_id)
 
-        # Check if the admin is approving of behalf of another manager
-        absent_pi = manager_id if int(manager_id) != int(request.user.id) else None
-
-        func.count_approved_numbers_by_id(status, self.form, room, request.user.id, absent_pi)
+        email_coordinator = ApprovalNotificationManager([rfs], status, request.user)
+        email_coordinator.send_email_notification()
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
         return HttpResponseRedirect(next)
@@ -188,36 +233,52 @@ class ViewFormDetails(LoginRequiredMixin, View):
 @access_pi_admin_key_request
 @require_http_methods(['POST'])
 def update_all(request):
-    rooms = request.POST.getlist('rooms[]')
+
+    raw_rooms = request.POST.getlist('rooms[]')
+
     status = request.POST.get('status')
-    if not rooms:
-            raise SuspiciousOperation
+    if not raw_rooms:
+        raise SuspiciousOperation
 
     if status:
-        objs = []
-        manager_room_map = {}
-        for room in rooms:
-            room_sp = room.split('_')
-            form = RequestForm.objects.get(id=room_sp[0])
-            objs.append(RequestFormStatus(
+        rfs = []
+        for raw_room in raw_rooms:
+            # rooms in the format: <entity_label>:<entity_id>__<form.id>:<room_id>
+
+            room_sp = raw_room.split('__')
+            entity_tuple = room_sp[0].split(":")
+            entity_label = entity_tuple[0]
+            entity_id = entity_tuple[1]
+
+            room_form_tuple = room_sp[1].split(":")
+            form_id = room_form_tuple[0]
+            room_id = room_form_tuple[1]
+
+            form = RequestForm.objects.get(id=form_id)
+            rfs_obj = RequestFormStatus(
                 form = form,
-                room_id = room_sp[1],
-                manager_id = room_sp[2],
+                room_id = room_id,
                 operator_id = request.user.id,
                 status = status
-            ))
+            )
+            setattr(rfs_obj, entity_label, entity_id)
 
-            manager_id = room_sp[2]
+            rfs.append(rfs_obj)
 
-            manager_room_map.setdefault(manager_id, []).append(room_sp[1])
 
-        if len(objs) > 0:
-            request_status_forms = RequestFormStatus.objects.bulk_create(objs)
-            func.count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, request.user.id, manager_room_map)
+        if len(rfs) > 0:
 
-            messages.success(request, 'Success! The number of rooms ({0}) have been updated.'.format(len(objs)))
+            request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
+
+            rsf_list = list(request_status_forms)
+
+            email_coordinator = ApprovalNotificationManager(rsf_list, status, request.user)
+            email_coordinator.send_email_notification()
+
+
+            messages.success(request, 'Success! The number of key request forms ({0}) have been updated.'.format(len(request_status_forms)))
         else:
-            messages.warning(request, 'There is no room to update.')
+            messages.warning(request, 'There are no key request forms to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
 
@@ -412,16 +473,18 @@ class CreateRoom(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
+        data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
         
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
+            'room_groups': RoomGroup.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url),
             'tab': self.tab,
             'manager_ids': manager_ids,
+            'group_ids': group_ids,
             'area_ids': area_ids,
             'training_ids': training_ids
         })
@@ -444,6 +507,7 @@ class CreateRoom(LoginRequiredMixin, View):
                 'alarm': None,
                 'is_active': None,
                 'note': None,
+                'groups': [],
                 'managers': [],
                 'areas': [],
                 'trainings': []
@@ -464,6 +528,7 @@ class CreateRoom(LoginRequiredMixin, View):
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
+                data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
 
             elif tab == 'areas':
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
@@ -471,20 +536,22 @@ class CreateRoom(LoginRequiredMixin, View):
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
 
-            print(data)
             request.session[CREATE_ROOM_KEY] = data
 
 
             return HttpResponseRedirect(self.url + URL_NEXT[tab])
 
         elif method == 'Create Room':
-            data, manager_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
+            data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
             form = RoomForm(data)
             if form.is_valid():
                 room = form.save()
                 if room:
                     if len(manager_ids) > 0:
                         room.managers.add(*manager_ids)
+
+                    if len(group_ids) > 0:
+                        room.groups.add(*group_ids)
 
                     if len(area_ids) > 0:
                         room.areas.add(*area_ids)
@@ -525,17 +592,19 @@ class EditRoom(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
+        data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
         
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
+            'room_groups': RoomGroup.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
             'tab': self.tab,
             'manager_ids': manager_ids,
+            'group_ids': group_ids,
             'area_ids': area_ids,
             'training_ids': training_ids,
             'next': self.next
@@ -561,6 +630,7 @@ class EditRoom(LoginRequiredMixin, View):
                 'is_active': True if self.room.is_active else False,
                 'note': self.room.note,
                 'managers': [manager.id for manager in self.room.managers.all()],
+                'groups': [group.id for group in self.room.groups.all()],
                 'areas': [area.id for area in self.room.areas.all()],
                 'trainings': [training.id for training in self.room.trainings.all()]
             }
@@ -580,6 +650,8 @@ class EditRoom(LoginRequiredMixin, View):
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
+                data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
+
 
             elif tab == 'areas':
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
@@ -592,17 +664,21 @@ class EditRoom(LoginRequiredMixin, View):
             return HttpResponseRedirect(self.url + URL_NEXT[tab] + '&next=' + next)
 
         elif method == 'Update Room':
-            data, manager_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
+            data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
             form = RoomForm(data, instance=self.room)
             if form.is_valid():
                 room = form.save()
                 if room:
                     room.managers.clear()
+                    room.groups.clear()
                     room.areas.clear()
                     room.trainings.clear()
 
                     if len(manager_ids) > 0:
                         room.managers.add(*manager_ids)
+
+                    if len(group_ids) > 0:
+                        room.groups.add(*group_ids)
 
                     if len(area_ids) > 0:
                         room.areas.add(*area_ids)

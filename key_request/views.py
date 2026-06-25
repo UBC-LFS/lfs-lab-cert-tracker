@@ -19,9 +19,9 @@ class Index(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
 
-        is_pi = Room.objects.filter(managers__id=request.user.id).exists()
-        if is_pi:
-            return redirect('key_request:manager_dashboard')
+        # is_pi = Room.objects.filter(managers__id=request.user.id).exists()
+        # if is_pi:
+        #     return redirect('key_request:manager_dashboard')
 
 
         form_list = request.user.requestform_set.all()

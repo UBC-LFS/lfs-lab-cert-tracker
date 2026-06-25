@@ -38,7 +38,7 @@
 						<th>Floor</th>
 						<th>Room <br /> Number</th>
 						<th>Areas</th>
-						<th>PI</th>
+						<th>PI/Group</th>
 						<th>Operator</th>
 						<th>Note</th>
 						<th>Status <br /> History</th>
@@ -50,7 +50,7 @@
 				</thead>
 				{% for item in items %}
 					<tr>
-						<td>{{ form.id }}</td>
+						<td>{{ item.label }} <br>(ID: {{ item.id }})</td>
 						<td>{{ item.room.building.code }}</td>
 						<td>{{ item.room.floor.name }}</td>
 						<td>{{ item.room.number }}</td>
@@ -61,23 +61,36 @@
 								{% endfor%}
 							</ul>
 						</td>
-						<td>{{ item.manager.full_name }}</td>
-						<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
 						<td>
-							{% if item.status|length > 0 %}
-								{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
-							{% endif %}
-						</td>
+                            {% if item.group %}
+                                {{ item.group.name }}
+                            {% else %}
+                                {{ item.manager.get_full_name }}
+                            {% endif %}
+                        </td>
+						<td>{{ item.status.first.operator_id|get_user_full_name }}</td>
 						<td>
 							{% if item.room.note %}
 								{{ item.room.note|linebreaks }}
 							{% endif %}
 						</td>
+                        <td>
+                            {% if item.status|length > 0 %}
+                                {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
+                            {% endif %}
+                        </td>
 						<td>
 							{% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=item %}
 						</td>
 						<td>
-							<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ item.room.id }}_{{ item.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ item.room.building.code }}" data-floor="{{ item.room.floor.name }}" data-number="{{ item.room.number }}" data-is_new="{% if item.status|length == 0 %}true{% else %}false{% endif %}" />
+							<input class="room-checkbox" type="checkbox"
+                                   value="{{ item.request_form_identifier }}"
+                                   data-user="{{ form.user.get_full_name }}"
+                                   data-building="{{ item.room.building.code }}"
+                                   data-floor="{{ item.room.floor.name }}"
+                                   data-number="{{ item.room.number }}"
+                                   data-is_new="{% if item.is_new %}true{% else %}false{% endif %}" />
+
 						</td>
 					</tr>
 				{% empty %}
@@ -112,5 +125,6 @@
 
 {% block js %}
 	{% load static %}
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/update_all_helper.js' %}"></script>
 	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/rooms_select_all.js' %}"></script>
 {% endblock %}

@@ -146,9 +146,13 @@ def send_email(form):
         room_info = '<li>{0}</li>'.format(func.display_room(room))
         user_rooms += room_info
 
+        seen_pis_for_current_room = set()
+
         for manager in room.managers.all():
+            seen_pis_for_current_room.add(manager.id)
             if manager.id not in pi_rooms.keys():
                 pi_rooms[manager.id] = []
+
 
             pi_rooms[manager.id].append({
                 'pi': manager,
@@ -157,12 +161,30 @@ def send_email(form):
                 'submitted_at': submitted_at
             })
 
+        for group in room.groups.all():
+            for member in group.members.all():
+
+                if member.id not in pi_rooms.keys():
+                    pi_rooms[member.id] = []
+
+                if member.id not in seen_pis_for_current_room:
+                    pi_rooms[member.id].append({
+                        'pi': member,
+                        'room': room_info,
+                        'applicant': form.user,
+                        'submitted_at': submitted_at
+                    })
+
+                seen_pis_for_current_room.add(member.id)
+
+
+
     # Send an email to the user
     if len(user_rooms) > 0:
         subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
         send(form.user, subject, message)
 
-    # Send an email to the Room's PIs
+    # Send an email to the Rooms' PIs
     if len(pi_rooms.keys()) > 0:
         for key, value in pi_rooms.items():
             if len(value) > 0:

@@ -61,10 +61,10 @@
 	    {% for form in forms %}
 	      <tr>
 					<td>
-						{% if request.user.is_superuser %}
-							{{ form.id }}
+                        {% if request.user.is_superuser %}
+                            {{ form.label }}: {{ form.id }}
 						{% else %}
-							{{ form.counter }}
+                            {{ form.label }}: {{ form.counter }}
 						{% endif %}
 					</td>
 	        <td>{{ form.user.get_full_name }}</td>
@@ -76,21 +76,25 @@
 	        </td>
 					<td>{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-xs' %}</td>
 	        <td>
-						{% if form.status.count > 0 %}
-							{% include 'key_request/subpages/request_status.html' with data=form.status.last.status|get_status_display %}
+						{% if not form.is_new %}
+							{% include 'key_request/subpages/request_status.html' with data=form.status|get_status_display %}
 							<span class="font-size-xs text-secondary d-block">
-							  {% include 'key_request/subpages/date_and_time.html' with data=form.status.last.created_at %}
+							  {% include 'key_request/subpages/date_and_time.html' with data=form.status.created_at %}
 							</span>
 						{% else %}
 							<span class="badge">NEW</span>
 						{% endif %}
 	        </td>
 	        <td>
-	          {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
-	        </td>
+                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
+            </td>
 					<td>
-						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.status.count == 0 %}true{% else %}false{% endif %}"/>
-					</td>
+                    {% if form.group %}
+						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.is_new == 0 %}true{% else %}false{% endif %}"/>
+					{% else %}
+                        <input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.group.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.is_new == 0 %}true{% else %}false{% endif %}"/>
+                    {% endif %}
+                    </td>
 	      </tr>
 			{% empty %}
 				<tr>
