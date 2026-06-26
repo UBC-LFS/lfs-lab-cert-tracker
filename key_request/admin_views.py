@@ -23,7 +23,6 @@ from django.apps import apps
 from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
-from key_request.api import email_api as email_api
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
 
@@ -49,7 +48,7 @@ class AllRequests(LoginRequiredMixin, View):
             'status': request.GET.get('status')
         }
 
-        coordinator = DashboardCoordinator(request.user, query, [AdminGroupFormProcessor, AdminManagerFormProcessor])
+        coordinator = DashboardCoordinator(request.user, query, [AdminManagerFormProcessor, AdminGroupFormProcessor])
         coordinator.run()
 
         form_list = coordinator.get_forms()
@@ -129,8 +128,22 @@ class ViewFormDetails(LoginRequiredMixin, View):
         for room in self.form.rooms.all():
             areas = [area.name for area in room.areas.all()]
 
-            items += self._create_item_obj(room, areas, 'manager', room.managers.all(), 1)
-            items += self._create_item_obj(room, areas, 'group', room.groups.all(), 2)
+            managers = room.managers.all()
+            groups = room.groups.all()
+            if not managers and not groups:
+                items.append({
+                    'id': self.form.id,
+                    'label': None,
+                    'form': self.form,
+                    'room': room,
+                    'areas': areas,
+                    # For sorting the list. Rooms without a managing entity are placed at the end
+                    'priority': 2,
+                    'sorting_key': f"{room.building.name}{room.floor.name}{room.number}"
+                })
+            else:
+                items += self._create_item_with_entity_status(room, areas, 'manager', managers, 0)
+                items += self._create_item_with_entity_status(room, areas, 'group', groups, 1)
 
         items = sorted(items, key=lambda x: (x['priority'], x['sorting_key']), reverse=False)
 
@@ -149,7 +162,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
             'next': self.next
         })
 
-    def _create_item_obj(self, room, areas, entity_label, entities, priority):
+    def _create_item_with_entity_status(self, room, areas, entity_label, entities, priority):
         items = []
         if entity_label not in ['group', 'manager']:
             return []

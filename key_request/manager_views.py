@@ -16,7 +16,6 @@ from .email_coordinator import ApprovalNotificationManager
 from .models import Room
 from .forms import RequestForm, RequestFormStatus
 from . import functions as func
-from key_request.api import email_api as email_api
 from .dashboard_coordinators import DashboardCoordinator
 from .utils import REQUEST_STATUS_DICT
 
