@@ -1,9 +1,9 @@
-from app import functions as func
+from key_request import functions as func
 
-def is_manager(request):
+def is_room_manager(request):
     exists = False
     if request.user.is_authenticated:
-        exists = func.is_pi(request.user.id)
+        exists = func.is_room_manager(request.user.id)
     return {
-        'is_manager': exists
+        'is_room_manager': exists
     }

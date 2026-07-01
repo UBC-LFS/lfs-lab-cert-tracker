@@ -10,16 +10,13 @@
           #
         {% endif %}
       </th>
-      <th>Building</th>
-      <th>Floor</th>
-      <th>Room <br /> Number</th>
-      <th>Areas</th>
+      <th>Building & Room Info</th>
 
       {% if is_admin %}
         <th>PIs</th>
       {% endif %}
 
-      <th>Required <br /> Trainings</th>
+      <th>Required Trainings</th>
 
       {% if is_admin %}
         <th>Note</th>
@@ -39,13 +36,11 @@
           {{ forloop.counter }}
         {% endif %}
       </td>
-      <td>{{ room.building.code }}</td>
-      <td>{{ room.floor.name }}</td>
-      <td>{{ room.number }}</td>
       <td class="text-left">
+        {{ room|display_room }}
         <ul class="list-minus-20">
           {% for area in room.areas.all %}
-            <li>{{ area.name }}</li>
+            <li class="text-secondary font-size-sm">{{ area.name }}</li>
           {% endfor%}
         </ul>
       </td>
@@ -76,7 +71,7 @@
       </td>
 
       {% if is_admin %}
-        <td>
+        <td class="text-left">
           {% if room.note %}
             {{ room.note|linebreaks }}
           {% endif %}
@@ -87,7 +82,9 @@
         <td>
           {% get_status_by_room_and_form form.id room.id as approved %}
           {% if approved %}
-              <span class="material-symbols-outlined text-success">check_circle</span>
+            <span class="material-symbols-outlined text-success">check_circle</span>
+          {% else %}
+            <span class="material-symbols-outlined text-danger">close</span>
           {% endif %}
         </td>
       {% endif %}
@@ -95,7 +92,7 @@
 
   {% empty %}
     <tr>
-      <td colspan="100%">No rooms found</td>
+      <td colspan="100%">No rooms found.</td>
     </tr>
   {% endfor %}
 </table>

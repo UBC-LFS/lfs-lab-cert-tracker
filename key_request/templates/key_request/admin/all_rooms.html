@@ -51,7 +51,7 @@
 	      <tr>
 	        <td>
 						{{ room.id }} <br />
-						
+
 						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
 							{{ room.requestform_set.count }}
 						</a>
@@ -88,7 +88,7 @@
 					</td>
 					<td>
 						{% if room.note %}
-							{{ room.note|linebreaks }}
+							{% include 'key_request/subpages/modal_room_note.html' with id=room.id data=room.note %}
 						{% endif %}
 					</td>
 	        <td>

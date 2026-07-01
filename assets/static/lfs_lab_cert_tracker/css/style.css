@@ -491,6 +491,10 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   background-color: #f1f1f1;
 }
 
+.bd-callout-success {
+  border-left-color: #28a745;
+}
+
 .bd-callout-info {
   border-left-color: #17a2b8;
 }
@@ -512,6 +516,11 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
 .bd-callout p,
 .bd-callout ul {
   color: #343a40 !important;
+}
+
+.bd-callout-success h4,
+.bd-callout-success h5 {
+  color: #28a745;
 }
 
 .bd-callout-info h4,

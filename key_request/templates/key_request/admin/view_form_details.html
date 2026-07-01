@@ -19,11 +19,20 @@
 
 	<h3 class="title">Key Request Details</h3>
 
+	<div class="bd-callout bd-callout-success">
+		<h5>Requester Information</h5>
+		<ul class="list-minus-20">
+			<li><strong>Full Name:</strong> {{ form.user.get_full_name }}</li>
+			<li><strong>Email:</strong> {{ form.user.email }}</li>
+		</ul>
+	</div>
+
 	<nav class="mt-5">
 		<div class="nav nav-tabs">
 			<a class="nav-link {% if tab == 'selected_rooms' %}active{% endif %}" href="{{ tab_urls.selected_rooms }}">Selected Rooms</a>
 			<a class="nav-link {% if tab == 'form_details' %}active{% endif %}" href="{{ tab_urls.form_details }}">Form Details</a>
 			<a class="nav-link {% if tab == 'training_records' %}active{% endif %}" href="{{ tab_urls.training_records }}">Training Records</a>
+			<a class="nav-link {% if tab == 'emails' %}active{% endif %}" href="{{ tab_urls.emails }}">Emails</a>
 		</div>
 	</nav>
 
@@ -34,16 +43,15 @@
 				<thead>
 					<tr>
 						<th>Form <br /> ID</th>
-						<th>Building</th>
-						<th>Floor</th>
-						<th>Room <br /> Number</th>
-						<th>Areas</th>
+						<th>Building & <br /> Room Info</th>
+						<th>Supervisor</th>
 						<th>PI</th>
 						<th>Operator</th>
-						<th>Note</th>
 						<th>Status <br /> History</th>
+						<th>Note</th>
 						<th>Action</th>
 						<th>
+							<div>Select <br /> All</div>
 							<input id="select-all-checkbox" type="checkbox" />
 						</th>
 					</tr>
@@ -51,16 +59,11 @@
 				{% for item in items %}
 					<tr>
 						<td>{{ form.id }}</td>
-						<td>{{ item.room.building.code }}</td>
-						<td>{{ item.room.floor.name }}</td>
-						<td>{{ item.room.number }}</td>
-						<td class="text-left">
-							<ul class="list-minus-20">
-								{% for area in item.room.areas.all %}
-									<li>{{ area.name }}</li>
-								{% endfor%}
-							</ul>
+						<td>
+							{{ item.room.building.code }} {{ item.room.floor.name }} <br />
+							Room {{ item.room.number }}
 						</td>
+						<td>{{ form.supervisor.get_full_name }}</td>
 						<td>{{ item.manager.full_name }}</td>
 						<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
 						<td>
@@ -70,7 +73,7 @@
 						</td>
 						<td>
 							{% if item.room.note %}
-								{{ item.room.note|linebreaks }}
+								{% include 'key_request/subpages/modal_room_note.html' with id=forloop.counter data=item.room.note %}
 							{% endif %}
 						</td>
 						<td>
@@ -101,6 +104,115 @@
 
 			{% include 'key_request/subpages/table_user_trainings.html' with user_trainings=form.user_trainings id_visible='True' %}
 
+		{% elif tab == 'emails' %}
+
+
+				<table id="selected-rooms" class="table table-bordered table-striped">
+					<thead>
+						<tr>
+							<th>Room <br /> ID</th>
+							<th>Approved?</th>
+							<th>Building & Room Info</th>
+							<th>Key</th>
+							<th>FOB</th>
+							<th>Alarm</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for room in rooms %}
+
+							{% get_status_by_room_and_form form.id room.id as approved %}
+							<tr>
+								<td>{{ room.id }}</td>
+								<td class="text-left">
+									<div class="text-center">
+										{% if approved %}
+											<span class="text-success">
+												<span class="material-symbols-outlined">check_circle</span> <strong>YES</strong>
+											</span>
+										{% else %}
+											<span class="text-danger">
+												<span class="material-symbols-outlined">close</span> <strong>NO</strong>
+											</span>
+										{% endif %}
+									</div>
+
+									<hr />
+
+									<ul class="list-minus-20">
+				            {% for manager in room.managers.all %}
+				              <li>
+				                {% concat_strings room.id manager.id as args %}
+				                {% if form.id|get_status_by_manager:args %}
+				                  <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+				                {% else %}
+				                  <span>{{ manager.get_full_name }}</span>
+				                {% endif %}
+				              </li>
+				            {% endfor%}
+				          </ul>
+								</td>
+								<td class="text-left">
+									{{ room|display_room }}
+									<ul class="list-minus-20">
+										{% for area in room.areas.all %}
+											<li class="text-secondary font-size-sm">{{ area.name }}</li>
+										{% endfor%}
+									</ul>
+								</td>
+								<td>
+									{% if approved %}
+										<form action="{% url 'key_request:send_emails' %}" method="POST">
+											{% csrf_token %}
+											<input type="hidden" name="user_id" value="{{ form.user.id }}" />
+											<input type="hidden" name="room_id" value="{{ room.id }}" />
+											<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
+											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+											<button class="btn btn-{% if room.key %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="key" {% if not room.key %}disabled{% endif %}>Send</button>
+										</form>
+										{{ room|count_by_email_type:'key' }}
+									{% else %}
+										<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
+									{% endif %}
+								</td>
+								<td>
+									{% if approved %}
+										<form action="{% url 'key_request:send_emails' %}" method="POST">
+											{% csrf_token %}
+											<input type="hidden" name="user_id" value="{{ form.user.id }}" />
+											<input type="hidden" name="room_id" value="{{ room.id }}" />
+											<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
+											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+											<button id="{{ room.id }}" class="btn btn-{% if room.fob %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="fob" {% if not room.fob %}disabled{% endif %}>Send</button>
+										</form>
+									{{ room|count_by_email_type:'fob' }}
+									{% else %}
+										<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
+									{% endif %}
+								</td>
+								<td>
+									{% if approved %}
+										<form action="{% url 'key_request:send_emails' %}" method="POST">
+											{% csrf_token %}
+											<input type="hidden" name="user_id" value="{{ form.user.id }}" />
+											<input type="hidden" name="room_id" value="{{ room.id }}" />
+											<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
+											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+											<button id="{{ room.id }}" class="btn btn-{% if room.alarm %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="alarm" {% if not room.alarm %}disabled{% endif %}>Send</button>
+										</form>
+										{{ room|count_by_email_type:'alarm' }}
+									{% else %}
+										<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
+									{% endif %}
+								</td>
+							</tr>
+						{% empty %}
+							<tr>
+								<td colspan="100%">No rooms found.</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
 		{% endif %}
 	</section>
 

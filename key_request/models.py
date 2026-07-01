@@ -106,6 +106,16 @@ class RequestFormStatus(models.Model):
         ordering = ['pk']
 
 
+class RoomEmail(models.Model):
+    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
+    type = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['pk']
+
+
 class UserFilter(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     json = models.JSONField()

@@ -7,7 +7,7 @@ from key_request import functions as func
 from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
-from key_request.models import Room, RequestFormStatus, RequestForm
+from key_request.models import Room, RequestFormStatus, RequestForm, UserFilter
 
 from django.template.defaultfilters import pluralize
 from datetime import date
@@ -92,6 +92,11 @@ def get_status_by_manager(form_id, args):
 
 
 @register.filter
+def count_by_email_type(room, type):
+    return room.roomemail_set.filter(type=type).count()
+
+
+@register.filter
 def date_to_str(d):
     if d:
         return func.convert_date_to_str(d)
@@ -140,8 +145,6 @@ def concat_strings_dash(*args):
             s += '-'
     return s
 
-from key_request.models import UserFilter
-import json
 
 @register.simple_tag
 def all_requests_url(uid):

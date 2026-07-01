@@ -1,0 +1,15 @@
+<button class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#room-note-modal-{{ id }}">View</button> <br />
+
+<div class="modal fade" id="room-note-modal-{{ id }}" tabindex="-1" role="dialog" aria-labelledby="room-note-modal-label-{{ id }}" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="room-note-modal-label-{{ id }}">Room Note</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+        {{ data|linebreaks }}
+      </div>
+    </div>
+  </div>
+</div>

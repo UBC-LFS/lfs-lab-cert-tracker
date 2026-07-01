@@ -33,6 +33,12 @@ def get_headers(model):
     return headers
 
 
+def is_room_manager(user_id):
+    if Room.objects.count() == 0:
+        return False
+    return Room.objects.filter(managers__id=user_id).exists()
+
+
 def preprocess_rooms(rooms):
     by_building = {}
     for room in rooms:
@@ -127,6 +133,7 @@ def search_filters_for_requests(query, option=None):
 
     return forms, total, new_forms
 
+
 # Takes the name search term and looks for partial matches of users' full names
 def filter_forms_by_full_name(forms, name):
     return forms.annotate(
@@ -135,6 +142,7 @@ def filter_forms_by_full_name(forms, name):
         Q(full_name__icontains=name)
     ).distinct()
 
+
 def get_forms_per_manager(user):
     # rooms_managed = Room.objects.filter(managers=user)
     # return RequestForm.objects.filter(rooms__in=rooms_managed)
@@ -142,6 +150,9 @@ def get_forms_per_manager(user):
 
 
 def get_manager_dashboard(user, query=None):
+    if Room.objects.count() == 0:
+        return 0, 0, []
+
     rooms_managed = Room.objects.filter(managers=user)
     form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed)
     total_forms = form_filtered.count()

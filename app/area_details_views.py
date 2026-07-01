@@ -287,7 +287,6 @@ class AddUserToArea(LoginRequiredMixin, View):
         return HttpResponseRedirect(request.POST.get('next'))
 
 
-
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AddTrainingToArea(LoginRequiredMixin, View):
     def setup(self, request, *args, **kwargs):

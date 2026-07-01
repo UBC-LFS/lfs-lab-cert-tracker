@@ -17,13 +17,15 @@ from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.apps import apps
+from django.core.mail import send_mail
+from django.core.validators import validate_email
 
 from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 
-from .models import Room, UserFilter
+from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
@@ -35,7 +37,6 @@ class AllRequests(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        # print(request.GET)
         method = request.GET.get('method', None)
 
         query = {
@@ -173,7 +174,9 @@ class ViewFormDetails(LoginRequiredMixin, View):
         self.form.total_expired = total_expired
 
         items = []
+        rooms = set()
         for room in self.form.rooms.all():
+            rooms.add(room)
             for manager in room.managers.all():
                 status = None
                 status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, manager_id=manager.id)
@@ -188,16 +191,18 @@ class ViewFormDetails(LoginRequiredMixin, View):
                     'manager': {'id': manager.id, 'full_name': manager.get_full_name()},
                     'status': status
                 })
-
+        
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
+            'rooms': list(rooms),
             'items': items,
             'req_status_dict': REQUEST_STATUS_DICT,
             'post_url': self.url,
             'tab_urls': {
                 'form_details': self.url + '?t=form_details&next=' + self.next ,
                 'selected_rooms': self.url + '?t=selected_rooms&next=' + self.next,
-                'training_records': self.url + '?t=training_records&next=' + self.next
+                'training_records': self.url + '?t=training_records&next=' + self.next,
+                'emails': self.url + '?t=emails&next=' + self.next
             },
             'tab': self.tab,
             'next': self.next
@@ -243,11 +248,85 @@ class ViewFormDetails(LoginRequiredMixin, View):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_pi_admin_key_request
 @require_http_methods(['POST'])
+def send_emails(request):
+    user_id = request.POST.get('user_id', None)
+    room_id = request.POST.get('room_id', None)
+    expiry_date = request.POST.get('expiry_date', '')
+    email_type = request.POST.get('email_type', None)
+    next = request.POST.get('next', None)
+    
+    if not user_id or not room_id or not email_type or not next:
+        raise SuspiciousOperation
+    
+    user = get_object_or_404(User, id=user_id)
+    room = get_object_or_404(Room, id=room_id)
+    sent = send(user, room, email_type, expiry_date)
+    if sent:
+        messages.success(request, 'Success! An email has been sent.')
+    else:
+        messages.error(request, 'An error occurred. Failed to send an email.')
+    
+    return HttpResponseRedirect(next)
+
+
+def send(user, room, email_type, expiry_date):
+    room_name = func.display_room(room)
+
+    title = ''
+    message = ''
+    if email_type == 'key':
+        title = 'Your key request for {0} has been sent to UBC Keydesk'.format(room_name)
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <p>Your key request for {1} has been sent to UBC Keydesk. You will receive a notification email from UBC Keydesk when the key is ready for pickup. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+            <p>Best regards,</p>
+            <p>LFS Training Record Management System</p>
+        </div>
+        '''.format(user.get_full_name(), room_name)
+    
+    elif email_type == 'fob':
+        title = 'Your fob request is set up for {0}'.format(room_name)
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <p>Your fob request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+            <p>Best regards,</p>
+            <p>LFS Training Record Management System</p>
+        </div>
+        '''.format(user.get_full_name(), room_name, expiry_date)
+
+    elif email_type == 'alarm':
+        title = 'Your fob request is set up for {0}'.format(room_name)
+        message = '''\
+        <div>
+            <p>Hi {0},</p>
+            <p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
+            <p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+            <p>Best regards,</p>
+            <p>LFS Training Record Management System</p>
+        </div>
+        '''.format(user.get_full_name(), room_name, expiry_date)
+
+    sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)
+    
+    if sent:
+        RoomEmail.objects.create(user=user, room=room, type=email_type)
+        return True
+    return False
+
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_pi_admin_key_request
+@require_http_methods(['POST'])
 def update_all(request):
     rooms = request.POST.getlist('rooms[]')
     status = request.POST.get('status')
     if not rooms:
-            raise SuspiciousOperation
+        raise SuspiciousOperation
 
     if status:
         objs = []
@@ -527,10 +606,8 @@ class CreateRoom(LoginRequiredMixin, View):
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
-
-            print(data)
+            
             request.session[CREATE_ROOM_KEY] = data
-
 
             return HttpResponseRedirect(self.url + URL_NEXT[tab])
 
