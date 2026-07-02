@@ -76,7 +76,10 @@
 	        <td>
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
 	        </td>
-					<td>{{ form.expiry_date }}</td>
+					<td>
+						{{ form.expiry_date }} <br />
+            <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
+					</td>
 	        <td>
 	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=selected_rooms&next={{ request.get_full_path }}">Details</a>
 	        </td>
