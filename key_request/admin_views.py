@@ -277,41 +277,39 @@ def send(user, room, email_type, expiry_date):
     if email_type == 'key':
         title = 'Your key request for {0} has been sent to UBC Keydesk'.format(room_name)
         message = '''\
-        <div>
-            <p>Hi {0},</p>
-            <p>Your key request for {1} has been sent to UBC Keydesk. You will receive a notification email from UBC Keydesk when the key is ready for pickup. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
-            <p>Best regards,</p>
-            <p>LFS Training Record Management System</p>
-        </div>
-        '''.format(user.get_full_name(), room_name)
+<div>
+<p>Hi {0},</p>
+<p>Your key request for {1} has been sent to UBC Keydesk. You will receive a notification email from UBC Keydesk when the key is ready for pickup. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Training Record Management System</p>
+</div>'''.format(user.get_full_name(), room_name)
     
     elif email_type == 'fob':
         title = 'Your fob request is set up for {0}'.format(room_name)
         message = '''\
-        <div>
-            <p>Hi {0},</p>
-            <p>Your fob request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
-            <p>Best regards,</p>
-            <p>LFS Training Record Management System</p>
-        </div>
-        '''.format(user.get_full_name(), room_name, expiry_date)
+<div>
+<p>Hi {0},</p>
+<p>Your fob request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Training Record Management System</p>
+</div>'''.format(user.get_full_name(), room_name, expiry_date)
 
     elif email_type == 'alarm':
         title = 'Your fob request is set up for {0}'.format(room_name)
         message = '''\
-        <div>
-            <p>Hi {0},</p>
-            <p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
-            <p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
-            <p>Best regards,</p>
-            <p>LFS Training Record Management System</p>
-        </div>
-        '''.format(user.get_full_name(), room_name, expiry_date)
+<div>
+<p>Hi {0},</p>
+<p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
+<p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Training Record Management System</p>
+</div>'''.format(user.get_full_name(), room_name, expiry_date)
 
     sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)
     
     if sent:
-        RoomEmail.objects.create(user=user, room=room, type=email_type)
+        msg = '<p>{0}</p><hr />{1}'.format(title, message)
+        RoomEmail.objects.create(user=user, room=room, type=email_type, message=msg)
         return True
     return False
 

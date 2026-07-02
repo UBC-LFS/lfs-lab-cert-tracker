@@ -91,7 +91,7 @@ class RequestForm(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-id', '-submitted_at']
+        ordering = ['-pk', '-submitted_at']
 
 
 class RequestFormStatus(models.Model):
@@ -103,17 +103,18 @@ class RequestFormStatus(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['pk']
+        ordering = ['-pk']
 
 
 class RoomEmail(models.Model):
-    user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
     type = models.CharField(max_length=10)
+    message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['pk']
+        ordering = ['-pk']
 
 
 class UserFilter(models.Model):

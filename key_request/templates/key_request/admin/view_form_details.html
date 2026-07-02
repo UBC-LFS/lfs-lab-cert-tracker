@@ -160,51 +160,38 @@
 										{% endfor%}
 									</ul>
 								</td>
-								<td>
-									{% if approved %}
-										<form action="{% url 'key_request:send_emails' %}" method="POST">
-											{% csrf_token %}
-											<input type="hidden" name="user_id" value="{{ form.user.id }}" />
-											<input type="hidden" name="room_id" value="{{ room.id }}" />
-											<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
-											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+								<form action="{% url 'key_request:send_emails' %}" method="POST">
+									{% csrf_token %}
+									<input type="hidden" name="user_id" value="{{ form.user.id }}" />
+									<input type="hidden" name="room_id" value="{{ room.id }}" />
+									<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
+									<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+									<td>
+										{% if approved %}
 											<button class="btn btn-{% if room.key %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="key" {% if not room.key %}disabled{% endif %}>Send</button>
-										</form>
-										{{ room|count_by_email_type:'key' }}
-									{% else %}
-										<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
-									{% endif %}
-								</td>
-								<td>
-									{% if approved %}
-										<form action="{% url 'key_request:send_emails' %}" method="POST">
-											{% csrf_token %}
-											<input type="hidden" name="user_id" value="{{ form.user.id }}" />
-											<input type="hidden" name="room_id" value="{{ room.id }}" />
-											<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
-											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+											{% include 'key_request/subpages/modal_room_email.html' with email_type='key' %}
+										{% else %}
+											<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
+										{% endif %}
+									</td>
+									<td>
+										{% if approved %}
 											<button id="{{ room.id }}" class="btn btn-{% if room.fob %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="fob" {% if not room.fob %}disabled{% endif %}>Send</button>
-										</form>
-									{{ room|count_by_email_type:'fob' }}
-									{% else %}
-										<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
-									{% endif %}
-								</td>
-								<td>
-									{% if approved %}
-										<form action="{% url 'key_request:send_emails' %}" method="POST">
-											{% csrf_token %}
-											<input type="hidden" name="user_id" value="{{ form.user.id }}" />
-											<input type="hidden" name="room_id" value="{{ room.id }}" />
-											<input type="hidden" name="expiry_date" value="{{ form.expiry_date }}" />
-											<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+											{% include 'key_request/subpages/modal_room_email.html' with email_type='fob' %}
+										{% else %}
+											<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
+										{% endif %}
+									</td>
+									<td>
+										{% if approved %}
 											<button id="{{ room.id }}" class="btn btn-{% if room.alarm %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="alarm" {% if not room.alarm %}disabled{% endif %}>Send</button>
-										</form>
-										{{ room|count_by_email_type:'alarm' }}
-									{% else %}
-										<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
-									{% endif %}
-								</td>
+											{% include 'key_request/subpages/modal_room_email.html' with email_type='alarm' %}
+										{% else %}
+											<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
+										{% endif %}
+									</td>
+								</form>
 							</tr>
 						{% empty %}
 							<tr>

@@ -97,6 +97,11 @@ def count_by_email_type(room, type):
 
 
 @register.filter
+def get_room_email(room, type):
+    return room.roomemail_set.filter(type=type).first()
+
+
+@register.filter
 def date_to_str(d):
     if d:
         return func.convert_date_to_str(d)
