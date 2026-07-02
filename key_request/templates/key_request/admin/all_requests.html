@@ -39,7 +39,8 @@
 				<th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
-	      <th>Submitted Date</th>
+	      <th>Submitted <br /> Date</th>
+				<th>Expiry <br /> Date</th>
 	      <th>Action</th>
 	    </tr>
 	  </thead>
@@ -75,6 +76,7 @@
 	        <td>
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
 	        </td>
+					<td>{{ form.expiry_date }}</td>
 	        <td>
 	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=selected_rooms&next={{ request.get_full_path }}">Details</a>
 	        </td>

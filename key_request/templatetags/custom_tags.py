@@ -97,8 +97,8 @@ def count_by_email_type(room, type):
 
 
 @register.filter
-def get_room_email(room, type):
-    return room.roomemail_set.filter(type=type).first()
+def get_room_emails(room, type):
+    return room.roomemail_set.filter(type=type)
 
 
 @register.filter
