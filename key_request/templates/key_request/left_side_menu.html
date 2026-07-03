@@ -1,10 +1,12 @@
+{% load custom_tags %}
+
 <section id="left-side-menu" class="left-side-menu">
   <h5 class="menu-title text-center mb-4">Menu</h5>
   <ul class="list-no-bullets">
     <li><a href="{% url 'key_request:index' %}">Key Request</a></li>
   </ul>
 
-  {% if is_manager %}
+  {% if is_room_manager %}
     <hr />
     <ul class="list-no-bullets">
     	<li><a href="{% url 'key_request:manager_dashboard' %}">Dashboard</a></li>
@@ -15,10 +17,12 @@
   {% if request.user.is_superuser %}
     <hr />
     <ul class="list-no-bullets">
-      <li><a href="{% url 'key_request:all_requests' %}">All Requests</a></li>
+      {% all_requests_url request.user.id as all_requests_url %}
+      <li><a href="{{ all_requests_url }}">All Requests</a></li>
+      <li><a href="{% url 'key_request:expired_requests' %}?page=1">Expired Requests</a></li>
       <li><a href="{% url 'key_request:settings' model='buildings' %}">All Buildings</a></li>
       <li><a href="{% url 'key_request:settings' model='floors' %}">All Floors</a></li>
-      <li><a href="{% url 'key_request:all_rooms' %}">All Rooms</a></li>
+      <li><a href="{% url 'key_request:all_rooms' %}?page=1">All Rooms</a></li>
       <li><a href="{% url 'key_request:create_room' %}?t=basic_info">Create Room</a></li>
       <hr />
         <li><a href="{% url 'key_request:all_groups' %}">All Room Groups</a></li>

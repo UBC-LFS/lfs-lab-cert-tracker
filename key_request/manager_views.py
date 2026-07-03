@@ -13,11 +13,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room
-from .forms import RequestForm, RequestFormStatus
+from .models import Room, RequestForm, RequestFormStatus
+from .forms import KeyRequestForm
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator
 from .utils import REQUEST_STATUS_DICT
+
+from datetime import date
 
 
 @method_decorator([never_cache], name='dispatch')
@@ -111,10 +113,39 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache], name='dispatch')
+class UpdateExpiryDate(LoginRequiredMixin, View):
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form_id = request.POST.get('form', None)
+        expiry_date = request.POST.get('expiry_date', None)
+        next = request.POST.get('next', None)
+
+        if not form_id or not next:
+            raise SuspiciousOperation
+
+        if not expiry_date:
+            messages.error(request, 'An error occurred. <strong>Expiry Date:</strong> This field is required.')
+            return HttpResponseRedirect(next)
+
+        duration = func.convert_str_to_date(expiry_date) - date.today()
+        if duration.days < 0:
+            messages.error(request, 'An error occurred. Please enter a valid <strong>Expiry Date</strong>.')
+            return HttpResponseRedirect(next)
+
+        RequestForm.objects.filter(id=form_id).update(expiry_date=expiry_date)
+        messages.success(request, 'Success! <strong>Expiry Date</strong> has been updated.')
+        return HttpResponseRedirect(next)
+
+
+@method_decorator([never_cache], name='dispatch')
 class ManagerRooms(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        room_list = Room.objects.filter(managers__in=[request.user.id])
+        total = len(room_list)
+
         query = {
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),

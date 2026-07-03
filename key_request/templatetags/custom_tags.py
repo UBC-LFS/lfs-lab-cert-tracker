@@ -1,11 +1,16 @@
 from django import template
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 from key_request import functions as func
 from app import functions as appFunc
-from key_request.utils import REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
+from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
-from key_request.models import Room, RequestFormStatus, RequestForm
+from key_request.models import Room, RequestFormStatus, RequestForm, UserFilter
+
+from django.template.defaultfilters import pluralize
+from datetime import date
 
 
 register = template.Library()
@@ -47,16 +52,11 @@ def get_status_display(status):
 
 
 @register.filter
-def get_user_name(user):
-    if user:
-        return appFunc.get_user_name(user)
-
-
-@register.filter
 def get_user_full_name(user_id):
     if user_id:
-        user = User.objects.get(id=user_id)
-        return appFunc.get_user_name(user)
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            return appFunc.get_user_name(user)
 
 
 @register.filter
@@ -78,6 +78,36 @@ def get_status_by_manager(form_id, args):
         obj = status_filtered.last()
         return REQUEST_STATUS_DICT[obj.status]
     return None
+
+
+@register.filter
+def count_by_email_type(room, type):
+    return room.roomemail_set.filter(type=type).count()
+
+
+@register.filter
+def get_room_emails(room, type):
+    return room.roomemail_set.filter(type=type)
+
+
+@register.filter
+def date_to_str(d):
+    if d:
+        return func.convert_date_to_str(d)
+
+
+@register.filter
+def remaining_days(d):
+    if d:
+        duration = d - date.today()
+        suffix = pluralize(duration.days)
+        return '<strong>{0}</strong> day{1} left'.format(duration.days, suffix)
+
+
+@register.filter
+def display_room(room, args=None):
+    return func.display_room(room, args)
+
 
 @register.filter
 def get_status_by_group(form_id, args):
@@ -104,7 +134,6 @@ def get_status_by_room_and_form(form_id, room_id):
         return False
 
     return func.all_pis_approved(form, room)
-
 
 
 @register.simple_tag
@@ -151,3 +180,17 @@ def join_attribute_with_comma(queryset, attr_name):
             strings.append(str(val))
 
     return separator.join(strings)
+
+@register.simple_tag
+def all_requests_url(uid):
+    user_filter = UserFilter.objects.filter(user_id=uid)
+    params = '?page=1'
+    if user_filter.exists():
+        uf = user_filter.last()
+
+        for filter in ['building', 'floor', 'number', 'name', 'status']:
+            value = uf.json.get(filter, None)
+            if value:
+                params += '&' + filter + '=' + value
+
+    return reverse('key_request:all_requests') + params

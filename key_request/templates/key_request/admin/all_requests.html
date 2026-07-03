@@ -27,6 +27,7 @@
 			</div>
 		</div>
 	</div>
+
 	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
 
 	<table class="table table-bordered table-striped font-size-sm">
@@ -35,9 +36,11 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
+				<th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
-	      <th>Submitted At</th>
+	      <th>Submitted <br /> Date</th>
+				<th>Expiry <br /> Date</th>
 	      <th>Action</th>
 	    </tr>
 	  </thead>
@@ -59,6 +62,7 @@
 							{% endfor %}
 						</ul>
 					</td>
+					<td>{{ form.supervisor.get_full_name }}</td>
 	        <td>
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
 	        </td>
@@ -72,6 +76,13 @@
 	        <td>
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
 	        </td>
+					<td>
+						{{ form.expiry_date }}
+						{% if form.expiry_date %}
+							<br />
+	            <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>	
+						{% endif %}
+					</td>
 	        <td>
 	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=selected_rooms&next={{ request.get_full_path }}">Details</a>
 	        </td>

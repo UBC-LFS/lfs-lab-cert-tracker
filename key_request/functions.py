@@ -2,7 +2,8 @@ from django.db.models.functions import Concat
 from django.db.models import Q, F, Max, CharField, Value, Count, OuterRef, Subquery, Exists
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
-from datetime import date
+from django.utils import timezone
+from datetime import datetime, date
 import re
 import json
 
@@ -27,6 +28,12 @@ def get_headers(model):
             headers.append(name)
     headers.append('Actions')
     return headers
+
+
+def is_room_manager(user_id):
+    if Room.objects.count() == 0:
+        return False
+    return Room.objects.filter(managers__id=user_id).exists()
 
 
 def preprocess_rooms(rooms):
@@ -91,8 +98,15 @@ def check_user_trainings(user, selected_rooms):
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
 
 
-def search_filters_for_requests(query):
+def search_filters_for_requests(query, option=None):
     forms = RequestForm.objects.all()
+
+    if option == 'expiry':
+        forms = RequestForm.objects.select_related('user', 'supervisor').filter(
+            expiry_date__isnull=False,
+            expiry_date__lt=timezone.localdate()
+        ).order_by('-expiry_date', '-id')
+
     new_forms = forms.filter(requestformstatus__isnull=True)
 
     total = len(forms)
@@ -116,6 +130,7 @@ def search_filters_for_requests(query):
 
     return forms, total, new_forms
 
+
 # Takes the name search term and looks for partial matches of users' full names
 def filter_forms_by_full_name(forms, name):
     return forms.annotate(
@@ -124,13 +139,68 @@ def filter_forms_by_full_name(forms, name):
         Q(full_name__icontains=name)
     ).distinct()
 
-def get_forms_per_manager(user):
-    return RequestForm.objects.filter(rooms__managers=user)
 
+def get_forms_per_manager(user):
+    # rooms_managed = Room.objects.filter(managers=user)
+    # return RequestForm.objects.filter(rooms__in=rooms_managed)
+    return RequestForm.objects.filter(rooms__managers=user)
 
 def make_request_form_identifier(room, form, entity_label, entity_id):
     return f"{entity_label}:{entity_id}__{form.id}:{room.id}"
 
+def get_manager_dashboard(user, query=None):
+    if Room.objects.count() == 0:
+        return 0, 0, []
+
+    rooms_managed = Room.objects.filter(managers=user)
+    form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed)
+    total_forms = form_filtered.count()
+
+    num_new_forms = 0
+    for form in form_filtered.all():
+        if form.requestformstatus_set.filter(manager_id=user.id).count() == 0:
+            num_new_forms += 1
+
+    if query:
+        if query.get('building'):
+            rooms_managed = rooms_managed.filter(building__code__exact=query.get('building'))
+        if query.get('floor'):
+            rooms_managed = rooms_managed.filter(floor__name__exact=query.get('floor'))
+        if query.get('number'):
+            rooms_managed = rooms_managed.filter(number__exact=query.get('number'))
+
+    forms = []
+
+    for room in rooms_managed.all():
+        for form in room.requestform_set.all():
+            form.manager = user
+            form.room = room
+            form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=user.id)
+            if not query or (not query.get('name') and not query.get('status')):
+                forms.append(form)
+                continue # no filters so add form
+
+            if query.get('status'):
+                form_status = form.status.last().status if form.status.count() > 0 else None
+                if not validate_status(query.get('status'), form_status):
+                    continue   # form status does not match
+
+            if query.get('name'):
+                name = query.get('name').lower()
+                full_name = f"{form.user.first_name.lower()} {form.user.last_name.lower()}"
+                if name not in full_name:
+                    continue # name does not match
+
+            forms.append(form)
+
+    forms = sorted(forms, key=lambda x: x.id, reverse=True)
+    for i, form in enumerate(forms):
+        form.counter = len(forms) - i
+
+    return total_forms, num_new_forms, forms
+
+# Returns true if the status of the form matches the query
+# If there is no form status, checks if the query_status is NEW
 def validate_status(query_status, form_status):
     if not form_status:
         return query_status == "New"
@@ -411,6 +481,10 @@ def get_tab_urls(url, next=''):
 
 def convert_date_to_str(date):
     return date.strftime('%Y-%m-%d')
+
+
+def convert_str_to_date(s):
+    return datetime.strptime(s, "%Y-%m-%d").date()
 
 
 # def count_approved_status(form, room):

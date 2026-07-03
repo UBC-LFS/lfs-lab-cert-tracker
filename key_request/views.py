@@ -8,7 +8,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from app.utils import NUM_PER_PAGE
 
-from .models import Room
 from .utils import APPROVED
 from . import functions as func
 
@@ -18,13 +17,7 @@ class Index(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
-        # is_pi = Room.objects.filter(managers__id=request.user.id).exists()
-        # if is_pi:
-        #     return redirect('key_request:manager_dashboard')
-
-
-        form_list = request.user.requestform_set.all()
+        form_list = request.user.request_forms.all()
 
         for i, form in enumerate(form_list):
             form.counter = len(form_list) - i

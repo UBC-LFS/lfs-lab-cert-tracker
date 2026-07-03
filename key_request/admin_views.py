@@ -19,6 +19,8 @@ from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.apps import apps
+from django.core.mail import send_mail
+from django.core.validators import validate_email
 
 from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request
@@ -28,6 +30,8 @@ from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room, ApprovalGroup, ApprovalGroupCoordinator
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
+from .models import Room, UserFilter, RoomEmail
+from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, AdminGroupFormProcessor, AdminManagerFormProcessor
@@ -39,6 +43,8 @@ class AllRequests(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
+        method = request.GET.get('method', None)
+
         query = {
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
@@ -47,6 +53,24 @@ class AllRequests(LoginRequiredMixin, View):
             'name': request.GET.get('name'),
             'status': request.GET.get('status')
         }
+
+        if method == 'save':
+            user_filter = UserFilter.objects.filter(user_id=request.user.id)
+            if user_filter.exists():
+                user_filter.update(json = query)
+                messages.success(request, 'Your filter has been updated successfully.')
+            else:
+                UserFilter.objects.create(user=request.user, json=query)
+                messages.success(request, 'Your filter has been saved successfully.')
+
+            # Create a new url
+            query_params = request.GET.copy()
+            query_params.pop('method', None)
+            encoded_params = query_params.urlencode()
+            base_url = request.path
+            new_url = f"{base_url}?{encoded_params}" if encoded_params else base_url
+
+            return redirect(new_url)
 
         coordinator = DashboardCoordinator(request.user, query, [AdminManagerFormProcessor, AdminGroupFormProcessor])
         coordinator.run()
@@ -95,6 +119,43 @@ class AllRequests(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
+class ExpiredRequests(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        query = {
+            'building': request.GET.get('building'),
+            'floor': request.GET.get('floor'),
+            'number': request.GET.get('number'),
+            'room': request.GET.get('room'),
+            'name': request.GET.get('name'),
+            'status': request.GET.get('status')
+        }
+
+        form_list, total_forms, _ = func.search_filters_for_requests(query, 'expiry')
+        num_filtered_forms = len(form_list)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(form_list, NUM_PER_PAGE)
+
+        try:
+            forms = paginator.page(page)
+        except PageNotAnInteger:
+            forms = paginator.page(1)
+        except EmptyPage:
+            forms = paginator.page(paginator.num_pages)
+
+        return render(request, 'key_request/admin/expired_requests.html', {
+            'total_forms': total_forms,
+            'num_filtered_forms': num_filtered_forms,
+            'forms': forms,
+            'req_status_dict': REQUEST_STATUS_DICT,
+            'search_filter_options': func.search_filter_options,
+            'is_admin': True if request.user.is_superuser else False
+        })
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
 class ViewFormDetails(LoginRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):
@@ -122,10 +183,17 @@ class ViewFormDetails(LoginRequiredMixin, View):
         self.form.total_expired = total_expired
 
         items = []
+        rooms = set()
 
         # Need both the managers and the groups
 
         for room in self.form.rooms.all():
+            rooms.add(room)
+            for manager in room.managers.all():
+                status = None
+                status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, manager_id=manager.id)
+                if status_filtered.exists():
+                    status = status_filtered
             areas = [area.name for area in room.areas.all()]
 
             managers = room.managers.all()
@@ -150,13 +218,15 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
+            'rooms': list(rooms),
             'items': items,
             'req_status_dict': REQUEST_STATUS_DICT,
             'post_url': self.url,
             'tab_urls': {
                 'form_details': self.url + '?t=form_details&next=' + self.next ,
                 'selected_rooms': self.url + '?t=selected_rooms&next=' + self.next,
-                'training_records': self.url + '?t=training_records&next=' + self.next
+                'training_records': self.url + '?t=training_records&next=' + self.next,
+                'emails': self.url + '?t=emails&next=' + self.next
             },
             'tab': self.tab,
             'next': self.next
@@ -245,6 +315,78 @@ class ViewFormDetails(LoginRequiredMixin, View):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_pi_admin_key_request
 @require_http_methods(['POST'])
+def send_emails(request):
+    user_id = request.POST.get('user_id', None)
+    room_id = request.POST.get('room_id', None)
+    expiry_date = request.POST.get('expiry_date', '')
+    email_type = request.POST.get('email_type', None)
+    next = request.POST.get('next', None)
+
+    if not user_id or not room_id or not email_type or not next:
+        raise SuspiciousOperation
+
+    user = get_object_or_404(User, id=user_id)
+    room = get_object_or_404(Room, id=room_id)
+    sent = send(user, room, email_type, expiry_date)
+    if sent:
+        messages.success(request, 'Success! An email has been sent.')
+    else:
+        messages.error(request, 'An error occurred. Failed to send an email.')
+
+    return HttpResponseRedirect(next)
+
+
+def send(user, room, email_type, expiry_date):
+    room_name = func.display_room(room)
+
+    title = ''
+    message = ''
+    if email_type == 'key':
+        title = 'Your key request for {0} has been sent to UBC Keydesk'.format(room_name)
+        message = '''\
+<div>
+<p>Hi {0},</p>
+<p>Your key request for {1} has been sent to UBC Keydesk. You will receive a notification email from UBC Keydesk when the key is ready for pickup. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Training Record Management System</p>
+</div>'''.format(user.get_full_name(), room_name)
+
+    elif email_type == 'fob':
+        title = 'Your fob request is set up for {0}'.format(room_name)
+        message = '''\
+<div>
+<p>Hi {0},</p>
+<p>Your fob request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Training Record Management System</p>
+</div>'''.format(user.get_full_name(), room_name, expiry_date)
+
+    elif email_type == 'alarm':
+        title = 'Your fob request is set up for {0}'.format(room_name)
+        message = '''\
+<div>
+<p>Hi {0},</p>
+<p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
+<p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Training Record Management System</p>
+</div>'''.format(user.get_full_name(), room_name, expiry_date)
+
+    sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)
+
+    if sent:
+        msg = '<p>{0}</p><hr />{1}'.format(title, message)
+        RoomEmail.objects.create(user=user, room=room, type=email_type, message=msg)
+        return True
+    return False
+
+
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_pi_admin_key_request
+@require_http_methods(['POST'])
 def update_all(request):
 
     raw_rooms = request.POST.getlist('rooms[]')
@@ -283,7 +425,7 @@ def update_all(request):
 
             request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
 
-            rsf_list = list(request_status_forms)
+            manager_room_map.setdefault(manager_id, []).append(room_sp[1])
 
             email_coordinator = ApprovalNotificationManager(rsf_list, status, request.user)
             email_coordinator.send_email_notification()
@@ -410,6 +552,7 @@ class DeleteSetting(LoginRequiredMixin, View):
             messages.error(request, 'Error occurred while deleting {0} (ID: {1}). Please try again.'.format(self.model, id))
 
         return redirect('key_request:settings', model=self.raw_model)
+
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRooms(LoginRequiredMixin, View):

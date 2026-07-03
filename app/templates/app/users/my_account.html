@@ -32,10 +32,17 @@
 				</h3>
 
 				{% if request.user.id == app_user.id %}
-					<a class="btn btn-primary" href="{% url 'key_request:index' %}">
-						{% include "lfs_lab_cert_tracker/icons/key.html" %}
-						Key Request
-					 </a>
+					{% if is_room_manager %}
+						<a class="btn btn-primary" href="{% url 'key_request:manager_dashboard' %}">
+							{% include "lfs_lab_cert_tracker/icons/key.html" %}
+							Key Request
+						</a>
+					{% else %}
+						<a class="btn btn-primary" href="{% url 'key_request:index' %}">
+							{% include "lfs_lab_cert_tracker/icons/key.html" %}
+							Key Request
+						</a>
+					{% endif %}
 				 {% endif %}
 			</div>
 

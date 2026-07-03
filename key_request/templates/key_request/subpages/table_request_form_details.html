@@ -4,7 +4,21 @@
   {% for field in form|get_fields %}
     <tr>
       <td class="text-left">{{ field.0 }}</td>
-      <td class="text-left">{{ field.1 }}</td>
+      <td class="text-left">
+        {% if field.0 == 'Supervisor' %}
+          {{ field.1.id|get_user_full_name }}
+        {% elif field.0 == 'Working alone and/or in isolation' %}
+          {% if field.1 %}
+            <span class="badge badge-success">YES</span>
+          {% else %}
+            <span class="badge badge-danger">NO</span>
+          {% endif %}
+        {% elif field.0 == 'Additional Comments' %}
+          {{ field.1|linebreaksbr }}
+        {% else %}
+          {{ field.1 }}
+        {% endif %}
+      </td>
     </tr>
   {% endfor %}
 </table>

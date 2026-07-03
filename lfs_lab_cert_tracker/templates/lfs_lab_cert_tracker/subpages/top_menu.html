@@ -16,6 +16,10 @@
   {% endif %}
 
   <div class="dropdown">
-    <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
+    {% if is_room_manager %}
+      <a class="btn dropdown-item" href="{% url 'key_request:manager_dashboard' %}">Key Request</a>
+    {% else %}
+      <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
+    {% endif %}
   </div>
 </nav>
