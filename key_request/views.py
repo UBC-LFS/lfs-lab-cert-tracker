@@ -17,9 +17,6 @@ class Index(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        if func.is_room_manager(request.user.id):
-            return redirect('key_request:manager_dashboard')
-
         form_list = request.user.request_forms.all()
 
         for i, form in enumerate(form_list):
