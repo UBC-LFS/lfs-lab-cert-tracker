@@ -17,15 +17,13 @@ register = template.Library()
 
 
 @register.filter
-def get_fields(obj, arg=None):
-    exclude = ['id', 'user', 'updated_at']
-    choices_fields = ['affiliation', 'after_hours_access']
-
+def get_fields(obj):
     fields = []
     for field in obj._meta.fields:
-        if field.name not in exclude:
+        print(field.name)
+        if field.name not in ['id', 'user', 'updated_at']:
             value = getattr(obj, field.name)
-            if field.name in choices_fields:
+            if field.name in ['affiliation', 'after_hours_access']:
                 value = getattr(obj, 'get_{0}_display'.format(field.name))()
             fields.append( (make_field_name_label(field), value) )
     return fields

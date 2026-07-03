@@ -68,8 +68,10 @@
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
 	        </td>
           <td>
-            {{ form.expiry_date }} <br />
-            <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
+            {{ form.expiry_date }}
+						{% if form.expiry_date %} <br />
+	            <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
+						{% endif %}
           </td>
         </tr>
       {% empty %}

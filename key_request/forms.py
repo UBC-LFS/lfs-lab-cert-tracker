@@ -62,7 +62,8 @@ KEY_REQUEST_LABELS = {
     'student_number': 'UBC Student Number',
     'after_hours_access': 'After Hours Access',
     'working_alone': 'Working alone and/or in isolation',
-    'comment': 'Additional Comments'
+    'comment': 'Additional Comments',
+    'submitted_at': 'Submitted Date'
 }
 
 
