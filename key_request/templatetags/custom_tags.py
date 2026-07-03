@@ -17,12 +17,6 @@ register = template.Library()
 
 
 @register.filter
-def get_user(username):
-    user = get_object_or_404(User, username=username)
-    return user.get_full_name()
-
-
-@register.filter
 def get_fields(obj, arg=None):
     exclude = ['id', 'user', 'updated_at']
     choices_fields = ['affiliation', 'after_hours_access']
@@ -60,16 +54,11 @@ def get_status_display(status):
 
 
 @register.filter
-def get_user_name(user):
-    if user:
-        return appFunc.get_user_name(user)
-
-
-@register.filter
 def get_user_full_name(user_id):
     if user_id:
-        user = User.objects.get(id=user_id)
-        return appFunc.get_user_name(user)
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            return appFunc.get_user_name(user)
 
 
 @register.filter

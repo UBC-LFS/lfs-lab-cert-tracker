@@ -6,7 +6,7 @@
       <td class="text-left">{{ field.0 }}</td>
       <td class="text-left">
         {% if field.0 == 'Supervisor' %}
-          {{ field.1|get_user }}
+          {{ field.1.id|get_user_full_name }}
         {% elif field.0 == 'Additional Comments' %}
           {{ field.1|linebreaks }}
         {% else %}
