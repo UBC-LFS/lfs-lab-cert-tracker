@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
 # Replace this with your actual Group/Room model names
-from key_request.models import RoomGroup
+from key_request.models import ApprovalGroup
 
 LOGIN_URL = reverse('accounts:local_login')
 
@@ -22,10 +22,10 @@ class RoomGroupCRUDAndFilterTests(TestCase):
         self.user3 = User.objects.create_user(username='charlie', first_name='Charlie', last_name='Brown')
 
         # 2. Create Existing Test Groups
-        self.group_alpha = RoomGroup.objects.create(name="Alpha Lab")
+        self.group_alpha = ApprovalGroup.objects.create(name="Alpha Lab")
         self.group_alpha.members.set([self.user1.id, self.user2.id])
 
-        self.group_beta = RoomGroup.objects.create(name="Beta Team")
+        self.group_beta = ApprovalGroup.objects.create(name="Beta Team")
         self.group_beta.members.set([self.user3.id])
 
         # 3. Login
@@ -67,7 +67,7 @@ class RoomGroupCRUDAndFilterTests(TestCase):
         }
         response = self.client.post(reverse('key_request:create_group'), data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(RoomGroup.objects.filter(name='Gamma Lab').exists())
+        self.assertTrue(ApprovalGroup.objects.filter(name='Gamma Lab').exists())
 
     def test_create_fails_without_name(self):
         payload = {
@@ -108,4 +108,4 @@ class RoomGroupCRUDAndFilterTests(TestCase):
     def test_delete_group_success(self):
         response = self.client.post(reverse('key_request:delete_group'), data={'group': self.group_alpha.id})
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(RoomGroup.objects.filter(id=self.group_alpha.id).exists())
+        self.assertFalse(ApprovalGroup.objects.filter(id=self.group_alpha.id).exists())

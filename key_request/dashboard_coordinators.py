@@ -1,4 +1,4 @@
-from key_request.models import Room, RequestFormStatus, RoomGroup, RequestForm
+from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, OuterRef, Subquery
 
@@ -170,7 +170,7 @@ class GroupFormProcessor(EntityFormProcessor):
     def __init__(self, user, query):
         super().__init__(user, query)
 
-        self.user_groups = RoomGroup.objects.filter(members=user)
+        self.user_groups = ApprovalGroup.objects.filter(members=user)
 
         self.label = "Group Form"
         self.priority = 1
@@ -230,7 +230,7 @@ class AdminGroupFormProcessor(GroupFormProcessor):
 
     def __init__(self, user, query):
         super().__init__(user, query)
-        self.user_groups = RoomGroup.objects.all()
+        self.user_groups = ApprovalGroup.objects.all()
 
     def get_all_rooms(self):
         return Room.objects.all()

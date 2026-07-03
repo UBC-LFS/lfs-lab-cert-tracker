@@ -4,7 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from app import functions as appFunc
 
-from key_request.models import RequestFormStatus, Room, RequestForm, RoomGroup
+from key_request.models import RequestFormStatus, Room, RequestForm, ApprovalGroup
 from key_request.utils import APPROVED, EMAIL_FOOTER
 from key_request.functions import all_pis_approved, display_user_full_name, display_user_first_name
 
@@ -43,7 +43,7 @@ class ApprovalNotificationManager:
                 self._add_room_to_pi_rooms(form_pi_rooms, form_id, req.manager_id, room)
 
             if req.group_id:
-                group = RoomGroup.objects.get(id=req.group_id)
+                group = ApprovalGroup.objects.get(id=req.group_id)
                 for member in group.members.all():
                     self._add_room_to_form_group_rooms(form_group_rooms, form_id, member.id, group.id, room)
 
@@ -183,7 +183,7 @@ class ApprovalNotificationManager:
             return ''
         items = []
         for group_id, rooms in groups_dict.items():
-            group = RoomGroup.objects.get(id=group_id)
+            group = ApprovalGroup.objects.get(id=group_id)
             items.append(
                 f'<li>{group.name}{self._rooms_to_html(rooms)}</li>'
             )

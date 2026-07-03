@@ -1,6 +1,6 @@
-import RoomGroupForm from "./RoomGroupForm.js";
+import GroupForm from "./GroupForm.js";
 
-export default class CreateRoomGroupForm extends RoomGroupForm {
+class CreateGroupForm extends GroupForm {
 
     constructor() {
         super()
@@ -67,6 +67,6 @@ export default class CreateRoomGroupForm extends RoomGroupForm {
 }
 
 $(document).ready(function() {
-    new CreateRoomGroupForm()
+    new CreateGroupForm()
 
 });

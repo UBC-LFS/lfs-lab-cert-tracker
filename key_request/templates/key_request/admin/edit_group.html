@@ -10,7 +10,7 @@
     {% include 'key_request/left_side_menu.html' %}
 
     <section class="main-content">
-        <h3 class="title">Edit Room Group</h3>
+        <h3 class="title">Edit Group</h3>
         <input type="hidden" id="group_id" value="{{ group.id }}">
 
         {% include 'key_request/admin/_group_form.html' with group_members=group_members path='edit_group'%}
@@ -23,5 +23,5 @@
 
 {% block js %}
     {% load static %}
-    <script type="module" src="{% static 'lfs_lab_cert_tracker/js/RoomGroup/EditRoomGroupForm.js' %}"></script>
+    <script type="module" src="{% static 'lfs_lab_cert_tracker/js/Group/EditGroupForm.js' %}"></script>
 {% endblock %}

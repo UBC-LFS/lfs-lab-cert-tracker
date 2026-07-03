@@ -26,6 +26,7 @@
 	    <tr>
 				<th>ID</th>
 				<th>Group Name</th>
+                <th>Users with manage access</th>
 	            <th>Group Members</th>
 				<th>Associated Rooms</th>
 				<th>Actions</th>
@@ -38,6 +39,12 @@
                 {{ group.id }}
             </td>
             <td>{{ group.name }}</td>
+              <td class="text-left">
+                  <ul class="mb-0">
+                      {% for member in group.approvalgroupcoordinators.all %}
+                          <li>{{ member.get_full_name }}</li>
+                      {% endfor %}
+                  </ul>
             <td class="text-left">
             <ul class="mb-0">
                 {% for member in group.members.all %}
@@ -109,6 +116,6 @@
 
 {% block js %}
     {% load static %}
-    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/RoomGroup/LoadRoomGroupDeleteModal.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/Group/LoadGroupDeleteModal.js' %}"></script>
 
 {% endblock %}

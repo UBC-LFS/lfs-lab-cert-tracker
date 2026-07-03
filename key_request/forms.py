@@ -28,7 +28,7 @@ class FloorForm(forms.ModelForm):
             'name': 'It must be unique. Maximum characters: 50'
         }
 
-class RoomGroupForm(forms.ModelForm):
+class ApprovalGroupForm(forms.ModelForm):
 
     search_name = forms.CharField(
         label="User Search",
@@ -43,21 +43,26 @@ class RoomGroupForm(forms.ModelForm):
         ),
         required=False)
 
+    coordinator_ids = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+
     member_ids = forms.CharField(
         widget=forms.HiddenInput(),
         required=True
     )
 
     class Meta:
-        model = RoomGroup
+        model = ApprovalGroup
         fields = ['name']
         labels = {
-            'name': "Room Group Name"
+            'name': "Approval Group Name"
         }
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': "e.g. Jane_Doe's Room Group"
+                'placeholder': "e.g. Jane_Doe's Approval Group"
             }),
         }
 
@@ -77,12 +82,34 @@ class RoomGroupForm(forms.ModelForm):
         data = self.cleaned_data['member_ids']
 
         if not data:
-            raise forms.ValidationError("A Room Group must consist of at least one user.")
+            raise forms.ValidationError("A Group must consist of at least one user.")
 
         try:
             return [int(x.strip()) for x in data.split(',') if x.strip().isdigit()]
         except ValueError:
             raise forms.ValidationError("Invalid user ID detected.")
+
+    def clean_coordinator_ids(self):
+        data = self.cleaned_data['coordinator_ids']
+
+        try:
+            return [int(x.strip()) for x in data.split(',') if x.strip().isdigit()]
+        except ValueError:
+            raise forms.ValidationError("Invalid user ID detected.")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        member_ids = cleaned_data.get('member_ids')
+        coordinator_ids = cleaned_data.get('coordinator_ids')
+
+        if member_ids is not None and coordinator_ids is not None:
+            invalid_coordinators = set(coordinator_ids) - set(member_ids)
+            if invalid_coordinators:
+                raise forms.ValidationError(
+                    "All coordinators must also be members of the group."
+                )
+
+        return cleaned_data
 
 
 class RoomForm(forms.ModelForm):

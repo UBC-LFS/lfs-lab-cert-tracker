@@ -2,7 +2,9 @@
 
 <div class="bd-callout bd-callout-warning mb-4">
     <ul>
-        <li>Group names should follow the convention of <strong><code style="font-size: 100%">&ltPI's First Name&gt_&ltPI's Last Name&gt's Room Group</code></strong>
+        <li>Group names should follow the convention of <strong><code style="font-size: 100%">&ltPI's First Name&gt_&ltPI's Last Name&gt's PI Group</code></strong>
+        </li>
+        <li>Members with <strong><code style="font-size: 100%">Manage Group?</code></strong> will be given access to modify the group
         </li>
     </ul>
 </div>
@@ -62,6 +64,7 @@
                     <thead class="table-light sticky-top">
                     <tr>
                         <th class="text-center" style="width: 30%;">User</th>
+                        <th class="text-center" style="width: 40%;">Manage Group?</th>
                         <th class="text-center" style="width: 40%;">Remove?</th>
                     </tr>
                     </thead>
@@ -70,6 +73,15 @@
                         {% for user in group_members %}
                             <tr>
                                 <td data-id="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</td>
+                                <td class="p-0 text-center align-middle" style="height: 50px;">
+                                    <div class="d-flex justify-content-center align-items-center w-100 h-100" style="min-height: 45px;">
+                                        <input class="form-check-input form-check-input-lg set-coordinator"
+                                               type="checkbox"
+                                               id="set-user-{{ user.id }}"
+                                               {% if user.is_coordinator %} checked {% endif %}
+                                               data-id="{{ user.id }}">
+                                    </div>
+                                </td>
                                 <td><button type="button" class="btn btn-danger btn-sm remove-btn" data-id="{{ user.id }}">Remove</button></td>
                             </tr>
                         {% endfor %}

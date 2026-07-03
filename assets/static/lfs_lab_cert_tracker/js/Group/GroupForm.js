@@ -1,7 +1,7 @@
 import AlertManager from "../utils/AlertManager.js";
 
 // Abstract class for Create/Edit Forms
-export default class RoomGroupForm {
+export default class GroupForm {
 
     constructor() {
 
@@ -9,6 +9,7 @@ export default class RoomGroupForm {
         this.$form = $('#room-group-form')
         this.$group_name = $('#id_name')
         this.$member_ids_input = $('#id_member_ids')
+        this.$coordinator_ids_input = $('#id_coordinator_ids')
         this.$name_search = $('#id_user_name_search')
         this.$search_results_table = $('#select-user')
         this.$display_selected_users_table = $('#display-selected-users')
@@ -62,9 +63,18 @@ export default class RoomGroupForm {
     }
 
     prepareAndSubmitForm() {
-        const ids_list = [...this.selected_members.keys()]
+        const member_ids = [...this.selected_members.keys()]
 
-        this.$member_ids_input.val(ids_list.join(','));
+        const coordinator_ids = []
+        for (const [id, user] of this.selected_members) {
+            if (user.is_coordinator) {
+                coordinator_ids.push(id)
+            }
+        }
+
+        this.$member_ids_input.val(member_ids.join(','));
+        this.$coordinator_ids_input.val(coordinator_ids.join(','));
+
 
         // need to remove the old submit listener (validation check)
         this.$form.off('submit')
@@ -101,6 +111,19 @@ export default class RoomGroupForm {
                 );
             } else {
                 this.removeUserFromMap(id)
+            }
+
+            this.refreshUserList();
+        });
+
+        this.$display_selected_users_table.on('change', '.set-coordinator', (e) => {
+            const $checkBox = $(e.currentTarget);
+            const id = $checkBox.data('id');
+
+            if ($checkBox.is(':checked')) {
+                this.changeCoordinatorFlag(this.selected_members, id, true)
+            } else {
+                this.changeCoordinatorFlag(this.selected_members, id, false)
             }
 
             this.refreshUserList();
@@ -152,8 +175,6 @@ export default class RoomGroupForm {
             return
         }
 
-        console.log("Selected users: ", this.selected_members)
-
         let content = ''
         for (const user of users) {
 
@@ -195,13 +216,34 @@ export default class RoomGroupForm {
         }
 
         let userArray = Array.from(this.selected_members)
+        // If there is a coordinator, make this appear first; only 1 [for now]
         userArray.sort((a, b) => {
-            return a[1].first_name.localeCompare(b[1].first_name) ||
+            return (b[1].is_coordinator - a[1].is_coordinator) ||
+                a[1].first_name.localeCompare(b[1].first_name) ||
                 a[1].last_name.localeCompare(b[1].last_name)
         })
 
         let htmlBuffer = userArray.map(([id, user]) => {
-            return `<tr><td data-id="${id}">${user.first_name} ${user.last_name}</td><td><button class="btn btn-danger btn-sm remove-btn" data-id="${id}">Remove</button></td></tr>`;
+            let checked = ""
+
+            console.log(user)
+
+            if (user.is_coordinator) {
+                checked = "checked"
+            }
+            return `<tr>
+                        <td data-id="${id}">${user.first_name} ${user.last_name}</td>
+                        <td class="p-0 text-center align-middle" style="height: 50px;">
+                            <div class="d-flex justify-content-center align-items-center w-100 h-100" style="min-height: 45px;">
+                                <input class="form-check-input form-check-input-lg set-coordinator" 
+                                       type="checkbox" 
+                                       id="set-user-${id}" 
+                                       ${checked}
+                                       data-id="${id}">
+                           </div>
+                        </td>
+                        <td><button class="btn btn-danger btn-sm remove-btn" data-id="${id}">Remove</button></td>
+                    </tr>`;
         });
 
         this.$display_selected_users_table.html(`${htmlBuffer.join('')}`)
@@ -222,12 +264,20 @@ export default class RoomGroupForm {
             id,
             {
                 "first_name": first_name,
-                "last_name": last_name
+                "last_name": last_name,
+                "is_coordinator": false
             }
         )
     }
 
     removeUserFromMap(user_id) {
         this.selected_members.delete(user_id)
+    }
+
+    changeCoordinatorFlag(map, new_coordinator_id, flag) {
+        const member = this.selected_members.get(new_coordinator_id)
+        if (member) {
+            member.is_coordinator = flag
+        }
     }
 }

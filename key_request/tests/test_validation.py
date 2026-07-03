@@ -2,7 +2,7 @@ import json
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from key_request.models import RoomGroup
+from key_request.models import ApprovalGroup
 
 LOGIN_URL = reverse('accounts:local_login')
 
@@ -25,7 +25,7 @@ class AsyncValidationAndAutofillTests(TestCase):
 
 
         # Existing duplicate check group
-        self.duplicate_target = RoomGroup.objects.create(name="Alice_Smith's Room Group")
+        self.duplicate_target = ApprovalGroup.objects.create(name="Alice_Smith's Room Group")
         self.duplicate_target.members.set([self.user_alice.id, self.user_bob.id])
 
     # ==========================================

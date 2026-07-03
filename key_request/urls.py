@@ -25,7 +25,7 @@ urlpatterns += [
     path('all-rooms/delete/', admin_views.delete_room, name='delete_room'),
 
     # Groups
-    path('all-groups/', admin_views.ViewRoomGroups.as_view(), name='all_groups'),
+    path('all-groups/', admin_views.ViewApprovalGroups.as_view(), name='all_groups'),
     path('<int:group_id>/edit-group/', admin_views.EditRoomGroups.as_view(), name='edit_group'),
     path('all-groups/delete/', admin_views.delete_group, name='delete_group'),
     path('create-group', admin_views.CreateRoomGroup.as_view(), name='create_group'),

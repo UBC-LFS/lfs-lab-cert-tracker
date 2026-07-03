@@ -1,6 +1,6 @@
-import RoomGroupForm from "./RoomGroupForm.js";
+import GroupForm from "./GroupForm.js";
 
-export default class EditRoomGroupForm extends RoomGroupForm {
+class EditGroupForm extends GroupForm {
 
     constructor() {
         super()
@@ -10,13 +10,14 @@ export default class EditRoomGroupForm extends RoomGroupForm {
     }
 
     initializeMap() {
-        const $jsonContent = $('#group_members_json')
+        const $groupjsonContent = $('#group_members_json')
 
         const groupMap = new Map()
 
-        if ($jsonContent.length === 0) {
+        if ($groupjsonContent.length === 0) {
             return groupMap
         }
+
 
         const groupMembers = JSON.parse($jsonContent.text())
 
@@ -55,5 +56,5 @@ export default class EditRoomGroupForm extends RoomGroupForm {
 }
 
 $(document).ready(function() {
-    new EditRoomGroupForm()
+    new EditGroupForm()
 });

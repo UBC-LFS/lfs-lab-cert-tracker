@@ -26,8 +26,8 @@ from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, RoomGroup
-from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, RoomGroupForm
+from .models import Room, ApprovalGroup, ApprovalGroupCoordinator
+from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
 from .mixins import RoomActionsMixin
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, AdminGroupFormProcessor, AdminManagerFormProcessor
@@ -491,7 +491,7 @@ class CreateRoom(LoginRequiredMixin, View):
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
-            'room_groups': RoomGroup.objects.all() if self.tab == 'pis' else None,
+            'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url),
@@ -611,7 +611,7 @@ class EditRoom(LoginRequiredMixin, View):
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
-            'room_groups': RoomGroup.objects.all() if self.tab == 'pis' else None,
+            'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
@@ -837,10 +837,10 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
         return HttpResponseRedirect(request.POST.get('next'))
 
-# ROOM GROUPS START
+# GROUPS START
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class ViewRoomGroups(LoginRequiredMixin, View):
+class ViewApprovalGroups(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -857,6 +857,8 @@ class ViewRoomGroups(LoginRequiredMixin, View):
         selected_ids = request.GET.getlist('members[]', [])
         if selected_ids:
             all_groups = func.get_groups_with_matching_composition(selected_ids)
+
+        all_groups = all_groups.prefetch_related('approvalgroupcoordinators__user')
 
         group_name = request.GET.get('name')
         member_first_name = request.GET.get('member_first_name')
@@ -898,14 +900,14 @@ class CreateRoomGroup(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
 
         return render(request, 'key_request/admin/create_group.html', {
-            'form': RoomGroupForm(autofill_url=reverse('key_request:user_autofill')),
+            'form': ApprovalGroupForm(autofill_url=reverse('key_request:user_autofill')),
             'validate_group_url': reverse('key_request:validate_room_group')
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
 
-        form = RoomGroupForm(request.POST)
+        form = ApprovalGroupForm(request.POST)
         if form.is_valid():
             id_list = form.cleaned_data['member_ids']
 
@@ -928,8 +930,8 @@ class EditRoomGroups(LoginRequiredMixin, View):
         group_id = kwargs.get('group_id')
 
         try:
-            self.group = RoomGroup.objects.get(id=group_id)
-        except RoomGroup.DoesNotExist:
+            self.group = ApprovalGroup.objects.get(id=group_id).prefetch_related('approvalgroupcoordinators__user')
+        except ApprovalGroup.DoesNotExist:
             self.group = None
 
         return setup
@@ -938,13 +940,17 @@ class EditRoomGroups(LoginRequiredMixin, View):
         member_ids = func.get_group_member_ids(self.group)
         return ','.join(member_ids)
 
-    def _make_member_dict(self):
-        group_members = self.group.members.all()
+    def _make_coordinators_string(self):
+        member_ids = func.get_group_coordinator_ids(self.group)
+        return ','.join(member_ids)
+
+    def _make_member_dict(self, group_members):
         return [
             {
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'id': user.id
+                'id': user.id,
+                'is_coordinator': user.is_coordinator,
             } for user in group_members
         ]
 
@@ -956,30 +962,40 @@ class EditRoomGroups(LoginRequiredMixin, View):
             messages.error(request, 'Error! No group matches the id specified. It may have been deleted.')
             return HttpResponseRedirect(reverse('key_request:all_groups'))
 
+        group_members_with_coordinator_flag = func.get_group_members_with_coordinator_flag(self.group)
 
         return render(request, 'key_request/admin/edit_group.html', {
-            'form': RoomGroupForm(
+            'form': ApprovalGroupForm(
                 autofill_url=reverse('key_request:user_autofill'),
                 initial={
                     'member_ids': self._make_member_string(),
+                    'coordinator_ids': self._make_coordinators_string(),
                     'name': self.group.name}
             ),
             'validate_group_url': reverse('key_request:validate_room_group'),
             'group': self.group,
-            'group_members': self.group.members.all(),
-            'group_members_dict': self._make_member_dict()
+            'group_members': group_members_with_coordinator_flag,
+            'group_members_dict': self._make_member_dict(group_members_with_coordinator_flag)
         })
 
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form = RoomGroupForm(request.POST, instance=self.group)
+        form = ApprovalGroupForm(request.POST, instance=self.group)
         if form.is_valid():
-            id_list = form.cleaned_data['member_ids']
+            member_id_list = form.cleaned_data['member_ids']
+            coordinator_id_list = form.cleaned_data['coordinator_ids']
 
             group_name = form.cleaned_data['name']
 
-            self.group.members.set(id_list)
+            self.group.members.set(member_id_list)
+
+            ApprovalGroupCoordinator.objects.filter(group=self.group).delete()
+            ApprovalGroupCoordinator.objects.bulk_create([
+                ApprovalGroupCoordinator(group=self.group, user_id=user_id)
+                for user_id in coordinator_id_list
+            ])
+
             self.group.name = group_name
             self.group.save()
             messages.success(request, 'Success! {0} has been updated.'.format(self.group.name))
@@ -1089,11 +1105,11 @@ def validate_room_group(request):
 def delete_group(request):
     id = request.POST.get('group')
     try:
-        group = RoomGroup.objects.get(id=id)
+        group = ApprovalGroup.objects.get(id=id)
         group_name = group.name
         group.delete()
         messages.success(request, 'Success! Lab Room Group {0} has been deleted.'.format(group_name))
-    except RoomGroup.DoesNotExist:
+    except ApprovalGroup.DoesNotExist:
         messages.error(request, 'Error! Failed to delete Lab Room Group Number {0}. It may have already been deleted.'.format(id))
     return redirect('key_request:all_groups')
 

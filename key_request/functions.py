@@ -1,5 +1,5 @@
 from django.db.models.functions import Concat
-from django.db.models import Q, F, Max, CharField, Value, Count, OuterRef, Subquery
+from django.db.models import Q, F, Max, CharField, Value, Count, OuterRef, Subquery, Exists
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from datetime import date
@@ -9,7 +9,7 @@ import json
 
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Cert
-from .models import Building, Floor, Room, RequestForm, RequestFormStatus, RoomGroup
+from .models import Building, Floor, Room, RequestForm, RequestFormStatus, ApprovalGroup, ApprovalGroupCoordinator
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT
 
 
@@ -275,14 +275,14 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
 # For creating the default group
 
 def get_all_groups():
-    return RoomGroup.objects.all()
+    return ApprovalGroup.objects.all()
 
 def create_group_from_ids_list(group_name, member_ids):
     users = User.objects.filter(id__in=member_ids)
     return create_custom_group(group_name, users)
 
 def create_custom_group(group_name, members):
-    group = RoomGroup.objects.create(name=group_name)
+    group = ApprovalGroup.objects.create(name=group_name)
     group.members.add(*members)
     group.save()
     return group
@@ -293,17 +293,27 @@ def add_member_to_group(group, member):
 def remove_member_from_group(group, member):
     group.members.remove(member)
 
-def get_group_members(group):
-    return group.members.all()
+def get_group_members_with_coordinator_flag(group):
+    return group.members.all().annotate(
+        is_coordiantor=Exists(
+            ApprovalGroupCoordinator.objects.filter(
+                group=group,
+                user=OuterRef('pk')
+            )
+        ))
 
 def get_group_member_ids(group):
     id_arr = group.members.values_list('id', flat=True)
     return [str(id) for id in id_arr]
 
+def get_group_coordinator_ids(group):
+    id_arr = group.approvalgroupcoordinators_set.all().values_list('id', flat=True)
+    return [str(id) for id in id_arr]
+
 def get_groups_with_matching_composition(member_ids, group_id=None):
     # Normalize and deduplicate member ids (handles strings and duplicates)
     if not member_ids:
-        return RoomGroup.objects.none()
+        return ApprovalGroup.objects.none()
 
     try:
         member_ids = [int(m) for m in member_ids]
@@ -320,7 +330,7 @@ def get_groups_with_matching_composition(member_ids, group_id=None):
     num_members = len(unique_member_ids)
 
 
-    group_matches = RoomGroup.objects.annotate(
+    group_matches = ApprovalGroup.objects.annotate(
         total_members=Count('members', distinct=True)
     ).filter(total_members=num_members)
 
@@ -333,7 +343,7 @@ def get_groups_with_matching_composition(member_ids, group_id=None):
     return group_matches.prefetch_related('members').distinct()
 
 def get_group_with_matching_name(group_name, group_id=None):
-    matching_groups = RoomGroup.objects.filter(name__iexact=group_name)
+    matching_groups = ApprovalGroup.objects.filter(name__iexact=group_name)
 
     if group_id:
         matching_groups = matching_groups.exclude(id=group_id)
