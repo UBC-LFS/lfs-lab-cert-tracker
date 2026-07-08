@@ -10,7 +10,7 @@ import json
 
 from django.contrib.auth.models import User
 from lfs_lab_cert_tracker.models import Cert
-from .models import Building, Floor, Room, RequestForm, RequestFormStatus, ApprovalGroup, ApprovalGroupCoordinator
+from .models import Building, Floor, Room, RequestForm, RequestFormStatus, ApprovalGroup, ApprovalGroupRole
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT
 
 
@@ -30,10 +30,10 @@ def get_headers(model):
     return headers
 
 
-def is_room_manager(user_id):
+def is_room_approver(user_id):
     if Room.objects.count() == 0:
         return False
-    return Room.objects.filter(managers__id=user_id).exists()
+    return Room.objects.filter(Q(managers__id=user_id) | Q(groups__roles__user_id=user_id))
 
 
 def preprocess_rooms(rooms):
@@ -342,75 +342,66 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
 
 # GROUPS
 
-# For creating the default group
+def get_group_by_id(group_id):
+    try:
+        return ApprovalGroup.objects.prefetch_related('roles__user').get(id=group_id)
+    except ApprovalGroup.DoesNotExist:
+        return None
 
 def get_all_groups():
     return ApprovalGroup.objects.all()
 
-def create_group_from_ids_list(group_name, member_ids):
-    users = User.objects.filter(id__in=member_ids)
-    return create_custom_group(group_name, users)
-
-def create_custom_group(group_name, members):
-    group = ApprovalGroup.objects.create(name=group_name)
-    group.members.add(*members)
-    group.save()
-    return group
-
-def add_member_to_group(group, member):
-    group.members.add(member)
-
-def remove_member_from_group(group, member):
-    group.members.remove(member)
-
-def get_group_members_with_coordinator_flag(group):
-    return group.members.all().annotate(
-        is_coordiantor=Exists(
-            ApprovalGroupCoordinator.objects.filter(
-                group=group,
-                user=OuterRef('pk')
-            )
-        ))
-
 def get_group_member_ids(group):
     id_arr = group.members.values_list('id', flat=True)
-    return [str(id) for id in id_arr]
+    return [str(user_id) for user_id in id_arr]
 
 def get_group_coordinator_ids(group):
-    id_arr = group.approvalgroupcoordinators_set.all().values_list('id', flat=True)
-    return [str(id) for id in id_arr]
+    id_arr = group.coordinators.values_list('id', flat=True)
+    return [str(user_id) for user_id in id_arr]
 
-def get_groups_with_matching_composition(member_ids, group_id=None):
+# Checks to see if a group with the same members & coordinators
+def get_groups_with_matching_composition(member_ids, coordinator_ids, group_id=None):
     # Normalize and deduplicate member ids (handles strings and duplicates)
     if not member_ids:
         return ApprovalGroup.objects.none()
 
     try:
         member_ids = [int(m) for m in member_ids]
+        coordinator_ids = [int(c) for c in coordinator_ids]
     except Exception:
         member_ids = list(member_ids)
+        coordinator_ids = list(coordinator_ids)
 
     seen = set()
     unique_member_ids = []
+    role_map = {}
     for m in member_ids:
         if m not in seen:
             seen.add(m)
             unique_member_ids.append(m)
+            role_map[m] = ApprovalGroupRole.Role.MEMBER
+
+    for m in coordinator_ids:
+        if m not in seen:
+            seen.add(m)
+            unique_member_ids.append(m)
+        role_map[m] = ApprovalGroupRole.Role.COORDINATOR
+
 
     num_members = len(unique_member_ids)
 
 
     group_matches = ApprovalGroup.objects.annotate(
-        total_members=Count('members', distinct=True)
+        total_members=Count('roles__user_id', distinct=True)
     ).filter(total_members=num_members)
 
     for member_id in unique_member_ids:
-        group_matches = group_matches.filter(members__id=member_id)
+        group_matches = group_matches.filter(roles__user_id=member_id, roles__role=role_map.get(member_id))
 
     if group_id:
         group_matches = group_matches.exclude(id=group_id)
 
-    return group_matches.prefetch_related('members').distinct()
+    return group_matches.prefetch_related('roles__user').distinct()
 
 def get_group_with_matching_name(group_name, group_id=None):
     matching_groups = ApprovalGroup.objects.filter(name__iexact=group_name)
@@ -487,19 +478,9 @@ def convert_str_to_date(s):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
 
-# def count_approved_status(form, room):
-#     cache = [0] * room.managers.count()
-#     for i, manager in enumerate(room.managers.all()):
-#         status_filtered = RequestFormStatus.objects.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
-#         if status_filtered.exists():
-#             for item in status_filtered:
-#                 if item.status == APPROVED:
-#                     cache[i] = 1
-#                     break
-    
-#     count = 0
-#     for c in cache:
-#         count += c
-    
-#     return count
+def has_date_passed(date_obj):
+    if not date_obj:
+        return False
+
+    return date_obj < timezone.localdate()
 

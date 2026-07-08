@@ -45,11 +45,10 @@
 						<th>Form <br /> ID</th>
 						<th>Building & <br /> Room Info</th>
 						<th>Supervisor</th>
-						<th>PI</th>
 						<th>PI/Group</th>
 						<th>Operator</th>
+                        <th>Note</th>
 						<th>Status <br /> History</th>
-						<th>Note</th>
 						<th>Action</th>
 						<th>
 							<div>Select <br /> All</div>
@@ -70,8 +69,6 @@
 							Room {{ item.room.number }}
 
 						<td>{{ form.supervisor.get_full_name }}</td>
-						<td>{{ item.manager.full_name }}</td>
-						<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
 						<td>
                             {% if item.group %}
                                 {{ item.group.name }}
@@ -81,7 +78,7 @@
                                 No managers
                             {% endif %}
                         </td>
-						<td>{{ item.status.first.operator_id|get_user_full_name }}</td>
+						<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
 						<td>
                             {% if item.room.note %}
                                 {% include 'key_request/subpages/modal_room_note.html' with id=forloop.counter data=item.room.note %}
@@ -94,7 +91,7 @@
                         </td>
 						<td>
                             {% if item.group or item.manager %}
-							    {% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=item %}
+							    {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.first.status %}
                             {% else %}
                                 <a href="#" data-toggle="tooltip" data-placement="top"
                                    title="This room is not associated with any group(s) or manager(s) and therefore does not need explicit approval">
@@ -164,21 +161,9 @@
 											</span>
 										{% endif %}
 									</div>
-
 									<hr />
+                                    {% include 'key_request/subpages/entities_list_with_approval_status.html' with form=form room=room %}
 
-									<ul class="list-minus-20">
-				            {% for manager in room.managers.all %}
-				              <li>
-				                {% concat_strings room.id manager.id as args %}
-				                {% if form.id|get_status_by_manager:args %}
-				                  <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
-				                {% else %}
-				                  <span>{{ manager.get_full_name }}</span>
-				                {% endif %}
-				              </li>
-				            {% endfor%}
-				          </ul>
 								</td>
 								<td class="text-left">
 									{{ room|display_room }}

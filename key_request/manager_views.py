@@ -143,8 +143,6 @@ class ManagerRooms(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        room_list = Room.objects.filter(managers__in=[request.user.id])
-        total = len(room_list)
 
         query = {
             'building': request.GET.get('building'),

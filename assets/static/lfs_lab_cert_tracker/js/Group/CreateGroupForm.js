@@ -12,14 +12,24 @@ class CreateGroupForm extends GroupForm {
 
     // Edit form only cares about checking for invalid name;
     async validateFormContent(url) {
-        const ids_list = [...this.selected_members.keys()]
+        const coordinator_ids = []
+        const member_ids = []
+        for (const [id, user] of this.selected_members) {
+            if (user.is_coordinator) {
+                coordinator_ids.push(id)
+            } else {
+                member_ids.push(id)
+            }
+        }
+
         let issue_warning = false
         await $.ajax({
             method: 'GET',
             url: url,
             data: {
                 'name': this.$group_name.val(),
-                'members[]': ids_list,
+                'members[]': member_ids,
+                'coordinators[]': coordinator_ids
             },
             success: (res) => {
                 if (res.has_duplicate) {

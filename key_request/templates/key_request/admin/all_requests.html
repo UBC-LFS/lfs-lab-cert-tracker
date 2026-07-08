@@ -36,7 +36,7 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
-				<th>Supervisor</th>
+          <th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted <br /> Date</th>
@@ -63,26 +63,26 @@
 						</ul>
 					</td>
 					<td>{{ form.supervisor.get_full_name }}</td>
+              <td>
+                  {% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
+              </td>
 	        <td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
-	        </td>
-	        <td>
-						{% if form.requestformstatus_set.all|length > 0 %}
-							{% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+						{% if form.is_new %}
+                            <span class="badge">NEW</span>
 						{% else %}
-							<span class="badge">NEW</span>
+                            {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
 						{% endif %}
 	        </td>
-	        <td>
-						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
-	        </td>
-					<td>
-						{{ form.expiry_date }}
-						{% if form.expiry_date %}
-							<br />
-	            <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>	
-						{% endif %}
-					</td>
+              <td>
+                  {% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
+              </td>
+                <td>
+                        {{ form.expiry_date }}
+                    {% if form.expiry_date %}
+                        <br />
+                        <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
+                    {% endif %}
+                </td>
 	        <td>
 	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=selected_rooms&next={{ request.get_full_path }}">Details</a>
 	        </td>

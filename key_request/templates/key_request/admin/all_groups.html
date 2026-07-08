@@ -12,9 +12,10 @@
 
 <section class="main-content">
 	<h3 class="title">
-		All Room Groups
+		All Approval Groups
 		<small class="text-secondary">(Total: {{ total_groups }})</small>
 	</h3>
+
 
 	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
         {% include 'key_request/subpages/search_filter_groups.html' %}
@@ -26,7 +27,6 @@
 	    <tr>
 				<th>ID</th>
 				<th>Group Name</th>
-                <th>Users with manage access</th>
 	            <th>Group Members</th>
 				<th>Associated Rooms</th>
 				<th>Actions</th>
@@ -39,16 +39,17 @@
                 {{ group.id }}
             </td>
             <td>{{ group.name }}</td>
-              <td class="text-left">
-                  <ul class="mb-0">
-                      {% for member in group.approvalgroupcoordinators.all %}
-                          <li>{{ member.get_full_name }}</li>
-                      {% endfor %}
-                  </ul>
+
             <td class="text-left">
             <ul class="mb-0">
-                {% for member in group.members.all %}
-                    <li>{{ member.get_full_name }}</li>
+                {% for user_role in group.user_roles_ordered %}
+                    <li>
+                        {{ user_role.user.get_full_name }}
+                        {% if user_role.role == COORDINATOR_ROLE %}
+                            <span class="badge badge-success">Edit Access
+                            </span>
+                        {% endif %}
+                    </li>
                 {% endfor %}
             </ul>
             </td>

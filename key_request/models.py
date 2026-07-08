@@ -3,7 +3,6 @@ from django.utils.text import slugify
 from django.contrib.auth.models import User, Group
 from lfs_lab_cert_tracker.models import Lab, Cert
 from django.db.models import Q, CheckConstraint
-from django.core.exceptions import ValidationError
 
 from datetime import datetime
 
@@ -47,27 +46,35 @@ class Floor(models.Model):
 class ApprovalGroup(models.Model):
     """ Represents a group of users associated with a room. """
 
-    # TODO: Future Extension: Make RoomGroup -> Group; Add a TYPE field (RoomGroup, WorkTagGroup)
-    members = models.ManyToManyField(User, related_name='room_groups')
     name = models.TextField(null=False, blank=False, max_length=150)
 
     class Meta:
         ordering = ['name']
-#         TODO: Add a constraint for name, type (one shared name per group type)
+
+    @property
+    def user_roles_ordered(self):
+        return self.roles.all().order_by('-role', 'user__first_name', 'user__last_name')
+
+    @property
+    def members(self):
+        return User.objects.filter(approval_group_roles__group=self)
+
+    @property
+    def coordinators(self):
+        return User.objects.filter(
+            approval_group_roles__group=self,
+            approval_group_roles__role=ApprovalGroupRole.Role.COORDINATOR,
+        )
 
 
-class ApprovalGroupCoordinator(models.Model):
-    group = models.ForeignKey(ApprovalGroup, null=False, blank=False, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE)
+class ApprovalGroupRole(models.Model):
+    class Role(models.IntegerChoices):
+        MEMBER = 1, 'Member'
+        COORDINATOR = 2, 'Coordinator'
 
-
-    def clean(self):
-        if not self.group.members.filter(id=self.user_id).exists():
-            raise ValidationError("User must be a member of the group to be assigned as a coordinator.")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
+    group = models.ForeignKey(ApprovalGroup, null=False, blank=False, on_delete=models.CASCADE, related_name='roles')
+    user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE, related_name='approval_group_roles')
+    role = models.IntegerField(choices=Role.choices, default=Role.MEMBER)
 
 
 class Room(models.Model):

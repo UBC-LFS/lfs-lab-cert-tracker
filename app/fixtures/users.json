@@ -370,5 +370,29 @@
       "last_name": "user21",
       "email": "email address"
     }
+  },
+  {
+    "model": "auth.user",
+    "pk": 32,
+    "fields": {
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
+      "is_superuser": false,
+      "username": "testsupervisor1",
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 33,
+    "fields": {
+      "password": "pbkdf2_sha256$150000$o40PKWhQTyaC$8LXfzmFRqlwYH0C2ckjaQfAiYeDy3BKWeBYLerdTiDs=",
+      "is_superuser": false,
+      "username": "testsupervisor2",
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "email": "jane.doe@example.com"
+    }
   }
 ]

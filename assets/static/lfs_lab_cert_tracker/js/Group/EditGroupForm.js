@@ -10,21 +10,19 @@ class EditGroupForm extends GroupForm {
     }
 
     initializeMap() {
-        const $groupjsonContent = $('#group_members_json')
+        const $groupJSONContent = $('#group_members_json')
 
         const groupMap = new Map()
 
-        if ($groupjsonContent.length === 0) {
+        if ($groupJSONContent.length === 0) {
             return groupMap
         }
 
-
-        const groupMembers = JSON.parse($jsonContent.text())
+        const groupMembers = JSON.parse($groupJSONContent.text())
 
         for (const member of groupMembers) {
-            this.addMemberToMap(groupMap, member.id, member.first_name, member.last_name, )
+            this.addMemberToMap(groupMap, member.id, member.first_name, member.last_name, member.is_coordinator)
         }
-
 
         return groupMap
     }

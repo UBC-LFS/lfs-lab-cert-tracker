@@ -28,13 +28,13 @@ from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, ApprovalGroup, ApprovalGroupCoordinator
+from .models import Room, ApprovalGroup, ApprovalGroupRole
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
 from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .dashboard_coordinators import DashboardCoordinator, AdminGroupFormProcessor, AdminManagerFormProcessor
+from .dashboard_coordinators import DashboardCoordinator, RequestFormProcessor, ExpiredRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
 
 
@@ -72,7 +72,7 @@ class AllRequests(LoginRequiredMixin, View):
 
             return redirect(new_url)
 
-        coordinator = DashboardCoordinator(request.user, query, [AdminManagerFormProcessor, AdminGroupFormProcessor])
+        coordinator = DashboardCoordinator(request.user, query, [RequestFormProcessor])
         coordinator.run()
 
         form_list = coordinator.get_forms()
@@ -132,8 +132,10 @@ class ExpiredRequests(LoginRequiredMixin, View):
             'status': request.GET.get('status')
         }
 
-        form_list, total_forms, _ = func.search_filters_for_requests(query, 'expiry')
-        num_filtered_forms = len(form_list)
+        coordinator = DashboardCoordinator(request.user, query, [ExpiredRequestFormProcessor])
+        coordinator.run()
+
+        form_list = coordinator.get_forms()
 
         page = request.GET.get('page', 1)
         paginator = Paginator(form_list, NUM_PER_PAGE)
@@ -146,8 +148,8 @@ class ExpiredRequests(LoginRequiredMixin, View):
             forms = paginator.page(paginator.num_pages)
 
         return render(request, 'key_request/admin/expired_requests.html', {
-            'total_forms': total_forms,
-            'num_filtered_forms': num_filtered_forms,
+            'total_forms': coordinator.get_total_forms(),
+            'num_filtered_forms': coordinator.get_num_filtered_forms(),
             'forms': forms,
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
@@ -425,9 +427,7 @@ def update_all(request):
 
             request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
 
-            manager_room_map.setdefault(manager_id, []).append(room_sp[1])
-
-            email_coordinator = ApprovalNotificationManager(rsf_list, status, request.user)
+            email_coordinator = ApprovalNotificationManager(request_status_forms, status, request.user)
             email_coordinator.send_email_notification()
 
 
@@ -998,10 +998,11 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
             })
 
         selected_ids = request.GET.getlist('members[]', [])
-        if selected_ids:
-            all_groups = func.get_groups_with_matching_composition(selected_ids)
+        coordinator_ids = request.GET.getlist('coordinators[]', [])
+        if selected_ids and coordinator_ids:
+            all_groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids)
 
-        all_groups = all_groups.prefetch_related('approvalgroupcoordinators__user')
+        all_groups = all_groups.prefetch_related('roles__user')
 
         group_name = request.GET.get('name')
         member_first_name = request.GET.get('member_first_name')
@@ -1011,9 +1012,9 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         if group_name:
             all_groups = all_groups.filter(name__icontains=group_name)
         if member_first_name:
-            all_groups = all_groups.filter(members__first_name__icontains=member_first_name).distinct()
+            all_groups = all_groups.filter(roles__user__first_name__icontains=member_first_name).distinct()
         if member_last_name:
-            all_groups = all_groups.filter(members__last_name__icontains=member_last_name).distinct()
+            all_groups = all_groups.filter(roles__user__last_name__icontains=member_last_name).distinct()
         if room_pk:
             all_groups = all_groups.filter(manager_groups__pk=room_pk).distinct()
 
@@ -1034,10 +1035,11 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
             'total_groups': total_groups,
             'num_filtered_groups': num_filtered_groups,
             'groups': groups,
+            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
         })
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class CreateRoomGroup(LoginRequiredMixin, View):
+class CreateApprovalGroup(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -1052,11 +1054,22 @@ class CreateRoomGroup(LoginRequiredMixin, View):
 
         form = ApprovalGroupForm(request.POST)
         if form.is_valid():
-            id_list = form.cleaned_data['member_ids']
 
             group_name = form.cleaned_data['name']
+            group = ApprovalGroup.objects.create(name=group_name)
 
-            group = func.create_group_from_ids_list(group_name, id_list)
+            member_id_list = form.cleaned_data['member_ids']
+            coordinator_id_list = form.cleaned_data['coordinator_ids']
+            role_by_id = {
+                **{uid: ApprovalGroupRole.Role.MEMBER for uid in member_id_list},
+                **{uid: ApprovalGroupRole.Role.COORDINATOR for uid in coordinator_id_list},
+            }
+
+            ApprovalGroupRole.objects.bulk_create([
+                ApprovalGroupRole(group=group, user_id=user_id, role=role)
+                for user_id, role in role_by_id.items()
+            ])
+
             messages.success(request, 'Success! {0} has been created.'.format(group.name))
 
         else:
@@ -1065,17 +1078,16 @@ class CreateRoomGroup(LoginRequiredMixin, View):
         return HttpResponseRedirect(reverse('key_request:all_groups'))
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class EditRoomGroups(LoginRequiredMixin, View):
+class EditApprovalGroups(LoginRequiredMixin, View):
+
+    group = None
 
     def setup(self, request, *args, **kwargs):
 
         setup = super().setup(request, *args, **kwargs)
         group_id = kwargs.get('group_id')
 
-        try:
-            self.group = ApprovalGroup.objects.get(id=group_id).prefetch_related('approvalgroupcoordinators__user')
-        except ApprovalGroup.DoesNotExist:
-            self.group = None
+        self.group = func.get_group_by_id(group_id)
 
         return setup
 
@@ -1087,14 +1099,14 @@ class EditRoomGroups(LoginRequiredMixin, View):
         member_ids = func.get_group_coordinator_ids(self.group)
         return ','.join(member_ids)
 
-    def _make_member_dict(self, group_members):
+    def _make_member_dict(self):
         return [
             {
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'id': user.id,
-                'is_coordinator': user.is_coordinator,
-            } for user in group_members
+                'first_name': user_role.user.first_name,
+                'last_name': user_role.user.last_name,
+                'id': user_role.user_id,
+                'is_coordinator': user_role.role == ApprovalGroupRole.Role.COORDINATOR,
+            } for user_role in self.group.roles.all()
         ]
 
 
@@ -1104,8 +1116,6 @@ class EditRoomGroups(LoginRequiredMixin, View):
         if not self.group:
             messages.error(request, 'Error! No group matches the id specified. It may have been deleted.')
             return HttpResponseRedirect(reverse('key_request:all_groups'))
-
-        group_members_with_coordinator_flag = func.get_group_members_with_coordinator_flag(self.group)
 
         return render(request, 'key_request/admin/edit_group.html', {
             'form': ApprovalGroupForm(
@@ -1117,8 +1127,9 @@ class EditRoomGroups(LoginRequiredMixin, View):
             ),
             'validate_group_url': reverse('key_request:validate_room_group'),
             'group': self.group,
-            'group_members': group_members_with_coordinator_flag,
-            'group_members_dict': self._make_member_dict(group_members_with_coordinator_flag)
+            'group_members': self.group.roles.all().order_by('-role', 'user__first_name', 'user__last_name'),
+            'group_members_dict': self._make_member_dict(),
+            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
         })
 
 
@@ -1128,16 +1139,19 @@ class EditRoomGroups(LoginRequiredMixin, View):
         if form.is_valid():
             member_id_list = form.cleaned_data['member_ids']
             coordinator_id_list = form.cleaned_data['coordinator_ids']
+            role_by_id = {
+                **{uid: ApprovalGroupRole.Role.MEMBER for uid in member_id_list},
+                **{uid: ApprovalGroupRole.Role.COORDINATOR for uid in coordinator_id_list},
+            }
+
+            ApprovalGroupRole.objects.filter(group=self.group).delete()
+
+            ApprovalGroupRole.objects.bulk_create([
+                ApprovalGroupRole(group=self.group, user_id=user_id, role=role)
+                for user_id, role in role_by_id.items()
+            ])
 
             group_name = form.cleaned_data['name']
-
-            self.group.members.set(member_id_list)
-
-            ApprovalGroupCoordinator.objects.filter(group=self.group).delete()
-            ApprovalGroupCoordinator.objects.bulk_create([
-                ApprovalGroupCoordinator(group=self.group, user_id=user_id)
-                for user_id in coordinator_id_list
-            ])
 
             self.group.name = group_name
             self.group.save()
@@ -1179,10 +1193,11 @@ def user_autofill_suggestions(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['GET'])
-def validate_room_group(request):
+def validate_approval_group(request):
     group_id = request.GET.get('group_id', None)
     selected_name = request.GET.get('name', '').strip()
     selected_ids = request.GET.getlist('members[]', [])
+    coordinator_ids = request.GET.getlist('coordinators[]', [])
 
     if group_id:
         try:
@@ -1196,10 +1211,9 @@ def validate_room_group(request):
     if name_matches.exists():
         # name is a unique field
         matching_group = name_matches.first()
-        q = QueryDict(mutable=True)
-        q.setlist('members[]', [matching_group.id])
-        view_url = reverse('key_request:all_groups') + "?" + q.urlencode()
-        group_member_names = [user.get_full_name() for user in matching_group.members.all()]
+
+        view_url = reverse('key_request:all_groups') + f"?name={matching_group.name}"
+        group_member_names = [user.get_full_name() for user in matching_group.members]
 
         return JsonResponse({
             'has_duplicate': True,
@@ -1212,12 +1226,13 @@ def validate_room_group(request):
             status=200
         )
 
-    group_matches = func.get_groups_with_matching_composition(selected_ids, group_id)
+    group_matches = func.get_groups_with_matching_composition(selected_ids, coordinator_ids, group_id)
 
     if group_matches.exists():
         num_matches = group_matches.count()
         q = QueryDict(mutable=True)
         q.setlist('members[]', selected_ids)
+        q.setlist('coordinators[]', coordinator_ids)
         view_url = reverse('key_request:all_groups') + "?" + q.urlencode()
 
         group_names = [group.name for group in group_matches]

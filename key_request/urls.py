@@ -28,11 +28,11 @@ urlpatterns += [
 
     # Groups
     path('all-groups/', admin_views.ViewApprovalGroups.as_view(), name='all_groups'),
-    path('<int:group_id>/edit-group/', admin_views.EditRoomGroups.as_view(), name='edit_group'),
+    path('<int:group_id>/edit-group/', admin_views.EditApprovalGroups.as_view(), name='edit_group'),
     path('all-groups/delete/', admin_views.delete_group, name='delete_group'),
-    path('create-group', admin_views.CreateRoomGroup.as_view(), name='create_group'),
+    path('create-group', admin_views.CreateApprovalGroup.as_view(), name='create_group'),
     path('user_autofill/', admin_views.user_autofill_suggestions, name='user_autofill'),
-    path('validate_room_group/', admin_views.validate_room_group, name='validate_room_group'),
+    path('validate_room_group/', admin_views.validate_approval_group, name='validate_room_group'),
 
     # Settings - Building and Floors
     path('all-<str:model>/view/', admin_views.Settings.as_view(), name='settings'),

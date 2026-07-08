@@ -11,8 +11,8 @@ from key_request.functions import all_pis_approved, display_user_full_name, disp
 
 class ApprovalNotificationManager:
 
-    def __init__(self, request_for_statuses, status, operator):
-        self.request_for_statuses = request_for_statuses
+    def __init__(self, request_form_statuses, status, operator):
+        self.request_form_statuses = request_form_statuses
         self.status = status
         self.operator = operator
 
@@ -30,7 +30,7 @@ class ApprovalNotificationManager:
 
         seen_rooms_applicant = set()
 
-        for req in self.request_for_statuses:
+        for req in self.request_form_statuses:
             room = Room.objects.get(id=req.room_id)
             form_id = int(req.form_id)
             form = RequestForm.objects.get(id=form_id)

@@ -119,12 +119,7 @@ export default class GroupForm {
         this.$display_selected_users_table.on('change', '.set-coordinator', (e) => {
             const $checkBox = $(e.currentTarget);
             const id = $checkBox.data('id');
-
-            if ($checkBox.is(':checked')) {
-                this.changeCoordinatorFlag(this.selected_members, id, true)
-            } else {
-                this.changeCoordinatorFlag(this.selected_members, id, false)
-            }
+            this.changeCoordinatorFlag(this.selected_members, id, $checkBox.is(':checked'))
 
             this.refreshUserList();
         });
@@ -226,8 +221,6 @@ export default class GroupForm {
         let htmlBuffer = userArray.map(([id, user]) => {
             let checked = ""
 
-            console.log(user)
-
             if (user.is_coordinator) {
                 checked = "checked"
             }
@@ -250,7 +243,7 @@ export default class GroupForm {
 
     }
 
-    addMemberToMap(map, id, first_name, last_name) {
+    addMemberToMap(map, id, first_name, last_name, is_coordinator=false) {
         if (typeof id === "string") {
             id = parseInt(id)
         }
@@ -265,7 +258,7 @@ export default class GroupForm {
             {
                 "first_name": first_name,
                 "last_name": last_name,
-                "is_coordinator": false
+                "is_coordinator": is_coordinator
             }
         )
     }

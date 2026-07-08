@@ -13,7 +13,7 @@
       <th>Building & Room Info</th>
 
       {% if is_admin %}
-        <th>PIs</th>
+        <th>PIs/Groups</th>
       {% endif %}
 
       <th>Required Trainings</th>
@@ -47,34 +47,7 @@
 
       {% if is_admin %}
         <td class="text-left">
-          <ul class="list-minus-20">
-            {% for manager in room.managers.all %}
-              <li>
-                {% concat_strings room.id manager.id as args %}
-                {% with manager_status_string=form.id|get_status_by_manager:args %}
-                {% if manager_status_string %}
-                  <span class="font-weight-600 text-{% if manager_status_string == 'Approved' %}success{% elif manager_status_string == 'Declined' %}danger{% elif manager_status_string == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }} (PI)</span>
-                {% else %}
-                  <span>{{ manager.get_full_name }} (PI)</span>
-                {% endif %}
-                {% endwith %}
-              </li>
-            {% endfor%}
-
-              {% for group in room.groups.all %}
-                  <li>
-                      {% concat_strings room.id group.id as args %}
-                  {% with group_status_string=form.id|get_status_by_group:args %}
-                      {% if group_status_string %}
-                          <span class="font-weight-600 text-{% if group_status_string == 'Approved' %}success{% elif group_status_string == 'Declined' %}danger{% elif group_status_string == 'Insufficient Info' %}orange{% endif %}">{{ group.name }}</span>
-                      {% else %}
-                          <span>{{ group.name }} </span>
-                      {% endif %}
-                  </li>
-                  {% endwith %}
-              {% endfor%}
-
-          </ul>
+              {% include 'key_request/subpages/entities_list_with_approval_status.html' with form=form room=room %}
         </td>
       {% endif %}
 
