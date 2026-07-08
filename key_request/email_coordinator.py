@@ -16,7 +16,6 @@ class ApprovalNotificationManager:
         self.status = status
         self.operator = operator
 
-    # Get all the data needed
     def _collect_data(self):
         """
         Returns:
@@ -81,7 +80,7 @@ class ApprovalNotificationManager:
 
         emails_to_send += self._send_pi_emails(form_pi_rooms, form_group_rooms)
         emails_to_send += self._send_applicant_emails(fully_approved)
-        # self._send_multiple(emails_to_send)
+        self._send_multiple(emails_to_send)
 
     def _send_pi_emails(self, form_pi_rooms, form_group_rooms):
         pi_data = {}
