@@ -33,8 +33,13 @@ def get_headers(model):
 def is_room_approver(user_id):
     if Room.objects.count() == 0:
         return False
-    return Room.objects.filter(Q(managers__id=user_id) | Q(groups__roles__user_id=user_id))
+    return Room.objects.filter(Q(managers__id=user_id) | Q(groups__roles__user_id=user_id)).exists()
 
+def is_approval_group_coordinator(user_id):
+    if ApprovalGroup.objects.count() == 0:
+        return False
+
+    return ApprovalGroupRole.objects.filter(user_id=user_id, role=ApprovalGroupRole.Role.COORDINATOR).exists()
 
 def preprocess_rooms(rooms):
     by_building = {}
@@ -98,117 +103,9 @@ def check_user_trainings(user, selected_rooms):
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
 
 
-def search_filters_for_requests(query, option=None):
-    forms = RequestForm.objects.all()
-
-    if option == 'expiry':
-        forms = RequestForm.objects.select_related('user', 'supervisor').filter(
-            expiry_date__isnull=False,
-            expiry_date__lt=timezone.localdate()
-        ).order_by('-expiry_date', '-id')
-
-    new_forms = forms.filter(requestformstatus__isnull=True)
-
-    total = len(forms)
-    if query:
-        if query['building']:
-            forms = forms.filter(rooms__building__code__exact=query['building']).distinct()
-        if query['floor']:
-            forms = forms.filter(rooms__floor__name__exact=query['floor']).distinct()
-        if query['number']:
-            forms = forms.filter(rooms__number__exact=query['number']).distinct()
-        if query['room']:
-            forms = forms.filter(rooms__id__exact=query['room']).distinct()
-        if query['name']:
-            forms = filter_forms_by_full_name(forms, query.get('name'))
-            # forms = forms.filter(Q(user__first_name__icontains=query['name'].strip()) | Q(user__last_name__icontains=query['name'].strip())).distinct()
-        if query['status']:
-            if query['status'] == "New":
-                forms = forms.filter(requestformstatus__isnull=True)
-            else:
-                forms = forms.filter(requestformstatus__status__exact=REV_REQUEST_STATUS_DICT.get(query['status'])).distinct()
-
-    return forms, total, new_forms
-
-
-# Takes the name search term and looks for partial matches of users' full names
-def filter_forms_by_full_name(forms, name):
-    return forms.annotate(
-        full_name = Concat(F('user__first_name'), Value(' '), F('user__last_name'), output_field=CharField())
-    ).filter(
-        Q(full_name__icontains=name)
-    ).distinct()
-
-
-def get_forms_per_manager(user):
-    # rooms_managed = Room.objects.filter(managers=user)
-    # return RequestForm.objects.filter(rooms__in=rooms_managed)
-    return RequestForm.objects.filter(rooms__managers=user)
-
 def make_request_form_identifier(room, form, entity_label, entity_id):
     return f"{entity_label}:{entity_id}__{form.id}:{room.id}"
 
-def get_manager_dashboard(user, query=None):
-    if Room.objects.count() == 0:
-        return 0, 0, []
-
-    rooms_managed = Room.objects.filter(managers=user)
-    form_filtered = RequestForm.objects.filter(rooms__in=rooms_managed)
-    total_forms = form_filtered.count()
-
-    num_new_forms = 0
-    for form in form_filtered.all():
-        if form.requestformstatus_set.filter(manager_id=user.id).count() == 0:
-            num_new_forms += 1
-
-    if query:
-        if query.get('building'):
-            rooms_managed = rooms_managed.filter(building__code__exact=query.get('building'))
-        if query.get('floor'):
-            rooms_managed = rooms_managed.filter(floor__name__exact=query.get('floor'))
-        if query.get('number'):
-            rooms_managed = rooms_managed.filter(number__exact=query.get('number'))
-
-    forms = []
-
-    for room in rooms_managed.all():
-        for form in room.requestform_set.all():
-            form.manager = user
-            form.room = room
-            form.status = form.requestformstatus_set.filter(room_id=form.room.id, manager_id=user.id)
-            if not query or (not query.get('name') and not query.get('status')):
-                forms.append(form)
-                continue # no filters so add form
-
-            if query.get('status'):
-                form_status = form.status.last().status if form.status.count() > 0 else None
-                if not validate_status(query.get('status'), form_status):
-                    continue   # form status does not match
-
-            if query.get('name'):
-                name = query.get('name').lower()
-                full_name = f"{form.user.first_name.lower()} {form.user.last_name.lower()}"
-                if name not in full_name:
-                    continue # name does not match
-
-            forms.append(form)
-
-    forms = sorted(forms, key=lambda x: x.id, reverse=True)
-    for i, form in enumerate(forms):
-        form.counter = len(forms) - i
-
-    return total_forms, num_new_forms, forms
-
-# Returns true if the status of the form matches the query
-# If there is no form status, checks if the query_status is NEW
-def validate_status(query_status, form_status):
-    if not form_status:
-        return query_status == "New"
-
-    if query_status in REV_REQUEST_STATUS_DICT.keys():
-        return form_status == REV_REQUEST_STATUS_DICT.get(query_status)
-
-    return False
 
 # Returns True if all PIs have approved a room; If there are no managers or groups, returns False
 def all_pis_approved(form, room):
@@ -344,12 +241,15 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
 
 def get_group_by_id(group_id):
     try:
-        return ApprovalGroup.objects.prefetch_related('roles__user').get(id=group_id)
+        return ApprovalGroup.objects.prefetch_related('roles__user', 'group_rooms').get(id=group_id)
     except ApprovalGroup.DoesNotExist:
         return None
 
 def get_all_groups():
     return ApprovalGroup.objects.all()
+
+def get_all_user_groups(user):
+    return ApprovalGroup.objects.filter(roles__user=user)
 
 def get_group_member_ids(group):
     id_arr = group.members.values_list('id', flat=True)

@@ -28,6 +28,18 @@ class FloorForm(forms.ModelForm):
             'name': 'It must be unique. Maximum characters: 50'
         }
 
+class UserApprovalGroupForm(forms.ModelForm):
+    ''' Add a user to an approval group '''
+
+    class Meta:
+        model = ApprovalGroupRole
+        fields = ['user', 'role']
+        labels = { 'user': 'CWL' }
+        widgets = {
+            'user': forms.TextInput(attrs={ 'class': 'form-control' }),
+            'role': forms.Select(attrs={ 'class': 'form-control' }),
+        }
+
 class ApprovalGroupForm(forms.ModelForm):
 
     search_name = forms.CharField(

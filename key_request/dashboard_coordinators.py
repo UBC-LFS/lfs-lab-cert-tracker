@@ -221,7 +221,7 @@ class GroupFormProcessor(EntityRequestFormProcessor):
 
         self.user_groups = ApprovalGroup.objects.filter(roles__user=user)
 
-        self.label = "Group Form"
+        self.label = "Group"
         self.priority = 1
 
     def get_all_rooms(self):
@@ -252,7 +252,7 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
     def __init__(self, query, user):
         super().__init__(query, user)
 
-        self.label = "PI Form"
+        self.label = "Individual"
         self.priority = 2
 
     def get_all_rooms(self):

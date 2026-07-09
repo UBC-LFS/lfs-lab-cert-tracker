@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect, Http404, JsonResponse, QueryDict
 from django.utils.html import format_html
 from django.db.utils import IntegrityError
 
-from django.db.models import Q, Case, When, IntegerField, Value
+from django.db.models import Q, Case, When, IntegerField, Value, Exists, OuterRef
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -23,7 +23,7 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 
 from lfs_lab_cert_tracker.models import Lab, Cert
-from app.accesses import access_admin_only, access_pi_admin_key_request
+from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
@@ -982,16 +982,31 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
 # GROUPS START
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ViewApprovalGroups(LoginRequiredMixin, View):
+
+    def setup(self, request, *args, **kwargs):
+
+        setup = super().setup(request, *args, **kwargs)
+
+        self.user = request.user
+
+        self.method = kwargs.get('method')
+
+        if self.user.is_superuser and self.method == 'admin':
+            self.groups = func.get_all_groups()
+        else:
+            self.groups =  func.get_all_user_groups(self.user)
+
+        return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        all_groups = func.get_all_groups()
-        total_groups = all_groups.count()
+        total_groups = self.groups.count()
 
         if total_groups == 0:
             return render(request, 'key_request/admin/all_groups.html', {
+                'method': self.method,
                 'total_groups': 0,
                 'num_filtered_groups': 0,
                 'groups': [],
@@ -999,10 +1014,11 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
 
         selected_ids = request.GET.getlist('members[]', [])
         coordinator_ids = request.GET.getlist('coordinators[]', [])
+
         if selected_ids and coordinator_ids:
             all_groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids)
 
-        all_groups = all_groups.prefetch_related('roles__user')
+        self.groups = self.groups.prefetch_related('roles__user')
 
         group_name = request.GET.get('name')
         member_first_name = request.GET.get('member_first_name')
@@ -1010,18 +1026,27 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         room_pk = request.GET.get('room_pk')
 
         if group_name:
-            all_groups = all_groups.filter(name__icontains=group_name)
+            self.groups = self.groups.filter(name__icontains=group_name)
         if member_first_name:
-            all_groups = all_groups.filter(roles__user__first_name__icontains=member_first_name).distinct()
+            self.groups = self.groups.filter(roles__user__first_name__icontains=member_first_name).distinct()
         if member_last_name:
-            all_groups = all_groups.filter(roles__user__last_name__icontains=member_last_name).distinct()
+            self.groups = self.groups.filter(roles__user__last_name__icontains=member_last_name).distinct()
         if room_pk:
-            all_groups = all_groups.filter(manager_groups__pk=room_pk).distinct()
+            self.groups = self.groups.filter(manager_groups__pk=room_pk).distinct()
 
-        num_filtered_groups = all_groups.count()
+        self.groups = self.groups.annotate(
+            is_coordinator=Exists(ApprovalGroupRole.objects.filter(
+                user=self.user,
+                role=ApprovalGroupRole.Role.COORDINATOR,
+                group=OuterRef('pk')
+            )
+            )
+        )
+
+        num_filtered_groups = self.groups.count()
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(all_groups, 10)
+        paginator = Paginator(self.groups, 10)
 
         try:
             groups = paginator.page(page)
@@ -1030,11 +1055,13 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         except EmptyPage:
             groups = paginator.page(paginator.num_pages)
 
-
         return render(request, 'key_request/admin/all_groups.html', {
+            'method': self.method,
             'total_groups': total_groups,
             'num_filtered_groups': num_filtered_groups,
             'groups': groups,
+            'is_admin': self.user.is_superuser,
+            'is_group_coordinator': func.is_approval_group_coordinator(request.user.id),
             'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
         })
 
@@ -1087,6 +1114,8 @@ class EditApprovalGroups(LoginRequiredMixin, View):
         setup = super().setup(request, *args, **kwargs)
         group_id = kwargs.get('group_id')
 
+        self.user = request.user
+
         self.group = func.get_group_by_id(group_id)
 
         return setup
@@ -1129,7 +1158,7 @@ class EditApprovalGroups(LoginRequiredMixin, View):
             'group': self.group,
             'group_members': self.group.roles.all().order_by('-role', 'user__first_name', 'user__last_name'),
             'group_members_dict': self._make_member_dict(),
-            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
+            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR,
         })
 
 
@@ -1191,7 +1220,7 @@ def user_autofill_suggestions(request):
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@access_admin_only
+@access_group_coordinator_admin_key_request
 @require_http_methods(['GET'])
 def validate_approval_group(request):
     group_id = request.GET.get('group_id', None)

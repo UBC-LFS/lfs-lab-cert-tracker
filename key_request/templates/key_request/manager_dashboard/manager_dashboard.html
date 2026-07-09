@@ -44,6 +44,7 @@
                         #
                     {% endif %}
                 </th>
+                <th>Approval Role</th>
                 <th>Applicant <br/> Full Name</th>
                 <th>Building & <br/> Room Info</th>
                 <th>Supervisor</th>
@@ -61,11 +62,12 @@
                 <tr>
                     <td>
                         {% if request.user.is_superuser %}
-                            {{ form.label }}:<br> (ID: {{ form.id }})
+                           {{ form.id }}
                         {% else %}
-                            {{ form.label }}:<br> {{ form.counter }}
+                          {{ form.counter }}
                         {% endif %}
                     </td>
+                <td>{{ form.label }}</td>
                     <td>{{ form.user.get_full_name }}</td>
                     <td>
                         {{ form.room.building.code }} {{ form.room.floor.name }} <br/>
@@ -124,14 +126,14 @@
                                    data-user="{{ form.user.get_full_name }}"
                                    data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
                                    data-number="{{ form.room.number }}"
-                                   data-is_new="{% if form.is_new == 0 %}true{% else %}false{% endif %}"/>
+                                   data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
                         {% else %}
                             <input class="room-checkbox" type="checkbox"
                                    value="{{ form.id }}_{{ form.room.id }}_{{ form.group.id }}"
                                    data-user="{{ form.user.get_full_name }}"
                                    data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
                                    data-number="{{ form.room.number }}"
-                                   data-is_new="{% if form.is_new == 0 %}true{% else %}false{% endif %}"/>
+                                   data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
                         {% endif %}
                     </td>
                 </tr>

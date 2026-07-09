@@ -58,11 +58,8 @@
 				</thead>
 				{% for item in items %}
 					<tr>
-						<td>{% if item.label %}
-                            {{ item.label }} <br>(ID: {{ item.id }})
-                        {% else %}
+						<td>
                             {{ item.id }}
-                        {% endif %}
                         </td>
 						<td>
 							{{ item.room.building.code }} {{ item.room.floor.name }} <br />

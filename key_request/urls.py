@@ -27,9 +27,14 @@ urlpatterns += [
     path('all-rooms/delete/', admin_views.delete_room, name='delete_room'),
 
     # Groups
-    path('all-groups/', admin_views.ViewApprovalGroups.as_view(), name='all_groups'),
+    path('manager-groups/', admin_views.ViewApprovalGroups.as_view(), {'method': 'manager'}, name='manager_groups'),
+    path('all-groups/', admin_views.ViewApprovalGroups.as_view(), {'method': 'admin'}, name='all_groups'),
     path('<int:group_id>/edit-group/', admin_views.EditApprovalGroups.as_view(), name='edit_group'),
+    path('<int:group_id>/manage-group/', manager_views.EditManagerGroups.as_view(), name='manager_edit_group'),
     path('all-groups/delete/', admin_views.delete_group, name='delete_group'),
+
+    path('<int:group_id>/change-member-role/', manager_views.change_group_member_role, name='change_group_member_role'),
+    path('<int:group_id>/delete-member/', manager_views.delete_group_member, name='delete_group_member'),
     path('create-group', admin_views.CreateApprovalGroup.as_view(), name='create_group'),
     path('user_autofill/', admin_views.user_autofill_suggestions, name='user_autofill'),
     path('validate_room_group/', admin_views.validate_approval_group, name='validate_room_group'),

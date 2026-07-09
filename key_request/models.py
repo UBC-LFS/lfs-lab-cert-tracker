@@ -76,6 +76,9 @@ class ApprovalGroupRole(models.Model):
     user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE, related_name='approval_group_roles')
     role = models.IntegerField(choices=Role.choices, default=Role.MEMBER)
 
+    class Meta:
+        unique_together = ('group', 'user')
+
 
 class Room(models.Model):
     building = models.ForeignKey(Building, on_delete=models.DO_NOTHING)

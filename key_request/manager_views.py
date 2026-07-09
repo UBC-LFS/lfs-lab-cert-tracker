@@ -1,4 +1,6 @@
-from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.views.decorators.cache import never_cache, cache_control
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -6,15 +8,18 @@ from django.contrib import messages
 from django.urls import reverse
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
+from psycopg2 import IntegrityError
 
+from app.accesses import access_group_coordinator_admin_key_request
 from app.utils import NUM_PER_PAGE
+from lfs_lab_cert_tracker import settings
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, RequestForm, RequestFormStatus
-from .forms import KeyRequestForm
+from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, ApprovalGroup
+from .forms import KeyRequestForm, ApprovalGroupForm, UserApprovalGroupForm
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator
 from .utils import REQUEST_STATUS_DICT
@@ -175,3 +180,100 @@ class ManagerRooms(LoginRequiredMixin, View):
             'search_filter_options': func.search_filter_options,
             'is_admin': True if request.user.is_superuser else False
         })
+
+@method_decorator([never_cache, access_group_coordinator_admin_key_request], name='dispatch')
+class EditManagerGroups(LoginRequiredMixin, View):
+
+    group = None
+
+    def setup(self, request, *args, **kwargs):
+
+        setup = super().setup(request, *args, **kwargs)
+        group_id = kwargs.get('group_id')
+
+        self.user = request.user
+
+        self.group = func.get_group_by_id(group_id)
+
+        return setup
+
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        if not self.group:
+            messages.error(request, 'Error! No group matches the id specified. It may have been deleted.')
+            return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+        members = []
+        for member in self.group.roles.all():
+            if member.user == self.user:
+                members.insert(0, member)
+            else:
+                members.append(member)
+
+
+        return render(request, 'key_request/manager_dashboard/edit_group_as_manager.html', {
+            'form': UserApprovalGroupForm(initial={
+                'group': self.group
+            }),
+            'group': self.group,
+            'members': members,
+            'user': self.user,
+            'role_choices': ApprovalGroupRole.Role.choices
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        username = request.POST.get('user')
+
+        user = User.objects.filter(username=username)
+        if not user.exists():
+            messages.error(request, 'Error! Could not find user with CWL {0}.'.format(username))
+            return HttpResponseRedirect(reverse('key_request:manager_edit_group', kwargs={'group_id': self.group.id}))
+        user = user.first()
+
+        role_id = request.POST.get('role')
+        try:
+            ApprovalGroupRole.objects.create(user_id=user.id, role=role_id, group_id=self.group.id)
+            messages.success(request, 'Success! User {0} has been added to the group.'.format(user.get_full_name()))
+        except IntegrityError:
+            messages.error(request, 'Error! Failed to add User {0}. They may already exist within the group.').format(user.get_full_name())
+
+        return HttpResponseRedirect(reverse('key_request:manager_edit_group', kwargs={'group_id': self.group.id}))
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_group_coordinator_admin_key_request
+@require_http_methods(['POST'])
+def delete_group_member(request, group_id):
+    user_id = request.POST.get('user')
+    try:
+        member = ApprovalGroupRole.objects.filter(group_id=group_id, user_id=user_id).first()
+        name = member.user.get_full_name()
+        member.delete()
+        messages.success(request, 'Success! User {0} has been removed from the group.'.format(name))
+    except ApprovalGroupRole.DoesNotExist:
+        messages.error(request, 'Error! Failed to remove the User. They may have already been removed.')
+    return redirect(reverse('key_request:manager_edit_group', kwargs={'group_id': group_id}))
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_group_coordinator_admin_key_request
+@require_http_methods(['POST'])
+def change_group_member_role(request, group_id):
+    user_id = request.POST.get('user')
+    role_id = request.POST.get('role')
+
+    try:
+        member = ApprovalGroupRole.objects.filter(group_id=group_id, user_id=user_id).first()
+        name = member.user.get_full_name()
+        member.role = int(role_id)
+        member.save()
+        role_string = member.get_role_display()
+        messages.success(request, 'Success! User {0}\'s role has been updated to {1}.'.format(name, role_string))
+    except ApprovalGroupRole.DoesNotExist:
+        messages.error(request, 'Error! Failed to change the User\'s Role.')
+    return redirect(reverse('key_request:manager_edit_group', kwargs={'group_id': group_id}))

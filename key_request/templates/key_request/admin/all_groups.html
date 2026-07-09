@@ -2,116 +2,135 @@
 {% load custom_tags %}
 
 {% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
+    {% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+    {% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
 
-{% include 'key_request/left_side_menu.html' %}
+    {% include 'key_request/left_side_menu.html' %}
 
-<section class="main-content">
-	<h3 class="title">
-		All Approval Groups
-		<small class="text-secondary">(Total: {{ total_groups }})</small>
-	</h3>
-
-
-	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
-        {% include 'key_request/subpages/search_filter_groups.html' %}
-	</div>
-	{% include 'key_request/subpages/search_results.html' with total=num_filtered_groups items=groups %}
-
-	<table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
-	  <thead>
-	    <tr>
-				<th>ID</th>
-				<th>Group Name</th>
-	            <th>Group Members</th>
-				<th>Associated Rooms</th>
-				<th>Actions</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-			{% for group in groups %}
-	      <tr>
-	        <td>
-                {{ group.id }}
-            </td>
-            <td>{{ group.name }}</td>
-
-            <td class="text-left">
-            <ul class="mb-0">
-                {% for user_role in group.user_roles_ordered %}
-                    <li>
-                        {{ user_role.user.get_full_name }}
-                        {% if user_role.role == COORDINATOR_ROLE %}
-                            <span class="badge badge-success">Edit Access
-                            </span>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-            </td>
-	        <td class="text-left">
-            {% if group.room_set.all|length > 0 %}
-                <ul class="mb-0">
-                    {% for room in group.room_set.all %}
-                        <li>{{ room.building.code }} {{ room.floor }} {{ room.number }}</li>
-                    {% endfor %}
-                </ul>
+    <section class="main-content">
+        <h3 class="title">
+            {% if method == 'admin' %}
+                All
             {% else %}
-                No associated rooms
+                My
             {% endif %}
+            Approval Groups
+            <small class="text-secondary">(Total: {{ total_groups }})</small>
+        </h3>
 
-            </td>
-                <td>
-                    <a class="btn btn-link btn-sm" href="{% url 'key_request:edit_group' group_id=group.id %}">Edit</a>
 
-                    <button class="btn btn-xs fs-8 btn-danger delete-group-btn" type="button"
-                            data-toggle="modal"
-                            data-target="#room-groups-delete-modal"
-                            data-id="{{ group.id }}"
-                            data-name="{{ group.name }}"
-                            data-group-members="{{ group.members.all|join_attribute_with_comma:"get_full_name" }}"
-                    >Delete
-                    </button>
-	        </td>
-	      </tr>
-	    {% empty %}
-	      <tr>
-	        <td colspan="100%">No groups found</td>
-	      </tr>
-	    {% endfor %}
-	  </tbody>
-	</table>
+        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+            {% include 'key_request/subpages/search_filter_groups.html' %}
+        </div>
+        {% include 'key_request/subpages/search_results.html' with total=num_filtered_groups items=groups %}
 
-	{% include 'key_request/subpages/pagination.html' with data=rooms %}
+        <table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Group Name</th>
+                <th>Group Members</th>
+                <th>Associated Rooms</th>
+                {% if is_group_coordinator or is_admin %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for group in groups %}
+                <tr>
+                    <td>
+                        {{ group.id }}
+                    </td>
+                    <td>{{ group.name }}</td>
 
-    <div class="modal fade" id="room-groups-delete-modal" tabindex="-1" role="dialog" aria-labelledby="room-groups-delete-modal-label" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-info" id="room-groups-delete-modal-label">Delete Group</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body text-center">
-                    <h5 class="text-danger">Are you sure you want to delete this group?</h5>
-                    <div class="mb-3"><h5>Group: <span id="delete-group-name"></span> (ID: <span id="delete-group-id"></span>)</h5></div>
-                    <div class="mb-3">Members: <span id="group-members-string"></span></div>
+                    <td class="text-left">
+                        <ul class="mb-0">
+                            {% for user_role in group.user_roles_ordered %}
+                                <li>
+                                    {{ user_role.user.get_full_name }}
+                                    {% if user_role.role == COORDINATOR_ROLE %}
+                                        <span class="badge badge-success">Coordinator
+                            </span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="text-left">
+                        {% if group.group_rooms.all %}
+                            <ul class="mb-0">
+                                {% for room in group.group_rooms.all %}
+                                    <li>{{ room.building.code }} {{ room.floor }} {{ room.number }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <div class="text-center">No associated rooms</div>
+                        {% endif %}
 
-                    <form action="{% url 'key_request:delete_group' %}" method="post">
-                        {% csrf_token %}
+                    </td>
+                    {% if is_group_coordinator or is_admin %}
+                        <td>
+                            {% if is_admin %}
+                                <a class="btn btn-link btn-sm"
+                                   href="{% url 'key_request:edit_group' group_id=group.id %}">Edit</a>
+                                <button class="btn btn-xs fs-8 btn-danger delete-group-btn" type="button"
+                                        data-toggle="modal"
+                                        data-target="#room-groups-delete-modal"
+                                        data-id="{{ group.id }}"
+                                        data-name="{{ group.name }}"
+                                        data-group-members="
+                                                {{ group.members.all|join_attribute_with_comma:"get_full_name" }}"
+                                >Delete
+                                </button>
+                            {% elif group.is_coordinator %}
+                                <a class="btn btn-link btn-sm"
+                                   href="{% url 'key_request:manager_edit_group' group_id=group.id %}">Edit</a>
+                            {% endif %}
 
-                        <input type="hidden" name="group" value="" />
-                        <input class="btn btn-danger mt-3" type="submit" value="Confirm to delete" />
-                    </form>
+                        </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="100%">You're not currently a member of any approval groups.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% include 'key_request/subpages/pagination.html' with data=rooms %}
+
+        <div class="modal fade" id="room-groups-delete-modal" tabindex="-1" role="dialog"
+             aria-labelledby="room-groups-delete-modal-label" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-info" id="room-groups-delete-modal-label">Delete Group</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <h5 class="text-danger">Are you sure you want to delete this group?</h5>
+                        <div class="mb-3"><h5>Group: <span id="delete-group-name"></span> (ID: <span
+                                id="delete-group-id"></span>)</h5></div>
+                        <div class="mb-3">Members: <span id="group-members-string"></span></div>
+
+                        <form action="{% url 'key_request:delete_group' %}" method="post">
+                            {% csrf_token %}
+
+                            <input type="hidden" name="group" value=""/>
+                            <input class="btn btn-danger mt-3" type="submit" value="Confirm to delete"/>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-</section>
+    </section>
 
 {% endblock %}
 
