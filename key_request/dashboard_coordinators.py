@@ -102,7 +102,8 @@ class RequestFormProcessor:
         if not status:
             return self.status_q == "New"
 
-        if status in REV_REQUEST_STATUS_DICT.keys():
+
+        if self.status_q in REV_REQUEST_STATUS_DICT.keys():
             return status == REV_REQUEST_STATUS_DICT.get(self.status_q)
 
         return False
@@ -233,7 +234,6 @@ class EntityRequestFormProcessor(RequestFormProcessor):
             total_new_forms=Count('pk', filter=~Exists(request_form_status_query), distinct=True),
         )
         return result['total_forms'], result['total_new_forms']
-
 
 class GroupFormProcessor(EntityRequestFormProcessor):
 
