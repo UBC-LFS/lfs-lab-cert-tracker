@@ -746,10 +746,32 @@ class EditRoom(LoginRequiredMixin, View):
 
         return setup
 
+    def _make_conflict_map(self, group_ids, manager_ids):
+        # no distinct; want dupes
+        groups_members = ApprovalGroupRole.objects.filter(group_id__in=group_ids)
+
+        conflict_map = dict()
+
+        managers = User.objects.filter(id__in=manager_ids)
+
+        for manager in managers:
+            conflict_map.setdefault(manager, []).append("PI")
+
+        for member in groups_members:
+            conflict_map.setdefault(member.user, []).append(member.group.name)
+
+        return dict(
+            sorted(
+                conflict_map.items(),
+                key=lambda item: item[0].first_name
+            )
+        )
+
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
-        
+
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
@@ -759,6 +781,7 @@ class EditRoom(LoginRequiredMixin, View):
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
             'tab': self.tab,
+            'conflict_map': self._make_conflict_map(group_ids, manager_ids) if self.tab == 'pis' else None,
             'manager_ids': manager_ids,
             'group_ids': group_ids,
             'area_ids': area_ids,

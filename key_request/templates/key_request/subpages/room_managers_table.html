@@ -13,12 +13,12 @@
   <tbody>
     {% for user in users %}
       <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.get_full_name }}</td>
+        <td class="userID">{{ user.id }}</td>
+        <td class="userName">{{ user.get_full_name }}</td>
         <td>{{ user.username }}</td>
         <td>{{ user.email }}</td>
         <td>
-          <input id="{{ user.id }}" type="checkbox" name="managers[]" value="{{ user.id }}" {% if user.id in manager_ids %}checked{% endif %} />
+          <input class='add-approver-checkbox' id="{{ user.id }}" type="checkbox" name="managers[]" value="{{ user.id }}" {% if user.id in manager_ids %}checked{% endif %} />
         </td>
       </tr>
     {% endfor %}
