@@ -1,9 +1,10 @@
 from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, OuterRef, Subquery, Exists
-from key_request.functions import has_date_passed, make_request_form_identifier
+from key_request.functions import has_date_passed, make_request_form_identifier, all_pis_approved
 
-from key_request.utils import REV_REQUEST_STATUS_DICT
+from key_request.utils import REV_REQUEST_STATUS_DICT, APPROVED
+
 
 class RequestFormProcessor:
     user = None
@@ -123,6 +124,26 @@ class RequestFormProcessor:
         form.priority = self.priority
         form.room = room
         return form
+
+class ApplicantRequestFormProcessor:
+
+    def __init__(self, user):
+        self.user = user
+
+    def get_all_status_annotated_forms(self, forms):
+
+        for form in forms:
+            form.status = "Approved"
+            latest_status = form.requestformstatus_set.all().order_by('-created_at')
+            if latest_status:
+                form.status_created_at = latest_status.first().created_at
+            for room in form.rooms.all():
+                if not(all_pis_approved(form, room)):
+                    form.status = 'Pending by Supervisor'
+                    form.status_created_at = None
+                    break
+
+        return forms
 
 class EntityRequestFormProcessor(RequestFormProcessor):
 

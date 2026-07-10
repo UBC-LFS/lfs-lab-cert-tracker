@@ -7,6 +7,7 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from app.utils import NUM_PER_PAGE
+from .dashboard_coordinators import ApplicantRequestFormProcessor
 
 from .utils import APPROVED
 from . import functions as func
@@ -32,31 +33,12 @@ class Index(LoginRequiredMixin, View):
         except EmptyPage:
             forms = paginator.page(paginator.num_pages)
 
+        processor = ApplicantRequestFormProcessor(request.user)
+        forms = processor.get_all_status_annotated_forms(forms)
+
+
         for form in forms:
-            form.status = 'Pending by Supervisor'
-            form.status_created_at = None
-
-            room_ids = []
-            num_managers = 0
-            manager_approvals = 0
-            for room in form.rooms.all():
-                room_ids.append(room.id)
-                num_managers += room.managers.count()
-
-            for room in form.rooms.all():
-                for manager in room.managers.all():
-                    manager.status = None
-                    status_filtered = form.requestformstatus_set.filter(form_id=form.id, room_id=room.id, manager_id=manager.id)
-                    if status_filtered.exists():
-                        status = status_filtered.last()
-                        if status.status == APPROVED:
-                            manager_approvals += 1
-                            if not form.status_created_at or status_filtered.last().created_at > form.status_created_at:
-                                form.status_created_at = status_filtered.last().created_at
-            
-            if num_managers > 0 and num_managers == manager_approvals:
-                form.status = 'Approved'
-
+            room_ids = form.rooms.all().values_list('id', flat=True)
             user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, room_ids)
             form.user_trainings = user_trainings
             form.total_missing = total_missing
