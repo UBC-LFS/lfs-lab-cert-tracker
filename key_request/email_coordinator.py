@@ -149,7 +149,7 @@ class ApprovalNotificationManager:
             form = RequestForm.objects.get(id=form_id)
             applicant = form.user
 
-            individual_html = self._rooms_to_html(data.get('individual', []))
+            individual_html = self._rooms_to_html(data.get('individuals', []))
             group_html = self._groups_to_html(data.get('groups', {}))
 
             sections.append(
@@ -171,7 +171,7 @@ class ApprovalNotificationManager:
         list_rooms = []
         for room in rooms:
             if room.id not in seen_rooms:
-                f'<li>{self._display_room(room)}</li>'
+                list_rooms.append(f'<li>{self._display_room(room)}</li>')
                 seen_rooms.add(room.id)
 
         return f'<ul>{"".join(list_rooms)}</ul>'
