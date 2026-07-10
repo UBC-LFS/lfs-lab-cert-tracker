@@ -1,7 +1,7 @@
 from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, OuterRef, Subquery, Exists
-from key_request.functions import has_date_passed
+from key_request.functions import has_date_passed, make_request_form_identifier
 
 from key_request.utils import REV_REQUEST_STATUS_DICT
 
@@ -245,6 +245,7 @@ class GroupFormProcessor(EntityRequestFormProcessor):
     def _annotate_form_object(self, form, room, is_new):
         form = super()._annotate_form_object(form, room, is_new)
         form.group = self.current_group
+        form.request_form_identifier = make_request_form_identifier(room, form, 'group_id', self.current_group.id)
         return form
 
 class ManagerFormProcessor(EntityRequestFormProcessor):
@@ -274,6 +275,7 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
     def _annotate_form_object(self, form, room, is_new):
         form = super()._annotate_form_object(form, room, is_new)
         form.manager = self.current_manager
+        form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.current_manager.id)
         return form
 
 

@@ -120,21 +120,12 @@
                     {% endif %}
                     </td>
                     <td>
-                        {% if form.group %}
-                            <input class="room-checkbox" type="checkbox"
-                                   value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}"
-                                   data-user="{{ form.user.get_full_name }}"
-                                   data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
-                                   data-number="{{ form.room.number }}"
-                                   data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
-                        {% else %}
-                            <input class="room-checkbox" type="checkbox"
-                                   value="{{ form.id }}_{{ form.room.id }}_{{ form.group.id }}"
-                                   data-user="{{ form.user.get_full_name }}"
-                                   data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
-                                   data-number="{{ form.room.number }}"
-                                   data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
-                        {% endif %}
+                        <input class="room-checkbox" type="checkbox"
+                               value="{{ form.request_form_identifier }}"
+                               data-user="{{ form.user.get_full_name }}"
+                               data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
+                               data-number="{{ form.room.number }}"
+                               data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
                     </td>
                 </tr>
                 {% empty %}
