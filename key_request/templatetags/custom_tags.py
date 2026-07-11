@@ -73,9 +73,9 @@ def get_status_by_manager(form_id, args):
     room_id = args_splited[0]
     manager_id = args_splited[1]
     
-    status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, manager_id=manager_id)
+    status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, manager_id=manager_id).order_by('-created_at')
     if status_filtered.exists():
-        obj = status_filtered.last()
+        obj = status_filtered.first()
         return REQUEST_STATUS_DICT[obj.status]
     return None
 
