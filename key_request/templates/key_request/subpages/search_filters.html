@@ -51,6 +51,9 @@
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}?page=1">Clear</a>
         <button class="btn btn-sm btn-warning" type="submit" name="method" value="save">Save</button>
 
+      {% elif path == 'expired_requests' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:expired_requests' %}?page=1">Clear</a>
+
       {% elif path == 'manager_dashboard' %}
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:manager_dashboard' %}?page=1">Clear</a>
 
