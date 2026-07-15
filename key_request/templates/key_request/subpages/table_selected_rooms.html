@@ -13,7 +13,7 @@
       <th>Building & Room Info</th>
 
       {% if is_admin %}
-        <th>PIs</th>
+        <th>PIs/Groups</th>
       {% endif %}
 
       <th>Required Trainings</th>
@@ -47,18 +47,7 @@
 
       {% if is_admin %}
         <td class="text-left">
-          <ul class="list-minus-20">
-            {% for manager in room.managers.all %}
-              <li>
-                {% concat_strings room.id manager.id as args %}
-                {% if form.id|get_status_by_manager:args %}
-                  <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
-                {% else %}
-                  <span>{{ manager.get_full_name }}</span>
-                {% endif %}
-              </li>
-            {% endfor%}
-          </ul>
+              {% include 'key_request/subpages/entities_list_with_approval_status.html' with form=form room=room %}
         </td>
       {% endif %}
 
@@ -97,7 +86,7 @@
   {% endfor %}
 </table>
 
-{% if is_admin %}
+{% if is_admin and form %}
   <div class="mt-4">
     <p class="mb-0">Note: Different colours indicate the status of key requests in the <strong>PIs</strong> column.</p>
     <ul>

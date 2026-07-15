@@ -2,9 +2,11 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control, never_cache
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, JsonResponse, QueryDict
 from django.utils.html import format_html
 from django.db.utils import IntegrityError
+
+from django.db.models import Q, Case, When, IntegerField, Value, Exists, OuterRef
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -21,14 +23,18 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 
 from lfs_lab_cert_tracker.models import Lab, Cert
-from app.accesses import access_admin_only, access_pi_admin_key_request
+from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
+from .email_coordinator import ApprovalNotificationManager
 
+from .models import Room, ApprovalGroup, ApprovalGroupRole
+from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
 from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
+from .dashboard_coordinators import DashboardCoordinator, RequestFormProcessor, ExpiredRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
 
 
@@ -47,7 +53,7 @@ class AllRequests(LoginRequiredMixin, View):
             'name': request.GET.get('name'),
             'status': request.GET.get('status')
         }
-        
+
         if method == 'save':
             user_filter = UserFilter.objects.filter(user_id=request.user.id)
             if user_filter.exists():
@@ -56,19 +62,20 @@ class AllRequests(LoginRequiredMixin, View):
             else:
                 UserFilter.objects.create(user=request.user, json=query)
                 messages.success(request, 'Your filter has been saved successfully.')
-            
+
             # Create a new url
             query_params = request.GET.copy()
             query_params.pop('method', None)
             encoded_params = query_params.urlencode()
             base_url = request.path
             new_url = f"{base_url}?{encoded_params}" if encoded_params else base_url
-    
+
             return redirect(new_url)
 
-        form_list, total_forms, new_forms = func.search_filters_for_requests(query)
+        coordinator = DashboardCoordinator(request.user, query, [RequestFormProcessor])
+        coordinator.run()
 
-        num_filtered_forms = len(form_list)
+        form_list = coordinator.get_forms()
 
         page = request.GET.get('page', 1)
         paginator = Paginator(form_list, NUM_PER_PAGE)
@@ -87,10 +94,10 @@ class AllRequests(LoginRequiredMixin, View):
             form.total_expired = total_expired
         
         return render(request, 'key_request/admin/all_requests.html', {
-            'total_forms': total_forms,
-            'num_filtered_forms': num_filtered_forms,
+            'total_forms': coordinator.get_total_forms(),
+            'num_filtered_forms': coordinator.get_num_filtered_forms(),
             'forms': forms,
-            'num_new_forms': new_forms.count(),
+            'num_new_forms': coordinator.get_num_new_forms(),
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
             'is_admin': True if request.user.is_superuser else False
@@ -99,9 +106,11 @@ class AllRequests(LoginRequiredMixin, View):
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         form_id = request.POST.get('form')
+        manager_id = request.POST.get('manager_id', None)
+        group_id = request.POST.get('group_id', None)
         operator = appFunc.get_user_name(request.user)
         status = request.POST.get('status')
-        fs = RequestFormStatus.objects.create(form_id=form_id, operator=operator, status=status)
+        fs = RequestFormStatus.objects.create(form_id=form_id, operator=operator, manager_id=manager_id, group_id=group_id, status=status)
         if fs:
             messages.success(request, "Success! {0}'s status has been updated.".format(operator))
         else:
@@ -123,8 +132,10 @@ class ExpiredRequests(LoginRequiredMixin, View):
             'status': request.GET.get('status')
         }
 
-        form_list, total_forms, _ = func.search_filters_for_requests(query, 'expiry')
-        num_filtered_forms = len(form_list)
+        coordinator = DashboardCoordinator(request.user, query, [ExpiredRequestFormProcessor])
+        coordinator.run()
+
+        form_list = coordinator.get_forms()
 
         page = request.GET.get('page', 1)
         paginator = Paginator(form_list, NUM_PER_PAGE)
@@ -135,10 +146,10 @@ class ExpiredRequests(LoginRequiredMixin, View):
             forms = paginator.page(1)
         except EmptyPage:
             forms = paginator.page(paginator.num_pages)
-        
+
         return render(request, 'key_request/admin/expired_requests.html', {
-            'total_forms': total_forms,
-            'num_filtered_forms': num_filtered_forms,
+            'total_forms': coordinator.get_total_forms(),
+            'num_filtered_forms': coordinator.get_num_filtered_forms(),
             'forms': forms,
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
@@ -175,6 +186,9 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         items = []
         rooms = set()
+
+        # Need both the managers and the groups
+
         for room in self.form.rooms.all():
             rooms.add(room)
             for manager in room.managers.all():
@@ -182,16 +196,28 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, manager_id=manager.id)
                 if status_filtered.exists():
                     status = status_filtered
+            areas = [area.name for area in room.areas.all()]
 
+            managers = room.managers.all()
+            groups = room.groups.all()
+            if not managers and not groups:
                 items.append({
                     'id': self.form.id,
+                    'label': None,
                     'form': self.form,
                     'room': room,
-                    'areas': [area.name for area in room.areas.all()],
-                    'manager': {'id': manager.id, 'full_name': manager.get_full_name()},
-                    'status': status
+                    'areas': areas,
+                    # For sorting the list. Rooms without a managing entity are placed at the end
+                    'priority': 2,
+                    'sorting_key': f"{room.building.name}{room.floor.name}{room.number}"
                 })
-        
+            else:
+                items += self._create_item_with_entity_status(room, areas, 'manager', managers, 0)
+                items += self._create_item_with_entity_status(room, areas, 'group', groups, 1)
+
+        items = sorted(items, key=lambda x: (x['priority'], x['sorting_key']), reverse=False)
+
+
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
             'rooms': list(rooms),
@@ -208,10 +234,54 @@ class ViewFormDetails(LoginRequiredMixin, View):
             'next': self.next
         })
 
+    def _create_item_with_entity_status(self, room, areas, entity_label, entities, priority):
+        items = []
+        if entity_label not in ['group', 'manager']:
+            return []
+
+        entity_filter_label = f"{entity_label}_id"
+
+        for entity in entities:
+            entity_filter = {
+                entity_filter_label: entity.id
+            }
+            status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, **entity_filter).order_by('-created_at')
+            is_new = not status_filtered.exists()
+            status = status_filtered
+
+            if is_new:
+                status = None
+
+            if entity_label == 'group':
+                sorting_key = entity.name
+
+            if entity_label == 'manager':
+                sorting_key = entity.get_full_name()
+
+            items.append({
+                'id': self.form.id,
+                'label': f'{entity_label.capitalize()} Form',
+                'form': self.form,
+                'room': room,
+                'areas': areas,
+                 entity_label: entity,
+                'status': status,
+                'is_new': is_new,
+                # Update all expects the format: <entity_label>:<entity_id>__<form.id>:<room_id>
+                'request_form_identifier': func.make_request_form_identifier(room, self.form, entity_filter_label, entity.id),
+                # For sorting the list of PI/Group (PI=prio_1; group=prio_2); sorting key is then name/get_full_name()
+                'priority': priority,
+                'sorting_key': sorting_key
+            })
+        return items
+
+
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager')
+        manager_id = request.POST.get('manager_id', None)
+        group_id = request.POST.get('group_id', None)
+
         status = request.POST.get('status')
         next = request.POST.get('next')
 
@@ -222,23 +292,22 @@ class ViewFormDetails(LoginRequiredMixin, View):
             else:
                 return redirect('key_request:index')
         
-        if not self.form or not room_id or not manager_id or not next:
+        if not self.form or not room_id or (not manager_id and not group_id) or not next:
             raise SuspiciousOperation
 
-        RequestFormStatus.objects.create(
+        rfs = RequestFormStatus.objects.create(
             form_id = self.form.id,
             room_id = room_id,
             manager_id = manager_id,
+            group_id = group_id,
             operator_id = request.user.id,
             status = status
         )
 
         room = Room.objects.get(id=room_id)
 
-        # Check if the admin is approving of behalf of another manager
-        absent_pi = manager_id if int(manager_id) != int(request.user.id) else None
-
-        func.count_approved_numbers_by_id(status, self.form, room, request.user.id, absent_pi)
+        email_coordinator = ApprovalNotificationManager([rfs], status, request.user)
+        email_coordinator.send_email_notification()
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
         return HttpResponseRedirect(next)
@@ -254,10 +323,10 @@ def send_emails(request):
     expiry_date = request.POST.get('expiry_date', '')
     email_type = request.POST.get('email_type', None)
     next = request.POST.get('next', None)
-    
+
     if not user_id or not room_id or not email_type or not next:
         raise SuspiciousOperation
-    
+
     user = get_object_or_404(User, id=user_id)
     room = get_object_or_404(Room, id=room_id)
     sent = send(user, room, email_type, expiry_date)
@@ -265,7 +334,7 @@ def send_emails(request):
         messages.success(request, 'Success! An email has been sent.')
     else:
         messages.error(request, 'An error occurred. Failed to send an email.')
-    
+
     return HttpResponseRedirect(next)
 
 
@@ -283,7 +352,7 @@ def send(user, room, email_type, expiry_date):
 <p>Best regards,</p>
 <p>LFS Training Record Management System</p>
 </div>'''.format(user.get_full_name(), room_name)
-    
+
     elif email_type == 'fob':
         title = 'Your fob request is set up for {0}'.format(room_name)
         message = '''\
@@ -306,7 +375,7 @@ def send(user, room, email_type, expiry_date):
 </div>'''.format(user.get_full_name(), room_name, expiry_date)
 
     sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)
-    
+
     if sent:
         msg = '<p>{0}</p><hr />{1}'.format(title, message)
         RoomEmail.objects.create(user=user, room=room, type=email_type, message=msg)
@@ -321,36 +390,50 @@ def send(user, room, email_type, expiry_date):
 @access_pi_admin_key_request
 @require_http_methods(['POST'])
 def update_all(request):
-    rooms = request.POST.getlist('rooms[]')
+
+    raw_rooms = request.POST.getlist('rooms[]')
+
     status = request.POST.get('status')
-    if not rooms:
+    if not raw_rooms:
         raise SuspiciousOperation
 
     if status:
-        objs = []
-        manager_room_map = {}
-        for room in rooms:
-            room_sp = room.split('_')
-            form = RequestForm.objects.get(id=room_sp[0])
-            objs.append(RequestFormStatus(
+        rfs = []
+        for raw_room in raw_rooms:
+            # rooms in the format: <entity_label>:<entity_id>__<form.id>:<room_id>
+
+            room_sp = raw_room.split('__')
+            entity_tuple = room_sp[0].split(":")
+            entity_label = entity_tuple[0]
+            entity_id = entity_tuple[1]
+
+            room_form_tuple = room_sp[1].split(":")
+            form_id = room_form_tuple[0]
+            room_id = room_form_tuple[1]
+
+            form = RequestForm.objects.get(id=form_id)
+            rfs_obj = RequestFormStatus(
                 form = form,
-                room_id = room_sp[1],
-                manager_id = room_sp[2],
+                room_id = room_id,
                 operator_id = request.user.id,
                 status = status
-            ))
+            )
+            setattr(rfs_obj, entity_label, entity_id)
 
-            manager_id = room_sp[2]
+            rfs.append(rfs_obj)
 
-            manager_room_map.setdefault(manager_id, []).append(room_sp[1])
 
-        if len(objs) > 0:
-            request_status_forms = RequestFormStatus.objects.bulk_create(objs)
-            func.count_approved_numbers_by_id_multiple_rooms(status, request_status_forms, request.user.id, manager_room_map)
+        if len(rfs) > 0:
 
-            messages.success(request, 'Success! The number of rooms ({0}) have been updated.'.format(len(objs)))
+            request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
+
+            email_coordinator = ApprovalNotificationManager(request_status_forms, status, request.user)
+            email_coordinator.send_email_notification()
+
+
+            messages.success(request, 'Success! The number of key request forms ({0}) have been updated.'.format(len(request_status_forms)))
         else:
-            messages.warning(request, 'There is no room to update.')
+            messages.warning(request, 'There are no key request forms to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
 
@@ -546,16 +629,18 @@ class CreateRoom(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
+        data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
         
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
+            'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url),
             'tab': self.tab,
             'manager_ids': manager_ids,
+            'group_ids': group_ids,
             'area_ids': area_ids,
             'training_ids': training_ids
         })
@@ -578,6 +663,7 @@ class CreateRoom(LoginRequiredMixin, View):
                 'alarm': None,
                 'is_active': None,
                 'note': None,
+                'groups': [],
                 'managers': [],
                 'areas': [],
                 'trainings': []
@@ -598,25 +684,30 @@ class CreateRoom(LoginRequiredMixin, View):
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
+                data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
 
             elif tab == 'areas':
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
-            
+
             request.session[CREATE_ROOM_KEY] = data
+
 
             return HttpResponseRedirect(self.url + URL_NEXT[tab])
 
         elif method == 'Create Room':
-            data, manager_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
+            data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
             form = RoomForm(data)
             if form.is_valid():
                 room = form.save()
                 if room:
                     if len(manager_ids) > 0:
                         room.managers.add(*manager_ids)
+
+                    if len(group_ids) > 0:
+                        room.groups.add(*group_ids)
 
                     if len(area_ids) > 0:
                         room.areas.add(*area_ids)
@@ -655,19 +746,44 @@ class EditRoom(LoginRequiredMixin, View):
 
         return setup
 
+    def _make_conflict_map(self, group_ids, manager_ids):
+        # no distinct; want dupes
+        groups_members = ApprovalGroupRole.objects.filter(group_id__in=group_ids)
+
+        conflict_map = dict()
+
+        managers = User.objects.filter(id__in=manager_ids)
+
+        for manager in managers:
+            conflict_map.setdefault(manager, []).append("PI")
+
+        for member in groups_members:
+            conflict_map.setdefault(member.user, []).append(member.group.name)
+
+        return dict(
+            sorted(
+                conflict_map.items(),
+                key=lambda item: item[0].first_name
+            )
+        )
+
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        data, manager_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
-        
+        data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
+
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
+            'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
             'tab': self.tab,
+            'conflict_map': self._make_conflict_map(group_ids, manager_ids) if self.tab == 'pis' else None,
             'manager_ids': manager_ids,
+            'group_ids': group_ids,
             'area_ids': area_ids,
             'training_ids': training_ids,
             'next': self.next
@@ -693,6 +809,7 @@ class EditRoom(LoginRequiredMixin, View):
                 'is_active': True if self.room.is_active else False,
                 'note': self.room.note,
                 'managers': [manager.id for manager in self.room.managers.all()],
+                'groups': [group.id for group in self.room.groups.all()],
                 'areas': [area.id for area in self.room.areas.all()],
                 'trainings': [training.id for training in self.room.trainings.all()]
             }
@@ -712,6 +829,8 @@ class EditRoom(LoginRequiredMixin, View):
 
             elif tab == 'pis':
                 data['managers'] = func.str_to_int(request.POST.getlist('managers[]'))
+                data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
+
 
             elif tab == 'areas':
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
@@ -724,17 +843,21 @@ class EditRoom(LoginRequiredMixin, View):
             return HttpResponseRedirect(self.url + URL_NEXT[tab] + '&next=' + next)
 
         elif method == 'Update Room':
-            data, manager_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
+            data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
             form = RoomForm(data, instance=self.room)
             if form.is_valid():
                 room = form.save()
                 if room:
                     room.managers.clear()
+                    room.groups.clear()
                     room.areas.clear()
                     room.trainings.clear()
 
                     if len(manager_ids) > 0:
                         room.managers.add(*manager_ids)
+
+                    if len(group_ids) > 0:
+                        room.groups.add(*group_ids)
 
                     if len(area_ids) > 0:
                         room.areas.add(*area_ids)
@@ -753,7 +876,6 @@ class EditRoom(LoginRequiredMixin, View):
 
         return HttpResponseRedirect(next)
 
-
 def update_room_data(queryset, data):
     old_data = set(queryset.all().values_list('id', flat=True))
     new_data = set([int(d) for d in data])
@@ -771,7 +893,6 @@ def update_room_data(queryset, data):
             if len(new_diff) > 0:
                 queryset.add(*new_diff)
     return True
-
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -795,7 +916,6 @@ def delete_room(request):
     else:
         messages.error(request, 'Error! Failed to delete Room Number {0}.'.format(room_number))
     return redirect('key_request:all_rooms')
-
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AddTrainingToRoom(LoginRequiredMixin, RoomActionsMixin, View):
@@ -840,7 +960,6 @@ class AddTrainingToRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
         return HttpResponseRedirect(request.POST.get('next'))
 
-
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
@@ -883,6 +1002,328 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
             messages.error(request, "Error! Please select the Required Training, and try again.")
 
         return HttpResponseRedirect(request.POST.get('next'))
+
+# GROUPS START
+
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
+class ViewApprovalGroups(LoginRequiredMixin, View):
+
+    def setup(self, request, *args, **kwargs):
+
+        setup = super().setup(request, *args, **kwargs)
+
+        self.user = request.user
+
+        self.method = kwargs.get('method')
+
+        if self.user.is_superuser and self.method == 'admin':
+            self.groups = func.get_all_groups()
+        else:
+            self.groups =  func.get_all_user_groups(self.user)
+
+        return setup
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        total_groups = self.groups.count()
+
+        if total_groups == 0:
+            return render(request, 'key_request/admin/all_groups.html', {
+                'method': self.method,
+                'total_groups': 0,
+                'num_filtered_groups': 0,
+                'groups': [],
+            })
+
+        selected_ids = request.GET.getlist('members[]', [])
+        coordinator_ids = request.GET.getlist('coordinators[]', [])
+
+        if selected_ids and coordinator_ids:
+            all_groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids)
+
+        self.groups = self.groups.prefetch_related('roles__user')
+
+        group_name = request.GET.get('name')
+        member_first_name = request.GET.get('member_first_name')
+        member_last_name = request.GET.get('member_last_name')
+        room_pk = request.GET.get('room_pk')
+
+        if group_name:
+            self.groups = self.groups.filter(name__icontains=group_name)
+        if member_first_name:
+            self.groups = self.groups.filter(roles__user__first_name__icontains=member_first_name).distinct()
+        if member_last_name:
+            self.groups = self.groups.filter(roles__user__last_name__icontains=member_last_name).distinct()
+        if room_pk:
+            self.groups = self.groups.filter(manager_groups__pk=room_pk).distinct()
+
+        self.groups = self.groups.annotate(
+            is_coordinator=Exists(ApprovalGroupRole.objects.filter(
+                user=self.user,
+                role=ApprovalGroupRole.Role.COORDINATOR,
+                group=OuterRef('pk')
+            )
+            )
+        )
+
+        num_filtered_groups = self.groups.count()
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(self.groups, 10)
+
+        try:
+            groups = paginator.page(page)
+        except PageNotAnInteger:
+            groups = paginator.page(1)
+        except EmptyPage:
+            groups = paginator.page(paginator.num_pages)
+
+        return render(request, 'key_request/admin/all_groups.html', {
+            'method': self.method,
+            'total_groups': total_groups,
+            'num_filtered_groups': num_filtered_groups,
+            'groups': groups,
+            'is_admin': self.user.is_superuser,
+            'is_group_coordinator': func.is_approval_group_coordinator(request.user.id),
+            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
+        })
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class CreateApprovalGroup(LoginRequiredMixin, View):
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        return render(request, 'key_request/admin/create_group.html', {
+            'form': ApprovalGroupForm(autofill_url=reverse('key_request:user_autofill')),
+            'validate_group_url': reverse('key_request:validate_room_group')
+        })
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+
+        form = ApprovalGroupForm(request.POST)
+        if form.is_valid():
+
+            group_name = form.cleaned_data['name']
+            group = ApprovalGroup.objects.create(name=group_name)
+
+            member_id_list = form.cleaned_data['member_ids']
+            coordinator_id_list = form.cleaned_data['coordinator_ids']
+            role_by_id = {
+                **{uid: ApprovalGroupRole.Role.MEMBER for uid in member_id_list},
+                **{uid: ApprovalGroupRole.Role.COORDINATOR for uid in coordinator_id_list},
+            }
+
+            ApprovalGroupRole.objects.bulk_create([
+                ApprovalGroupRole(group=group, user_id=user_id, role=role)
+                for user_id, role in role_by_id.items()
+            ])
+
+            messages.success(request, 'Success! {0} has been created.'.format(group.name))
+
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
+
+        return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class EditApprovalGroups(LoginRequiredMixin, View):
+
+    group = None
+
+    def setup(self, request, *args, **kwargs):
+
+        setup = super().setup(request, *args, **kwargs)
+        group_id = kwargs.get('group_id')
+
+        self.user = request.user
+
+        self.group = func.get_group_by_id(group_id)
+
+        return setup
+
+    def _make_member_string(self):
+        member_ids = func.get_group_member_ids(self.group)
+        return ','.join(member_ids)
+
+    def _make_coordinators_string(self):
+        member_ids = func.get_group_coordinator_ids(self.group)
+        return ','.join(member_ids)
+
+    def _make_member_dict(self):
+        return [
+            {
+                'first_name': user_role.user.first_name,
+                'last_name': user_role.user.last_name,
+                'id': user_role.user_id,
+                'is_coordinator': user_role.role == ApprovalGroupRole.Role.COORDINATOR,
+            } for user_role in self.group.roles.all()
+        ]
+
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+
+        if not self.group:
+            messages.error(request, 'Error! No group matches the id specified. It may have been deleted.')
+            return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+        return render(request, 'key_request/admin/edit_group.html', {
+            'form': ApprovalGroupForm(
+                autofill_url=reverse('key_request:user_autofill'),
+                initial={
+                    'member_ids': self._make_member_string(),
+                    'coordinator_ids': self._make_coordinators_string(),
+                    'name': self.group.name}
+            ),
+            'validate_group_url': reverse('key_request:validate_room_group'),
+            'group': self.group,
+            'group_members': self.group.roles.all().order_by('-role', 'user__first_name', 'user__last_name'),
+            'group_members_dict': self._make_member_dict(),
+            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR,
+        })
+
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form = ApprovalGroupForm(request.POST, instance=self.group)
+        if form.is_valid():
+            member_id_list = form.cleaned_data['member_ids']
+            coordinator_id_list = form.cleaned_data['coordinator_ids']
+            role_by_id = {
+                **{uid: ApprovalGroupRole.Role.MEMBER for uid in member_id_list},
+                **{uid: ApprovalGroupRole.Role.COORDINATOR for uid in coordinator_id_list},
+            }
+
+            ApprovalGroupRole.objects.filter(group=self.group).delete()
+
+            ApprovalGroupRole.objects.bulk_create([
+                ApprovalGroupRole(group=self.group, user_id=user_id, role=role)
+                for user_id, role in role_by_id.items()
+            ])
+
+            group_name = form.cleaned_data['name']
+
+            self.group.name = group_name
+            self.group.save()
+            messages.success(request, 'Success! {0} has been updated.'.format(self.group.name))
+
+        else:
+            messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
+
+        return HttpResponseRedirect(reverse('key_request:all_groups'))
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['GET'])
+def user_autofill_suggestions(request):
+    name_q = request.GET.get('name_q', '')
+
+    users = (User.objects
+    .filter(
+        Q(first_name__icontains=name_q) | Q(last_name__icontains=name_q)
+    ).annotate(
+        priority=Case(
+            When(first_name__startswith=name_q, then=Value(1)),
+            default=Value(2),
+            output_field=IntegerField(),
+        )
+    )).order_by('priority', 'first_name', 'last_name')
+    data = [
+        {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        } for user in users
+    ]
+
+    return JsonResponse({'data' : data}, status=200)
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_group_coordinator_admin_key_request
+@require_http_methods(['GET'])
+def validate_approval_group(request):
+    group_id = request.GET.get('group_id', None)
+    selected_name = request.GET.get('name', '').strip()
+    selected_ids = request.GET.getlist('members[]', [])
+    coordinator_ids = request.GET.getlist('coordinators[]', [])
+
+    if group_id:
+        try:
+            group_id = int(group_id)
+        except ValueError:
+            group_id = None
+
+    # First checks name, then if no match, checks group composition
+
+    name_matches = func.get_group_with_matching_name(selected_name, group_id)
+    if name_matches.exists():
+        # name is a unique field
+        matching_group = name_matches.first()
+
+        view_url = reverse('key_request:all_groups') + f"?name={matching_group.name}"
+        group_member_names = [user.get_full_name() for user in matching_group.members]
+
+        return JsonResponse({
+            'has_duplicate': True,
+            'match_type': 'name',
+            'data': {
+                'view_url': view_url,
+                'group_members': group_member_names,
+                'group_members_string': ", ".join(group_member_names)
+            }},
+            status=200
+        )
+
+    group_matches = func.get_groups_with_matching_composition(selected_ids, coordinator_ids, group_id)
+
+    if group_matches.exists():
+        num_matches = group_matches.count()
+        q = QueryDict(mutable=True)
+        q.setlist('members[]', selected_ids)
+        q.setlist('coordinators[]', coordinator_ids)
+        view_url = reverse('key_request:all_groups') + "?" + q.urlencode()
+
+        group_names = [group.name for group in group_matches]
+
+        return JsonResponse({
+            'has_duplicate': True,
+            'match_type': 'composition',
+            'data': {
+                'num_matches': num_matches,
+                'view_url': view_url,
+                'group_names': group_names,
+            }},
+            status=200
+        )
+    else:
+        return JsonResponse({
+            'has_duplicate': False,
+            'match_type': None,
+            'data': None
+            },
+            status=200
+        )
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def delete_group(request):
+    id = request.POST.get('group')
+    try:
+        group = ApprovalGroup.objects.get(id=id)
+        group_name = group.name
+        group.delete()
+        messages.success(request, 'Success! Lab Room Group {0} has been deleted.'.format(group_name))
+    except ApprovalGroup.DoesNotExist:
+        messages.error(request, 'Error! Failed to delete Lab Room Group Number {0}. It may have already been deleted.'.format(id))
+    return redirect('key_request:all_groups')
+
+# ROOM GROUPS END
 
 
 # Helpers

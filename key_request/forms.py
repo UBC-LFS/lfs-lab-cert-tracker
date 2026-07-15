@@ -1,8 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
-
+from django.urls import reverse
 from .models import *
-
 
 class BuildingForm(forms.ModelForm):
     class Meta:
@@ -28,6 +27,101 @@ class FloorForm(forms.ModelForm):
         help_texts = {
             'name': 'It must be unique. Maximum characters: 50'
         }
+
+class UserApprovalGroupForm(forms.ModelForm):
+    ''' Add a user to an approval group '''
+
+    class Meta:
+        model = ApprovalGroupRole
+        fields = ['user', 'role']
+        labels = { 'user': 'CWL' }
+        widgets = {
+            'user': forms.TextInput(attrs={ 'class': 'form-control' }),
+            'role': forms.Select(attrs={ 'class': 'form-control' }),
+        }
+
+class ApprovalGroupForm(forms.ModelForm):
+
+    search_name = forms.CharField(
+        label="User Search",
+        widget=
+        forms.TextInput(
+            attrs={
+                'id': 'id_user_name_search',
+                'data-url': '',
+                'class': 'form-control form-control-sm',
+                'placeholder': 'Type the user\'s name to search...'
+            }
+        ),
+        required=False)
+
+    coordinator_ids = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=False
+    )
+
+    member_ids = forms.CharField(
+        widget=forms.HiddenInput(),
+        required=True
+    )
+
+    class Meta:
+        model = ApprovalGroup
+        fields = ['name']
+        labels = {
+            'name': "Approval Group Name"
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': "e.g. Jane_Doe's Approval Group"
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        autofill_url = kwargs.pop('autofill_url', '')
+
+        super().__init__(*args, **kwargs)
+
+        if autofill_url:
+            self.fields['search_name'].widget.attrs.update({'data-url': autofill_url})
+
+    def clean_group_name(self):
+        return self.cleaned_data['name'].strip()
+
+    def clean_member_ids(self):
+
+        data = self.cleaned_data['member_ids']
+
+        if not data:
+            raise forms.ValidationError("A Group must consist of at least one user.")
+
+        try:
+            return [int(x.strip()) for x in data.split(',') if x.strip().isdigit()]
+        except ValueError:
+            raise forms.ValidationError("Invalid user ID detected.")
+
+    def clean_coordinator_ids(self):
+        data = self.cleaned_data['coordinator_ids']
+
+        try:
+            return [int(x.strip()) for x in data.split(',') if x.strip().isdigit()]
+        except ValueError:
+            raise forms.ValidationError("Invalid user ID detected.")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        member_ids = cleaned_data.get('member_ids')
+        coordinator_ids = cleaned_data.get('coordinator_ids')
+
+        if member_ids is not None and coordinator_ids is not None:
+            invalid_coordinators = set(coordinator_ids) - set(member_ids)
+            if invalid_coordinators:
+                raise forms.ValidationError(
+                    "All coordinators must also be members of the group."
+                )
+
+        return cleaned_data
 
 
 class RoomForm(forms.ModelForm):

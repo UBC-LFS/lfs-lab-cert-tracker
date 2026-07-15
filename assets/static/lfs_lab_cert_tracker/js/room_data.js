@@ -5,6 +5,9 @@ $(document).ready(function() {
     const table = hrefs[1].split('&next=');
     if (table.length > 0 && table[0] !== 'basic_info') {
       main(table[0] + '-table-0');
+      if (table[0].includes("pis")) {
+        main('groups-table-0');
+      }
     }
   }
 

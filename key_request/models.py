@@ -1,7 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from lfs_lab_cert_tracker.models import Lab, Cert
+from django.db.models import Q, CheckConstraint
 
 from datetime import datetime
 
@@ -42,12 +43,50 @@ class Floor(models.Model):
         self.slug = slugify(self.name)
         super(Floor, self).save(*args, **kwargs)
 
+class ApprovalGroup(models.Model):
+    """ Represents a group of users associated with a room. """
+
+    name = models.TextField(null=False, blank=False, max_length=150)
+
+    class Meta:
+        ordering = ['name']
+
+    @property
+    def user_roles_ordered(self):
+        return self.roles.all().order_by('-role', 'user__first_name', 'user__last_name')
+
+    @property
+    def members(self):
+        return User.objects.filter(approval_group_roles__group=self)
+
+    @property
+    def coordinators(self):
+        return User.objects.filter(
+            approval_group_roles__group=self,
+            approval_group_roles__role=ApprovalGroupRole.Role.COORDINATOR,
+        )
+
+
+class ApprovalGroupRole(models.Model):
+    class Role(models.IntegerChoices):
+        MEMBER = 1, 'Member'
+        COORDINATOR = 2, 'Coordinator'
+
+    group = models.ForeignKey(ApprovalGroup, null=False, blank=False, on_delete=models.CASCADE, related_name='roles')
+    user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE, related_name='approval_group_roles')
+    role = models.IntegerField(choices=Role.choices, default=Role.MEMBER)
+
+    class Meta:
+        unique_together = ('group', 'user')
+
 
 class Room(models.Model):
     building = models.ForeignKey(Building, on_delete=models.DO_NOTHING)
     floor = models.ForeignKey(Floor, on_delete=models.DO_NOTHING)
     number = models.CharField(max_length=100)
     managers = models.ManyToManyField(User)
+    groups = models.ManyToManyField(ApprovalGroup, related_name="group_rooms")
+
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
     key = models.BooleanField(default=False)
@@ -69,6 +108,8 @@ class Room(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
         super(Room, self).save(*args, **kwargs)
+
+
 
 
 class RequestForm(models.Model):
@@ -97,13 +138,20 @@ class RequestForm(models.Model):
 class RequestFormStatus(models.Model):
     form = models.ForeignKey(RequestForm, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
-    manager = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_manager_set')
+    manager = models.ForeignKey(User, blank=True, null=True, on_delete=models.DO_NOTHING, related_name='requestformstatus_manager_set')
+    group = models.ForeignKey(ApprovalGroup, blank=True, null=True, on_delete=models.DO_NOTHING, related_name='requestformstatus_group_set')
     operator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_operator_set')
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-pk']
+        constraints = [
+            CheckConstraint(
+                check=Q(manager__isnull=False) | Q(group__isnull=False),
+                name='manager_or_group_not_null'
+            )
+        ]
 
 
 class RoomEmail(models.Model):

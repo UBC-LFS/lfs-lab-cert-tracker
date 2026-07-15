@@ -18,7 +18,7 @@
                 <th>Building</th>
                 <th>Floor</th>
                 <th>Room</th>
-                <th>PI</th>
+                <th>PI/Group</th>
                 <th>Operator</th>
                 <th>Status</th>
                 <th>Updated Date</th>
@@ -35,7 +35,13 @@
                     <td>{{ room.floor.name }}</td>
                     <td>{{ room.number }}</td>
                   {% endwith %}
-                  <td>{{ st.manager_id|get_user_full_name }}</td>
+                  <td>
+                      {% if st.group %}
+                          {{ st.group.name }}
+                      {% else %}
+                          {{ st.manager_id|get_user_full_name }}
+                      {% endif %}
+                  </td>
                   <td>{{ st.operator_id|get_user_full_name }}</td>
                   <td>
                     {% include 'key_request/subpages/request_status.html' with data=st.status|get_status_display %}

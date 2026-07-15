@@ -1,7 +1,7 @@
 from django.core.exceptions import PermissionDenied
 
 from .functions import is_pi_in_area, get_users_in_area_by_pi
-from key_request.functions import is_room_manager
+from key_request.functions import is_room_approver, is_approval_group_coordinator
 
 def access_admin_only(view_func):
     """ Access an admin only """
@@ -21,7 +21,16 @@ def access_pi_admin_key_request(view_func):
     """
 
     def wrap(request, *args, **kwargs):
-        if request.user.is_superuser or is_room_manager(request.user.id):
+        if request.user.is_superuser or is_room_approver(request.user.id):
+            return view_func(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+    return wrap
+
+def access_group_coordinator_admin_key_request(view_func):
+    def wrap(request, *args, **kwargs):
+        if request.user.is_superuser or is_approval_group_coordinator(request.user.id):
             return view_func(request, *args, **kwargs)
         else:
             raise PermissionDenied

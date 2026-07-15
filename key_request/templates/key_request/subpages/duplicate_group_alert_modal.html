@@ -1,0 +1,39 @@
+<div class="modal fade duplicate-group-modal" id="duplicate-group-modal" tabindex="-1" aria-labelledby="duplicate-group-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    &#9888; Warning: Duplicate Room Group Detected
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body text-left fs-1rem">
+                <h6>There are <b><span class="text-danger" id="num-duplicates"></span></b> groups with this user composition:</h6>
+                <div class="text-secondary mb-3">Users(s): <span id="group-member-names"></span></div>
+                <div class="mb-3">
+                    <h6>Existing Room Group(s) Name(s):</h6>
+                    <ul id="duplicate_group_list">
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">Close</span>
+                </button>
+
+                <div class="d-flex" style="gap: 20px">
+                    <a href=""
+                       id="view_groups_link"
+                       target="_blank"
+                       class="btn btn-outline-primary">
+                        View Groups in New Tab
+                    </a>
+
+                    <button id="submit-anyways-btn" type="button" class="btn btn-primary">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

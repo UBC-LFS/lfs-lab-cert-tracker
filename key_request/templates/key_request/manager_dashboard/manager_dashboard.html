@@ -2,142 +2,152 @@
 {% load custom_tags %}
 
 {% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
+    {% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+    {% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
 
-{% include 'key_request/left_side_menu.html' %}
+    {% include 'key_request/left_side_menu.html' %}
 
-<section class="main-content">
-	<h2 class="title">Dashboard</h2>
+    <section class="main-content">
+        <h2 class="title">Dashboard</h2>
 
-	<p>This page includes a table to display all the applications for Key Request and update their status.</p>
+        <p>This page includes a table to display all the applications for Key Request and update their status.</p>
 
-	<h3 class="text-info mt-5 mb-4">
-		Key Requests
-		<small class="text-secondary">(Total: {{ total_forms }})</small>
-	</h3>
+        <h3 class="text-info mt-5 mb-4">
+            Key Requests
+            <small class="text-secondary">(Total: {{ total_forms }})</small>
+        </h3>
 
-	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
-		<div class="col-md-9" style="border-right: 1px solid #bbb;">
-			{% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
-		</div>
-		<div class="col-md-3">
-			<div class="text-center">
-				<h5>Number of <br /> New Requests</h5>
-				<a class="h4" href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_forms }}</a>
-			</div>
-		</div>
-	</div>
-	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
+        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+            <div class="col-md-9" style="border-right: 1px solid #bbb;">
+                {% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h5>Number of <br/> New Requests</h5>
+                    <a class="h4"
+                       href="{% url 'key_request:manager_dashboard' %}?page=1&status=New">{{ num_new_forms }}</a>
+                </div>
+            </div>
+        </div>
+        {% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
 
-	<table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
-	  <thead>
-	    <tr>
-				<th>
-					{% if request.user.is_superuser %}
-						Form <br /> ID
-					{% else %}
-						#
-					{% endif %}
-				</th>
-	      <th>Applicant <br /> Full Name</th>
-				<th>Building & <br /> Room Info</th>
-				<th>Supervisor</th>
-	      <th>Details</th>
-	      <th>Status</th>
-	      <th>Expiry Date</th>
-				<th>
-          <div>Select <br /> All</div>
-          <input id="select-all-checkbox" type="checkbox" />
-				</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-	    {% for form in forms %}
-	      <tr>
-					<td>
-						{% if request.user.is_superuser %}
-							{{ form.id }}
-						{% else %}
-							{{ forloop.counter }}
-						{% endif %}
-					</td>
-	        <td>{{ form.user.get_full_name }}</td>
-	        <td>
-						{{ form.room.building.code }} {{ form.room.floor.name }} <br />
-						Room {{ form.room.number }}
-					</td>
-					<td>{{ form.supervisor.get_full_name }}</td>
-	        <td>
-						{% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
-						<br />
-						<span class="text-secondary">
-							<span class="font-size-xs">Submitted Date:</span>
-							{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-xs' %}
-						</span>
-	        </td>
-	        <td>
-						{% if form.status.count > 0 %}
-							{% include 'key_request/subpages/request_status.html' with data=form.status.last.status|get_status_display %}
-							<span class="font-size-xs text-secondary d-block">{{ form.status.last.created_at }}</span>
-						{% else %}
-							<span class="badge badge-light">NEW</span>
-						{% endif %}
+        <table id="selected-rooms" class="table table-bordered table-striped font-size-sm">
+            <thead>
+            <tr>
+                <th>
+                    {% if request.user.is_superuser %}
+                        Form ID
+                    {% else %}
+                        #
+                    {% endif %}
+                </th>
+                <th>Approval Role</th>
+                <th>Applicant <br/> Full Name</th>
+                <th>Building & <br/> Room Info</th>
+                <th>Supervisor</th>
+                <th>Details</th>
+                <th>Status</th>
+                <th>Expiry Date</th>
+                <th>
+                    <div>Select <br/> All</div>
+                    <input id="select-all-checkbox" type="checkbox"/>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for form in forms %}
+                <tr>
+                    <td>
+                        {% if request.user.is_superuser %}
+                           {{ form.id }}
+                        {% else %}
+                          {{ form.counter }}
+                        {% endif %}
+                    </td>
+                <td>{{ form.label }}</td>
+                    <td>{{ form.user.get_full_name }}</td>
+                    <td>
+                        {{ form.room.building.code }} {{ form.room.floor.name }} <br/>
+                        Room {{ form.room.number }}
+                    </td>
+                    <td>{{ form.supervisor.get_full_name }}</td>
+                    <td>
+                        {% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
+                        <br/>
+                        <span class="text-secondary">
+                        <span class="font-size-xs">Submitted Date:</span>
+                        {% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-xs' %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if form.is_new %}
+                            <span class="badge badge-light">NEW</span>
+                        {% else %}
+                            {% include 'key_request/subpages/request_status.html' with data=form.status|get_status_display %}
+                            <span class="font-size-xs text-secondary d-block">{{ form.status_created_at }}</span>
+                        {% endif %}
 
-						<hr />
-						{% include 'key_request/subpages/update_status_form.html' with post_url=post_url data=form %}
-	        </td>
-	        <td>
-						{% if form.supervisor.id == request.user.id %}
-							{% if form.expiry_date %}
-								<span class="text-chocolate">{{ form.expiry_date|remaining_days|safe }}</span>
-							{% else %}
-								N/A
-							{% endif %}
+                        <hr />
+                        {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=form status=form.status %}
+                    </td>
+                <td>
+                    {% if form.supervisor.id == request.user.id %}
+                        {% if form.expiry_date %}
+                            <span class="text-chocolate">{{ form.expiry_date|remaining_days|safe }}</span>
+                        {% else %}
+                            N/A
+                        {% endif %}
 
-							<hr />
+                        <hr/>
 
-							<form action="{% url 'key_request:update_expiry_date' %}" method="post">
-								{% csrf_token %}
+                        <form action="{% url 'key_request:update_expiry_date' %}" method="post">
+                            {% csrf_token %}
 
-								<input class="form-control mb-1" type="date" name="expiry_date" value="{{ form.expiry_date|date_to_str }}" />
+                            <input class="form-control mb-1" type="date" name="expiry_date"
+                                   value="{{ form.expiry_date|date_to_str }}"/>
 
-								<input type="hidden" name="form" value="{{ form.id }}" />
-								<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                            <input type="hidden" name="form" value="{{ form.id }}"/>
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}"/>
 
-								<input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs" type="submit" value="Update" />
-							</form>
-						{% else %}
-							N/A
-						{% endif %}
-	        </td>
-					<td>
-						<input class="room-checkbox" type="checkbox" value="{{ form.id }}_{{ form.room.id }}_{{ form.manager.id }}" data-user="{{ form.user.get_full_name }}" data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}" data-number="{{ form.room.number }}" data-is_new="{% if form.status.count == 0 %}true{% else %}false{% endif %}"/>
-					</td>
-	      </tr>
-			{% empty %}
-				<tr>
-					<td colspan="100%">No key request forms found</td>
-				</tr>
-	    {% endfor %}
-	  </tbody>
-	</table>
+                            <input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs"
+                                   type="submit" value="Update"/>
+                        </form>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                    </td>
+                    <td>
+                        <input class="room-checkbox" type="checkbox"
+                               value="{{ form.request_form_identifier }}"
+                               data-user="{{ form.user.get_full_name }}"
+                               data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
+                               data-number="{{ form.room.number }}"
+                               data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="100%">No key request forms found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-	<div class="d-flex justify-content-between align-items-start">
-		{% include 'key_request/subpages/pagination.html' with data=forms %}
+        <div class="d-flex justify-content-between align-items-start">
+            {% include 'key_request/subpages/pagination.html' with data=forms %}
 
-		{% if total_forms > 0 %}
-			{% include 'key_request/subpages/modal_rooms_update_all.html' with path='manager_dashboard' %}
-		{% endif %}
-	</div>
-</section>
+            {% if total_forms > 0 %}
+                {% include 'key_request/subpages/modal_rooms_update_all.html' with path='manager_dashboard' %}
+            {% endif %}
+        </div>
+    </section>
 
 {% endblock %}
 
 {% block js %}
-	{% load static %}
-	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/rooms_select_all.js' %}"></script>
+    {% load static %}
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/rooms_select_all.js' %}"></script>
 {% endblock %}

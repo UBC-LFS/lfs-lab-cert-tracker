@@ -7,6 +7,7 @@ import datetime as dt
 class UserForm(forms.ModelForm):
     """ Create a new user """
 
+
     class Meta:
         model = AuthUser
         fields = ['username', 'first_name', 'last_name', 'email']

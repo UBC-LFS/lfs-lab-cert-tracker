@@ -10,7 +10,7 @@
 <form action="" method="POST">
   {% csrf_token %}
 
-  <section class="pt-5">
+  <section class="pt-5 create-room-tabs">
     {% if tab == 'basic_info' %}
       <table id="basic-info-table" class="form-table">
         {% for field in form.visible_fields %}
@@ -33,7 +33,7 @@
         {% endfor %}
       </table>
     {% elif tab == 'pis' %}
-      {% include 'key_request/subpages/room_managers_table.html' with room_id='0' manager_ids=manager_ids %}
+        {% include 'key_request/subpages/manager_and_group_tables.html' with room_id='0' manager_ids=manager_ids group_ids=group_ids %}
     {% elif tab == 'areas' %}
       {% include 'key_request/subpages/room_areas_table.html' with room_id='0' area_ids=area_ids %}
     {% elif tab == 'trainings' %}
