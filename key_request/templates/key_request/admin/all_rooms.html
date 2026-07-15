@@ -2,157 +2,160 @@
 {% load custom_tags %}
 
 {% block top_menu_nav %}
-	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
-	{% include 'app/subpages/return_message.html' with data=messages %}
+    {% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+    {% include 'app/subpages/return_message.html' with data=messages %}
 {% endblock %}
 
 {% block content %}
 
-{% include 'key_request/left_side_menu.html' %}
+    {% include 'key_request/left_side_menu.html' %}
 
-<section class="main-content">
-	<h3 class="title">
-		All Rooms
-		<small class="text-secondary">(Total: {{ total_rooms }})</small>
-	</h3>
+    <section class="main-content">
+        <h3 class="title">
+            All Rooms
+            <small class="text-secondary">(Total: {{ total_rooms }})</small>
+        </h3>
 
-	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
-		<div class="col-md-6" style="border-right: 1px solid #bbb;">
-			{% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
-		</div>
-		<div class="col-md-6">
-			<strong>Note:</strong> Only <strong class="text-success">ACTIVE</strong> rooms will be displayed in the Key Request process.
-		</div>
-	</div>
-	{% include 'key_request/subpages/search_results.html' with total=num_filtered_rooms items=rooms %}
+        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+            <div class="col-md-6" style="border-right: 1px solid #bbb;">
+                {% include 'key_request/subpages/search_filters.html' with path='all_rooms' %}
+            </div>
+            <div class="col-md-6">
+                <strong>Note:</strong> Only <strong class="text-success">ACTIVE</strong> rooms will be displayed in the
+                Key Request process.
+            </div>
+        </div>
+        {% include 'key_request/subpages/search_results.html' with total=num_filtered_rooms items=rooms %}
 
-	<table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
-	  <thead>
-	    <tr>
-				<th>ID</th>
-				<th>Building</th>
-				<th>Floor</th>
-	      <th>Room <br /> Number</th>
-				<th>PIs</th>
-	      <th>Areas</th>
-				<th>Required Trainings</th>
-				<th>
-					Key? <br />
-					FOB? <br />
-					Alarm? <br />
-					Active?
-				</th>
-				<th>Note</th>
-				<th>Actions</th>
-	    </tr>
-	  </thead>
-	  <tbody>
-			{% for room in rooms %}
-	      <tr>
-	        <td>
-						{{ room.id }} <br />
+        <table class="table table-bordered table-striped table-responsive-md text-center font-size-sm">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Building</th>
+                <th>Floor</th>
+                <th>Room <br/> Number</th>
+                <th>PIs/Groups</th>
+                <th>Areas</th>
+                <th>Required Trainings</th>
+                <th>
+                    Key? <br/>
+                    FOB? <br/>
+                    Alarm? <br/>
+                    Active?
+                </th>
+                <th>Note</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for room in rooms %}
+                <tr>
+                    <td>
+                        {{ room.id }} <br/>
 
-						<a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
-							{{ room.requestform_set.count }}
-						</a>
-					</td>
-					<td>{{ room.building.code }}</td>
-					<td>{{ room.floor.name }}</td>
-	        <td>{{ room.number }}</td>
-					<td class="text-left">
-						<ul class="list-minus-20">
-							{% for manager in room.managers.all %}
-		            <li>{{ manager.get_full_name }}</li>
-		          {% endfor %}
-						</ul>
-					</td>
-	        <td class="text-left">
-						<ul class="list-minus-20">
-		          {% for area in room.areas.all %}
-		            <li>{{ area.name }}</li>
-		          {% endfor %}
-						</ul>
-	        </td>
-					<td class="text-left">
-						<ul class="list-minus-20">
-						{% for training in room.trainings.all %}
-							<li>{{ training.name }}</li>
-						{% endfor %}
-						</ul>
-					</td>
-					<td>
-						{% include 'key_request/subpages/_yes_or_no.html' with data=room.key %} <br />
-						{% include 'key_request/subpages/_yes_or_no.html' with data=room.fob %} <br />
-						{% include 'key_request/subpages/_yes_or_no.html' with data=room.alarm %} <br />
-						{% include 'key_request/subpages/_yes_or_no.html' with data=room.is_active %}
-					</td>
-					<td>
-						{% if room.note %}
-							{% include 'key_request/subpages/modal_room_note.html' with id=room.id data=room.note %}
-						{% endif %}
-					</td>
-	        <td>
-            <a class="btn btn-link btn-sm" href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
-            <button class="btn btn-xs fs-8 btn-danger delete-room-btn" type="button"
-              data-toggle="modal"
-              data-target="#rooms-model-delete-modal"
-              data-id="{{ room.id }}"
-              data-name="{{ room.building.code}} {{room.floor.name}} {{room.number }}"
-              data-num-reqs="{{ room.requestform_set.count }}"
-            >
-            	Delete
-            </button>
-	        </td>
-	      </tr>
-	    {% empty %}
-	      <tr>
-	        <td colspan="100%">No rooms found</td>
-	      </tr>
-	    {% endfor %}
-	  </tbody>
-	</table>
+                        <a href="{% url 'key_request:all_requests' %}?page=1&building={{ room.building.code }}&floor={{ room.floor.name }}&number={{ room.number }}&room={{ room.id }}">
+                            {{ room.requestform_set.count }}
+                        </a>
+                    </td>
+                    <td>{{ room.building.code }}</td>
+                    <td>{{ room.floor.name }}</td>
+                    <td>{{ room.number }}</td>
+                    <td class="text-left">
+                        {% include 'key_request/subpages/entities_list_with_approval_status.html' with room=room %}
+                    </td>
+                    <td class="text-left">
+                        <ul class="list-minus-20">
+                            {% for area in room.areas.all %}
+                                <li>{{ area.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="text-left">
+                        <ul class="list-minus-20">
+                            {% for training in room.trainings.all %}
+                                <li>{{ training.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        {% include 'key_request/subpages/_yes_or_no.html' with data=room.key %} <br/>
+                        {% include 'key_request/subpages/_yes_or_no.html' with data=room.fob %} <br/>
+                        {% include 'key_request/subpages/_yes_or_no.html' with data=room.alarm %} <br/>
+                        {% include 'key_request/subpages/_yes_or_no.html' with data=room.is_active %}
+                    </td>
+                    <td>
+                        {% if room.note %}
+                            {% include 'key_request/subpages/modal_room_note.html' with id=room.id data=room.note %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a class="btn btn-link btn-sm"
+                           href="{% url 'key_request:edit_room' room_id=room.id %}?t=basic_info&next={{ request.get_full_path }}">Edit</a>
+                        <button class="btn btn-xs fs-8 btn-danger delete-room-btn" type="button"
+                                data-toggle="modal"
+                                data-target="#rooms-model-delete-modal"
+                                data-id="{{ room.id }}"
+                                data-name="{{ room.building.code }} {{ room.floor.name }} {{ room.number }}"
+                                data-num-reqs="{{ room.requestform_set.count }}"
+                        >
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="100%">No rooms found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-	{% include 'key_request/subpages/pagination.html' with data=rooms %}
+        {% include 'key_request/subpages/pagination.html' with data=rooms %}
 
-    <div class="modal fade" id="rooms-model-delete-modal" tabindex="-1" role="dialog" aria-labelledby="rooms-model-delete-modal-label" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-info" id="rooms-model-delete-modal-label">Delete Room</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body text-center">
-                    <h5 class="text-danger">Are you sure you want to delete this room?</h5>
-                   <div class="mb-3">Room: <span id="delete-room-name"></span> (ID: <span id="delete-room-id"></span>)</div>
-
-                    <div class="alert alert-danger font-size-20px" role="alert">
-                        <span class="material-symbols-outlined me-1">warning</span>
-                        Warning! This room has <strong id="delete-room-num-requests"></strong> key request(s) associated with it.
+        <div class="modal fade" id="rooms-model-delete-modal" tabindex="-1" role="dialog"
+             aria-labelledby="rooms-model-delete-modal-label" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-info" id="rooms-model-delete-modal-label">Delete Room</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
                     </div>
+                    <div class="modal-body text-center">
+                        <h5 class="text-danger">Are you sure you want to delete this room?</h5>
+                        <div class="mb-3">Room: <span id="delete-room-name"></span> (ID: <span
+                                id="delete-room-id"></span>)
+                        </div>
 
-                    <div class="alert alert-primary d-none" role="alert">
-                        <span class="material-symbols-outlined me-1">info</span>
-                        There are no key requests associated with this room.
+                        <div class="alert alert-danger font-size-20px" role="alert">
+                            <span class="material-symbols-outlined me-1">warning</span>
+                            Warning! This room has <strong id="delete-room-num-requests"></strong> key request(s)
+                            associated with it.
+                        </div>
+
+                        <div class="alert alert-primary d-none" role="alert">
+                            <span class="material-symbols-outlined me-1">info</span>
+                            There are no key requests associated with this room.
+                        </div>
+
+                        <form action="{% url 'key_request:delete_room' %}" method="post">
+                            {% csrf_token %}
+
+                            <input type="hidden" name="room" value=""/>
+                            <input class="btn btn-danger mt-3" type="submit" value="Confirm to delete"/>
+                        </form>
                     </div>
-
-                    <form action="{% url 'key_request:delete_room' %}" method="post">
-                        {% csrf_token %}
-
-                        <input type="hidden" name="room" value="" />
-                        <input class="btn btn-danger mt-3" type="submit" value="Confirm to delete" />
-                    </form>
                 </div>
             </div>
         </div>
-    </div>
 
-</section>
+    </section>
 
 {% endblock %}
 
 {% block js %}
-	{% load static %}
-  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
-  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/show_delete_modal.js' %}"></script>
+    {% load static %}
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/show_delete_modal.js' %}"></script>
 
 {% endblock %}
