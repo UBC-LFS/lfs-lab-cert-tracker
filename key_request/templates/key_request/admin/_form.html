@@ -1,3 +1,4 @@
+<div id="conflict-message"></div>
 <nav class="mt-5">
   <div class="nav nav-tabs">
     <a class="nav-link {% if tab == 'basic_info' %}active{% endif %}" href="{{ tab_urls.basic_info }}">Basic Info</a>
@@ -7,7 +8,7 @@
   </div>
 </nav>
 
-<form action="" method="POST">
+<form {% if tab == 'pis' %} class="pis-form"{% endif %} action="" method="POST">
   {% csrf_token %}
 
   <section class="pt-5 create-room-tabs">
@@ -49,16 +50,16 @@
     <a class="btn btn-outline-secondary" href="{{ next }}">Cancel</a>
 
     {% if path == 'create_room' %}
-      <input class="btn btn-primary mx-2" name="method" type="submit" value="Create Room" />
+      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Create Room" />
     {% elif path == 'edit_room' %}
       <input type="hidden" name="next" value="{{ next }}" />
-      <input class="btn btn-primary mx-2" name="method" type="submit" value="Update Room" />
+      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Update Room" />
     {% endif %}
 
     {% if tab == 'trainings' %}
       <input class="btn btn-warning" name="method" type="submit" value="Save and Back to Basic Info" />
     {% else %}
-      <input class="btn btn-warning" name="method" type="submit" value="Save and Next" />
+      <input class="btn btn-warning submit-btn" name="method" type="submit" value="Save and Next" />
     {% endif %}
   </div>
 </form>
