@@ -19,12 +19,29 @@
 
 	<h3 class="title">Key Request Details</h3>
 
-	<div class="bd-callout bd-callout-success">
-		<h5>Requester Information</h5>
-		<ul class="list-minus-20">
-			<li><strong>Full Name:</strong> {{ form.user.get_full_name }}</li>
-			<li><strong>Email:</strong> {{ form.user.email }}</li>
-		</ul>
+	<div class="bd-callout bd-callout-info m-0">
+		<div class="two-columns">
+			<div class="column left-50" style="border-right:2px solid white;">
+				<h5>Requester Information</h5>
+				<ul class="list-minus-20">
+					<li><strong>Full Name:</strong> {{ form.user.get_full_name }}</li>
+					<li><strong>Email:</strong> {{ form.user.email }}</li>
+				</ul>
+			</div>
+			<div class="column right-50">
+				<div class="text-center">
+					<h5 class="text-dark">Request Status</h5>
+					{% for room in rooms %}
+						{% get_status_by_room_and_form form.id room.id as approved %}
+						{% if approved %}
+							<strong class="text-success h3">APPROVED</strong>
+						{% else %}
+							<strong class="text-danger h3">NOT APPROVED</strong>
+						{% endif %}
+					{% endfor %}
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<nav class="mt-5">
