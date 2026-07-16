@@ -18,7 +18,8 @@
         <td>{{ user.username }}</td>
         <td>{{ user.email }}</td>
         <td>
-          <input class='add-approver-checkbox' id="{{ user.id }}" type="checkbox" name="managers[]" value="{{ user.id }}" {% if user.id in manager_ids %}checked{% endif %} />
+            <input class="init-checked" type="hidden" value="{% if user.id in manager_ids %}true{% else %}false{% endif %}">
+            <input class='add-approver-checkbox' id="{{ user.id }}" type="checkbox" name="managers[]" value="{{ user.id }}" {% if user.id in manager_ids %}checked{% endif %} />
         </td>
       </tr>
     {% endfor %}
