@@ -167,6 +167,9 @@ def get_room_managers():
         for m in room.managers.all():
             manager_set.add((m.id, m.get_full_name()))
     
+    for group in ApprovalGroupRole.objects.all():
+        manager_set.add((group.user.id, group.user.get_full_name()))
+    
     manager_sorted = sorted(manager_set, key=lambda x: x[1])
     managers = list(manager_sorted)
     managers.insert(0, ('', 'Select'))

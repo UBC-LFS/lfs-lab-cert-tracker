@@ -261,7 +261,7 @@ class AllUsers(LoginRequiredMixin, View):
         query = request.GET.get('q')
         if query:
             user_list = User.objects.filter(
-                Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)
+                Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query)
             ).order_by('id').distinct()
 
         page = request.GET.get('page', 1)
