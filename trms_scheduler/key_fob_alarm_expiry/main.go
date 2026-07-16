@@ -26,7 +26,7 @@ func determineAlerts(statusMap map[int]map[int]map[RoomEntity]KeyRequestStatusRe
 			approverCount := 0
 
 			for _, status := range roomEntity {
-				if status.status != Approved {
+				if status.status == Approved {
 					approverCount++
 				}
 			}
