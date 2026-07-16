@@ -91,13 +91,16 @@ class RoomUserEntityConflictManager {
 
         this.userTracker.forEach((entry) => {
             if (entry.entities.size > 1) {
-                conflicts.push(`<li>${entry.name}</li>`)
+                conflicts.push(`<li>${entry.name}: ${[...entry.entities].join(', ')}</li>`)
             }
         })
 
         const numConflicts = conflicts.length
 
         if (numConflicts > 0) {
+            const allGroupsUrl = $('#all-approval-groups-link').val()
+            const createGroupUrl = $('#create-new-approval-groups-link').val()
+
             let msg = "There "
             if (numConflicts === 1) {
                 msg += "is 1 user "
@@ -109,6 +112,7 @@ class RoomUserEntityConflictManager {
             <ul>
                 ${conflicts.join('')}
             </ul>
+            <p>Please go to the <a href="${allGroupsUrl}" target="_blank">All Approval Groups</a> page to modify the desired group, or go to the <a href="${createGroupUrl}" target="_blank">Create Approval Groups</a> page to create a new group.</p>
                 `
             const alertContainer = document.getElementById("conflict-message")
             AlertManager.showAlert(msg, alertContainer)
