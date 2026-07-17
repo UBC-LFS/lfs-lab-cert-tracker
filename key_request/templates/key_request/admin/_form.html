@@ -1,3 +1,4 @@
+<div id="conflict-message"></div>
 <nav class="mt-5">
   <div class="nav nav-tabs">
     <a class="nav-link {% if tab == 'basic_info' %}active{% endif %}" href="{{ tab_urls.basic_info }}">Basic Info</a>
@@ -7,7 +8,7 @@
   </div>
 </nav>
 
-<form action="" method="POST">
+<form {% if tab == 'pis' %} class="pis-form"{% endif %} action="" method="POST">
   {% csrf_token %}
 
   <section class="pt-5 create-room-tabs">
@@ -33,6 +34,8 @@
         {% endfor %}
       </table>
     {% elif tab == 'pis' %}
+        <input type="hidden" id="all-approval-groups-link" value="{% url 'key_request:all_groups' method='admin'%}">
+        <input type="hidden" id="create-new-approval-groups-link" value="{% url 'key_request:create_group'%}">
         {% include 'key_request/subpages/manager_and_group_tables.html' with room_id='0' manager_ids=manager_ids group_ids=group_ids %}
     {% elif tab == 'areas' %}
       {% include 'key_request/subpages/room_areas_table.html' with room_id='0' area_ids=area_ids %}
@@ -49,16 +52,16 @@
     <a class="btn btn-outline-secondary" href="{{ next }}">Cancel</a>
 
     {% if path == 'create_room' %}
-      <input class="btn btn-primary mx-2" name="method" type="submit" value="Create Room" />
+      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Create Room" />
     {% elif path == 'edit_room' %}
       <input type="hidden" name="next" value="{{ next }}" />
-      <input class="btn btn-primary mx-2" name="method" type="submit" value="Update Room" />
+      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Update Room" />
     {% endif %}
 
     {% if tab == 'trainings' %}
       <input class="btn btn-warning" name="method" type="submit" value="Save and Back to Basic Info" />
     {% else %}
-      <input class="btn btn-warning" name="method" type="submit" value="Save and Next" />
+      <input class="btn btn-warning submit-btn" name="method" type="submit" value="Save and Next" />
     {% endif %}
   </div>
 </form>

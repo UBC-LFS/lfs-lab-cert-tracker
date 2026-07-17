@@ -72,8 +72,8 @@ class ApprovalGroupRole(models.Model):
         MEMBER = 1, 'Member'
         COORDINATOR = 2, 'Coordinator'
 
-    group = models.ForeignKey(ApprovalGroup, null=False, blank=False, on_delete=models.CASCADE, related_name='roles')
-    user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE, related_name='approval_group_roles')
+    group = models.ForeignKey(ApprovalGroup, on_delete=models.CASCADE, related_name='roles')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='approval_group_roles')
     role = models.IntegerField(choices=Role.choices, default=Role.MEMBER)
 
     class Meta:

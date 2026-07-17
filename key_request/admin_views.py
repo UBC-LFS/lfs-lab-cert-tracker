@@ -598,6 +598,7 @@ class AllRooms(LoginRequiredMixin, View):
             rooms = paginator.page(paginator.num_pages)
 
         for room in rooms:
+            room.groups.all().values_list('id', flat=True)
             room.manager_ids = list(room.managers.all().values_list('id', flat=True))
             room.area_ids = list(room.areas.all().values_list('id', flat=True))
             room.training_ids = list(room.trainings.all().values_list('id', flat=True))
@@ -608,6 +609,7 @@ class AllRooms(LoginRequiredMixin, View):
             'rooms': rooms,
             'search_filter_options': func.search_filter_options,
             'users': User.objects.all(),
+            'groups': ApprovalGroup.objects.all(),
             'areas': Lab.objects.all(),
             'trainings': Cert.objects.all()
         })

@@ -80,6 +80,7 @@ class ApprovalNotificationManager:
 
         emails_to_send += self._send_pi_emails(form_pi_rooms, form_group_rooms)
         emails_to_send += self._send_applicant_emails(fully_approved)
+        emails_to_send += self._send_admin_emails(fully_approved)
         self._send_multiple(emails_to_send)
 
     def _send_pi_emails(self, form_pi_rooms, form_group_rooms):
@@ -134,8 +135,19 @@ class ApprovalNotificationManager:
         return emails_to_send
 
     # Admin summary email
-    def _send_admin_email(self, form_pi_rooms, form_group_rooms):
-        pass
+    def _send_admin_emails(self, fully_approved):
+        emails_to_send = []
+        admins = User.objects.filter(is_active=True, is_superuser=True)
+
+        for admin in admins:
+            for form_id, rooms in fully_approved.items():
+                form = RequestForm.objects.get(id=form_id)
+                applicant = form.user
+                room_info = self._rooms_to_html(rooms)
+                subject, body = self._make_admin_summary_message(admin, applicant, room_info)
+                emails_to_send.append(self._make_send_obj(admin, subject, body))
+
+        return emails_to_send
 
     #HTML
 
@@ -253,19 +265,20 @@ class ApprovalNotificationManager:
         )
         return subject, message
 
-    def _make_admin_summary_message(self, room_info):
+    def _make_admin_summary_message(self, admin, applicant, room_info):
         """Single summary email to the admin with all approved rooms."""
         subject = "Notification: Key Request Approval Summary at UBC LFS"
         message = '''\
         <div>
-            <p>Hi Admin,</p>
-            <div>This email is a summary of the key request approvals made by {0}. The following room(s) were approved:</div>
-            {1}
-            <div>Please visit <a href="{2}">{2}</a> to check the latest status. Thank you.</div>
-            {3}
+            <p>Hi {0},</p>
+            <div>This email is a notification that {1}'s key request has been approved for the following room(s):</div>
+            {2}
+            <div>Please visit <a href="{3}">{3}</a> to check the latest status. Thank you.</div>
+            {4}
         </div>
         '''.format(
-            display_user_full_name(self.operator),
+            display_user_first_name(admin),
+            display_user_full_name(applicant),
             room_info,
             settings.SITE_URL,
             EMAIL_FOOTER,
