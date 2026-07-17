@@ -10,6 +10,8 @@ import (
 	"trms_scheduler/utils"
 )
 
+const GROUP_ALPHA_ID = 1
+
 // ORDER: key, fob, alarm
 const (
 	KEY_ONLY   = 100
@@ -207,6 +209,18 @@ func seedTestData() error {
 		return err
 	}
 
+	if err = createGroup(GROUP_ALPHA_ID, "Group Alpha"); err != nil {
+		return err
+	}
+
+	if err = addMemberToGroup(GROUP_ALPHA_ID, 1); err != nil {
+		return err
+	}
+
+	if err = addMemberToGroup(GROUP_ALPHA_ID, 2); err != nil {
+		return err
+	}
+
 	return nil
 
 }
@@ -229,6 +243,23 @@ func insertData(insertQuery string, args ...any) error {
 	}
 
 	return nil
+}
+
+func addManagerToRoom(roomID int, userID int) error {
+	query := `
+	INSERT INTO key_request_room_managers (room_id, user_id) 
+	VALUES ($1::bigint, $2::bigint);
+	`
+	return insertData(query, roomID, userID)
+
+}
+
+func addGroupToRoom(roomID int, groupID int) error {
+	query := `
+	INSERT INTO key_request_room_groups (room_id, approvalgroup_id) 
+	VALUES ($1::bigint, $2::bigint);
+	`
+	return insertData(query, roomID, groupID)
 }
 
 func addRoomsToForm(formID int, roomID int) error {
@@ -260,10 +291,35 @@ func addStatusToKeyRequestWithManager(formId int, roomID int, status string, man
 func addStatusToKeyRequestWithGroup(formId int, roomID int, status string, groupID int) error {
 	query := `
 	INSERT INTO key_request_requestformstatus(status, created_at, form_id, manager_id, operator_id, room_id, group_id)
-	VALUES ($1, NOW() - INTERVAL '4 day', $2::bigint, null, 2, $4::bigint, $4::bigint)
+	VALUES ($1, NOW() - INTERVAL '4 day', $2::bigint, null, 2, $3::bigint, $4::bigint)
 	`
 
-	return insertData(query, status, formId, groupID, roomID)
+	return insertData(query, status, formId, roomID, groupID)
+}
+
+func createGroup(groupID int, groupName string) error {
+	query := `
+	INSERT INTO key_request_approvalgroup (id, name) 
+	VALUES ($1::bigint, $2::varchar);
+	`
+
+	return insertData(query, groupID, groupName)
+}
+
+func addMemberToGroup(groupID int, userID int) error {
+	query := `INSERT INTO key_request_approvalgrouprole(role, group_id, user_id)
+	Values(1, $1::bigint, $2::bigint);`
+
+	return insertData(query, groupID, userID)
+}
+
+func createRequestFormExpiry14Days() error {
+	query := `
+	INSERT INTO key_request_requestform (affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
+	VALUES ('3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
+	`
+
+	return insertData(query)
 }
 
 // TestQueryGetFOB checks that GetKRForFobTwoWeeks returns the expected result when there is a KR Form with a 2-week
@@ -274,24 +330,11 @@ func TestQueryGetFOB(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, FOB_ONLY)
-
-	if err != nil {
+	if err := addManagerToRoom(FOB_ONLY, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES ('3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -353,24 +396,11 @@ func TestQueryGetKey(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, KEY_ONLY)
-
-	if err != nil {
+	if err := addManagerToRoom(KEY_ONLY, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES ('3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -435,24 +465,11 @@ func TestQueryGetAlarm(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALARM_ONLY)
-
-	if err != nil {
+	if err := addManagerToRoom(ALARM_ONLY, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES ('3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -513,28 +530,24 @@ func TestQueryDateBoundaries(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALL)
+	// Create 3 request forms: one on each side of date boundary
 
-	if err != nil {
+	if err := addManagerToRoom(ALL, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create 3 request forms: one on each side of date boundary
+	if err := createRequestFormExpiry14Days(); err != nil {
+		t.Fatal(err)
+	}
 
-	query = `
-	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES (1, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
+	query := `
 	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
 	VALUES (2, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '13 day');
 	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
 	VALUES (3, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '15 day');
 	`
 
-	err = insertData(query)
+	err := insertData(query)
 
 	if err != nil {
 		t.Fatal(err)
@@ -612,38 +625,25 @@ func TestQueryIgnoreOlderStatuses(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALL)
-
-	if err != nil {
+	if err := addManagerToRoom(ALL, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES (1, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
 	// Add the rooms to each of the forms
 
-	if err = addRoomsToForm(1, ALL); err != nil {
+	if err := addRoomsToForm(1, ALL); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create key request statuses for each
-	if err = addStatusToKeyRequest(1, ALL, "1"); err != nil {
+	if err := addStatusToKeyRequest(1, ALL, "1"); err != nil {
 		t.Fatal(err)
 	}
-	if err = addStatusToKeyRequest(1, ALL, "0"); err != nil {
+	if err := addStatusToKeyRequest(1, ALL, "0"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -696,29 +696,16 @@ func TestQueryIgnoreRoomsNoStatuses(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALL)
-
-	if err != nil {
+	if err := addManagerToRoom(ALL, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES (1, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
 	// Add the rooms to each of the forms
-	if err = addRoomsToForm(1, ALL); err != nil {
+	if err := addRoomsToForm(1, ALL); err != nil {
 		t.Fatal(err)
 	}
 
@@ -753,29 +740,16 @@ func TestQueryIgnoreRoomsDeclinedStatus(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALL)
-
-	if err != nil {
+	if err := addManagerToRoom(ALL, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES (1, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
 	// Add the rooms to each of the forms
-	if err = addRoomsToForm(1, ALL); err != nil {
+	if err := addRoomsToForm(1, ALL); err != nil {
 		t.Fatal(err)
 	}
 
@@ -822,34 +796,21 @@ func TestQueryIgnoreRoomsInsufficientStatus(t *testing.T) {
 	// SET-UP
 	setupTest(t)
 
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALL)
-
-	if err != nil {
+	if err := addManagerToRoom(ALL, 2); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_requestform (id, affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES (1, '3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
 	// Add the rooms to each of the forms
-	if err = addRoomsToForm(1, ALL); err != nil {
+	if err := addRoomsToForm(1, ALL); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create key request statuses for Insufficient
-	if err = addStatusToKeyRequest(1, ALL, "2"); err != nil {
+	if err := addStatusToKeyRequest(1, ALL, "2"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -885,43 +846,19 @@ func TestQueryIgnoreRoomsInsufficientStatus(t *testing.T) {
 }
 
 func TestQueryPartlyApprovedRoomMultiplePIs(t *testing.T) {
-	// Room with only FOB: 010 -> 10
 
 	// SET-UP
 	setupTest(t)
 
 	// Add multiple managers
-
-	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 2);
-	`
-	err := insertData(query, ALL)
-
-	if err != nil {
+	if err := addManagerToRoom(ALL, 2); err != nil {
+		t.Fatal(err)
+	}
+	if err := addManagerToRoom(ALL, 3); err != nil {
 		t.Fatal(err)
 	}
 
-	query = `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
-	VALUES ($1::bigint, 3);
-	`
-	err = insertData(query, ALL)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create form
-
-	query = `
-	INSERT INTO key_request_requestform (affiliation, after_hours_access, working_alone, submitted_at, updated_at, user_id, expiry_date)
-	VALUES ('3', '1', false,  NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, NOW() + INTERVAL '14 day');
-	`
-
-	err = insertData(query)
-
-	if err != nil {
+	if err := createRequestFormExpiry14Days(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -980,12 +917,328 @@ func TestQueryPartlyApprovedRoomMultiplePIs(t *testing.T) {
 }
 
 func TestQueryApprovedRoomWithGroupApprover(t *testing.T) {
+	// SET-UP
+	setupTest(t)
 
+	// Add a single group with multiple members
+
+	if err := addGroupToRoom(ALL, GROUP_ALPHA_ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create form
+
+	if err := createRequestFormExpiry14Days(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Attach Room and KRS to the form
+	if err := addRoomsToForm(1, ALL); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addStatusToKeyRequestWithGroup(1, ALL, "0", GROUP_ALPHA_ID); err != nil {
+		t.Fatal(err)
+	}
+
+	// EXECUTE
+
+	roomApproverMap, err := GetApprovalEntityMapping(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statusMap, err := GetKRForFobTwoWeeks(db)
+
+	// EVALUATE
+
+	if len(statusMap) != 1 {
+		t.Fatalf("expected 1 result and got %d", len(statusMap))
+	}
+
+	// Validate the approval status
+	for _, roomEntityStatuses := range statusMap {
+		for _, roomEntity := range roomEntityStatuses {
+			for entity, status := range roomEntity {
+
+				if entity.entityType != Group {
+					t.Fatalf("incorrect entity; expected %s and got %s", Group, entity.entityType)
+				}
+
+				if entity.entityID != GROUP_ALPHA_ID {
+					t.Fatalf("incorrect entity; expected %d and got %d", GROUP_ALPHA_ID, entity.entityID)
+
+				}
+
+				if status.status != Approved {
+					t.Fatalf("incorrect status; expected %d (Approved) and got %d", Approved, status.status)
+				}
+			}
+		}
+
+	}
+
+	needsUpdate := determineAlerts(statusMap, roomApproverMap)
+
+	for formID, rooms := range needsUpdate {
+		if formID != 1 {
+			t.Fatalf("incorrect form id; expected 1 and got %d", formID)
+		}
+		if len(rooms) != 1 {
+			t.Fatalf("incorrect number of rooms; expected 1 and got %d", len(rooms))
+		}
+		if rooms[0] != ALL {
+			t.Fatalf("incorrect room id; expected %d and got %d", ALL, rooms[0])
+		}
+	}
 }
 
 func TestQueryFullyApprovedARoomWithGroupAndPIS(t *testing.T) {
+	// SET-UP
+	setupTest(t)
 
+	// Add both group and manager
+	if err := addGroupToRoom(ALL, GROUP_ALPHA_ID); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addManagerToRoom(ALL, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create form
+
+	if err := createRequestFormExpiry14Days(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Attach Room and KRS to the form
+	if err := addRoomsToForm(1, ALL); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addStatusToKeyRequestWithGroup(1, ALL, "0", GROUP_ALPHA_ID); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addStatusToKeyRequestWithManager(1, ALL, "0", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// EXECUTE
+
+	roomApproverMap, err := GetApprovalEntityMapping(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statusMap, err := GetKRForFobTwoWeeks(db)
+
+	// EVALUATE
+
+	if len(statusMap) != 1 {
+		t.Fatalf("expected 1 result and got %d", len(statusMap))
+	}
+
+	// Validate the approval status
+	for _, roomEntityStatuses := range statusMap {
+		for _, roomEntity := range roomEntityStatuses {
+			if len(roomEntity) != 2 {
+				t.Fatalf("incorrect number of entities; expected 2 and got %d", len(roomEntityStatuses))
+			}
+			for _, status := range roomEntity {
+				if status.status != Approved {
+					t.Fatalf("incorrect status; expected %d (Approved) and got %d", Approved, status.status)
+				}
+			}
+		}
+
+	}
+
+	needsUpdate := determineAlerts(statusMap, roomApproverMap)
+
+	for formID, rooms := range needsUpdate {
+		if formID != 1 {
+			t.Fatalf("incorrect form id; expected 1 and got %d", formID)
+		}
+		if len(rooms) != 1 {
+			t.Fatalf("incorrect number of rooms; expected 1 and got %d", len(rooms))
+		}
+		if rooms[0] != ALL {
+			t.Fatalf("incorrect room id; expected %d and got %d", ALL, rooms[0])
+		}
+	}
 }
+
 func TestQueryPartlyApprovedARoomWithGroupAndPIS(t *testing.T) {
+	setupTest(t)
+
+	// Add both group and manager
+	if err := addGroupToRoom(ALL, GROUP_ALPHA_ID); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addManagerToRoom(ALL, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create form
+
+	if err := createRequestFormExpiry14Days(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Attach Room and KRS to the form
+	if err := addRoomsToForm(1, ALL); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addStatusToKeyRequestWithGroup(1, ALL, "0", GROUP_ALPHA_ID); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addStatusToKeyRequestWithManager(1, ALL, "1", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// EXECUTE
+
+	roomApproverMap, err := GetApprovalEntityMapping(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statusMap, err := GetKRForFobTwoWeeks(db)
+
+	// EVALUATE
+
+	if len(statusMap) != 1 {
+		t.Fatalf("expected 1 result and got %d", len(statusMap))
+	}
+
+	// Validate the approval status
+	for _, roomEntityStatuses := range statusMap {
+		for _, roomEntity := range roomEntityStatuses {
+			if len(roomEntity) != 2 {
+				t.Fatalf("incorrect number of entities; expected 2 and got %d", len(roomEntityStatuses))
+			}
+			for entity, status := range roomEntity {
+				if entity.entityType == Manager && status.status != Declined {
+					t.Fatalf("incorrect status; expected %d (Declined) and got %d", Declined, status.status)
+				}
+				if entity.entityType == Group && status.status != Approved {
+					t.Fatalf("incorrect status; expected %d (Approved) and got %d", Approved, status.status)
+				}
+			}
+		}
+
+	}
+
+	needsUpdate := determineAlerts(statusMap, roomApproverMap)
+
+	if len(needsUpdate) != 0 {
+		t.Fatalf("expected no forms which need an update but got %d", len(needsUpdate))
+	}
+}
+
+// TESTING EMAIL CONTENT
+
+func TestSendEmails(t *testing.T) {
+	setupTest(t)
+
+	if err := addManagerToRoom(ALL, 1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create form
+
+	if err := createRequestFormExpiry14Days(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Attach Room and KRS to the form
+	if err := addRoomsToForm(1, ALL); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := addStatusToKeyRequestWithManager(1, ALL, "0", 1); err != nil {
+		t.Fatal(err)
+	}
+
+	roomApproverMap, err := GetApprovalEntityMapping(db)
+
+	// ========= FOB EMAILS ===========
+
+	statusMap, err := GetKRForFobTwoWeeks(db)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	keyUpdates := determineAlerts(statusMap, roomApproverMap)
+	summary := sendEmails(keyUpdates, FOB)
+
+	if summary.Total != 1 {
+		t.Fatalf("expected 1 fob email but got %d", summary.Total)
+	}
+
+	if len(summary.Failures) != 0 {
+		t.Fatalf("expected 0 fob email errors but got %d", len(summary.Failures))
+	}
+
+	if summary.SuccessCount != 1 {
+		t.Fatalf("expected 1 fob email success but got %d", summary.SuccessCount)
+
+	}
+
+	// ========= ALARM EMAILS ===========
+
+	statusMap, err = GetKRForAlarmTwoWeeks(db)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	keyUpdates = determineAlerts(statusMap, roomApproverMap)
+	summary = sendEmails(keyUpdates, Alarm)
+
+	if summary.Total != 1 {
+		t.Fatalf("expected 1 alarm code email but got %d", summary.Total)
+	}
+
+	if len(summary.Failures) != 0 {
+		t.Fatalf("expected 0 alarm code email errors but got %d", len(summary.Failures))
+	}
+
+	if summary.SuccessCount != 1 {
+		t.Fatalf("expected 1 alarm code email success but got %d", summary.SuccessCount)
+
+	}
+
+	// ========= KEY EMAILS ===========
+
+	statusMap, err = GetKRForKeyTwoWeeks(db)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	keyUpdates = determineAlerts(statusMap, roomApproverMap)
+	summary = sendEmails(keyUpdates, Key)
+
+	if summary.Total != 1 {
+		t.Fatalf("expected 1 key email but got %d", summary.Total)
+	}
+
+	if len(summary.Failures) != 0 {
+		t.Fatalf("expected 0 key email errors but got %d", len(summary.Failures))
+	}
+
+	if summary.SuccessCount != 1 {
+		t.Fatalf("expected 1 key email success but got %d", summary.SuccessCount)
+
+	}
+
+	t.Log("Please check your email inbox to verify emails are formatted correctly.")
 
 }
