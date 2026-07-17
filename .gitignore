@@ -24,3 +24,4 @@ key_request/fixtures/dev_room_managers.json
 .idea/
 /venv
 .env
+*.exe
