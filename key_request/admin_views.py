@@ -92,7 +92,7 @@ class AllRequests(LoginRequiredMixin, View):
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
-        
+
         return render(request, 'key_request/admin/all_requests.html', {
             'total_forms': coordinator.get_total_forms(),
             'num_filtered_forms': coordinator.get_num_filtered_forms(),
@@ -291,7 +291,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 return HttpResponseRedirect(next)
             else:
                 return redirect('key_request:index')
-        
+
         if not self.form or not room_id or (not manager_id and not group_id) or not next:
             raise SuspiciousOperation
 
@@ -602,7 +602,7 @@ class AllRooms(LoginRequiredMixin, View):
             room.manager_ids = list(room.managers.all().values_list('id', flat=True))
             room.area_ids = list(room.areas.all().values_list('id', flat=True))
             room.training_ids = list(room.trainings.all().values_list('id', flat=True))
-        
+
         return render(request, 'key_request/admin/all_rooms.html', {
             'total_rooms': total_rooms,
             'num_filtered_rooms': num_filtered_rooms,
@@ -632,7 +632,7 @@ class CreateRoom(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
-        
+
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
@@ -773,7 +773,7 @@ class EditRoom(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
-
+        
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
@@ -805,9 +805,9 @@ class EditRoom(LoginRequiredMixin, View):
                 'building': self.room.building.id,
                 'floor': self.room.floor.id,
                 'number': self.room.number,
-                'key': True if self.room.is_active else False,
-                'fob': True if self.room.is_active else False,
-                'alarm': True if self.room.is_active else False,
+                'key': True if self.room.key else False,
+                'fob': True if self.room.fob else False,
+                'alarm': True if self.room.alarm else False,
                 'is_active': True if self.room.is_active else False,
                 'note': self.room.note,
                 'managers': [manager.id for manager in self.room.managers.all()],
@@ -926,7 +926,7 @@ class AddTrainingToRoom(LoginRequiredMixin, RoomActionsMixin, View):
     def post(self, request, *args, **kwargs):
         rooms = request.POST.getlist('rooms[]')
         training_id = request.POST.get('training')
-        
+
         if not rooms:
             raise SuspiciousOperation
 
@@ -938,7 +938,7 @@ class AddTrainingToRoom(LoginRequiredMixin, RoomActionsMixin, View):
                 if room_filtered.exists():
                     room = room_filtered.first()
                     curr_training_ids = list(room.trainings.all().values_list('id', flat=True))
-                    
+
                     if int(training_id) in curr_training_ids:
                         already_contained_rooms.append(f'ID: {room.id} - {room.building.code} {room.floor.name} - Room {room.number}')
                     else:
@@ -969,7 +969,7 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
     def post(self, request, *args, **kwargs):
         rooms = request.POST.getlist('rooms[]')
         training_id = request.POST.get('training')
-        
+
         if not rooms:
             raise SuspiciousOperation
 
@@ -981,7 +981,7 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
                 if room_filtered.exists():
                     room = room_filtered.first()
                     curr_training_ids = list(room.trainings.all().values_list('id', flat=True))
-                    
+
                     if int(training_id) in curr_training_ids:
                         room.trainings.remove(*[training_id])
                         count += 1

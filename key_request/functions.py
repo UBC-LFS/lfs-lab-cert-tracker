@@ -148,7 +148,7 @@ def all_pis_approved(form, room):
 
 
 def create_data_from_session(session, key, room=None):
-    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
+    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'note': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     group_ids = [group.id for group in room.groups.all()] if room else []
     area_ids = [area.id for area in room.areas.all()] if room else []
@@ -188,8 +188,10 @@ def create_data_from_session(session, key, room=None):
 
     return data, manager_ids, group_ids, area_ids, training_ids
 
+
 def update_data_from_post_and_session(post, session, key, tab, room=None):
     data, manager_ids, group_ids, area_ids, training_ids = create_data_from_session(session, key, room)
+    
     if tab == 'basic_info':
         if data['building'] != post.get('building'):
             data['building'] = post.get('building')
