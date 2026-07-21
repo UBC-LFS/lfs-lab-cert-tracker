@@ -144,15 +144,6 @@ class RequestFormStatus(models.Model):
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['-pk']
-        constraints = [
-            CheckConstraint(
-                check=Q(manager__isnull=False) | Q(group__isnull=False),
-                name='manager_or_group_not_null'
-            )
-        ]
-
 
 class RoomEmail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
