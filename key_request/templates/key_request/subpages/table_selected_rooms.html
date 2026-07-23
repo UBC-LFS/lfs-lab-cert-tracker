@@ -46,9 +46,15 @@
       </td>
 
       {% if is_admin %}
-        <td class="text-left">
-              {% include 'key_request/subpages/entities_list_with_approval_status.html' with form=form room=room %}
-        </td>
+          {% if room.groups.all or room.managers.all %}
+            <td class="text-left">
+                  {% include 'key_request/subpages/entities_list_with_approval_status.html' with form=form room=room %}
+            </td>
+          {% else %}
+          <td>
+            <span class="badge badge-danger">NO PIs</span>
+          </td>
+          {% endif %}
       {% endif %}
 
       <td class="text-left">

@@ -240,7 +240,9 @@ class GroupFormProcessor(EntityRequestFormProcessor):
     def __init__(self, query, user):
         super().__init__(query, user)
 
-        self.user_groups = ApprovalGroup.objects.filter(roles__user=user)
+        # The is_active is not required as groups are tied to rooms and inactive groups have 0 rooms
+        #  but it is included for future reference that only active rooms are considered valid
+        self.user_groups = ApprovalGroup.objects.filter(roles__user=user, is_active=True)
 
         self.label = "Group"
         self.priority = 1
