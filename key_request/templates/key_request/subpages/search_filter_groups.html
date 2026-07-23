@@ -1,13 +1,19 @@
 <form method="GET">
     <div class="search-filter">
-        <div class="d-flex flex-row align-items-center mb-3">
-        <input type="hidden" name="page" value="1" />
+        <div class="d-flex flex-row align-items-center mb-1">
+            <input type="hidden" name="page" value="1" />
             <input class="form-control" type="text" name="name" value="{{ request.GET.name }}" placeholder="Approval Group's Name" />
             <span class="mx-3 text-muted">and</span>
             <input class="form-control " type="text" name="member_first_name" value="{{ request.GET.member_first_name }}" placeholder="Member's First Name" />
             <span class="mx-3 text-muted">and</span>
             <input class="form-control " type="text" name="member_last_name" value="{{ request.GET.member_last_name }}" placeholder="Member's Last Name" />
         </div>
+    {% if is_admin %}
+        <div class="d-flex flex-row align-items-center mb-3 ml-1">
+            <div class="mr-2"><label for="is_active" class="mb-0">Show deactivated groups?</label></div>
+            <input id="is_active" type="checkbox" name="include_inactive" {% if request.GET.include_inactive%}checked{% endif %}>
+        </div>
+    {% endif %}
 
         <div class="mt-2">
             <button class="btn btn-primary btn-sm" type="submit">Search</button>

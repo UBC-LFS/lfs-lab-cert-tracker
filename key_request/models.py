@@ -47,6 +47,7 @@ class ApprovalGroup(models.Model):
     """ Represents a group of users associated with a room. """
 
     name = models.TextField(null=False, blank=False, max_length=150)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['name']
@@ -138,9 +139,9 @@ class RequestForm(models.Model):
 class RequestFormStatus(models.Model):
     form = models.ForeignKey(RequestForm, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
-    manager = models.ForeignKey(User, blank=True, null=True, on_delete=models.DO_NOTHING, related_name='requestformstatus_manager_set')
-    group = models.ForeignKey(ApprovalGroup, blank=True, null=True, on_delete=models.DO_NOTHING, related_name='requestformstatus_group_set')
-    operator = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requestformstatus_operator_set')
+    manager = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_manager_set')
+    group = models.ForeignKey(ApprovalGroup, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_group_set')
+    operator = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_operator_set')
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 

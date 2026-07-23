@@ -636,7 +636,7 @@ class CreateRoom(LoginRequiredMixin, View):
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
-            'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
+            'room_groups': ApprovalGroup.objects.filter(is_active=True) if self.tab == 'pis' else None,
             'areas': Lab.objects.all() if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url),
@@ -997,7 +997,7 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
                 messages.warning(request, 'Warning! This required training ({0}) does not exist in the following room(s). {1}'.format(training.name, room_numbers))
 
             if count > 0:
-                messages.success(request, 'Success! The number of rooms ({0}) have been deleted.'.format(count))
+                messages.success(request, 'Success! The required training has been deleted from {0} room(s).'.format(count))
             else:
                 messages.warning(request, 'Warning! There is no room to delete.')
         else:
@@ -1041,15 +1041,19 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         coordinator_ids = request.GET.getlist('coordinators[]', [])
 
         if selected_ids and coordinator_ids:
-            all_groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids)
+            self.groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids)
 
         self.groups = self.groups.prefetch_related('roles__user')
 
+        include_inactive = request.GET.get('include_inactive')
+        print("filter: ", include_inactive)
         group_name = request.GET.get('name')
         member_first_name = request.GET.get('member_first_name')
         member_last_name = request.GET.get('member_last_name')
         room_pk = request.GET.get('room_pk')
 
+        if not include_inactive:
+            self.groups = self.groups.filter(is_active=True)
         if group_name:
             self.groups = self.groups.filter(name__icontains=group_name)
         if member_first_name:
@@ -1314,16 +1318,26 @@ def validate_approval_group(request):
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_admin_only
 @require_http_methods(['POST'])
-def delete_group(request):
-    id = request.POST.get('group')
+def change_group_activation(request):
+    method = request.POST.get('method')
+    activation = method == "activate"
+    group_id = request.POST.get('group')
     try:
-        group = ApprovalGroup.objects.get(id=id)
+        group = ApprovalGroup.objects.get(id=group_id)
         group_name = group.name
-        group.delete()
-        messages.success(request, 'Success! Lab Room Group {0} has been deleted.'.format(group_name))
+
+        group.is_active = activation
+        group.save()
+
+        if not activation:
+            # Remove from all rooms
+            group.group_rooms.clear()
+
+        messages.success(request, 'Success! Approval Group {0} has been {1}d.'.format(group_name, method))
     except ApprovalGroup.DoesNotExist:
-        messages.error(request, 'Error! Failed to delete Lab Room Group Number {0}. It may have already been deleted.'.format(id))
+        messages.error(request, 'Error! Failed to change activation of Approval Group Number {0}.'.format(id))
     return redirect('key_request:all_groups')
+
 
 # ROOM GROUPS END
 
