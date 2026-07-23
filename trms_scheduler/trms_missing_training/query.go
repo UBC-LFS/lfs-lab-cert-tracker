@@ -44,7 +44,7 @@ func GetUsersWithMissingCerts(db utils.Database) ([]MissingTrainingResult, error
 			JOIN lfs_lab_cert_tracker_cert c ON c.id = lc.cert_id
 			LEFT JOIN latest_usercert luc ON luc.user_id = ul.user_id AND luc.cert_id = lc.cert_id
 			JOIN auth_user u ON u.id = ul.user_id
-			WHERE u.is_active = TRUE
+			WHERE u.is_active = TRUE AND c.is_lfs = TRUE
 			GROUP BY ul.lab_id, ul.user_id, l.name
 		)
 		SELECT
@@ -91,27 +91,18 @@ func GetSupervisorsWithMissingCerts(db utils.Database) (map[string]map[string][]
         	member.last_name,
 			c.name
 		FROM lfs_lab_cert_tracker_lab l
-
 		JOIN lfs_lab_cert_tracker_userlab ul_member ON ul_member.lab_id = l.id AND ul_member.role IN (0, 1)
-
 		JOIN auth_user member ON member.id = ul_member.user_id AND member.is_active = TRUE
-
 		JOIN lfs_lab_cert_tracker_labcert lc ON lc.lab_id = l.id
-
 		JOIN lfs_lab_cert_tracker_cert c ON c.id = lc.cert_id
-
 		JOIN lfs_lab_cert_tracker_userlab ul_sup ON ul_sup.lab_id = l.id AND ul_sup.role = 1
-
 		JOIN auth_user sup ON sup.id = ul_sup.user_id AND sup.is_active = TRUE
-
 		WHERE NOT EXISTS (
 			SELECT 1
 			FROM lfs_lab_cert_tracker_usercert uc
 			WHERE uc.user_id = member.id AND uc.cert_id = c.id
-		)
-
-		ORDER BY sup.username, l.name, member.username, c.name
-    `
+		) AND c.is_lfs = TRUE
+		ORDER BY sup.username, l.name, member.username, c.name;`
 
 	rows, err := db.Conn.Query(query)
 	if err != nil {
