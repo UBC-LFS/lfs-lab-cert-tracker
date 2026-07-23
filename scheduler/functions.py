@@ -24,13 +24,13 @@ def get_users_missing_trainings():
         email=F('lab__userlab__user__email'),
         is_active=F('lab__userlab__user__is_active')
     ).filter(
-        Q(is_active=False) & 
+        Q(is_active=False) &
         Q(~Exists(has_cert_subquery))
     ).values(
-        'user', 
+        'user',
         'lab',
-        'cert', 
-        'lab__name', 
+        'cert',
+        'lab__name',
         'cert__name',
         'first_name',
         'last_name',
@@ -51,13 +51,13 @@ def get_users_missing_trainings():
                     'email': at['email'],
                     'areas': {}
                 }
-            
+
             if area_id not in users[user_id]['areas'].keys():
                 users[user_id]['areas'][area_id] = {
                     'name': at['lab__name'],
                     'missing_trainings': []
                 }
-            
+
             users[user_id]['areas'][area_id]['missing_trainings'].append(at['cert__name'])
 
             if area_id not in areas.keys():
@@ -70,7 +70,7 @@ def get_users_missing_trainings():
                 }
 
             areas[area_id][user_id]['missing_trainings'].append(at['cert__name'])
-    
+
     return users, areas
 
 
@@ -118,7 +118,7 @@ def get_message_pis_missing_trainings(contents):
 
 def get_users_with_expired_trainings(target_date, type):
     ''' Get users with expired trainings '''
-    
+
     users = {}
 
     filters = Q(user__is_active=True) & ~Q(completion_date=F('expiry_date'))
@@ -126,12 +126,12 @@ def get_users_with_expired_trainings(target_date, type):
         filters &= Q(expiry_date=target_date)
     elif type == 'after':
         filters &= Q(expiry_date__lt=target_date)
-    
+
     values = ['user', 'cert', 'user__first_name', 'user__last_name', 'user__email', 'cert__name']
 
     user_trainings = UserCert.objects.filter(filters).order_by('id')
     print('========== user trainings:', user_trainings.exists(), user_trainings.count())
-    
+
     """user_trainings = UserCert.objects.filter(filters).order_by('id').values(*values).annotate(latest_expiry_date=Max('expiry_date'))
     if user_trainings.exists():
         for ut in user_trainings.iterator():
@@ -144,7 +144,7 @@ def get_users_with_expired_trainings(target_date, type):
                     'email': ut['user__email'],
                     'expired_trainings': []
                 }
-            
+
             users[user_id]['expired_trainings'].append({
                 'name': ut['cert__name'],
                 'expiry_date': appFunc.convert_date_to_str(ut['latest_expiry_date'])
@@ -168,7 +168,7 @@ def get_message_users_expired_trainings(user_id, trainings, days, type):
         <ul>{1}</ul>
         <p>See <a href='{2}/app/users/{3}/report.pdf/'>User Report</a></p>
         """.format(days, ''.join(contents), settings.SITE_URL, user_id)
-    
+
     elif type == 'after':
         message = """\
         <p>This is a friendly reminder that your training has passed its expiration date. Please log in and update your training as soon as possible.</p>
@@ -190,7 +190,7 @@ def get_message_pis_expired_trainings(contents, days, type):
                 {1}
             </div>
         """.format(days, contents)
-    
+
     elif type == 'after':
         message = """\
             <p>Please be advised that the training certifications for the following users in your area have already expired. Please remind them to complete their renewal at the earliest convenience to prevent any area access issues.</p>
@@ -204,7 +204,7 @@ def get_message_pis_expired_trainings(contents, days, type):
 
 def send_email(receiver, message):
     """ Send an email with a receiver and a message """
-    
+
     if settings.EMAIL_FROM:
         sender = settings.EMAIL_FROM
 
@@ -232,12 +232,6 @@ def html_template(first_name, last_name, message):
         <p>Hi {0} {1},</p>
         <div>
             {2}
-        </div>
-        <br />
-        <div>
-            <b>Please note that if you try to access the LFS Training Record Management System off campus,
-            you must be connected via
-            <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
         </div>
         <br /><br />
         <div>
@@ -277,11 +271,11 @@ def get_expiry_date(completion_date, cert):
 
 def pull_by_api(headers, usernames, form_checking, multiple_trainings):
     user_trainings = []
-    
+
     body = {'requestIdentifiers': [{'identifierType': 'CWL', 'identifier': username} for username in usernames]}
     next_url = get_next_url(1)
     hasNextPage = True
-    
+
     while hasNextPage:
         res = requests.post(next_url, json=body, headers=headers)
         if res.status_code != 200:
@@ -292,7 +286,7 @@ def pull_by_api(headers, usernames, form_checking, multiple_trainings):
         if 'page' not in json.keys() or 'pageSize' not in json.keys() or 'hasNextPage' not in json.keys() or 'pageItems' not in json.keys():
             print('Error: page, pageSize, hasNextPage and pageItems are required.')
             break
-        
+
         for item in json['pageItems']:
             if 'requestedIdentifier' not in item.keys() or 'certificate' not in item.keys() or 'identifier' not in item['requestedIdentifier'].keys() or 'trainingName' not in item['certificate'].keys() or 'trainingId' not in item['certificate'].keys() or 'completionDate' not in item['certificate'].keys():
                 print('Warning: no requestedIdentifier, certificate, identifier, trainingName or completionDate')
@@ -308,7 +302,7 @@ def pull_by_api(headers, usernames, form_checking, multiple_trainings):
                 user = appFunc.get_user_by_username(username)
 
                 training = None
-                found_training = Cert.objects.filter(unique_id__iexact=training_id)                
+                found_training = Cert.objects.filter(unique_id__iexact=training_id)
                 if found_training.exists():
                     training = found_training.first()
                 else:
@@ -321,7 +315,7 @@ def pull_by_api(headers, usernames, form_checking, multiple_trainings):
                                     break
                             if training:
                                 break
-                
+
                 if user and training:
                     form = '{0}_{1}_{2}'.format(user.id, training.id, completion_date)
                     user_certs = user.usercert_set.filter(cert_id=training.id, completion_date=completion_date)
@@ -336,13 +330,13 @@ def pull_by_api(headers, usernames, form_checking, multiple_trainings):
                             by_api = True
                         ))
 
-                        form_checking.append(form)                        
+                        form_checking.append(form)
             else:
                 print('Warning: completion date is wrong, or status is not active:', username, training_name)
-        
+
         hasNextPage = json['hasNextPage']
         next_url = get_next_url(int(json['page']) + 1)
-    
+
     return user_trainings, form_checking
 
 
@@ -358,5 +352,5 @@ def pull_by_api(headers, usernames, form_checking, multiple_trainings):
 #     elif training_name == "Remote Work. Home Office Ergonomics. Orientation":
 #         training_name = "Home Office Ergo"
 
-#     cert = Cert.objects.filter(name=training_name)    
+#     cert = Cert.objects.filter(name=training_name)
 #     return cert.first() if cert.exists() else None

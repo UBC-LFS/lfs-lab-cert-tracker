@@ -38,13 +38,6 @@ EDIT_ROOM_KEY = 'edit_room_data'
 
 
 EMAIL_FOOTER = '''\
-<br />
-<div>
-    <b>Please note that if you try to access the LFS Training Record Management System off campus,
-    you must be connected via
-    <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
-</div>
-<br />
 <p>Best regards,</p>
 <p>LFS Training Record Management System</p>
 '''

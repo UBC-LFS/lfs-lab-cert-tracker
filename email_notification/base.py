@@ -38,12 +38,6 @@ def html_template(first_name, last_name, message):
         <div>
             {2}
         </div>
-        <br />
-        <div>
-            <b>Please note that if you try to access the LFS Training Record Management System off campus,
-            you must be connected via
-            <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
-        </div>
         <br /><br />
         <div>
             If you are trying to enroll in a missing or expired training, or to retrieve the training completion record, please visit the following links to get to the appropriate sites:
@@ -166,7 +160,7 @@ def send_email_to_admin(users, admin, lab_users, days, type):
         template = html_template('LFS TRMS', 'administrators', message)
 
         send_email(receiver, template)
-    
+
 
 # Helper functions
 

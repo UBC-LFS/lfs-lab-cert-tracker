@@ -135,12 +135,12 @@ class UserLab(models.Model):
     """
     Keeps track of which users belong to which lab
     """
-    
+
     LAB_USER = 0
     PRINCIPAL_INVESTIGATOR = 1
-    
+
     ROLE_CHOICES = [ (LAB_USER, "User"), (PRINCIPAL_INVESTIGATOR, "Supervisor") ]
-    
+
     user = models.ForeignKey(AuthUser, on_delete=models.CASCADE)
     lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
     role = models.IntegerField(choices=ROLE_CHOICES)
@@ -158,14 +158,7 @@ def send_notification(sender, created, **kwargs):
         message = '''\
         <div>
             <p>Hi {0} {1},</p>
-            <div>You have recently been added to {2} in the LFS Training Record Management System. Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</div>
-            <br />
-            <div>
-                <b>Please note that if you try to access the LFS Training Record Management System off campus,
-                you must be connected via
-                <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
-            </div>
-            <br />
+            <p>You have recently been added to {2} in the LFS Training Record Management System. Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</p>
             <p>Best regards,</p>
             <p>LFS Training Record Management System</p>
         </div>

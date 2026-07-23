@@ -93,7 +93,7 @@ class SubmitForm(LoginRequiredMixin, View):
                 'floor': room.floor.name,
                 'number': room.number
             })
-        
+
         return render(request, 'key_request/process/submit_form.html', {
             'form': KeyRequestForm(initial={'user': request.user.id }),
             'basic_info': [
@@ -110,7 +110,7 @@ class SubmitForm(LoginRequiredMixin, View):
         if not request.POST.get('agree'):
             messages.error(request, 'Error! Please read the <strong>Requirement to Proceed</strong>, and try again.')
             return redirect('key_request:submit_form')
-        
+
         form = KeyRequestForm(request.POST)
 
         rooms = request.POST.getlist('rooms[]')
@@ -177,7 +177,7 @@ def send_email(form):
                     })
 
                 seen_pis_for_current_room.add(member.id)
-    
+
     # Send an email to the user
     if len(user_rooms) > 0:
         subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
@@ -192,14 +192,14 @@ def send_email(form):
                     rooms += item['room']
                 subject, message = get_message(value[0]['pi'], rooms, 'pi', value[0]['submitted_at'], value[0]['applicant'])
                 send(value[0]['pi'], subject, message)
-    
+
     # Send an email to amdins
     admins = User.objects.filter(is_active=True, is_superuser=True)
     if admins.count() > 0:
         for admin in admins:
             subject, message = get_message(admin, user_rooms, 'admin', submitted_at, form.user)
             send(admin, subject, message)
-            
+
 
 def get_message(receiver, rooms, option, submitted_at, applicant=None):
     subject = ''
@@ -209,12 +209,12 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
         subject = 'Confirmation of Key Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <div>You have submitted the following key request on {1}.</div>
+            <p>You have submitted the following key request on {1}.</p>
             <ul>{2}</ul>
-            <div>Please visit <a href={3}>{3}</a> to check the status of your key request. Thank you.</div>'''.format(
-                receiver.get_full_name(), 
-                submitted_at, 
-                rooms, 
+            <p>Please visit <a href={3}>{3}</a> to check the status of your key request. Thank you.</p>'''.format(
+                receiver.get_full_name(),
+                submitted_at,
+                rooms,
                 settings.SITE_URL
             )
 
@@ -222,41 +222,34 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
         subject = 'Notification of Key Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <div>{1} submitted a key request form on {2}.</div>
+            <p>{1} submitted a key request form on {2}.</p>
             <ul>{3}</ul>
-            <div>Please visit <a href={4}>{4}</a> to check the status of {1}'s key request form. Thank you.</div>'''.format(
-                receiver.get_full_name(), 
-                applicant.get_full_name(), 
-                submitted_at, 
-                rooms, 
+            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s key request form. Thank you.</p>'''.format(
+                receiver.get_full_name(),
+                applicant.get_full_name(),
+                submitted_at,
+                rooms,
                 settings.SITE_URL
             )
-    
+
     elif option == 'admin':
         subject = 'Notification of Key Request at UBC LFS'
         message += '''\
             <p>Hi {0} (TRMS Administrator),</p>
-            <div>{1} submitted a key request form on {2}.</div>
+            <p>{1} submitted a key request form on {2}.</p>
             <ul>{3}</ul>
-            <div>Please visit <a href={4}>{4}</a> to check the status of {1}'s key request form. Thank you.</div>'''.format(
-                receiver.get_full_name(), 
-                applicant.get_full_name(), 
-                submitted_at, 
-                rooms, 
+            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s key request form. Thank you.</p>'''.format(
+                receiver.get_full_name(),
+                applicant.get_full_name(),
+                submitted_at,
+                rooms,
                 settings.SITE_URL
             )
 
     footer = '''\
-            <br />
-            <div>
-                <b>Please note that if you try to access the LFS Training Record Management System off campus,
-                you must be connected via
-                <a href="https://it.ubc.ca/services/email-voice-internet/myvpn">UBC VPN</a>.</b>
-            </div>
-            <br />
             <p>Best regards,</p>
             <p>LFS Training Record Management System</p></div>'''
-    
+
     message += footer
     return subject, message
 
