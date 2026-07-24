@@ -12,7 +12,7 @@
     {% for area in areas %}
       <tr>
         <td>{{ area.id }}</td>
-        <td class="text-left">{{ area.name }}</td>
+        <td class="text-left area-name">{{ area.name }}</td>
         <td>
           <input type="checkbox" name="areas[]" value="{{ area.id }}" {% if area.id in area_ids %}checked{% endif %} />
         </td>
@@ -20,5 +20,31 @@
     {% endfor %}
   </tbody>
 </table>
+
+<div class="modal fade" id="add-area-certs-modal" tabindex="-1" role="dialog" aria-labelledby="add-area-certs-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-info" id="add-area-certs-modal-label">Auto-Add Area Trainings?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p>Would you like to auto-add the trainings associated with the selected areas?</p>
+                <ul id="selected-area-names">
+
+                </ul>
+                <div class="d-flex flex-row justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-type="cancel">Go Back</button>
+                    </div>
+                    <div>
+                        <button  type="button" class="btn btn-warning submit" data-type="continue">Continue without Auto-Add</button>
+                        <button  type="button" class="btn btn-primary submit" data-type="autoAdd">Confirm Auto-Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% include 'key_request/subpages/room_pagination.html' with table='areas' id=room_id %}

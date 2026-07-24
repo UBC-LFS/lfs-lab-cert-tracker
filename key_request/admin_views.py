@@ -22,7 +22,7 @@ from django.apps import apps
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 
-from lfs_lab_cert_tracker.models import Lab, Cert
+from lfs_lab_cert_tracker.models import Lab, Cert, LabCert
 from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
@@ -637,7 +637,7 @@ class CreateRoom(LoginRequiredMixin, View):
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
             'room_groups': ApprovalGroup.objects.filter(is_active=True) if self.tab == 'pis' else None,
-            'areas': Lab.objects.all() if self.tab == 'areas' else None,
+            'areas': Lab.objects.all().prefetch_related('labcert_set') if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url),
             'tab': self.tab,
@@ -650,7 +650,9 @@ class CreateRoom(LoginRequiredMixin, View):
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         method = request.POST.get('method')
+        add_lab_certs = request.POST.get('add_lab_certs', None)
         tab = request.POST.get('tab')
+
 
         if not method or not tab:
             raise SuspiciousOperation
@@ -689,7 +691,13 @@ class CreateRoom(LoginRequiredMixin, View):
                 data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
 
             elif tab == 'areas':
+                print("In areas tab")
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
+                if add_lab_certs:
+                    sub_q = LabCert.objects.filter(lab_id__in=data['areas'], cert_id=OuterRef('pk'))
+                    certs = list(Cert.objects.filter(Exists(sub_q)).values_list('id', flat=True))
+                    data['trainings'] = certs
+                    print("Certs: ", certs)
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
@@ -774,12 +782,13 @@ class EditRoom(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
 
+
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
             'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
-            'areas': Lab.objects.all() if self.tab == 'areas' else None,
+            'areas': Lab.objects.all().prefetch_related('labcert_set') if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
             'tab': self.tab,
