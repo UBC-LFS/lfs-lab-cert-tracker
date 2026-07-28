@@ -12,7 +12,11 @@
 		{% for training in trainings %}
 			<tr>
 				<td>{{ training.id }}</td>
-				<td class="text-left">{{ training.name }}</td>
+				<td class="text-left">{{ training.name }}
+                    {% for lab_name in training.linked_lab_names %}
+                        <span class="badge badge-secondary">{{ lab_name }}</span>
+                    {% endfor %}
+                </td>
 				<td>
 					<input type="checkbox" name="trainings[]" value="{{ training.id }}" {% if training.id in training_ids %}checked{% endif %} />
 				</td>

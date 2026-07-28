@@ -65,15 +65,15 @@
                     </td>
                     <td class="text-left">
                         <ul class="list-minus-20">
-                            {% for area in room.areas.all %}
-                                <li>{{ area.name }}</li>
+                            {% for roomarea in room.roomarea_set.all %}
+                                <li>{{ roomarea.lab.name }}</li>
                             {% endfor %}
                         </ul>
                     </td>
                     <td class="text-left">
                         <ul class="list-minus-20">
-                            {% for training in room.trainings.all %}
-                                <li>{{ training.name }}</li>
+                            {% for training in room.all_trainings %}
+                                <li>{% include 'key_request/subpages/_display_training_with_area_tag.html' with training=training%}</li>
                             {% endfor %}
                         </ul>
                     </td>
@@ -155,6 +155,14 @@
 
 {% block js %}
     {% load static %}
+
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    </script>
+
+
     <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_data.js' %}"></script>
     <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/show_delete_modal.js' %}"></script>
 

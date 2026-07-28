@@ -1,5 +1,6 @@
 from django.db.models.functions import Concat
-from django.db.models import Q, F, Max, CharField, Value, Count, OuterRef, Subquery, Exists
+from django.db.models import Q, F, Max, Count, OuterRef, Subquery, Case, When, Value, BooleanField
+from django.contrib.postgres.aggregates import ArrayAgg
 from urllib.parse import urlparse
 from django.forms.models import model_to_dict
 from django.utils import timezone
@@ -9,7 +10,7 @@ import json
 
 
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import Cert
+from lfs_lab_cert_tracker.models import Cert, Lab, LabCert
 from .models import Building, Floor, Room, RequestForm, RequestFormStatus, ApprovalGroup, ApprovalGroupRole
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT
 
@@ -64,8 +65,8 @@ def preprocess_rooms(rooms):
                 'key': r['key'],
                 'fob': r['fob'],
                 'alarm': r['alarm'],
-                'areas': [{ 'id': area.id, 'name': area.name } for area in r['areas']],
-                'trainings': [{ 'id': training.id, 'name': training.name } for training in r['trainings']]
+                'areas': [{ 'id': roomarea.lab.id, 'name': roomarea.lab.name } for roomarea in room.roomarea_set.all()],
+                'trainings': [{ 'id': training.id, 'name': training.name } for training in room.all_trainings]
             })
 
     return json.dumps(by_building)
@@ -76,7 +77,7 @@ def check_user_trainings(user, selected_rooms):
     for room_id in selected_rooms:
         room = Room.objects.get(id=room_id)
 
-        for training in room.trainings.all():
+        for training in room.all_trainings:
             if training not in required_trainings:
                 required_trainings.append(training)
 
@@ -151,7 +152,9 @@ def create_data_from_session(session, key, room=None):
     data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     group_ids = [group.id for group in room.groups.all()] if room else []
-    area_ids = [area.id for area in room.areas.all()] if room else []
+    unlinked_area_ids = [roomarea.lab.id for roomarea in room.roomarea_set.filter(is_linked=False)] if room else []
+    linked_area_ids = [roomarea.lab.id for roomarea in room.roomarea_set.filter(is_linked=True)] if room else []
+
     training_ids = [training.id for training in room.trainings.all()] if room else []
 
     if session.get(key):
@@ -180,16 +183,19 @@ def create_data_from_session(session, key, room=None):
         if len(session[key]['groups']) > 0:
             group_ids = session[key]['groups']
 
-        if len(session[key]['areas']) > 0:
-            area_ids = session[key]['areas']
+        if len(session[key]['unlinked_areas']) > 0:
+            unlinked_area_ids = session[key]['unlinked_areas']
+
+        if len(session[key]['linked_areas']) > 0:
+            linked_area_ids = session[key]['linked_areas']
 
         if len(session[key]['trainings']) > 0:
             training_ids = session[key]['trainings']
 
-    return data, manager_ids, group_ids, area_ids, training_ids
+    return data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids
 
 def update_data_from_post_and_session(post, session, key, tab, room=None):
-    data, manager_ids, group_ids, area_ids, training_ids = create_data_from_session(session, key, room)
+    data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids = create_data_from_session(session, key, room)
     if tab == 'basic_info':
         if data['building'] != post.get('building'):
             data['building'] = post.get('building')
@@ -226,16 +232,51 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
             group_ids = groups
 
     elif tab == 'areas':
-        areas = str_to_int(post.getlist('areas[]'))
-        if not is_two_lists_equal(area_ids, areas):
-            area_ids = areas
+        all_areas = str_to_int(post.getlist('areas[]'))
+        linked_areas = str_to_int(post.getlist('linked_areas[]'))
+        unlinked_areas = list(set(all_areas) - set(linked_areas))
+        if not is_two_lists_equal(linked_area_ids, linked_areas):
+            linked_area_ids = linked_areas
+        if not is_two_lists_equal(unlinked_area_ids, unlinked_areas):
+            unlinked_area_ids = unlinked_areas
 
     elif tab == 'trainings':
         trainings = str_to_int(post.getlist('trainings[]'))
         if not is_two_lists_equal(training_ids, trainings):
             training_ids = trainings
 
-    return data, manager_ids, group_ids, area_ids, training_ids
+    return data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids
+
+# ROOM AREAS START
+
+def annotate_trainings_from_linked_areas(certs, linked_areas):
+    return certs.annotate(
+        linked_lab_names=ArrayAgg(
+            'labcert__lab__name',
+            filter=Q(labcert__lab_id__in=linked_areas),
+            distinct=True
+        ),
+    )
+
+def annotate_all_areas_from_session(all_areas, linked_areas):
+    all_areas = str_to_int(all_areas)
+    linked_areas = str_to_int(linked_areas)
+    annotated = Lab.objects.all().annotate(
+        has_area=Case(
+            When(pk__in=all_areas, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        ),
+        is_linked=Case(
+            When(pk__in=linked_areas, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        ),
+    )
+    return annotated
+
+# ROOM AREAS END
+
 
 # GROUPS
 

@@ -1,0 +1,7 @@
+{% if not training.room_training %}
+    <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">link</span>
+    <span class=text-underline" data-toggle="tooltip" data-placement="top" title="Inherited from: {{ training.linked_lab_names|join:", " }}">{{ training.name }}</span>
+{% else %}
+    <span>{{ training.name }}</span>
+
+{% endif %}

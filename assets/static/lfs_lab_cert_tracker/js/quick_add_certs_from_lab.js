@@ -1,7 +1,28 @@
 $(document).ready(function() {
-    quickAddCerts()
+    // quickAddCerts()
 
+    addAreaCheckboxListeners();
 });
+
+function addAreaCheckboxListeners() {
+    // $(".areas-form").on('click', '.submit-btn', showCarryOver);
+    $(".areas-form").on('change', '.add-area-checkbox', function (e) {
+        console.log("Fired")
+        const $addAreaCheckbox = $(e.currentTarget)
+        syncLinkAreaCheckbox($addAreaCheckbox)
+    });
+}
+
+function syncLinkAreaCheckbox($addAreaCheckbox) {
+    const areaID = $addAreaCheckbox.val()
+    const $linkAreaCheckbox = $(`#link-area-${areaID}`)
+    if ($addAreaCheckbox.is(':checked')) {
+        $linkAreaCheckbox.prop('disabled', false)
+    } else {
+        $linkAreaCheckbox.prop('checked', false)
+        $linkAreaCheckbox.prop('disabled', true)
+    }
+}
 
 function quickAddCerts() {
     $(".areas-form").on('click', '.submit-btn', showCarryOver);

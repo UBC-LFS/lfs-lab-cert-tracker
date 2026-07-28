@@ -1,8 +1,9 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User, Group
-from lfs_lab_cert_tracker.models import Lab, Cert
-from django.db.models import Q, CheckConstraint
+from lfs_lab_cert_tracker.models import Lab, Cert, LabCert
+from django.db.models import Q, Case, When, BooleanField, Value
+from django.contrib.postgres.aggregates import ArrayAgg
 
 from datetime import datetime
 
@@ -88,7 +89,6 @@ class Room(models.Model):
     managers = models.ManyToManyField(User)
     groups = models.ManyToManyField(ApprovalGroup, related_name="group_rooms")
 
-    areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
     key = models.BooleanField(default=False)
     fob = models.BooleanField(default=False)
@@ -110,7 +110,30 @@ class Room(models.Model):
         self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
         super(Room, self).save(*args, **kwargs)
 
+    @property
+    def all_trainings(self):
+        """ Get all the room's trainings, with the source lab's name attached [linked_lab_names]"""
+        linked_room_areas = self.roomarea_set.filter(is_linked=True).values_list('lab_id', flat=True)
+        linked_room_area_certs = LabCert.objects.filter(lab_id__in=linked_room_areas).values_list('cert_id', flat=True).distinct()
+        room_training_ids = self.trainings.values_list('id', flat=True)
+        all_ids = list(set(room_training_ids).union(linked_room_area_certs))
+        return Cert.objects.filter(id__in=all_ids).annotate(
+            linked_lab_names=ArrayAgg(
+                'labcert__lab__name',
+                filter=Q(labcert__lab_id__in=linked_room_areas),
+                distinct=True,
+            ),
+            room_training=Case(
+                When(id__in=room_training_ids, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+            ).order_by('name')
 
+class RoomArea(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
+    is_linked = models.BooleanField(default=False)
 
 
 class RequestForm(models.Model):

@@ -22,13 +22,13 @@ from django.apps import apps
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 
-from lfs_lab_cert_tracker.models import Lab, Cert, LabCert
+from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, ApprovalGroup, ApprovalGroupRole
+from .models import Room, ApprovalGroup, ApprovalGroupRole, RoomArea
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
 from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
@@ -600,9 +600,7 @@ class AllRooms(LoginRequiredMixin, View):
         for room in rooms:
             room.groups.all().values_list('id', flat=True)
             room.manager_ids = list(room.managers.all().values_list('id', flat=True))
-            room.area_ids = list(room.areas.all().values_list('id', flat=True))
-            room.training_ids = list(room.trainings.all().values_list('id', flat=True))
-        
+
         return render(request, 'key_request/admin/all_rooms.html', {
             'total_rooms': total_rooms,
             'num_filtered_rooms': num_filtered_rooms,
@@ -631,28 +629,30 @@ class CreateRoom(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
-        
+        data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids = func.create_data_from_session(request.session, CREATE_ROOM_KEY)
+        area_ids = list(set(linked_area_ids).union(set(unlinked_area_ids)))
+        annotated_areas = func.annotate_all_areas_from_session(area_ids, linked_area_ids)
+
         return render(request, 'key_request/admin/create_room.html', {
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
             'room_groups': ApprovalGroup.objects.filter(is_active=True) if self.tab == 'pis' else None,
-            'areas': Lab.objects.all().prefetch_related('labcert_set') if self.tab == 'areas' else None,
-            'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
+            'areas': annotated_areas.prefetch_related('labcert_set') if self.tab == 'areas' else None,
+            'trainings': func.annotate_trainings_from_linked_areas(Cert.objects.all(), linked_area_ids) if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url),
             'tab': self.tab,
             'manager_ids': manager_ids,
             'group_ids': group_ids,
             'area_ids': area_ids,
+            'linked_area_ids': linked_area_ids,
+            'unlinked_area_ids': unlinked_area_ids,
             'training_ids': training_ids
         })
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         method = request.POST.get('method')
-        add_lab_certs = request.POST.get('add_lab_certs', None)
         tab = request.POST.get('tab')
-
 
         if not method or not tab:
             raise SuspiciousOperation
@@ -669,7 +669,8 @@ class CreateRoom(LoginRequiredMixin, View):
                 'note': None,
                 'groups': [],
                 'managers': [],
-                'areas': [],
+                'linked_areas': [],
+                'unlinked_areas': [],
                 'trainings': []
             }
 
@@ -691,13 +692,10 @@ class CreateRoom(LoginRequiredMixin, View):
                 data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
 
             elif tab == 'areas':
-                print("In areas tab")
-                data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
-                if add_lab_certs:
-                    sub_q = LabCert.objects.filter(lab_id__in=data['areas'], cert_id=OuterRef('pk'))
-                    certs = list(Cert.objects.filter(Exists(sub_q)).values_list('id', flat=True))
-                    data['trainings'] = certs
-                    print("Certs: ", certs)
+                all_areas = func.str_to_int(request.POST.getlist('areas[]'))
+                data['linked_areas'] = func.str_to_int(request.POST.getlist('linked_areas[]'))
+                data['unlinked_areas'] = list(set(all_areas) - set(data['linked_areas']))
+
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
@@ -708,7 +706,7 @@ class CreateRoom(LoginRequiredMixin, View):
             return HttpResponseRedirect(self.url + URL_NEXT[tab])
 
         elif method == 'Create Room':
-            data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
+            data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
             form = RoomForm(data)
             if form.is_valid():
                 room = form.save()
@@ -719,8 +717,16 @@ class CreateRoom(LoginRequiredMixin, View):
                     if len(group_ids) > 0:
                         room.groups.add(*group_ids)
 
-                    if len(area_ids) > 0:
-                        room.areas.add(*area_ids)
+                    room_areas_to_create = []
+
+                    for area_id in linked_area_ids:
+                        room_areas_to_create.append(RoomArea(room=room, lab_id=area_id, is_linked=True))
+
+                    for area_id in unlinked_area_ids:
+                        room_areas_to_create.append(RoomArea(room=room, lab_id=area_id, is_linked=False))
+
+                    if len(room_areas_to_create) > 0:
+                        RoomArea.objects.bulk_create(room_areas_to_create)
 
                     if len(training_ids) > 0:
                         room.trainings.add(*training_ids)
@@ -780,7 +786,9 @@ class EditRoom(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
+        data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
+        area_ids = list(set(linked_area_ids).union(set(unlinked_area_ids)))
+        annotated_areas = func.annotate_all_areas_from_session(area_ids, linked_area_ids)
 
 
         return render(request, 'key_request/admin/edit_room.html', {
@@ -788,14 +796,16 @@ class EditRoom(LoginRequiredMixin, View):
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
             'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
-            'areas': Lab.objects.all().prefetch_related('labcert_set') if self.tab == 'areas' else None,
-            'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
+            'areas': annotated_areas.prefetch_related('labcert_set') if self.tab == 'areas' else None,
+            'trainings': func.annotate_trainings_from_linked_areas(Cert.objects.all(), linked_area_ids) if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
             'tab': self.tab,
             'conflict_map': self._make_conflict_map(group_ids, manager_ids) if self.tab == 'pis' else None,
             'manager_ids': manager_ids,
             'group_ids': group_ids,
             'area_ids': area_ids,
+            'linked_area_ids': linked_area_ids,
+            'unlinked_area_ids': unlinked_area_ids,
             'training_ids': training_ids,
             'next': self.next
         })
@@ -821,8 +831,9 @@ class EditRoom(LoginRequiredMixin, View):
                 'note': self.room.note,
                 'managers': [manager.id for manager in self.room.managers.all()],
                 'groups': [group.id for group in self.room.groups.all()],
-                'areas': [area.id for area in self.room.areas.all()],
-                'trainings': [training.id for training in self.room.trainings.all()]
+                'linked_areas': [area.id for area in self.room.roomarea_set.filter(is_linked=True)],
+                'unlinked_areas': [area.id for area in self.room.roomarea_set.filter(is_linked=False)],
+                'trainings': [training.id for training in self.room.trainings.all()],
             }
 
             if request.session.get(EDIT_ROOM_KEY):
@@ -844,7 +855,10 @@ class EditRoom(LoginRequiredMixin, View):
 
 
             elif tab == 'areas':
-                data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
+                all_areas = func.str_to_int(request.POST.getlist('areas[]'))
+                data['linked_areas'] = func.str_to_int(request.POST.getlist('linked_areas[]'))
+                data['unlinked_areas'] = list(set(all_areas) - set(data['linked_areas']))
+
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
@@ -854,14 +868,14 @@ class EditRoom(LoginRequiredMixin, View):
             return HttpResponseRedirect(self.url + URL_NEXT[tab] + '&next=' + next)
 
         elif method == 'Update Room':
-            data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
+            data, manager_ids, group_ids, linked_area_ids, unlinked_area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
             form = RoomForm(data, instance=self.room)
             if form.is_valid():
                 room = form.save()
                 if room:
                     room.managers.clear()
                     room.groups.clear()
-                    room.areas.clear()
+                    RoomArea.objects.filter(room=room).delete()
                     room.trainings.clear()
 
                     if len(manager_ids) > 0:
@@ -870,8 +884,17 @@ class EditRoom(LoginRequiredMixin, View):
                     if len(group_ids) > 0:
                         room.groups.add(*group_ids)
 
-                    if len(area_ids) > 0:
-                        room.areas.add(*area_ids)
+                    room_areas_to_create = []
+
+                    for area_id in linked_area_ids:
+                        room_areas_to_create.append(RoomArea(room=room, lab_id=area_id, is_linked=True))
+
+                    for area_id in unlinked_area_ids:
+                        room_areas_to_create.append(RoomArea(room=room, lab_id=area_id, is_linked=False))
+
+                    if len(room_areas_to_create) > 0:
+                        RoomArea.objects.bulk_create(room_areas_to_create)
+
 
                     if len(training_ids) > 0:
                         room.trainings.add(*training_ids)

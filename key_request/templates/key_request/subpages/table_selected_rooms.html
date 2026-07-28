@@ -59,8 +59,8 @@
 
       <td class="text-left">
         <ul class="list-minus-20">
-          {% for training in room.trainings.all %}
-            <li>{{ training.name }}</li>
+          {% for training in room.all_trainings %}
+              <li>{% include 'key_request/subpages/_display_training_with_area_tag.html' with training=training%}</li>
           {% endfor%}
         </ul>
       </td>
