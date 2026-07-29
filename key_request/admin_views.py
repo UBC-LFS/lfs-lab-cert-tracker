@@ -22,7 +22,7 @@ from django.apps import apps
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 
-from lfs_lab_cert_tracker.models import Lab, Cert, LabCert
+from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
@@ -650,7 +650,6 @@ class CreateRoom(LoginRequiredMixin, View):
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         method = request.POST.get('method')
-        add_lab_certs = request.POST.get('add_lab_certs', None)
         tab = request.POST.get('tab')
 
 
@@ -691,13 +690,9 @@ class CreateRoom(LoginRequiredMixin, View):
                 data['groups'] = func.str_to_int(request.POST.getlist('groups[]'))
 
             elif tab == 'areas':
-                print("In areas tab")
+                original_areas = data['areas']
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
-                if add_lab_certs:
-                    sub_q = LabCert.objects.filter(lab_id__in=data['areas'], cert_id=OuterRef('pk'))
-                    certs = list(Cert.objects.filter(Exists(sub_q)).values_list('id', flat=True))
-                    data['trainings'] = certs
-                    print("Certs: ", certs)
+                data['trainings'] = func.adjust_trainings_from_added_removed_areas(data['trainings'], original_areas, data['areas'])
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
@@ -708,7 +703,14 @@ class CreateRoom(LoginRequiredMixin, View):
             return HttpResponseRedirect(self.url + URL_NEXT[tab])
 
         elif method == 'Create Room':
+            # Need the original areas pre-update to see which areas removed
+            original_area_ids = func.get_area_ids_from_session(request.session, CREATE_ROOM_KEY)
+
             data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, CREATE_ROOM_KEY, tab)
+            if tab == 'areas':
+                # If creating from the areas tab, the trainings may not be updated; maintain carry over behaviour even on create
+                training_ids = func.adjust_trainings_from_added_removed_areas(training_ids, original_area_ids, area_ids)
+
             form = RoomForm(data)
             if form.is_valid():
                 room = form.save()
@@ -844,7 +846,10 @@ class EditRoom(LoginRequiredMixin, View):
 
 
             elif tab == 'areas':
+                original_areas = data['areas']
                 data['areas'] = func.str_to_int(request.POST.getlist('areas[]'))
+                data['trainings'] = func.adjust_trainings_from_added_removed_areas(data['trainings'], original_areas, data['areas'])
+
 
             elif tab == 'trainings':
                 data['trainings'] = func.str_to_int(request.POST.getlist('trainings[]'))
@@ -854,7 +859,19 @@ class EditRoom(LoginRequiredMixin, View):
             return HttpResponseRedirect(self.url + URL_NEXT[tab] + '&next=' + next)
 
         elif method == 'Update Room':
+
+            # Need pre-update area ids for updating areas if on areas tab
+            original_area_ids = func.get_area_ids_from_session(request.session, EDIT_ROOM_KEY, self.room)
+
             data, manager_ids, group_ids, area_ids, training_ids = func.update_data_from_post_and_session(request.POST, request.session, EDIT_ROOM_KEY, tab, self.room)
+
+            # Only alter if the original areas have changed
+            if tab == 'areas':
+                # If creating from the areas tab, the trainings may not be updated;
+                # maintain carry over behaviour even on create
+                training_ids = func.adjust_trainings_from_added_removed_areas(training_ids, original_area_ids, area_ids)
+
+
             form = RoomForm(data, instance=self.room)
             if form.is_valid():
                 room = form.save()
