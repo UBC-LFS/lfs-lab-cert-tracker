@@ -141,7 +141,11 @@ function filter(tableID, value, tableID, itemPerPage) {
   for (const row of tbody.rows) {
     if (row.children.length > 2) {
       let isFiltered = false;
-      if (row.children[1].innerHTML.toLowerCase().indexOf(value) > -1) {
+      let filterElement = row.querySelector('.filter')
+      if (!filterElement) {
+        filterElement = row.children[1]
+      }
+      if (filterElement.innerHTML.toLowerCase().indexOf(value) > -1) {
         isFiltered = true;
         filteredRows.push(row);
       }
