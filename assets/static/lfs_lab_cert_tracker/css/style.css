@@ -676,27 +676,3 @@ input[type="date"] {
 @media (min-width: 1200px) {
   .max-width-container { max-width: 1400px; }
 }
-
-
-
-/* Cert Side Bar [create/edit room] */
-/*
- Bootstrap 4 wasn't enough -> caused strange formatting issues using
- just the collapse. this smoothes the transition to slide from the side
-*/
-
-.cert-sidebar {
-  transform: translateX(100%);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 0;
-}
-
-.cert-sidebar.show {
-  transform: translateX(0);
-  opacity: 1;
-}
-
-.cert-sidebar.collapsing,
-.cert-sidebar.collapse:not(.show) {
-  display: block;
-}

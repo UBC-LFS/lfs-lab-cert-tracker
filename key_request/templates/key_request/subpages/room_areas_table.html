@@ -1,3 +1,8 @@
+<div class="bd-callout bd-callout-warning mb-4">
+    <span class="material-symbols-outlined">warning</span>
+    Adding or removing areas will automatically add or remove their associated trainings. Manually selected trainings should be adjusted on the Trainings tab.
+</div>
+
 {% include 'key_request/subpages/room_search.html' with table='areas' id=room_id placeholder="Search area..."%}
 
 <table id="areas-table-{{ room_id }}" class="table table-bordered table-striped table-responsive-md font-size-sm">
@@ -16,23 +21,29 @@
             {% if area.labcert_set.all %}
                 <span class="material-symbols-outlined" style="cursor: pointer"
                       title="Click to view trainings"
-                      data-toggle="collapse"
-                      data-target="#certSidebar-{{ area.id }}"
+                      data-toggle="modal"
+                      data-target="#cert-modal-{{ area.id }}"
                       aria-expanded="false">
                 info</span>
-                {# cert-sidebar is custom css so the sidebar appears smoothly from the side #}
-                <div class="collapse cert-sidebar shadow h-100 w-25 bg-white position-fixed pl-3 overflow-auto position-absolute"
-                     style="top: 0; right: 0;"
-                     id="certSidebar-{{ area.id }}">
-                        <div class="modal-header mb-2">
-                            <h5 class="modal-title text-info">{{ area.name }} Training</h5>
-                            <button type="button" class="close" data-toggle="collapse" data-target="#certSidebar-{{ area.id }}" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+
+                <div class="modal fade" id="cert-modal-{{ area.id }}" tabindex="-1" role="dialog"
+                     aria-labelledby="cert-modal-label-{{ area.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title text-info" id="cert-modal-label-{{ area.id }}">{{ area.name }} Training</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                        aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body text-left">
+                                <ul class="list-minus-20">
+                                    {% for labcert in area.labcert_set.all %}
+                                        <li>{{ labcert.cert.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
-                        <ul class="list-minus-20">
-                            {% for labcert in area.labcert_set.all %}
-                                <li>{{ labcert.cert.name }}</li>
-                            {% endfor %}
-                        </ul>
+                    </div>
                 </div>
             {% endif %}
         </td>

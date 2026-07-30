@@ -4,11 +4,17 @@
 
 <h4 class="text-info mt-5">Area Details</h4>
 
+    <div class="bd-callout bd-callout-warning mb-4">
+        <span class="material-symbols-outlined">warning</span> Removing a training from this area will also remove that training from all associated rooms.
+    </div>
+
 <div class="card border-primary">
   <div class="card-header bg-primary text-white">
     Required Training Record
     <small>(Total: {{ required_certs|length }})</small>
   </div>
+
+
 
   <div class="card-body">
     <div class="card-text">
