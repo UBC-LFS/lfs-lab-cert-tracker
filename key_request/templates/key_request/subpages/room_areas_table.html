@@ -17,7 +17,7 @@
     {% for area in areas %}
       <tr>
         <td>{{ area.id }}</td>
-        <td class="text-left">{{ area.name }}
+        <td class="text-left"><span class="filter">{{ area.name }}</span>
             {% if area.labcert_set.all %}
                 <span class="material-symbols-outlined" style="cursor: pointer"
                       title="Click to view trainings"
