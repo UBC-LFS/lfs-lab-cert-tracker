@@ -9,7 +9,7 @@ import json
 
 
 from django.contrib.auth.models import User
-from lfs_lab_cert_tracker.models import Cert
+from lfs_lab_cert_tracker.models import Cert, LabCert
 from .models import Building, Floor, Room, RequestForm, RequestFormStatus, ApprovalGroup, ApprovalGroupRole
 from .utils import APPROVED, REV_REQUEST_STATUS_DICT
 
@@ -69,6 +69,24 @@ def preprocess_rooms(rooms):
             })
 
     return json.dumps(by_building)
+
+
+def adjust_trainings_from_added_removed_areas(existing_training_ids, original_areas, new_areas):
+    """ Remove trainings of previous areas and adds trainings of new areas"""
+    removed_areas = set(original_areas) - set(new_areas)
+    new_areas_set = set(new_areas)
+
+    removed_certs = set(
+        LabCert.objects.filter(lab_id__in=removed_areas)
+        .values_list('cert_id', flat=True)
+    )
+    added_certs = set(
+        LabCert.objects.filter(lab_id__in=new_areas_set)
+        .values_list('cert_id', flat=True)
+    )
+
+    filtered_out = set(existing_training_ids) - removed_certs
+    return list(filtered_out | added_certs)
 
 
 def check_user_trainings(user, selected_rooms):
@@ -146,6 +164,13 @@ def all_pis_approved(form, room):
 
     return True
 
+def get_area_ids_from_session(session, key, room=None):
+    area_ids = [area.id for area in room.areas.all()] if room else []
+    if session.get(key):
+        if len(session[key]['areas']) > 0:
+            area_ids = session[key]['areas']
+
+    return area_ids
 
 def create_data_from_session(session, key, room=None):
     data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'note': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}

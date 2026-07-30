@@ -8,7 +8,7 @@
   </div>
 </nav>
 
-<form {% if tab == 'pis' %} class="pis-form"{% endif %} action="" method="POST">
+<form class="{{ tab }}-form" action="" method="POST">
   {% csrf_token %}
 
   <section class="pt-5 create-room-tabs">

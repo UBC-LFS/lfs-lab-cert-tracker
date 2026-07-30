@@ -14,6 +14,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from django.contrib.auth.models import User
+
+from key_request.models import Room
 from lfs_lab_cert_tracker.models import Cert, LabCert, UserLab
 from .forms import UserAreaForm, AreaTrainingForm
 from .accesses import access_admin_only, access_pi_admin
@@ -69,7 +71,15 @@ def delete_training_in_area(request):
     if lab_cert.exists():
         lab_cert_obj = lab_cert.first()
         if lab_cert_obj.delete():
+
+            # Cascade behaviour to all associated rooms
+            Room.trainings.through.objects.filter(
+                room_id__in=Room.objects.filter(areas=area_id).values_list('id', flat=True),
+                cert_id=training_id
+            ).delete()
+
             messages.success(request, 'Success! {0} deleted.'.format(lab_cert_obj.cert.name))
+
         else:
             messages.error(request, 'Error! Failed to delete {0}.'.format(lab_cert_obj.cert.name))
     else:
@@ -336,6 +346,11 @@ class AddTrainingToArea(LoginRequiredMixin, View):
             form = AreaTrainingForm(request.POST)
             if form.is_valid():
                 new_lab_cert = form.save()
+                # Cascade behaviour to all associated rooms [idempotent! no dupes]
+                rooms = Room.objects.filter(areas=area_id)
+                for room in rooms:
+                    room.trainings.add(training_id)
+
                 messages.success(request, 'Success! {0} added.'.format(new_lab_cert.cert.name))
             else:
                 messages.error(request, 'Error! Form is invalid. {0}'.format(func.get_error_messages(form.errors.get_json_data())))

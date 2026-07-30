@@ -20,6 +20,10 @@ key_request/fixtures/dev_rooms.json
 key_request/fixtures/dev_room_areas.json
 key_request/fixtures/dev_room_trainings.json
 key_request/fixtures/dev_room_managers.json
+key_request/fixtures/prod_rooms.json
+key_request/fixtures/prod_room_areas.json
+key_request/fixtures/prod_room_trainings.json
+key_request/fixtures/prod_room_managers.json
 *.xml
 .idea/
 /venv
