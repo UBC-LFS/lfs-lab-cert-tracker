@@ -26,6 +26,10 @@
                 <input class='add-approver-checkbox' id="{{ group.id }}" type="checkbox" name="groups[]" value="{{ group.id }}" {% if group.id in group_ids %}checked{% endif %} />
             </td>
         </tr>
+        {% empty %}
+        <tr>
+            <td colspan="100%">No active groups. <a href="{% url 'key_request:create_group' %}" target="_blank">Create one?</a></td>
+        </tr>v
     {% endfor %}
     </tbody>
 </table>
