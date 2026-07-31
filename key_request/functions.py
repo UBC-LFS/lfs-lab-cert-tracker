@@ -287,7 +287,7 @@ def get_group_coordinator_ids(group):
     return [str(user_id) for user_id in id_arr]
 
 # Checks to see if a group with the same members & coordinators
-def get_groups_with_matching_composition(member_ids, coordinator_ids, group_id=None):
+def get_groups_with_matching_composition(member_ids, coordinator_ids, group_id=None, user_groups=None):
     # Normalize and deduplicate member ids (handles strings and duplicates)
     if not member_ids and not coordinator_ids:
         return ApprovalGroup.objects.none()
@@ -317,8 +317,10 @@ def get_groups_with_matching_composition(member_ids, coordinator_ids, group_id=N
 
     num_members = len(unique_member_ids)
 
+    if not user_groups:
+        user_groups = ApprovalGroup.objects.all()
 
-    group_matches = ApprovalGroup.objects.annotate(
+    group_matches = user_groups.annotate(
         total_members=Count('roles__user_id', distinct=True)
     ).filter(total_members=num_members)
 
