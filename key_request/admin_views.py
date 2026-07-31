@@ -787,7 +787,7 @@ class EditRoom(LoginRequiredMixin, View):
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
             'users': User.objects.all() if self.tab == 'pis' else None,
-            'room_groups': ApprovalGroup.objects.all() if self.tab == 'pis' else None,
+            'room_groups': ApprovalGroup.objects.filter(is_active=True) if self.tab == 'pis' else None,
             'areas': Lab.objects.all().prefetch_related('labcert_set') if self.tab == 'areas' else None,
             'trainings': Cert.objects.all() if self.tab == 'trainings' else None,
             'tab_urls': func.get_tab_urls(self.url, self.next),
