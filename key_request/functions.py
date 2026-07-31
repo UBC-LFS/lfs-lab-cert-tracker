@@ -289,7 +289,7 @@ def get_group_coordinator_ids(group):
 # Checks to see if a group with the same members & coordinators
 def get_groups_with_matching_composition(member_ids, coordinator_ids, group_id=None):
     # Normalize and deduplicate member ids (handles strings and duplicates)
-    if not member_ids:
+    if not member_ids and not coordinator_ids:
         return ApprovalGroup.objects.none()
 
     try:
