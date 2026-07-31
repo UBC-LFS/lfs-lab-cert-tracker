@@ -1070,7 +1070,6 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         self.groups = self.groups.prefetch_related('roles__user')
 
         include_inactive = request.GET.get('include_inactive')
-        print("filter: ", include_inactive)
         group_name = request.GET.get('name')
         member_first_name = request.GET.get('member_first_name')
         member_last_name = request.GET.get('member_last_name')
@@ -1085,7 +1084,7 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         if member_last_name:
             self.groups = self.groups.filter(roles__user__last_name__icontains=member_last_name).distinct()
         if room_pk:
-            self.groups = self.groups.filter(manager_groups__pk=room_pk).distinct()
+            self.groups = self.groups.filter(group_rooms__pk=room_pk).distinct()
 
         self.groups = self.groups.annotate(
             is_coordinator=Exists(ApprovalGroupRole.objects.filter(
