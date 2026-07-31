@@ -222,18 +222,18 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         return RequestFormStatus.objects.none()
 
     def get_total_form_stats(self):
-        rooms = self.get_all_rooms()
+        total_forms = 0
+        total_new_forms = 0
 
-        if not rooms:
-            return 0, 0
+        for room in self.get_all_rooms():
+            for entity_filter in self._get_entity_filters_for_room(room):
+                latest_status = self._build_latest_status_subquery(room.id, **entity_filter)
+                room_forms = self._get_latest_status_room_forms(room, latest_status)
 
-        request_form_status_query = self._get_new_forms_subquery()
+                total_forms += room_forms.count()
+                total_new_forms += room_forms.filter(status_count__isnull=True).count()
 
-        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms()).aggregate(
-            total_forms=Count('pk', distinct=True),
-            total_new_forms=Count('pk', filter=~Exists(request_form_status_query), distinct=True),
-        )
-        return result['total_forms'], result['total_new_forms']
+        return total_forms, total_new_forms
 
 class GroupFormProcessor(EntityRequestFormProcessor):
 

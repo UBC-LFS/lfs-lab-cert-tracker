@@ -235,7 +235,12 @@ class EditManagerGroups(LoginRequiredMixin, View):
 
         role_id = request.POST.get('role')
         try:
-            ApprovalGroupRole.objects.create(user_id=user.id, role=role_id, group_id=self.group.id)
+            # NOTE: exclude role from lookup & keep in defaults
+            ApprovalGroupRole.objects.update_or_create(
+                group=self.group,
+                user_id=user.id,
+                defaults={"role": role_id},
+            )
             messages.success(request, 'Success! User {0} has been added to the group.'.format(user.get_full_name()))
         except IntegrityError:
             messages.error(request, 'Error! Failed to add User {0}. They may already exist within the group.').format(user.get_full_name())
@@ -254,7 +259,7 @@ def delete_group_member(request, group_id):
         name = member.user.get_full_name()
         member.delete()
         messages.success(request, 'Success! User {0} has been removed from the group.'.format(name))
-    except ApprovalGroupRole.DoesNotExist:
+    except (ApprovalGroupRole.DoesNotExist, User.DoesNotExist):
         messages.error(request, 'Error! Failed to remove the User. They may have already been removed.')
     return redirect(reverse('key_request:manager_edit_group', kwargs={'group_id': group_id}))
 

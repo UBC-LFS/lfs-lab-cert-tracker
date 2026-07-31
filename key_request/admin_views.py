@@ -1224,6 +1224,11 @@ class EditApprovalGroups(LoginRequiredMixin, View):
                 **{uid: ApprovalGroupRole.Role.MEMBER for uid in member_id_list},
                 **{uid: ApprovalGroupRole.Role.COORDINATOR for uid in coordinator_id_list},
             }
+            # Validate ids:
+            for uid in member_id_list + coordinator_id_list:
+                if not User.objects.filter(id=uid).exists():
+                    messages.error(request, 'Error! Invalid user ID: {0}'.format(uid))
+                    return HttpResponseRedirect(reverse('key_request:all_groups'))
 
             ApprovalGroupRole.objects.filter(group=self.group).delete()
 
