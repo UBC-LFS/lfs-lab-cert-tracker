@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect, Http404, JsonResponse, QueryDict
 from django.utils.html import format_html
 from django.db.utils import IntegrityError
-
+from django.db.models.functions import Concat
 from django.db.models import Q, Case, When, IntegerField, Value, Exists, OuterRef
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -1252,15 +1252,18 @@ def user_autofill_suggestions(request):
     name_q = request.GET.get('name_q', '')
 
     users = (User.objects
+    .annotate(
+        full_name=Concat('first_name', Value(' '), 'last_name')
+    )
     .filter(
-        Q(first_name__icontains=name_q) | Q(last_name__icontains=name_q)
+        Q(full_name__icontains=name_q)
     ).annotate(
         priority=Case(
-            When(first_name__startswith=name_q, then=Value(1)),
+            When(full_name__startswith=name_q, then=Value(1)),
             default=Value(2),
             output_field=IntegerField(),
         )
-    )).order_by('priority', 'first_name', 'last_name')
+    )).order_by('priority', 'full_name')
     data = [
         {
             'id': user.id,
