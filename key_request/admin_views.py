@@ -1064,7 +1064,7 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         selected_ids = request.GET.getlist('members[]', [])
         coordinator_ids = request.GET.getlist('coordinators[]', [])
 
-        if selected_ids and coordinator_ids:
+        if selected_ids or coordinator_ids:
             self.groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids)
 
         self.groups = self.groups.prefetch_related('roles__user')
