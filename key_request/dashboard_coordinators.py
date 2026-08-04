@@ -2,6 +2,7 @@ from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestFo
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, OuterRef, Subquery, Exists
 from key_request.functions import has_date_passed, make_request_form_identifier, all_pis_approved
+from django.utils import timezone
 
 from key_request.utils import REV_REQUEST_STATUS_DICT, APPROVED
 
@@ -307,6 +308,14 @@ class ExpiredRequestFormProcessor(RequestFormProcessor):
 
     def _form_matches_filter(self, form):
         return has_date_passed(form.expiry_date) and super()._form_matches_filter(form)
+
+    def get_total_form_stats(self):
+
+        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms(), expiry_date__lt=timezone.now()).aggregate(
+            total_forms=Count('pk', distinct=True),
+            total_new_forms=Count('pk', filter=Q(requestformstatus__isnull=True), distinct=True),
+        )
+        return result['total_forms'], result['total_new_forms']
 
 class DashboardCoordinator:
 
