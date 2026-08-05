@@ -31,14 +31,12 @@
 			<div class="column right-50">
 				<div class="text-center">
 					<h5 class="text-dark">Request Status</h5>
-					{% for room in rooms %}
-						{% get_status_by_room_and_form form.id room.id as approved %}
-						{% if approved %}
+						{% if form.all_approved %}
 							<strong class="text-success h3">APPROVED</strong>
 						{% else %}
 							<strong class="text-danger h3">NOT APPROVED</strong>
 						{% endif %}
-					{% endfor %}
+
 				</div>
 			</div>
 		</div>

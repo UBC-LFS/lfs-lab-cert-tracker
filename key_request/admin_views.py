@@ -35,7 +35,7 @@ from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormSt
 from .mixins import RoomActionsMixin
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, RequestFormProcessor, ExpiredRequestFormProcessor
-from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT
+from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
@@ -189,13 +189,11 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         # Need both the managers and the groups
 
+        all_approved = True
+
         for room in self.form.rooms.all():
             rooms.add(room)
-            for manager in room.managers.all():
-                status = None
-                status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, manager_id=manager.id)
-                if status_filtered.exists():
-                    status = status_filtered
+
             areas = [area.name for area in room.areas.all()]
 
             managers = room.managers.all()
@@ -211,12 +209,15 @@ class ViewFormDetails(LoginRequiredMixin, View):
                     'priority': 2,
                     'sorting_key': f"{room.building.name}{room.floor.name}{room.number}"
                 })
+                all_approved = False
             else:
-                items += self._create_item_with_entity_status(room, areas, 'manager', managers, 0)
-                items += self._create_item_with_entity_status(room, areas, 'group', groups, 1)
+                manager_forms, manager_all_approved = self._create_item_with_entity_status(room, areas, 'manager', managers, 0)
+                group_forms, group_all_approved = self._create_item_with_entity_status(room, areas, 'group', groups, 1)
+                items += manager_forms + group_forms
+                all_approved &= manager_all_approved and group_all_approved
 
         items = sorted(items, key=lambda x: (x['priority'], x['sorting_key']), reverse=False)
-
+        self.form.all_approved = all_approved
 
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
@@ -241,6 +242,8 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         entity_filter_label = f"{entity_label}_id"
 
+        all_approved = True
+
         for entity in entities:
             entity_filter = {
                 entity_filter_label: entity.id
@@ -251,6 +254,10 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
             if is_new:
                 status = None
+
+            if not status or status.first().status != APPROVED:
+                all_approved = False
+
 
             if entity_label == 'group':
                 sorting_key = entity.name
@@ -273,7 +280,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 'priority': priority,
                 'sorting_key': sorting_key
             })
-        return items
+        return items, all_approved
 
 
     @method_decorator(require_POST)

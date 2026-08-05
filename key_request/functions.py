@@ -340,6 +340,9 @@ def get_group_with_matching_name(group_name, group_id=None):
 
     return matching_groups
 
+def get_approval_role_string(role_id):
+    return dict(ApprovalGroupRole._meta.get_field('role').choices).get(int(role_id))
+
 # END GROUPS
 
 def natural_key(s):

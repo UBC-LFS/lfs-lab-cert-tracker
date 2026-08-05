@@ -233,15 +233,31 @@ class EditManagerGroups(LoginRequiredMixin, View):
             return HttpResponseRedirect(reverse('key_request:manager_edit_group', kwargs={'group_id': self.group.id}))
         user = user.first()
 
+        if user == request.user:
+            messages.warning(request, 'Cannot update self. Please contact admin.')
+            return HttpResponseRedirect(reverse('key_request:manager_edit_group', kwargs={'group_id': self.group.id}))
+
         role_id = request.POST.get('role')
         try:
             # NOTE: exclude role from lookup & keep in defaults
-            ApprovalGroupRole.objects.update_or_create(
+            role, created = ApprovalGroupRole.objects.get_or_create(
                 group=self.group,
-                user_id=user.id,
-                defaults={"role": role_id},
+                user_id=user.id
             )
-            messages.success(request, 'Success! User {0} has been added to the group.'.format(user.get_full_name()))
+
+
+            if not created:
+
+                msg = 'Warning! User {0} is already in the group.'.format(user.get_full_name())
+                if role.role != role_id:
+                    role.role = role_id
+                    role.save()
+                    role_str = func.get_approval_role_string(role_id)
+
+                    msg += f' Role has been updated to {role_str}.'
+                messages.warning(request, msg)
+            else:
+                messages.success(request, 'Success! User {0} has been added to the group.'.format(user.get_full_name()))
         except IntegrityError:
             messages.error(request, 'Error! Failed to add User {0}. They may already exist within the group.').format(user.get_full_name())
 
