@@ -27,8 +27,8 @@ urlpatterns += [
     path('all-rooms/delete/', admin_views.delete_room, name='delete_room'),
 
     # Groups
-    path('manager-groups/', admin_views.ViewApprovalGroups.as_view(), {'method': 'manager'}, name='manager_groups'),
-    path('all-groups/', admin_views.ViewApprovalGroups.as_view(), {'method': 'admin'}, name='all_groups'),
+    path('manager-groups/', manager_views.ViewManagerApprovalGroups.as_view(), name='manager_groups'),
+    path('all-groups/', admin_views.ViewAllApprovalGroups.as_view(), name='all_groups'),
     path('<int:group_id>/edit-group/', admin_views.EditApprovalGroups.as_view(), name='edit_group'),
     path('<int:group_id>/manage-group/', manager_views.EditManagerGroups.as_view(), name='manager_edit_group'),
     path('all-groups/change-activation/', admin_views.change_group_activation, name='change_activation'),

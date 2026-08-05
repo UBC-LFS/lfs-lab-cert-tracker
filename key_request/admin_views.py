@@ -37,6 +37,7 @@ from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, RequestFormProcessor, ExpiredRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
+GROUPS_PER_PAGE = 10
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRequests(LoginRequiredMixin, View):
@@ -1038,7 +1039,7 @@ class DeleteTrainingFromRoom(LoginRequiredMixin, RoomActionsMixin, View):
 
 # GROUPS START
 
-@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
+@method_decorator([never_cache], name='dispatch')
 class ViewApprovalGroups(LoginRequiredMixin, View):
 
     def setup(self, request, *args, **kwargs):
@@ -1047,66 +1048,81 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
 
         self.user = request.user
 
-        self.method = kwargs.get('method')
-
-        if self.user.is_superuser and self.method == 'admin':
-            self.groups = func.get_all_groups()
-        else:
-            self.groups =  func.get_all_user_groups(self.user)
+        self.context = {
+            'redirect': '',
+            'title': '',
+            'total_title': 'Total', # Total title is dynamic
+            'total_groups': 0,
+            'num_filtered_groups': 0,
+            'groups': [],
+            'is_admin': self.user.is_superuser,
+            'is_group_coordinator': func.is_approval_group_coordinator(request.user.id),
+            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
+        }
 
         return setup
 
+    def _get_groups(self):
+        return ApprovalGroup.objects.none()
+
+    def _append_context(self):
+        return {}
+
+    def _apply_baseline_filters(self, request, groups):
+        return groups, {}
+
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        total_groups = self.groups.count()
+        groups = self._get_groups()
 
-        if total_groups == 0:
-            return render(request, 'key_request/admin/all_groups.html', {
-                'method': self.method,
-                'total_groups': 0,
-                'num_filtered_groups': 0,
-                'groups': [],
-            })
+        self.context.update(self._append_context())
+
+        # Baseline == active/in_active. can alter the group total
+        groups, filter_context = self._apply_baseline_filters(request, groups)
+        self.context.update(filter_context)
+
+        total_groups = groups.count()
+        self.context['total_groups'] = total_groups
+
+        group_name = request.GET.get('name')
+        member_first_name = request.GET.get('member_first_name')
+        member_last_name = request.GET.get('member_last_name')
+
+        if group_name:
+            groups = groups.filter(name__icontains=group_name)
+
+        if member_first_name or member_last_name:
+            filters = Q()
+            if member_first_name:
+                filters &= Q(roles__user__first_name__icontains=member_first_name)
+            if member_last_name:
+                filters &= Q(roles__user__last_name__icontains=member_last_name)
+            groups = groups.filter(filters).distinct()
 
         selected_ids = request.GET.getlist('members[]', [])
         coordinator_ids = request.GET.getlist('coordinators[]', [])
 
         if selected_ids or coordinator_ids:
-            self.groups = func.get_groups_with_matching_composition(selected_ids, coordinator_ids, user_groups=self.groups)
-
-        self.groups = self.groups.prefetch_related('roles__user')
-
-        include_inactive = request.GET.get('include_inactive')
-        group_name = request.GET.get('name')
-        member_first_name = request.GET.get('member_first_name')
-        member_last_name = request.GET.get('member_last_name')
-        room_pk = request.GET.get('room_pk')
-
-        if not include_inactive:
-            self.groups = self.groups.filter(is_active=True)
-        if group_name:
-            self.groups = self.groups.filter(name__icontains=group_name)
-        if member_first_name:
-            self.groups = self.groups.filter(roles__user__first_name__icontains=member_first_name).distinct()
-        if member_last_name:
-            self.groups = self.groups.filter(roles__user__last_name__icontains=member_last_name).distinct()
-        if room_pk:
-            self.groups = self.groups.filter(group_rooms__pk=room_pk).distinct()
-
-        self.groups = self.groups.annotate(
-            is_coordinator=Exists(ApprovalGroupRole.objects.filter(
-                user=self.user,
-                role=ApprovalGroupRole.Role.COORDINATOR,
-                group=OuterRef('pk')
+            groups = func.get_groups_with_matching_composition(
+                selected_ids, coordinator_ids, user_groups=groups
             )
+
+        groups = groups.prefetch_related('roles__user')
+
+        groups = groups.annotate(
+            is_coordinator=Exists(
+                ApprovalGroupRole.objects.filter(
+                    user=self.user,
+                    role=ApprovalGroupRole.Role.COORDINATOR,
+                    group=OuterRef('pk'),
+                )
             )
         )
 
-        num_filtered_groups = self.groups.count()
+        paginator = Paginator(groups, GROUPS_PER_PAGE)
+        num_filtered_groups = paginator.count
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(self.groups, 10)
-
         try:
             groups = paginator.page(page)
         except PageNotAnInteger:
@@ -1114,15 +1130,28 @@ class ViewApprovalGroups(LoginRequiredMixin, View):
         except EmptyPage:
             groups = paginator.page(paginator.num_pages)
 
-        return render(request, 'key_request/admin/all_groups.html', {
-            'method': self.method,
-            'total_groups': total_groups,
-            'num_filtered_groups': num_filtered_groups,
-            'groups': groups,
-            'is_admin': self.user.is_superuser,
-            'is_group_coordinator': func.is_approval_group_coordinator(request.user.id),
-            'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR
-        })
+        self.context['groups'] = groups
+        self.context['num_filtered_groups'] = num_filtered_groups
+
+        return render(request, 'key_request/admin/all_groups.html', self.context)
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class ViewAllApprovalGroups(ViewApprovalGroups):
+    def _get_groups(self):
+        return func.get_all_groups()
+
+    def _append_context(self):
+        return {
+            'title': 'All Approval Groups',
+            'redirect': reverse('key_request:all_groups'),
+        }
+
+    def _apply_baseline_filters(self, request, groups):
+        include_inactive = request.GET.get('include_inactive') == 'true'
+        if not include_inactive:
+            return groups.filter(is_active=True), {'total_title': 'Total Active'}
+        return groups, {}
+
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class CreateApprovalGroup(LoginRequiredMixin, View):

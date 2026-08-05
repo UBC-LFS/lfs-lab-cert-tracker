@@ -34,7 +34,7 @@
         {% endfor %}
       </table>
     {% elif tab == 'pis' %}
-        <input type="hidden" id="all-approval-groups-link" value="{% url 'key_request:all_groups' method='admin'%}">
+        <input type="hidden" id="all-approval-groups-link" value="{% url 'key_request:all_groups'%}">
         <input type="hidden" id="create-new-approval-groups-link" value="{% url 'key_request:create_group'%}">
         {% include 'key_request/subpages/manager_and_group_tables.html' with room_id='0' manager_ids=manager_ids group_ids=group_ids %}
     {% elif tab == 'areas' %}

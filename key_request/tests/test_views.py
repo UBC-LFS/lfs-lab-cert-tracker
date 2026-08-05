@@ -42,6 +42,8 @@ class ApprovalGroupCRUDAndFilterTests(TestCase):
             )
         )
 
+        ApprovalGroupRole.objects.bulk_create(group_roles)
+
         # 3. Login
         self.client.post(LOGIN_URL, data={'username': 'test_admin', 'password': 'password'})
 
@@ -81,7 +83,7 @@ class ApprovalGroupCRUDAndFilterTests(TestCase):
         }
         response = self.client.post(reverse('key_request:create_group'), data=payload)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(ApprovalGroup.objects.filter(name='Gamma Lab').exists())
+        self.assertTrue(ApprovalGroup.objects.filter(name='Gamma Lab', is_active=True).exists())
 
     def test_create_group_success_with_coordinator(self):
         payload = {
@@ -92,7 +94,7 @@ class ApprovalGroupCRUDAndFilterTests(TestCase):
         response = self.client.post(reverse('key_request:create_group'), data=payload)
         self.assertEqual(response.status_code, 302)
 
-        new_group = ApprovalGroup.objects.filter(name='Gamma Lab')
+        new_group = ApprovalGroup.objects.filter(name='Gamma Lab', is_active=True)
         self.assertTrue(new_group.exists())
 
         members = ApprovalGroupRole.objects.filter(group_id=new_group.first().id)
@@ -143,12 +145,21 @@ class ApprovalGroupCRUDAndFilterTests(TestCase):
         self.assertContains(response, "Form is invalid")
 
     # ==========================================
-    #  TESTING DELETION (POST /all-groups/delete/)
+    #  TESTING DELETION (POST /all-groups/change-activation/)
     # ==========================================
-    def test_delete_group_success(self):
-        response = self.client.post(reverse('key_request:delete_group'), data={'group': self.group_alpha.id})
+    def test_deactivate_group_success(self):
+        response = self.client.post(reverse('key_request:change_activation'), data={'group': self.group_alpha.id, 'method': 'deactivate'})
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(ApprovalGroup.objects.filter(id=self.group_alpha.id).exists())
+        self.assertTrue(ApprovalGroup.objects.filter(id=self.group_alpha.id, is_active=False).exists())
+
+    def test_deactivate_reactivate_group_success(self):
+        response = self.client.post(reverse('key_request:change_activation'), data={'group': self.group_alpha.id, 'method': 'deactivate'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(ApprovalGroup.objects.filter(id=self.group_alpha.id, is_active=False).exists())
+        response = self.client.post(reverse('key_request:change_activation'), data={'group': self.group_alpha.id, 'method': 'activate'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(ApprovalGroup.objects.filter(id=self.group_alpha.id, is_active=True).exists())
+
 
 def make_form(rooms, user, submitted_at=None):
     form = RequestForm.objects.create(

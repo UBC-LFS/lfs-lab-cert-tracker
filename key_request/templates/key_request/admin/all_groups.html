@@ -12,18 +12,13 @@
 
     <section class="main-content">
         <h3 class="title">
-            {% if method == 'admin' %}
-                All
-            {% else %}
-                My
-            {% endif %}
-            Approval Groups
-            <small class="text-secondary">(Total: {{ total_groups }})</small>
+            {{ title }}
+            <small class="text-secondary">({{ total_title }}: {{ total_groups }})</small>
         </h3>
 
 
         <div class="row bg-light-gray border px-3 py-4 font-size-sm">
-            {% include 'key_request/subpages/search_filter_groups.html' %}
+            {% include 'key_request/subpages/search_filter_groups.html' with redirect=redirect%}
         </div>
         {% include 'key_request/subpages/search_results.html' with total=num_filtered_groups items=groups %}
 
@@ -121,7 +116,7 @@
             </tbody>
         </table>
 
-        {% include 'key_request/subpages/pagination.html' with data=groups %}
+        {% include 'key_request/subpages/group_pagination.html' with data=groups %}
 
         <div class="modal fade" id="room-groups-deactivate-modal" tabindex="-1" role="dialog"
              aria-labelledby="room-groups-deactivate-modal-label" aria-hidden="true">

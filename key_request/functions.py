@@ -275,8 +275,8 @@ def get_group_by_id(group_id):
 def get_all_groups():
     return ApprovalGroup.objects.all()
 
-def get_all_user_groups(user):
-    return ApprovalGroup.objects.filter(roles__user=user)
+def get_all_active_user_groups(user):
+    return ApprovalGroup.objects.filter(roles__user=user, is_active=True)
 
 def get_group_member_ids(group):
     id_arr = group.members.values_list('id', flat=True)

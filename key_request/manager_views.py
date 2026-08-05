@@ -13,9 +13,10 @@ from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 from psycopg2 import IntegrityError
 
-from app.accesses import access_group_coordinator_admin_key_request
+from app.accesses import access_group_coordinator_admin_key_request, access_pi_admin_key_request
 from app.utils import NUM_PER_PAGE
 from lfs_lab_cert_tracker import settings
+from .admin_views import ViewApprovalGroups
 from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, ApprovalGroup
@@ -180,6 +181,18 @@ class ManagerRooms(LoginRequiredMixin, View):
             'search_filter_options': func.search_filter_options,
             'is_admin': True if request.user.is_superuser else False
         })
+
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
+class ViewManagerApprovalGroups(ViewApprovalGroups):
+
+    def _append_context(self):
+        return {
+            'title': 'My Approval Groups',
+            'redirect': reverse('key_request:manager_groups'),
+        }
+
+    def _get_groups(self):
+       return func.get_all_active_user_groups(self.user)
 
 @method_decorator([never_cache, access_group_coordinator_admin_key_request], name='dispatch')
 class EditManagerGroups(LoginRequiredMixin, View):
