@@ -39,7 +39,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	trainings, trainings_by_unique_id, err := db.GetTrainings()
+	trainings_by_name, trainings_by_id, trainings_by_unique_id, err := db.GetTrainings()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,12 +59,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	keysA := utils.GetKeys(usersWithMissingTrainings)
-	keysB := utils.GetKeys(usersWithExpiredTrainings)
+	keysA := GetKeys(usersWithMissingTrainings)
+	keysB := GetKeys(usersWithExpiredTrainings)
 
-	setA := utils.ToSet(keysA)
-	setB := utils.ToSet(keysB)
-	allUserIDs := utils.Union(setA, setB)
+	setA := ToSet(keysA)
+	setB := ToSet(keysB)
+	allUserIDs := Union(setA, setB)
 
 	var usernames []string
 	for userID := range allUserIDs {
@@ -89,8 +89,6 @@ func main() {
 
 	var trainingModels []TrainingModel
 	for _, group := range groups {
-		// fmt.Printf("Group %d: %v\n", i+1, group)
-
 		var requestIdentifiers []map[string]string
 		for _, g := range group {
 			temp := make(map[string]string)
@@ -167,11 +165,14 @@ func main() {
 					date := t.Format("2006-01-02")
 					trainingID := strconv.FormatFloat(trainingID, 'f', -1, 64)
 
-					if foundTrainingID, ok := utils.FindValue(trainings_by_unique_id, trainingID); ok {
+					// Try to find trainings
+					if foundTrainingID, ok := FindTraining(trainings_by_name, trainings_by_unique_id, trainingName, trainingID); ok {
 						userID := users_by_username[username]
+
+						// Check the found training in each user
 						key := fmt.Sprintf("%d-%d-%s", userID, foundTrainingID, date)
 						if !userTrainingKeys[key] {
-							expiryDate := utils.GetExpiryDate(completionDate, foundTrainingID, trainings)
+							expiryDate := GetExpiryDate(completionDate, foundTrainingID, trainings_by_id)
 							trainingModels = append(trainingModels, TrainingModel{
 								userID,
 								foundTrainingID,
@@ -205,5 +206,82 @@ func main() {
 
 		fmt.Println("Bulk insert completed successfully!")
 	}
+
 	fmt.Println("Done!")
+}
+
+// Utils
+
+func GetKeys(items map[int][]string) []int {
+	var keys []int
+	for key := range items {
+		if len(items[key]) > 0 {
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}
+
+// Convert a slice to a set
+func ToSet[T comparable](arr []T) map[T]struct{} {
+	set := make(map[T]struct{})
+	for _, v := range arr {
+		set[v] = struct{}{}
+	}
+	return set
+}
+
+// Union of two sets
+func Union[T comparable](a, b map[T]struct{}) map[T]struct{} {
+	union := make(map[T]struct{})
+	for k := range a {
+		union[k] = struct{}{}
+	}
+	for k := range b {
+		union[k] = struct{}{}
+	}
+	return union
+}
+
+func FindTraining(trainings_by_name map[string]map[string]interface{}, trainings_by_unique_id map[string]map[string]interface{}, training_name string, training_id string) (int, bool) {
+	if training_name == "Chemical Safety" || training_name == "Chemical Safety Refresher" {
+		training_name = "Chemical Safety/Chemical Safety Refresher"
+	} else if training_name == "Biosafety for Study Team Members" || training_name == "Biosafety Refresher for Study Team Members" {
+		training_name = "Biosafety for Study Team Members/Biosafety Refresher for Study Team Members"
+	} else if training_name == "Biosafety for Permit Holders" || training_name == "Biosafety Refresher for Permit Holders" {
+		training_name = "Biosafety for Permit Holders/Biosafety Refresher for Permit Holders"
+	} else if training_name == "Transportation of Dangerous Goods by Ground and Air_ April 2020- March 7 2022" {
+		training_name = "Transportation of Dangerous Goods by Ground and Air"
+	} else if training_name == "Remote Work. Home Office Ergonomics. Orientation" {
+		training_name = "Home Office Ergo"
+	}
+
+	// Try to find it by training name
+	if training, ok := trainings_by_name[training_name]; ok {
+		return int(training["id"].(int64)), true
+	} else {
+		// Try to find it by training id
+		for key, value := range trainings_by_unique_id {
+			for _, part := range strings.Split(key, ",") {
+				if strings.TrimSpace(part) == training_id {
+					return int(value["id"].(int64)), true
+				}
+			}
+		}
+	}
+
+	return -1, false
+}
+
+func GetExpiryDate(completionDate string, traingID int, trainings map[int]map[string]interface{}) string {
+	t, err := time.Parse(time.RFC3339, completionDate)
+	if err != nil {
+		fmt.Println("Error parsing date:", err)
+		return ""
+	}
+
+	expiry_in_years := int(trainings[traingID]["expiry_in_years"].(int64))
+	newTime := t.AddDate(expiry_in_years, 0, 0)
+	newDateStr := newTime.Format("2006-01-02")
+	return newDateStr
 }

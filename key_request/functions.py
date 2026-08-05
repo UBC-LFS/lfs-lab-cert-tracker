@@ -174,6 +174,7 @@ def get_area_ids_from_session(session, key, room=None):
 
 def create_data_from_session(session, key, room=None):
     data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'note': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
+
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     group_ids = [group.id for group in room.groups.all()] if room else []
     area_ids = [area.id for area in room.areas.all()] if room else []
@@ -195,20 +196,16 @@ def create_data_from_session(session, key, room=None):
             data['alarm'] = session[key]['alarm']
         if 'is_active' in session[key]:
             data['is_active'] = session[key]['is_active']
-
-        if session[key]['note']:
+        if 'note' in session[key]:
             data['note'] = session[key]['note']
 
-        if len(session[key]['managers']) > 0:
+        if 'managers' in session[key]:
             manager_ids = session[key]['managers']
-
-        if len(session[key]['groups']) > 0:
+        if 'groups' in session[key]:
             group_ids = session[key]['groups']
-
-        if len(session[key]['areas']) > 0:
+        if 'areas' in session[key]:
             area_ids = session[key]['areas']
-
-        if len(session[key]['trainings']) > 0:
+        if 'trainings' in session[key]:
             training_ids = session[key]['trainings']
 
     return data, manager_ids, group_ids, area_ids, training_ids
