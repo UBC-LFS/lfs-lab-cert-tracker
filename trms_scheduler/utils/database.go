@@ -161,20 +161,21 @@ func (db *Database) GetAdmins() (map[int]map[string]interface{}, error) {
 	return items, nil
 }
 
-func (db *Database) GetTrainings() (map[int]map[string]interface{}, map[string]int, error) {
+func (db *Database) GetTrainings() (map[string]map[string]interface{}, map[int]map[string]interface{}, map[string]map[string]interface{}, error) {
 	rows, err := db.Conn.Query(`SELECT * FROM lfs_lab_cert_tracker_cert;`)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get columns: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to get columns: %v", err)
 	}
 
-	items := make(map[int]map[string]interface{})
-	items_by_unique_id := make(map[string]int)
+	items_by_name := make(map[string]map[string]interface{})
+	items_by_id := make(map[int]map[string]interface{})
+	items_by_unique_id := make(map[string]map[string]interface{})
 	for rows.Next() {
 		values := make([]interface{}, len(columns))
 		valuePtrs := make([]interface{}, len(columns))
@@ -184,10 +185,11 @@ func (db *Database) GetTrainings() (map[int]map[string]interface{}, map[string]i
 
 		// Scan the row into value pointers
 		if err := rows.Scan(valuePtrs...); err != nil {
-			return nil, nil, fmt.Errorf("failed to scan row: %v", err)
+			return nil, nil, nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 
 		rowMap := make(map[string]interface{})
+		var name string
 		var id int
 		var unique_id string
 		for i, col := range columns {
@@ -200,18 +202,27 @@ func (db *Database) GetTrainings() (map[int]map[string]interface{}, map[string]i
 			} else {
 				v = val
 			}
+
 			if col == "id" {
 				id = int(v.(int64))
+			} else if col == "name" {
+				name = string(v.(string))
 			} else if col == "unique_id" {
-				unique_id = v.(string)
+				if v == nil {
+					unique_id = ""
+				} else {
+					unique_id = v.(string)
+				}
 			}
-
 			rowMap[col] = v
 		}
 
-		items[id] = rowMap
-		items_by_unique_id[unique_id] = id
+		items_by_name[name] = rowMap
+		items_by_id[id] = rowMap
+		if unique_id != "" {
+			items_by_unique_id[unique_id] = rowMap
+		}
 	}
 
-	return items, items_by_unique_id, nil
+	return items_by_name, items_by_id, items_by_unique_id, nil
 }
