@@ -180,11 +180,6 @@ def create_data_from_session(session, key, room=None):
     area_ids = [area.id for area in room.areas.all()] if room else []
     training_ids = [training.id for training in room.trainings.all()] if room else []
 
-    print('create_data_from_session ===========')
-    print(data)
-    print(manager_ids)
-    print(session.get(key))
-
     if session.get(key):
         if session[key]['building']:
             data['building'] = session[key]['building']
