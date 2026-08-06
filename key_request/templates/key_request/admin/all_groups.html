@@ -80,7 +80,7 @@
                             {% if is_admin %}
                                 {% if group.is_active %}
                                 <a class="btn btn-link btn-sm"
-                                   href="{% url 'key_request:edit_group' group_id=group.id %}">Edit</a>
+                                   href="{% url 'key_request:edit_group' group_id=group.id %}?next={{ request.get_full_path | urlencode }}">Edit</a>
                                 <button class="btn btn-xs fs-8 btn-danger deactivate-group-btn" type="button"
                                         data-toggle="modal"
                                         data-target="#room-groups-deactivate-modal"

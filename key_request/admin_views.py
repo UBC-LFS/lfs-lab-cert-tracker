@@ -1229,7 +1229,9 @@ class EditApprovalGroups(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-
+        next_url = request.GET.get('next')
+        if not next_url:
+            next_url = reverse('key_request:all_groups')
         if not self.group:
             messages.error(request, 'Error! No group matches the id specified. It may have been deleted.')
             return HttpResponseRedirect(reverse('key_request:all_groups'))
@@ -1247,11 +1249,16 @@ class EditApprovalGroups(LoginRequiredMixin, View):
             'group_members': self.group.roles.all().order_by('-role', 'user__first_name', 'user__last_name'),
             'group_members_dict': self._make_member_dict(),
             'COORDINATOR_ROLE': ApprovalGroupRole.Role.COORDINATOR,
+            'next': next_url
         })
 
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
+        next_url = request.POST.get('next')
+        if not next_url:
+            next_url = reverse('key_request:all_groups')
+
         form = ApprovalGroupForm(request.POST, instance=self.group)
         if form.is_valid():
             member_id_list = form.cleaned_data['member_ids']
@@ -1264,7 +1271,7 @@ class EditApprovalGroups(LoginRequiredMixin, View):
             for uid in member_id_list + coordinator_id_list:
                 if not User.objects.filter(id=uid).exists():
                     messages.error(request, 'Error! Invalid user ID: {0}'.format(uid))
-                    return HttpResponseRedirect(reverse('key_request:all_groups'))
+                    return HttpResponseRedirect(next_url)
 
             ApprovalGroupRole.objects.filter(group=self.group).delete()
 
@@ -1282,7 +1289,7 @@ class EditApprovalGroups(LoginRequiredMixin, View):
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
 
-        return HttpResponseRedirect(reverse('key_request:all_groups'))
+        return HttpResponseRedirect(next_url)
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

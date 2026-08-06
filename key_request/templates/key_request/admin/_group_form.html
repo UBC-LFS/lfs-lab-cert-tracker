@@ -13,7 +13,9 @@
 
 <form action="" method="POST" id="room-group-form">
     {% csrf_token %}
-
+    {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
 
     <div class="row mb-4">
         <div class="col-md-8">
@@ -100,7 +102,11 @@
         </div>
 
         <div class="col-12 mt-3">
+        {% if next %}
+            <a class="btn btn-outline-secondary" href="{{ next }}">Cancel</a>
+        {% else %}
             <a class="btn btn-outline-secondary" href="{% url 'key_request:all_groups' %}">Cancel</a>
+        {% endif %}
             {% if path == 'create_group' %}
                 <input class="btn btn-primary mx-2" type="submit" value="Create Group" />
             {% elif path == 'edit_group' %}

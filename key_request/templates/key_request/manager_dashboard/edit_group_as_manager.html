@@ -10,6 +10,11 @@
     {% include 'key_request/left_side_menu.html' %}
 
     <section class="main-content">
+        <nav class="font-size-sm text-secondary">
+            <a href="{% url 'key_request:manager_groups' %}">My Approval Groups</a>
+            {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' with font_size='font-size-20px' %}
+            Group: {{ group.name }}
+        </nav>
         <h3 class="title">Manage {{ group.name }}</h3>
         <div class="bd-callout bd-callout-warning mb-4">
             <ul>
@@ -17,6 +22,7 @@
                 </li>
             </ul>
         </div>
+
 
         <div class="border bg-lighter-gray p-4 mt-4">
             <form action="#" method="post">
@@ -26,6 +32,12 @@
                 <input class="btn btn-primary mt-3" type="submit" value="ADD"/>
             </form>
         </div>
+
+    <section class="mt-5">
+        <h4>
+            Users in Approval Group
+            <small class="text-secondary">(Total: {{ members|length }})</small>
+        </h4>
 
         <table class="table table-bordered table-striped table-responsive-lg text-center"
                data-toggle="table"
@@ -93,6 +105,7 @@
             {% endfor %}
             </tbody>
         </table>
+    </section>
 
 
     </section>
