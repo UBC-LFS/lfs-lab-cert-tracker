@@ -270,7 +270,7 @@ class ApprovalNotificationManager:
         subject = "Notification: Key Request Approval Summary at UBC LFS"
         message = '''\
         <div>
-            <p>Hi {0},</p>
+            <p>Hi {0} (TRMS Administrator),</p>
             <div>This email is a notification that {1}'s key request has been approved for the following room(s):</div>
             {2}
             <div>Please visit <a href="{3}">{3}</a> to check the latest status. Thank you.</div>
