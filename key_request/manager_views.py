@@ -28,16 +28,8 @@ from .utils import REQUEST_STATUS_DICT
 from datetime import date
 
 
-@method_decorator([never_cache], name='dispatch')
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ManagerDashboard(LoginRequiredMixin, View):
-
-    # Removed setup since no longer doing permission checks
-    # def setup(self, request, *args, **kwargs):
-    #     setup = super().setup(request, *args, **kwargs)
-    #     form_filtered = func.get_forms_per_manager(request.user)
-    #     if not form_filtered.exists():
-    #         raise PermissionDenied
-    #     return setup
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -118,7 +110,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
         return HttpResponseRedirect(next)
 
 
-@method_decorator([never_cache], name='dispatch')
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class UpdateExpiryDate(LoginRequiredMixin, View):
 
     @method_decorator(require_POST)
@@ -144,7 +136,7 @@ class UpdateExpiryDate(LoginRequiredMixin, View):
         return HttpResponseRedirect(next)
 
 
-@method_decorator([never_cache], name='dispatch')
+@method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ManagerRooms(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
