@@ -14,10 +14,12 @@ function showModal($modal, $btn) {
     const numReqs = data.numReqs;
 
     if (parseInt(numReqs) === 0) {
+        $modal.find('.btn-danger').prop({'disabled': false, 'title': ""}).css('cursor', 'pointer')
+
         $modal.find(".alert-primary").removeClass('d-none');
         $modal.find('.alert-danger').addClass('d-none');
     } else {
-        $modal.find('#delete-room-num-requests').text(numReqs);
+        $modal.find('.btn-danger').prop({'disabled': true, 'title': "Cannot delete rooms with requests"}).css('cursor', 'not-allowed')
         $modal.find(".alert-primary").addClass('d-none');
         $modal.find('.alert-danger').removeClass('d-none');
     }
