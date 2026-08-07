@@ -251,6 +251,7 @@ func makeQuery(option Option) string {
 						  ON f.id = r.floor_id
 			WHERE rf.expiry_date = CURRENT_DATE + INTERVAL '14 days'
    			  AND auth_user.is_active = TRUE
+			  AND r.is_active = TRUE
 			  AND %s = TRUE
 		)
 		SELECT 
