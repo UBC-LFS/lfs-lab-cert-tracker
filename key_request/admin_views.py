@@ -339,9 +339,9 @@ def send_emails(request):
     room = get_object_or_404(Room, id=room_id)
     sent = send(user, room, email_type, expiry_date)
     if sent:
-        messages.success(request, 'Success! An email has been sent.')
+        messages.success(request, 'Success! An email for the {0} has been sent.'.format(email_type))
     else:
-        messages.error(request, 'An error occurred. Failed to send an email.')
+        messages.error(request, 'An error occurred. Failed to send an email for the {0}.'.format(email_type))
 
     return HttpResponseRedirect(next)
 
@@ -372,7 +372,7 @@ def send(user, room, email_type, expiry_date):
 </div>'''.format(user.get_full_name(), room_name, expiry_date)
 
     elif email_type == 'alarm':
-        title = 'Your fob request is set up for {0}'.format(room_name)
+        title = 'Your alarm code request is set up for {0}'.format(room_name)
         message = '''\
 <div>
 <p>Hi {0},</p>

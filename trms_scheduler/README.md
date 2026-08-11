@@ -12,6 +12,7 @@ $ go get github.com/lib/pq
 
 ### Run each app locally
 ```
+$ go run ./key_fob_alam_expiry
 $ go run ./trms_missing_training
 $ go run ./trms_before_expiry_date
 $ go run ./trms_after_expiry_date
