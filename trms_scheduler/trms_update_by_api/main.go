@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -87,6 +88,7 @@ func main() {
 	now := time.Now()
 	today := now.Format("2006-01-02")
 
+	var duplicates []string
 	var trainingModels []TrainingModel
 	for _, group := range groups {
 		var requestIdentifiers []map[string]string
@@ -171,7 +173,11 @@ func main() {
 
 						// Check the found training in each user
 						key := fmt.Sprintf("%d-%d-%s", userID, foundTrainingID, date)
-						if !userTrainingKeys[key] {
+						if !userTrainingKeys[key] && !slices.Contains(duplicates, key) {
+
+							// Check duplicates
+							duplicates = append(duplicates, key)
+
 							expiryDate := GetExpiryDate(completionDate, foundTrainingID, trainings_by_id)
 							trainingModels = append(trainingModels, TrainingModel{
 								userID,
