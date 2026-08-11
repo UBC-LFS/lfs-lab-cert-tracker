@@ -200,33 +200,38 @@ func main() {
 	}
 
 	statusMap, err := GetKRForFobTwoWeeks(db)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// form: [rooms]
 	fobUpdates := determineAlerts(statusMap, roomApproverMap)
-	sendEmails(fobUpdates, FOB)
+	fmt.Println("FOB: found", len(fobUpdates), "email(s).")
+	if len(fobUpdates) > 0 {
+		sendEmails(fobUpdates, FOB)
+	}
 
 	statusMap, err = GetKRForAlarmTwoWeeks(db)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// form: [rooms]
 	alarmUpdates := determineAlerts(statusMap, roomApproverMap)
-	sendEmails(alarmUpdates, Alarm)
+	fmt.Println("Alarm: found", len(alarmUpdates), "email(s).")
+	if len(alarmUpdates) > 0 {
+		sendEmails(alarmUpdates, Alarm)
+	}
 
 	statusMap, err = GetKRForKeyTwoWeeks(db)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// form: [rooms]
 	keyUpdates := determineAlerts(statusMap, roomApproverMap)
-	sendEmails(keyUpdates, Key)
-
+	fmt.Println("Key: found", len(keyUpdates), "email(s).")
+	if len(keyUpdates) > 0 {
+		sendEmails(keyUpdates, Key)
+	}
 }
