@@ -189,9 +189,11 @@ func main() {
 	fmt.Println("Start - Key, FOB, Alarm")
 
 	var db utils.Database
+
 	if err := db.Connect(utils.SSL_MODE); err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	roomApproverMap, err := GetApprovalEntityMapping(db)
 
