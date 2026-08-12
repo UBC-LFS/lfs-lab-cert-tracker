@@ -66,15 +66,15 @@ $ mv trms_key_fob_alarm_expiry /usr/local/bin/
 ```
 $ crontab -e
 
-0 5 * * * . /etc/apache2/envvars; /usr/local/bin/trms_update_by_api >> /[FOLDER PATH]/log/cron.log 2>&1
+0 5 * * * . /etc/apache2/envvars && /usr/local/bin/trms_update_by_api >> /[FOLDER PATH]/log/cron.log 2>&1
 
-30 10 1 * * . /etc/apache2/envvars; /usr/local/bin/trms_missing_training >> /[FOLDER PATH]/log/cron.log 2>&1
-30 10 15 * * . /etc/apache2/envvars; /usr/local/bin/trms_missing_training >> /[FOLDER PATH]/log/cron.log 2>&1
+30 10 1 * * . /etc/apache2/envvars && /usr/local/bin/trms_missing_training >> /[FOLDER PATH]/log/cron.log 2>&1
+30 10 15 * * . /etc/apache2/envvars && /usr/local/bin/trms_missing_training >> /[FOLDER PATH]/log/cron.log 2>&1
 
-0 9 * * * . /etc/apache2/envvars; /usr/local/bin/trms_before_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
+0 9 * * * . /etc/apache2/envvars && /usr/local/bin/trms_before_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
 
-0 10 1 * * . /etc/apache2/envvars; /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
-0 10 15 * * . /etc/apache2/envvars; /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
+0 10 1 * * . /etc/apache2/envvars && /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
+0 10 15 * * . /etc/apache2/envvars && /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
 
-0 11 * * * . /etc/apache2/envvars; /usr/local/bin/trms_key_fob_alarm_expiry >> /[FOLDER PATH]/log/cron.log 2>&1
+0 11 * * * . /etc/apache2/envvars && /usr/local/bin/trms_key_fob_alarm_expiry >> /[FOLDER PATH]/log/cron.log 2>&1
 ```
