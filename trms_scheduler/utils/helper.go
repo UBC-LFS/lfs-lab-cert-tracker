@@ -26,7 +26,7 @@ func EmailTemplate(recipientName string, content string) string {
 		content +
 		"<p>To enroll in a missing or expired training, please visit the below link and select the category that best describes your LFS affiliation for training links.<p/>" +
 		"<p><b>UBC/LFS Mandatory Training</b><br /><a href='https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/'>https://my.landfood.ubc.ca/lfs-intranet/onboarding/lfs-mandatory-training/</a></p>" +
-		"<p>Best regards,</p><p>LFS Training Record Management System</p>"
+		"<p>Best regards,</p><p>LFS Access and Training Record System (LFS ATRS)</p>"
 
 	return body
 }

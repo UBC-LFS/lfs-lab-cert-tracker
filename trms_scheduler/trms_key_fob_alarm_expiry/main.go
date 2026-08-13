@@ -112,7 +112,7 @@ func expiryEmailTemplate(recipientName string, rooms []int, option Option) strin
 		otherwiseMessage +
 		"<p/>" +
 		"<p>If you require further assistance, please email <a href=\"mailto:lfs.access@ubc.ca\">lfs.access@ubc.ca.</a></p>" +
-		"<p>Best regards,</p><p>LFS Training Record Management System</p>"
+		"<p>Best regards,</p><p>LFS Access and Training Record System (LFS ATRS)</p>"
 
 	return body
 

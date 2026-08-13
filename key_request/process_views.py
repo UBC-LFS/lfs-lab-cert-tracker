@@ -248,7 +248,7 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
 
     footer = '''\
             <p>Best regards,</p>
-            <p>LFS Training Record Management System</p></div>'''
+            <p>LFS Access and Training Record System (LFS ATRS)</p></div>'''
 
     message += footer
     return subject, message

@@ -158,9 +158,9 @@ def send_notification(sender, created, **kwargs):
         message = '''\
         <div>
             <p>Hi {0} {1},</p>
-            <p>You have recently been added to {2} in the LFS Training Record Management System. Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</p>
+            <p>You have recently been added to {2} in the LFS Access and Training Record System (LFS ATRS). Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</p>
             <p>Best regards,</p>
-            <p>LFS Training Record Management System</p>
+            <p>LFS Access and Training Record System (LFS ATRS)</p>
         </div>
         '''.format(
             obj.user.first_name,

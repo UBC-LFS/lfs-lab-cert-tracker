@@ -48,7 +48,7 @@ def html_template(first_name, last_name, message):
         </div>
         <br />
         <p>Best regards,</p>
-        <p>LFS Training Record Management System</p>
+        <p>LFS Access and Training Record System (LFS ATRS)</p>
       </body>
     </html>
     '''.format(first_name, last_name, message)

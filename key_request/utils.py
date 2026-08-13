@@ -39,5 +39,5 @@ EDIT_ROOM_KEY = 'edit_room_data'
 
 EMAIL_FOOTER = '''\
 <p>Best regards,</p>
-<p>LFS Training Record Management System</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
 '''

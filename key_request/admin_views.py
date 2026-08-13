@@ -358,7 +358,7 @@ def send(user, room, email_type, expiry_date):
 <p>Hi {0},</p>
 <p>Your key request for {1} has been sent to UBC Keydesk. You will receive a notification email from UBC Keydesk when the key is ready for pickup. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
 <p>Best regards,</p>
-<p>LFS Training Record Management System</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>'''.format(user.get_full_name(), room_name)
 
     elif email_type == 'fob':
@@ -368,7 +368,7 @@ def send(user, room, email_type, expiry_date):
 <p>Hi {0},</p>
 <p>Your fob request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
 <p>Best regards,</p>
-<p>LFS Training Record Management System</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>'''.format(user.get_full_name(), room_name, expiry_date)
 
     elif email_type == 'alarm':
@@ -379,7 +379,7 @@ def send(user, room, email_type, expiry_date):
 <p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
 <p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
 <p>Best regards,</p>
-<p>LFS Training Record Management System</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>'''.format(user.get_full_name(), room_name, expiry_date)
 
     sent = send_mail(title, message, settings.EMAIL_FROM, [ user.email ], fail_silently=False, html_message=message)

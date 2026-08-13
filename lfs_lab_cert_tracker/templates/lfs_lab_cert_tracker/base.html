@@ -5,7 +5,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>LFS TRMS @ UBC</title>
+	<title>LFS ATRS @ UBC</title>
 	<link rel="icon" type="image/png" href="{% static 'lfs_lab_cert_tracker/images/ubc-favicon.jpg' %}">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
 	<link rel="stylesheet" type="text/css" href="{% static 'lfs_lab_cert_tracker/css/bootstrap-table.min.css' %}">
@@ -17,7 +17,7 @@
 	<header class="px-0 py-2">
 		<div class="container d-flex align-items-center justify-content-between">
 			<img src="{% static 'lfs_lab_cert_tracker/images/UBC-logo-2018-crest-white-rgb300.png' %}" height="45" />
-			<span class="brand-title">Training Record Management System</span>
+			<span class="brand-title">LFS Access and Training Record System (LFS ATRS)</span>
 			{% if request.user.is_authenticated %}
 				<span class="text-white">
 					<span class="mr-4">Hi, <b>{{ request.user.get_full_name }}</b></span>
@@ -45,7 +45,7 @@
 			</div>
 
 			<div class="column text-right">
-				Training Record Management System <br />
+				LFS Access and Training Record System (LFS ATRS)<br />
 				<span class="material-symbols-outlined">email</span> <a href="mailto:lfs.facilities@ubc.ca">lfs.facilities@ubc.ca</a>
 			</div>
 		</div>

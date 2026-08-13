@@ -183,7 +183,7 @@ def welcome_message():
     <p>Welcome to LFS!</p>
 
     <p>
-        Thank you for using the LFS Training Record Management System! We want to take this opportunity to introduce you to the <a href="https://my.landfood.ubc.ca/operations/health-and-safety/johsc/" target="_blank">LFS Joint Occupational Health and Safety Committee (JOHSC)</a> and our Local Safety Teams (LSTs). We hope you spend some time to familiarize yourself with your local area’s LST membership and contact information. Below are the four LSTs covering the health and safety of the four main buildings in our faculty:
+        Thank you for using the LFS Access and Training Record System (LFS ATRS)! We want to take this opportunity to introduce you to the <a href="https://my.landfood.ubc.ca/operations/health-and-safety/johsc/" target="_blank">LFS Joint Occupational Health and Safety Committee (JOHSC)</a> and our Local Safety Teams (LSTs). We hope you spend some time to familiarize yourself with your local area’s LST membership and contact information. Below are the four LSTs covering the health and safety of the four main buildings in our faculty:
     </p>
 
     <ul style="list-style-type:none;">
@@ -242,10 +242,10 @@ def send_info_email(user):
     message = '''\
     <div>
         <p>Hi {0} {1},</p>
-        <p>You have recently been added to the LFS Training Record Management System. Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</p>
+        <p>You have recently been added to the LFS Access and Training Record System (LFS ATRS). Please visit <a href={3}>{3}</a> to upload your training records. Thank you.</p>
         <p>{2}</p>
         <p>Best regards,</p>
-        <p>LFS Training Record Management System</p>
+        <p>LFS Access and Training Record System (LFS ATRS)</p>
     </div>
     '''.format(user.first_name, user.last_name, welcome_message(), settings.SITE_URL)
 
