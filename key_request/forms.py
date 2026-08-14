@@ -127,11 +127,11 @@ class ApprovalGroupForm(forms.ModelForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ['building', 'floor', 'number', 'key', 'fob' , 'alarm', 'is_active', 'note']
+        fields = ['building', 'floor', 'number', 'key', 'card_access' , 'alarm', 'is_active', 'note']
         labels = {
             'number': 'Room Number',
             'key': 'Key?',
-            'fob': 'FOB?',
+            'card_access': 'Card Access?',
             'alarm': 'Alarm?',
             'is_active': 'Active?',
         }

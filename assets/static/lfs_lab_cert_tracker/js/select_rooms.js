@@ -183,13 +183,13 @@ function displayRooms(rooms, buildingID, floorID) {
   if (rooms && buildingID && floorID && rooms[buildingID][floorID]) {
     $('#select-room').html('');
     for (let room of rooms[buildingID][floorID]['numbers']) {
-      let fob = '<span class="badge badge-danger">NO</span>';
+      let card_access = '<span class="badge badge-danger">NO</span>';
       let alarm = '<span class="badge badge-danger">NO</span>';
 
-      if (room['fob']) fob = '<span class="badge badge-success">YES</span>';
+      if (room['card_access']) card_access = '<span class="badge badge-success">YES</span>';
       if (room['alarm']) alarm = '<span class="badge badge-success">YES</span>';
 
-      $('#select-room').append('<tr><td><input id="room_' + room['id'] + '" type="checkbox" name="room[]" value="' + room['id'] + '" data-number="' + room['number'] + '" /></td><td>' + room['number'] + '</td><td class="text-left">' + createList(room['areas']) + '</td><td class="text-left">' + createList(room['trainings']) + '</td><td>' + fob + '</td><td>' + alarm + '</td></tr>');
+      $('#select-room').append('<tr><td><input id="room_' + room['id'] + '" type="checkbox" name="room[]" value="' + room['id'] + '" data-number="' + room['number'] + '" /></td><td>' + room['number'] + '</td><td class="text-left">' + createList(room['areas']) + '</td><td class="text-left">' + createList(room['trainings']) + '</td><td>' + card_access + '</td><td>' + alarm + '</td></tr>');
     }
   }
 }

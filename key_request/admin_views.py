@@ -361,12 +361,12 @@ def send(user, room, email_type, expiry_date):
 <p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>'''.format(user.get_full_name(), room_name)
 
-    elif email_type == 'fob':
-        title = 'Your fob request is set up for {0}'.format(room_name)
+    elif email_type == 'card_access':
+        title = 'Your card access request is set up for {0}'.format(room_name)
         message = '''\
 <div>
 <p>Hi {0},</p>
-<p>Your fob request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Your card access request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
 <p>Best regards,</p>
 <p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>'''.format(user.get_full_name(), room_name, expiry_date)
@@ -670,7 +670,7 @@ class CreateRoom(LoginRequiredMixin, View):
                 'floor': '',
                 'number': '',
                 'key': None,
-                'fob': None,
+                'card_access': None,
                 'alarm': None,
                 'is_active': None,
                 'note': None,
@@ -688,7 +688,7 @@ class CreateRoom(LoginRequiredMixin, View):
                 data['floor'] = request.POST.get('floor')
                 data['number'] = request.POST.get('number')
                 data['key'] = True if request.POST.get('key') else False
-                data['fob'] = True if request.POST.get('fob') else False
+                data['card_access'] = True if request.POST.get('card_access') else False
                 data['alarm'] = True if request.POST.get('alarm') else False
                 data['is_active'] = True if request.POST.get('is_active') else False
                 data['note'] = request.POST.get('note')
@@ -823,7 +823,7 @@ class EditRoom(LoginRequiredMixin, View):
                 'floor': self.room.floor.id,
                 'number': self.room.number,
                 'key': True if self.room.key else False,
-                'fob': True if self.room.fob else False,
+                'card_access': True if self.room.card_access else False,
                 'alarm': True if self.room.alarm else False,
                 'is_active': True if self.room.is_active else False,
                 'note': self.room.note,
@@ -841,7 +841,7 @@ class EditRoom(LoginRequiredMixin, View):
                 data['floor'] = request.POST.get('floor')
                 data['number'] = request.POST.get('number')
                 data['key'] = True if request.POST.get('key') else False
-                data['fob'] = True if request.POST.get('fob') else False
+                data['card_access'] = True if request.POST.get('card_access') else False
                 data['alarm'] = True if request.POST.get('alarm') else False
                 data['is_active'] = True if request.POST.get('is_active') else False
                 data['note'] = request.POST.get('note')

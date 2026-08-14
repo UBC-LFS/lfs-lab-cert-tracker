@@ -14,10 +14,10 @@
 	<nav>
 		<a href="{{ next }}">All Requests</a>
 		{% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
-		<span class="text-secondary">Key Request Details</span>
+		<span class="text-secondary">Request Details</span>
 	</nav>
 
-	<h3 class="title">Key Request Details</h3>
+	<h3 class="title">Request Details</h3>
 
 	<div class="bd-callout bd-callout-info m-0">
 		<div class="two-columns">
@@ -36,7 +36,6 @@
 						{% else %}
 							<strong class="text-danger h3">NOT APPROVED</strong>
 						{% endif %}
-
 				</div>
 			</div>
 		</div>
@@ -62,7 +61,7 @@
 						<th>Supervisor</th>
 						<th>PI/Group</th>
 						<th>Operator</th>
-                        <th>Note</th>
+            <th>Note</th>
 						<th>Status <br /> History</th>
 						<th>Action</th>
 						<th>
@@ -74,56 +73,55 @@
 				{% for item in items %}
 					<tr>
 						<td>
-                            {{ item.id }}
-                        </td>
+              {{ item.id }}
+            </td>
 						<td>
 							{{ item.room.building.code }} {{ item.room.floor.name }} <br />
 							Room {{ item.room.number }}
-
+						</td>
 						<td>{{ form.supervisor.get_full_name }}</td>
 						<td>
-                            {% if item.group %}
-                                {{ item.group.name }}
-                            {% elif item.manager %}
-                                {{ item.manager.get_full_name }}
-                            {% else %}
-                                No managers
-                            {% endif %}
-                        </td>
+              {% if item.group %}
+                {{ item.group.name }}
+              {% elif item.manager %}
+                {{ item.manager.get_full_name }}
+              {% else %}
+                No managers
+              {% endif %}
+            </td>
 						<td>{{ item.status.last.operator_id|get_user_full_name }}</td>
 						<td>
-                            {% if item.room.note %}
-                                {% include 'key_request/subpages/modal_room_note.html' with id=forloop.counter data=item.room.note %}
-                            {% endif %}
+              {% if item.room.note %}
+                {% include 'key_request/subpages/modal_room_note.html' with id=forloop.counter data=item.room.note %}
+              {% endif %}
 						</td>
-                        <td>
-                            {% if item.status|length > 0 %}
-                                {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
-                            {% endif %}
-                        </td>
+            <td>
+              {% if item.status|length > 0 %}
+                {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=item.status %}
+              {% endif %}
+            </td>
 						<td>
-                            {% if item.group or item.manager %}
-							    {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.first.status %}
-                            {% else %}
-                                <a href="{% url 'key_request:edit_room' room_id=item.room.id %}?t=pis&next={{ request.get_full_path }}" target="_blank" data-toggle="tooltip" data-placement="top"
-                                   title="This room is not associated with any group(s) or manager(s) and therefore does not need explicit approval">
-                                   No action needed</a>
-                            {% endif %}
+            {% if item.group or item.manager %}
+  						{% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.first.status %}
+            {% else %}
+              <a href="{% url 'key_request:edit_room' room_id=item.room.id %}?t=pis&next={{ request.get_full_path }}" target="_blank" data-toggle="tooltip" data-placement="top"
+                 title="This room is not associated with any group(s) or manager(s) and therefore does not need explicit approval">
+                 No action needed</a>
+            {% endif %}
 						</td>
 						<td>
 							<input class="room-checkbox" type="checkbox"
-                                    {% if not item.group and not item.manager %}
-                                        disabled
-                                    style="cursor: not-allowed"
-                                    {% endif %}
-                                   value="{{ item.request_form_identifier }}"
-                                   data-user="{{ form.user.get_full_name }}"
-                                   data-building="{{ item.room.building.code }}"
-                                   data-floor="{{ item.room.floor.name }}"
-                                   data-number="{{ item.room.number }}"
-                                   data-is_new="{% if item.is_new %}true{% else %}false{% endif %}" />
-
-                        </td>
+                {% if not item.group and not item.manager %}
+                  disabled
+                style="cursor: not-allowed"
+                {% endif %}
+               value="{{ item.request_form_identifier }}"
+               data-user="{{ form.user.get_full_name }}"
+               data-building="{{ item.room.building.code }}"
+               data-floor="{{ item.room.floor.name }}"
+               data-number="{{ item.room.number }}"
+               data-is_new="{% if item.is_new %}true{% else %}false{% endif %}" />
+          </td>
 					</tr>
 				{% empty %}
 					<tr>
@@ -148,7 +146,6 @@
 
 		{% elif tab == 'emails' %}
 
-
 				<table id="selected-rooms" class="table table-bordered table-striped">
 					<thead>
 						<tr>
@@ -156,7 +153,7 @@
 							<th>Approved?</th>
 							<th>Building & Room Info</th>
 							<th>Key</th>
-							<th>FOB</th>
+							<th>Card Access</th>
 							<th>Alarm</th>
 						</tr>
 					</thead>
@@ -207,8 +204,8 @@
 									</td>
 									<td>
 										{% if approved %}
-											<button id="{{ room.id }}" class="btn btn-{% if room.fob %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="fob" {% if not room.fob %}disabled{% endif %}>Send</button>
-											{% include 'key_request/subpages/modal_room_email.html' with email_type='fob' %}
+											<button id="{{ room.id }}" class="btn btn-{% if room.card_access %}success{% else %}danger{% endif %} btn-sm" type="submit" name="email_type" value="card_access" {% if not room.card_access %}disabled{% endif %}>Send</button>
+											{% include 'key_request/subpages/modal_room_email.html' with email_type='card_access' %}
 										{% else %}
 											<button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
 										{% endif %}

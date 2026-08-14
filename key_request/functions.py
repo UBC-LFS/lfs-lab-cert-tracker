@@ -62,7 +62,7 @@ def preprocess_rooms(rooms):
                 'number': r['number'],
                 'is_active': r['is_active'],
                 'key': r['key'],
-                'fob': r['fob'],
+                'card_access': r['card_access'],
                 'alarm': r['alarm'],
                 'areas': [{ 'id': area.id, 'name': area.name } for area in r['areas']],
                 'trainings': [{ 'id': training.id, 'name': training.name } for training in r['trainings']]
@@ -173,7 +173,7 @@ def get_area_ids_from_session(session, key, room=None):
     return area_ids
 
 def create_data_from_session(session, key, room=None):
-    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'note': '', 'key': False, 'fob': False, 'alarm': False, 'is_active': True}
+    data = model_to_dict(room) if room else {'building': '', 'floor': '', 'number': '', 'note': '', 'key': False, 'card_access': False, 'alarm': False, 'is_active': True}
 
     manager_ids = [manager.id for manager in room.managers.all()] if room else []
     group_ids = [group.id for group in room.groups.all()] if room else []
@@ -190,8 +190,8 @@ def create_data_from_session(session, key, room=None):
 
         if 'key' in session[key]:
             data['key'] = session[key]['key']
-        if 'fob' in session[key]:
-            data['fob'] = session[key]['fob']
+        if 'card_access' in session[key]:
+            data['card_access'] = session[key]['card_access']
         if 'alarm' in session[key]:
             data['alarm'] = session[key]['alarm']
         if 'is_active' in session[key]:
@@ -226,9 +226,9 @@ def update_data_from_post_and_session(post, session, key, tab, room=None):
         if data['key'] != key:
             data['key'] = key
 
-        fob = True if post.get('fob') else False
-        if data['fob'] != fob:
-            data['fob'] = fob
+        card_access = True if post.get('card_access') else False
+        if data['card_access'] != card_access:
+            data['card_access'] = card_access
 
         alarm = True if post.get('alarm') else False
         if data['alarm'] != alarm:

@@ -39,7 +39,7 @@
                 <th>Required Trainings</th>
                 <th>
                     Key? <br/>
-                    FOB? <br/>
+                    Card? <br/>
                     Alarm? <br/>
                     Active?
                 </th>
@@ -79,7 +79,7 @@
                     </td>
                     <td>
                         {% include 'key_request/subpages/_yes_or_no.html' with data=room.key %} <br/>
-                        {% include 'key_request/subpages/_yes_or_no.html' with data=room.fob %} <br/>
+                        {% include 'key_request/subpages/_yes_or_no.html' with data=room.card_access %} <br/>
                         {% include 'key_request/subpages/_yes_or_no.html' with data=room.alarm %} <br/>
                         {% include 'key_request/subpages/_yes_or_no.html' with data=room.is_active %}
                     </td>

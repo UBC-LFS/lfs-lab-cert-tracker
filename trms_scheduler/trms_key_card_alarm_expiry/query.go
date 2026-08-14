@@ -63,7 +63,7 @@ type KeyRequestStatusResult struct {
 type Option string
 
 const (
-	FOB   Option = "r.fob"
+	Card   Option = "r.card_access"
 	Alarm Option = "r.alarm"
 	Key   Option = "r.key"
 )
@@ -74,14 +74,14 @@ func GetApprovalEntityMapping(db utils.Database) (map[int]int, error) {
 			FROM
 				(SELECT room_id, 'user' AS entity_type, user_id AS entity_id
 				FROM key_request_room_managers
-	
+
 				UNION ALL
-	
+
 				SELECT room_id, 'group' AS entity_type, approvalgroup_id AS entity_id
 				FROM key_request_room_groups
-	
+
 				ORDER BY room_id) entities
-			GROUP BY entities.room_id 
+			GROUP BY entities.room_id
 		`
 
 	rows, err := db.Conn.Query(query)
@@ -241,9 +241,9 @@ func makeQuery(option Option) string {
 			FROM key_request_requestform rf
 					 JOIN key_request_requestform_rooms rfr
 						  ON rfr.requestform_id = rf.id
-					JOIN key_request_room r 
+					JOIN key_request_room r
                           ON rfr.room_id = r.id
-					JOIN auth_user 
+					JOIN auth_user
 						  ON auth_user.id = rf.user_id
 					JOIN key_request_building b
 						  ON b.id = r.building_id
@@ -254,16 +254,16 @@ func makeQuery(option Option) string {
 			  AND r.is_active = TRUE
 			  AND %s = TRUE
 		)
-		SELECT 
-			rfs.id, 
-			rfs.created_at, 
-			rfs.status, 
-			rfs.form_id, 
-			rfs.manager_id, 
-			rfs.group_id, 
-			rfs.room_id, 
-			e.first_name, 
-			e.last_name, 
+		SELECT
+			rfs.id,
+			rfs.created_at,
+			rfs.status,
+			rfs.form_id,
+			rfs.manager_id,
+			rfs.group_id,
+			rfs.room_id,
+			e.first_name,
+			e.last_name,
 			e.email,
 			e.building,
 			e.floor,
@@ -286,7 +286,7 @@ func GetKRForAlarmTwoWeeks(db utils.Database) (map[int]map[int]map[RoomEntity]Ke
 	return processKeyRequestRows(db, alarmStatuses)
 }
 
-func GetKRForFobTwoWeeks(db utils.Database) (map[int]map[int]map[RoomEntity]KeyRequestStatusResult, error) {
-	fobStatuses := makeQuery(FOB)
-	return processKeyRequestRows(db, fobStatuses)
+func GetKRForCardTwoWeeks(db utils.Database) (map[int]map[int]map[RoomEntity]KeyRequestStatusResult, error) {
+	cardStatuses := makeQuery(Card)
+	return processKeyRequestRows(db, cardStatuses)
 }

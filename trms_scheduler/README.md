@@ -16,7 +16,7 @@ $ go run ./trms_missing_training
 $ go run ./trms_before_expiry_date
 $ go run ./trms_after_expiry_date
 $ go run ./trms_update_by_api
-$ go run ./trms_key_fob_alarm_expiry
+$ go run ./trms_key_card_alarm_expiry
 ```
 
 ### Change the SSL mode in production
@@ -48,7 +48,7 @@ trms_missing_training $ go build -o ./
 trms_before_expiry_date $ go build -o ./
 trms_after_expiry_date $ go build -o ./
 trms_update_by_api $ go build -o ./
-trms_key_fob_alarm_expiry $ go build -o ./
+trms_key_card_alarm_expiry $ go build -o ./
 ```
 
 ### 3. Move the executable application (e.g., update_by_api) to the */usr/local/bin/* folder
@@ -58,7 +58,7 @@ $ mv trms_update_by_api /usr/local/bin/
 $ mv trms_missing_training /usr/local/bin/
 $ mv trms_before_expiry_date /usr/local/bin/
 $ mv trms_after_expiry_date /usr/local/bin/
-$ mv trms_key_fob_alarm_expiry /usr/local/bin/
+$ mv trms_key_card_alarm_expiry /usr/local/bin/
 ```
 
 ### 4. Add a job to the crontab
@@ -76,5 +76,5 @@ $ crontab -e
 0 10 1 * * . /etc/apache2/envvars && /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
 0 10 15 * * . /etc/apache2/envvars && /usr/local/bin/trms_after_expiry_date >> /[FOLDER PATH]/log/cron.log 2>&1
 
-0 11 * * * . /etc/apache2/envvars && /usr/local/bin/trms_key_fob_alarm_expiry >> /[FOLDER PATH]/log/cron.log 2>&1
+0 11 * * * . /etc/apache2/envvars && /usr/local/bin/trms_key_card_alarm_expiry >> /[FOLDER PATH]/log/cron.log 2>&1
 ```

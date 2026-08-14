@@ -66,8 +66,8 @@ func determineAlerts(statusMap map[int]map[int]map[RoomEntity]KeyRequestStatusRe
 func getExpiryItemString(option Option) string {
 	if option == Key {
 		return "Key"
-	} else if option == FOB {
-		return "FOB"
+	} else if option == Card {
+		return "Card Access"
 	} else if option == Alarm {
 		return "Alarm Code"
 	}
@@ -79,7 +79,7 @@ func getExpiryItemString(option Option) string {
 func getOtherwiseMessage(option Option) string {
 	if option == Key {
 		return "Otherwise, you should return your key(s) to UBC Keydesk to avoid penalty."
-	} else if option == FOB {
+	} else if option == Card {
 		return "Otherwise, your access will terminate in 2 weeks."
 	} else if option == Alarm {
 		return "Otherwise, your alarm code will no longer be valid in 2 weeks."
@@ -103,10 +103,15 @@ func expiryEmailTemplate(recipientName string, rooms []int, option Option) strin
 
 	otherwiseMessage := getOtherwiseMessage(option)
 
+	suffix := "(s) "
+	if expiryItem == "card access" {
+		suffix = "(es) "
+	}
+
 	body := "<p>Hi " + recipientName + ",</p>" +
 		"<p>Your " +
-		expiryItem +
-		"(s) for the following rooms will expire in 2 weeks:</p>" +
+		expiryItem + suffix +
+		"for the following rooms will expire in 2 weeks:</p>" +
 		roomsBulletList.String() +
 		"<p>If you need to extend your access, please fill out Access Request via TRMS. " +
 		otherwiseMessage +
@@ -186,7 +191,7 @@ func sendEmails(formRoomMap map[int][]int, option Option) EmailSummary {
 }
 
 func main() {
-	fmt.Println("Start - Key, FOB, Alarm")
+	fmt.Println("Start - Key, Card, Alarm")
 
 	var db utils.Database
 
@@ -201,16 +206,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// form: [rooms]
-	fobUpdates := determineAlerts(statusMap, roomApproverMap)
-	fmt.Println("FOB: found", len(fobUpdates), "email(s).")
-	if len(fobUpdates) > 0 {
-		sendEmails(fobUpdates, FOB)
+	cardUpdates := determineAlerts(statusMap, roomApproverMap)
+	fmt.Println("Card: found", len(cardUpdates), "email(s).")
+	if len(cardUpdates) > 0 {
+		sendEmails(cardUpdates, Card)
 	}
 
 	statusMap, err = GetKRForAlarmTwoWeeks(db)

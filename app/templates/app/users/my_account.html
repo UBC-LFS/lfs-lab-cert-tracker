@@ -35,12 +35,12 @@
 					{% if is_room_manager %}
 						<a class="btn btn-primary" href="{% url 'key_request:manager_dashboard' %}">
 							{% include "lfs_lab_cert_tracker/icons/key.html" %}
-							Key Request
+							Key/Card/Alarm Request
 						</a>
 					{% else %}
 						<a class="btn btn-primary" href="{% url 'key_request:index' %}">
 							{% include "lfs_lab_cert_tracker/icons/key.html" %}
-							Key Request
+							Key/Card/Alarm Request
 						</a>
 					{% endif %}
 				 {% endif %}

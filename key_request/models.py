@@ -91,7 +91,7 @@ class Room(models.Model):
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
     key = models.BooleanField(default=False)
-    fob = models.BooleanField(default=False)
+    card_access = models.BooleanField(default=False)
     alarm = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     note = models.TextField(null=True, blank=True)
@@ -109,8 +109,6 @@ class Room(models.Model):
     def save(self, *args, **kwargs):
         self.slug = slugify(self.building.code + ' ' + self.floor.name + ' ' + self.number + ' ' + str(datetime.now().timestamp()))
         super(Room, self).save(*args, **kwargs)
-
-
 
 
 class RequestForm(models.Model):
@@ -149,7 +147,7 @@ class RequestFormStatus(models.Model):
 class RoomEmail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    type = models.CharField(max_length=10)
+    type = models.CharField(max_length=20)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 

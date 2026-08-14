@@ -12,15 +12,15 @@ import (
 
 const GROUP_ALPHA_ID = 1
 
-// ORDER: key, fob, alarm
+// ORDER: key, card_access, alarm
 const (
 	KEY_ONLY   = 100
-	FOB_ONLY   = 10
+	CARD_ONLY   = 10
 	ALARM_ONLY = 1
 	ALL        = 111
 	NONE       = 0
 	NO_ALARM   = 110
-	NO_FOB     = 101
+	NO_CARD     = 101
 	NO_KEY     = 11
 )
 
@@ -79,8 +79,8 @@ func zeroTestDatabase() error {
 		return fmt.Errorf("aborting: refusing to truncate non-test database %s", dbName)
 	}
 	query := `
-		DO $$ 
-		DECLARE 
+		DO $$
+		DECLARE
 			r RECORD;
 		BEGIN
 			FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
@@ -133,16 +133,16 @@ func seedTestData() error {
 	query := `
 		INSERT INTO key_request_building (id, name, code, slug, created_on, updated_on)
 		VALUES (1, 'Test Building', 'TEST-123', 'test-building', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day');
-	
+
 		INSERT INTO key_request_floor (id, name, slug, created_on, updated_on)
 		VALUES (1, 'Test Floor', 'test-floor', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day');
-	
+
 		INSERT INTO auth_user (id, email, is_active, first_name, last_name, password, date_joined, is_superuser, username, is_staff)
 		VALUES (1, 'test-email@email.com', true, 'Test', 'User', '$2a$12$KIXQjHqjH8QyZsGg5rXlOeG7b1u9n1z1Z1Z1Z1Z1Z1Z1Z1Z1Z1', NOW() - INTERVAL '10 day', false, 'testuser1', false);
-	
+
 		INSERT INTO auth_user (id, email, is_active, first_name, last_name, password, date_joined, is_superuser, username, is_staff)
 		VALUES (2, 'test-email@email.com', false, 'Test', 'User', '$2a$12$KIXQjHqjH8QyZsGg5rXlOeG7b1u9n1z1Z1Z1Z1Z1Z1Z1Z1Z1Z1', NOW() - INTERVAL '10 day', false, 'testuser2', false);
-	
+
 		INSERT INTO auth_user (id, email, is_active, first_name, last_name, password, date_joined, is_superuser, username, is_staff)
 		VALUES (3, 'test2-email@email.com', true, 'Test', 'User', '$2a$12$KIXQjHqjH8QyZsGg5rXlOeG7b1u9n1z1Z1Z1Z1Z1Z1Z1Z1Z1Z1', NOW() - INTERVAL '10 day', false, 'testuser3', false);
 	`
@@ -153,56 +153,56 @@ func seedTestData() error {
 	}
 
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '111', true, true, true, true, 'room-111', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
 	err = insertData(query, ALL)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '110', true, true, false, true, 'room-110', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
 	err = insertData(query, NO_ALARM)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '101', true, false, true, true, 'room-101', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
-	err = insertData(query, NO_FOB)
+	err = insertData(query, NO_CARD)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '011', false, true, true, true, 'room-011', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
 	err = insertData(query, NO_KEY)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '000', false, false, false, true, 'room-000', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
 	err = insertData(query, NONE)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '001', false, false, true, true, 'room-001', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
 	err = insertData(query, ALARM_ONLY)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '010', false, true, false, true, 'room-010', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
-	err = insertData(query, FOB_ONLY)
+	err = insertData(query, CARD_ONLY)
 	if err != nil {
 		return err
 	}
 	query = `
-	INSERT INTO key_request_room (id, number, key, fob, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
+	INSERT INTO key_request_room (id, number, key, card_access, alarm, is_active, slug, created_on, updated_on, building_id, floor_id, note)
 	VALUES ($1::bigint, '100', true, false, false, true, 'room-100', NOW() - INTERVAL '4 day', NOW() - INTERVAL '4 day', 1, 1, 'Room 100');`
 	err = insertData(query, KEY_ONLY)
 	if err != nil {
@@ -247,7 +247,7 @@ func insertData(insertQuery string, args ...any) error {
 
 func addManagerToRoom(roomID int, userID int) error {
 	query := `
-	INSERT INTO key_request_room_managers (room_id, user_id) 
+	INSERT INTO key_request_room_managers (room_id, user_id)
 	VALUES ($1::bigint, $2::bigint);
 	`
 	return insertData(query, roomID, userID)
@@ -256,7 +256,7 @@ func addManagerToRoom(roomID int, userID int) error {
 
 func addGroupToRoom(roomID int, groupID int) error {
 	query := `
-	INSERT INTO key_request_room_groups (room_id, approvalgroup_id) 
+	INSERT INTO key_request_room_groups (room_id, approvalgroup_id)
 	VALUES ($1::bigint, $2::bigint);
 	`
 	return insertData(query, roomID, groupID)
@@ -299,7 +299,7 @@ func addStatusToKeyRequestWithGroup(formId int, roomID int, status string, group
 
 func createGroup(groupID int, groupName string) error {
 	query := `
-	INSERT INTO key_request_approvalgroup (id, name) 
+	INSERT INTO key_request_approvalgroup (id, name)
 	VALUES ($1::bigint, $2::varchar);
 	`
 
@@ -322,15 +322,15 @@ func createRequestFormExpiry14Days() error {
 	return insertData(query)
 }
 
-// TestQueryGetFOB checks that GetKRForFobTwoWeeks returns the expected result when there is a KR Form with a 2-week
-// expiry date for a request that contains a room with a FOB [only a FOB in this case]
-func TestQueryGetFOB(t *testing.T) {
-	// Room with only FOB: 010 -> 10
+// TestQueryGetCard checks that GetKRForCardTwoWeeks returns the expected result when there is a KR Form with a 2-week
+// expiry date for a request that contains a room with a Card [only a Card in this case]
+func TestQueryGetCard(t *testing.T) {
+	// Room with only Card: 010 -> 10
 
 	// SET-UP
 	setupTest(t)
 
-	if err := addManagerToRoom(FOB_ONLY, 2); err != nil {
+	if err := addManagerToRoom(CARD_ONLY, 2); err != nil {
 		t.Fatal(err)
 	}
 
@@ -339,11 +339,11 @@ func TestQueryGetFOB(t *testing.T) {
 	}
 
 	// Attach Room and KRS to the form
-	if err := addRoomsToForm(1, FOB_ONLY); err != nil {
+	if err := addRoomsToForm(1, CARD_ONLY); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := addStatusToKeyRequest(1, FOB_ONLY, "0"); err != nil {
+	if err := addStatusToKeyRequest(1, CARD_ONLY, "0"); err != nil {
 		t.Fatal(err)
 	}
 	// EXECUTE
@@ -353,7 +353,7 @@ func TestQueryGetFOB(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 
 	// EVALUATE
 
@@ -382,8 +382,8 @@ func TestQueryGetFOB(t *testing.T) {
 		if len(rooms) != 1 {
 			t.Fatalf("incorrect number of rooms; expected 1 and got %d", len(rooms))
 		}
-		if rooms[0] != FOB_ONLY {
-			t.Fatalf("incorrect room id; expected %d and got %d", FOB_ONLY, rooms[0])
+		if rooms[0] != CARD_ONLY {
+			t.Fatalf("incorrect room id; expected %d and got %d", CARD_ONLY, rooms[0])
 		}
 	}
 }
@@ -460,7 +460,7 @@ func TestQueryGetKey(t *testing.T) {
 // TestQueryGetAlarm checks that GetKRForAlarmTwoWeeks returns the expected result when there is a KR Form with a 2-week
 // expiry date for a request that contains a room with an Alarm [only an Alarm in this case]
 func TestQueryGetAlarm(t *testing.T) {
-	// Room with only FOB: 010 -> 10
+	// Room with only Alarm
 
 	// SET-UP
 	setupTest(t)
@@ -877,7 +877,7 @@ func TestQueryPartlyApprovedRoomMultiplePIs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 
 	// EVALUATE
 
@@ -910,8 +910,8 @@ func TestQueryPartlyApprovedRoomMultiplePIs(t *testing.T) {
 		if len(rooms) != 1 {
 			t.Fatalf("incorrect number of rooms; expected 1 and got %d", len(rooms))
 		}
-		if rooms[0] != FOB_ONLY {
-			t.Fatalf("incorrect room id; expected %d and got %d", FOB_ONLY, rooms[0])
+		if rooms[0] != CARD_ONLY {
+			t.Fatalf("incorrect room id; expected %d and got %d", CARD_ONLY, rooms[0])
 		}
 	}
 }
@@ -948,7 +948,7 @@ func TestQueryApprovedRoomWithGroupApprover(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 
 	// EVALUATE
 
@@ -1032,7 +1032,7 @@ func TestQueryFullyApprovedARoomWithGroupAndPIS(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 
 	// EVALUATE
 
@@ -1108,7 +1108,7 @@ func TestQueryPartlyApprovedARoomWithGroupAndPIS(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 
 	// EVALUATE
 
@@ -1167,27 +1167,27 @@ func TestSendEmails(t *testing.T) {
 
 	roomApproverMap, err := GetApprovalEntityMapping(db)
 
-	// ========= FOB EMAILS ===========
+	// ========= Card EMAILS ===========
 
-	statusMap, err := GetKRForFobTwoWeeks(db)
+	statusMap, err := GetKRForCardTwoWeeks(db)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	keyUpdates := determineAlerts(statusMap, roomApproverMap)
-	summary := sendEmails(keyUpdates, FOB)
+	summary := sendEmails(keyUpdates, Card)
 
 	if summary.Total != 1 {
-		t.Fatalf("expected 1 fob email but got %d", summary.Total)
+		t.Fatalf("expected 1 card email but got %d", summary.Total)
 	}
 
 	if len(summary.Failures) != 0 {
-		t.Fatalf("expected 0 fob email errors but got %d", len(summary.Failures))
+		t.Fatalf("expected 0 card email errors but got %d", len(summary.Failures))
 	}
 
 	if summary.SuccessCount != 1 {
-		t.Fatalf("expected 1 fob email success but got %d", summary.SuccessCount)
+		t.Fatalf("expected 1 card email success but got %d", summary.SuccessCount)
 
 	}
 

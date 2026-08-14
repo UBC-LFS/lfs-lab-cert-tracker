@@ -17,9 +17,9 @@
 
   <div class="dropdown">
     {% if is_room_manager %}
-      <a class="btn dropdown-item" href="{% url 'key_request:manager_dashboard' %}">Key Request</a>
+      <a class="btn dropdown-item" href="{% url 'key_request:manager_dashboard' %}">Key/Card/Alarm Request</a>
     {% else %}
-      <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key Request</a>
+      <a class="btn dropdown-item" href="{% url 'key_request:index' %}">Key/Card/Alarm Request</a>
     {% endif %}
   </div>
 </nav>
