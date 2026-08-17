@@ -25,7 +25,8 @@
 				<th>Room <br /> Number</th>
 	      <th>Areas</th>
 	      <th>Required <br /> Trainings</th>
-				<th>Card Access?</th>
+				<th>Key?</th>
+				<th>Card <br /> Access?</th>
 				<th>Alarm?</th>
 	    </tr>
 	  </thead>
@@ -66,6 +67,7 @@
 	            </div>
 	          </div>
 	        </td>
+					<td>{% include 'key_request/subpages/_yes_or_no.html' with data=room.key %}</td>
 					<td>{% include 'key_request/subpages/_yes_or_no.html' with data=room.card_access %}</td>
 					<td>{% include 'key_request/subpages/_yes_or_no.html' with data=room.alarm %}</td>
 	      </tr>
