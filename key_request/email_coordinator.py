@@ -210,11 +210,11 @@ class ApprovalNotificationManager:
 
     def _make_manager_message(self, manager, room_info):
         """PI email not the operator."""
-        subject = "Notification: Key Request Approval at UBC LFS"
+        subject = "Notification: Request Approval at UBC LFS"
         message = '''\
         <div>
             <p>Hi {0},</p>
-            <div>This email is to notify you that {1} has approved the following key request(s):</div>
+            <div>This email is to notify you that {1} has approved the following request(s):</div>
             {2}
             <div>Please visit <a href="{3}">{3}</a> to check the latest status. Thank you.</div>
             {4}
@@ -230,11 +230,11 @@ class ApprovalNotificationManager:
 
     def _make_operator_message(self, manager, room_info):
         """PI email as the operator (they did the approving)."""
-        subject = "Notification: You Have Approved Key Request(s) at UBC LFS"
+        subject = "Notification: You Have Approved Request(s) at UBC LFS"
         message = '''\
         <div>
             <p>Hi {0},</p>
-            <div>This email is to confirm that you have approved the following key request(s):</div>
+            <div>This email is to confirm that you have approved the following request(s):</div>
             {1}
             <div>Please visit <a href="{2}">{2}</a> to check the latest status. Thank you.</div>
             {3}
@@ -248,13 +248,13 @@ class ApprovalNotificationManager:
         return subject, message
 
     def _make_applicant_message(self, user, room_info):
-        subject = 'Your key request has been approved by UBC LFS'
+        subject = 'Your request has been approved by UBC LFS'
         message = '''\
         <div>
             <p>Hi {0},</p>
-            <div>We are delighted to inform you that your key request has been approved for the following room(s):</div>
+            <div>We are delighted to inform you that your request has been approved for the following room(s):</div>
             {1}
-            <div>Please visit <a href="{2}">{2}</a> to check the status of your key request. Thank you.</div>
+            <div>Please visit <a href="{2}">{2}</a> to check the status of your request. Thank you.</div>
             {3}
         </div>
         '''.format(
@@ -267,11 +267,11 @@ class ApprovalNotificationManager:
 
     def _make_admin_summary_message(self, admin, applicant, room_info):
         """Single summary email to the admin with all approved rooms."""
-        subject = "Notification: Key Request Approval Summary at UBC LFS"
+        subject = "Notification: Request Approval Summary at UBC LFS"
         message = '''\
         <div>
             <p>Hi {0} (TRMS Administrator),</p>
-            <div>This email is a notification that {1}'s key request has been approved for the following room(s):</div>
+            <div>This email is a notification that {1}'s request has been approved for the following room(s):</div>
             {2}
             <div>Please visit <a href="{3}">{3}</a> to check the latest status. Thank you.</div>
             {4}

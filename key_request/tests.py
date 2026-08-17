@@ -45,16 +45,16 @@ class KeyRequestTest(TestCase):
 
     def login(self, username):
         self.client.post(LOGIN_URL, data={'username': username, 'password': 'password'})
-    
+
     def logout(self):
         self.client.get(reverse('accounts:local_logout'))
-    
+
     def messages(self, res):
         return [m.message for m in get_messages(res.wsgi_request)]
-    
+
     def json_messages(self, res):
         return json.loads(res.content.decode('utf-8'))
-    
+
     def test_check_request_forms(self):
         print('\n- Test: check the number of request forms')
         self.login('testadmin')
@@ -69,7 +69,7 @@ class KeyRequestTest(TestCase):
 
         res = self.client.get(reverse('key_request:all_requests'))
         self.assertEqual(res.status_code, 403)
-    
+
     def test_check_all_request_forms_access_failed_user1(self):
         print('\n- Test: check all request forms access failed by user1')
         self.login('testuser1')
@@ -83,7 +83,7 @@ class KeyRequestTest(TestCase):
 
         res = self.client.get(reverse('key_request:manager_dashboard'))
         self.assertEqual(res.status_code, 200)
-    
+
     def test_manager_dashboard_access_admin_failure(self):
         print('\n- Test: manager dashboard access - admin - failture')
         self.login('testadmin')
@@ -97,7 +97,7 @@ class KeyRequestTest(TestCase):
 
         res = self.client.get(reverse('key_request:manager_dashboard'))
         self.assertEqual(res.status_code, 403)
-    
+
 
     def test_request_form_approved_by_manger_success(self):
         print('\n- Test: form approved by a manager - success')
@@ -132,11 +132,11 @@ class KeyRequestTest(TestCase):
                     if item.status == APPROVED:
                         cache[i] = 1
                         break
-        
+
         count = 0
         for c in cache:
             count += c
-        
+
         if count >= form.rooms.count():
             print('send email')
 
@@ -156,7 +156,7 @@ class KeyRequestTest(TestCase):
         self.assertEqual(res.status_code, 302)
         msg = self.messages(res)[0]
         self.assertEqual(msg, 'Error: A status must be selected.')
-    
+
 
     def test_request_form_failure(self):
         print('\n- Test: form failure')
@@ -188,7 +188,7 @@ class KeyRequestTest(TestCase):
         res = self.client.post(reverse('key_request:manager_dashboard'), data=urlencode(data), content_type=ContentType)
         msg = self.messages(res)[0]
         self.assertEqual(msg, 'Success! The status of FNH 3rd - Room 310 has been updated.')
-        
+
         last_status = RequestFormStatus.objects.last()
         self.assertEqual(last_status.form.id, data['form'])
         self.assertEqual(last_status.room.id, data['room'])
@@ -246,7 +246,7 @@ class KeyRequestTest(TestCase):
 
         res = client_user6.post(reverse('key_request:submit_form'), data=urlencode(data), content_type=ContentType)
         msg = self.messages(res)[0]
-        self.assertEqual(msg, "Success! test user6's key request form has been submitted.")
+        self.assertEqual(msg, "Success! test user6's request form has been submitted.")
         client_user6.logout()
 
 
@@ -259,7 +259,7 @@ class KeyRequestTest(TestCase):
         self.assertEqual(res2.status_code, 200)
         self.assertEqual(res2.context['total_forms'], 3)
         client_admin.logout()
-        
+
 
         form = RequestForm.objects.last()
 
@@ -341,7 +341,7 @@ class KeyRequestTest(TestCase):
         self.assertEqual(res4.status_code, 200)
         self.assertEqual(res4.context['total_forms'], 1)
         self.assertEqual(res4.context['num_new_forms'], 1)
-        
+
         client_pi3.logout()
 
         # testps7
@@ -355,7 +355,7 @@ class KeyRequestTest(TestCase):
         self.assertEqual(res5.context['num_new_forms'], 2)
 
         client_pi7.logout()
-        
+
 
 
 

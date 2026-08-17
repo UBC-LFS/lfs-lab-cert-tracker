@@ -120,7 +120,7 @@ class SubmitForm(LoginRequiredMixin, View):
             req_form = form.save()
             if req_form:
 
-                # Add selected rooms to this key request
+                # Add selected rooms to this request
                 req_form.rooms.add( *rooms )
 
                 # Send a confirmation email
@@ -129,10 +129,10 @@ class SubmitForm(LoginRequiredMixin, View):
                 # Delete the selected rooms in the session
                 del request.session['selected_rooms']
 
-                messages.success(request, "Success! {0}'s key request form has been submitted.".format(operator))
+                messages.success(request, "Success! {0}'s request form has been submitted.".format(operator))
                 return redirect('key_request:index')
             else:
-                messages.error(request, "Error! Failed to submit {0}'s key request form for some reason. Please try again.".format(operator))
+                messages.error(request, "Error! Failed to submit {0}'s request form for some reason. Please try again.".format(operator))
         else:
             messages.error(request, 'Error! Form is invalid. {0}'.format(appFunc.get_error_messages(form.errors.get_json_data())))
 
@@ -206,12 +206,12 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
     message = '<div>'
 
     if option == 'user':
-        subject = 'Confirmation of Key Request at UBC LFS'
+        subject = 'Confirmation of Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <p>You have submitted the following key request on {1}.</p>
+            <p>You have submitted the following request on {1}.</p>
             <ul>{2}</ul>
-            <p>Please visit <a href={3}>{3}</a> to check the status of your key request. Thank you.</p>'''.format(
+            <p>Please visit <a href={3}>{3}</a> to check the status of your request. Thank you.</p>'''.format(
                 receiver.get_full_name(),
                 submitted_at,
                 rooms,
@@ -219,12 +219,12 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
             )
 
     elif option == 'pi':
-        subject = 'Notification of Key Request at UBC LFS'
+        subject = 'Notification of Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <p>{1} submitted a key request form on {2}.</p>
+            <p>{1} submitted a request form on {2}.</p>
             <ul>{3}</ul>
-            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s key request form. Thank you.</p>'''.format(
+            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s request form. Thank you.</p>'''.format(
                 receiver.get_full_name(),
                 applicant.get_full_name(),
                 submitted_at,
@@ -233,12 +233,12 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
             )
 
     elif option == 'admin':
-        subject = 'Notification of Key Request at UBC LFS'
+        subject = 'Notification of Request at UBC LFS'
         message += '''\
             <p>Hi {0} (TRMS Administrator),</p>
-            <p>{1} submitted a key request form on {2}.</p>
+            <p>{1} submitted a request form on {2}.</p>
             <ul>{3}</ul>
-            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s key request form. Thank you.</p>'''.format(
+            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s request form. Thank you.</p>'''.format(
                 receiver.get_full_name(),
                 applicant.get_full_name(),
                 submitted_at,

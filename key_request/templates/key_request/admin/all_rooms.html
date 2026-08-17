@@ -22,7 +22,7 @@
             </div>
             <div class="col-md-6">
                 <strong>Note:</strong> Only <strong class="text-success">ACTIVE</strong> rooms will be displayed in the
-                Key Request process.
+                Request process.
             </div>
         </div>
         {% include 'key_request/subpages/search_results.html' with total=num_filtered_rooms items=rooms %}
@@ -129,13 +129,13 @@
 
                         <div class="alert alert-danger font-size-20px" role="alert">
                             <span class="material-symbols-outlined me-1">warning</span>
-                            Warning! This room cannot be deleted because there are key request(s) associated with it.
+                            Warning! This room cannot be deleted because there are request(s) associated with it.
                             <div class="text-secondary">Please mark this room as inactive instead.</div>
                         </div>
 
                         <div class="alert alert-primary d-none" role="alert">
                             <span class="material-symbols-outlined me-1">info</span>
-                            There are no key requests associated with this room.
+                            There are no requests associated with this room.
                         </div>
 
                         <form action="{% url 'key_request:delete_room' %}" method="post">

@@ -29,7 +29,7 @@ class RequestFormProcessor:
         self.number_q = None
         self._init_room_query()
 
-        # Key Request Forms
+        # Request Forms
         self.status_q = None
         self.name_q = None
         self._init_form_query()

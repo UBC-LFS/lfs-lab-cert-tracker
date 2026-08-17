@@ -43,7 +43,7 @@ urlpatterns += [
     path('all-<str:model>/view/', admin_views.Settings.as_view(), name='settings'),
     path('all-<str:model>/edit/', admin_views.EditSetting.as_view(), name='edit_setting'),
     path('all-<str:model>/delete/', admin_views.DeleteSetting.as_view(), name='delete_setting'),
-    
+
     path('add-training-to-room/', admin_views.AddTrainingToRoom.as_view(), name='add_training_to_room'),
     path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room')
 ]
@@ -57,7 +57,7 @@ urlpatterns += [
 ]
 
 
-# Key Request process
+# Request process
 urlpatterns += [
     path('rooms/select/step1/', process_views.SelectRooms.as_view(), name='select_rooms'),
     path('user-trainings/check/step2/', process_views.CheckUserTrainings.as_view(), name='check_user_trainings'),

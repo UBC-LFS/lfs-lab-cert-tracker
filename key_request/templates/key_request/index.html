@@ -10,7 +10,7 @@
 {% include 'key_request/left_side_menu.html' %}
 
 <section class="main-content">
-	<h3 class="title">Key Request</h3>
+	<h3 class="title">Key/Card Access/Alarm Request</h3>
 
 	<div class="bg-prompt mb-5">
 		<div class="prompt text-center p-4 mb-4">
@@ -57,7 +57,7 @@
 				</tr>
 			{% empty %}
 				<tr>
-					<td colspan="100%">No key request forms found</td>
+					<td colspan="100%">No request forms found</td>
 				</tr>
 			{% endfor %}
 		</tbody>
@@ -73,7 +73,7 @@
 
 $(document).ready(function() {
 
-	// Remove the key request data in the session storage
+	// Remove the request data in the session storage
 	if (sessionStorage.getItem('key-request-data')) {
 		sessionStorage.removeItem('key-request-data');
 	}

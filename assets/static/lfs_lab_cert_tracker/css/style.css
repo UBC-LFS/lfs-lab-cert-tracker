@@ -413,7 +413,7 @@ tr.inactive { background-color: rgba(0,0,0,.075); }
   margin-right: -5px;
 }
 
-/* Key Request: Room Group */
+/* Request: Room Group */
 .form-check-input-lg {
   width: 24px !important;
   height: 24px !important;

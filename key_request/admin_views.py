@@ -391,16 +391,12 @@ def send(user, room, email_type, expiry_date):
     return False
 
 
-
-
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @access_pi_admin_key_request
 @require_http_methods(['POST'])
 def update_all(request):
-
     raw_rooms = request.POST.getlist('rooms[]')
-
     status = request.POST.get('status')
     if not raw_rooms:
         raise SuspiciousOperation
@@ -430,18 +426,15 @@ def update_all(request):
 
             rfs.append(rfs_obj)
 
-
         if len(rfs) > 0:
-
             request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
 
             email_coordinator = ApprovalNotificationManager(request_status_forms, status, request.user)
             email_coordinator.send_email_notification()
 
-
-            messages.success(request, 'Success! The number of key request forms ({0}) have been updated.'.format(len(request_status_forms)))
+            messages.success(request, 'Success! The number of request forms ({0}) have been updated.'.format(len(request_status_forms)))
         else:
-            messages.warning(request, 'There are no key request forms to update.')
+            messages.warning(request, 'There are no request forms to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
 
@@ -790,7 +783,7 @@ class EditRoom(LoginRequiredMixin, View):
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
         data, manager_ids, group_ids, area_ids, training_ids = func.create_data_from_session(request.session, EDIT_ROOM_KEY, self.room)
-        
+
         return render(request, 'key_request/admin/edit_room.html', {
             'room': self.room,
             'form': RoomForm(initial=data) if self.tab == 'basic_info' else None,
@@ -942,7 +935,7 @@ def delete_room(request):
             room_filtered.delete()
             messages.success(request, 'Success! Room Number {0} deleted.'.format(room_number))
         except IntegrityError:
-            msg = "Cannot delete {0} {1} {2} as there are associated key requests. ".format(room_building, room_floor, room_number)
+            msg = "Cannot delete {0} {1} {2} as there are associated requests. ".format(room_building, room_floor, room_number)
             msg += format_html('<a href="{0}">Click</a> to see all associated requests.',
                                reverse('key_request:all_requests') + '?building=' + room_building +
                                '&floor=' + room_floor + '&number=' + room_number)
