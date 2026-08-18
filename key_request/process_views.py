@@ -235,7 +235,7 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
     elif option == 'admin':
         subject = 'Notification of Request at UBC LFS'
         message += '''\
-            <p>Hi {0} (TRMS Administrator),</p>
+            <p>Hi {0} (ATRS Administrator),</p>
             <p>{1} submitted a request form on {2}.</p>
             <ul>{3}</ul>
             <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s request form. Thank you.</p>'''.format(
