@@ -326,6 +326,14 @@ class SupervisorRequestFormProcessor(RequestFormProcessor):
 
         return filtered_forms
 
+    def get_total_form_stats(self):
+
+        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms(), supervisor=self.user).aggregate(
+            total_forms=Count('pk', distinct=True),
+            total_new_forms=Count('pk', filter=Q(requestformstatus__isnull=True), distinct=True),
+        )
+        return result['total_forms'], result['total_new_forms']
+
 class ExpiredRequestFormProcessor(RequestFormProcessor):
 
     def _form_matches_filter(self, form):
