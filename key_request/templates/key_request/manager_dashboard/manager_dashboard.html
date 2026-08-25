@@ -94,7 +94,6 @@
                         {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=form status=form.status %}
                     </td>
                 <td>
-                    {% if form.supervisor.id == request.user.id %}
                         {% if form.expiry_date %}
                             <span class="text-chocolate">{{ form.expiry_date|remaining_days|safe }}</span>
                         {% else %}
@@ -115,9 +114,7 @@
                             <input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs"
                                    type="submit" value="Update"/>
                         </form>
-                    {% else %}
-                        N/A
-                    {% endif %}
+
                     </td>
                     <td>
                         <input class="room-checkbox" type="checkbox"
