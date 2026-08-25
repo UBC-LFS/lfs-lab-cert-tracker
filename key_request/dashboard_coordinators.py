@@ -302,7 +302,29 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
         form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.current_manager.id)
         return form
 
+class SupervisorRequestFormProcessor(RequestFormProcessor):
 
+    def get_all_filtered_forms(self):
+
+        rooms = self.get_all_filtered_rooms()
+
+        latest_status_sq = RequestFormStatus.objects.filter(
+            form_id=OuterRef('pk'),
+            room__in=rooms,
+        ).order_by('-created_at').values('status')[:1]
+
+        forms = RequestForm.objects.filter(rooms__in=rooms, supervisor=self.user).distinct().annotate(
+            status=Subquery(latest_status_sq)
+        )
+        filtered_forms = []
+
+        for form in forms:
+            if self._form_matches_filter(form):
+                is_new = False if form.status else True
+                form = self._annotate_form_object(form, None, is_new)
+                filtered_forms.append(form)
+
+        return filtered_forms
 
 class ExpiredRequestFormProcessor(RequestFormProcessor):
 

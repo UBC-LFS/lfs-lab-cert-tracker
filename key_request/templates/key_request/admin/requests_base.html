@@ -2,12 +2,12 @@
 
 <section class="main-content">
 	<h3 class="title">
-		{{ title }} Requests
+		{{ title }}
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h3>
 
-  {% if title == 'All' %}
-  	<div class="row bg-light-gray border px-3 py-4 font-size-sm">
+    {% if title == 'All Requests' %}
+        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
   		<div class="col-md-9" style="border-right: 1px solid #bbb;">
   			{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
   		</div>
@@ -18,10 +18,15 @@
   			</div>
   		</div>
   	</div>
-  {% elif title == 'Expired' %}
+  {% elif title == 'Expired Requests' %}
     <div class="row bg-light-gray border p-4 font-size-sm">
       {% include 'key_request/subpages/search_filters.html' with path='expired_requests' %}
     </div>
+    {% elif title == 'Supervisor Dashboard' %}
+        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+                {% include 'key_request/subpages/search_filters.html' with path='manager_dashboard' %}
+
+        </div>
   {% endif %}
 
 	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
@@ -32,14 +37,14 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
-        <th>Supervisor</th>
+         <th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted <br /> Date</th>
-				<th>Expiry <br /> Date</th>
-        {% if title == 'All' %}
-          <th>Action</th>
-        {% endif %}
+          <th>Expiry <br /> Date</th>
+            {% if show_actions_col %}
+                <th>Action</th>
+            {% endif %}
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -81,9 +86,9 @@
                 <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
               {% endif %}
             </td>
-          {% if title == 'All' %}
+          {% if show_actions_col %}
   	        <td>
-  	          <a class="d-block" href="{% url 'key_request:view_form_details' form_id=form.id %}?t=selected_rooms&next={{ request.get_full_path }}">Details</a>
+  	          <a class="d-block" href="{{ form.details_url }}">Details</a>
   	        </td>
           {% endif %}
 	      </tr>
