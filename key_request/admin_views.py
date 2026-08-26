@@ -34,7 +34,7 @@ from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .dashboard_coordinators import DashboardCoordinator, RequestFormProcessor, ExpiredRequestFormProcessor
+from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ExpiredRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
 GROUPS_PER_PAGE = 10
@@ -98,7 +98,7 @@ class RequestView(LoginRequiredMixin, View):
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class AllRequests(RequestView):
-    processor_classes = [RequestFormProcessor]
+    processor_classes = [AdminRequestFormProcessor]
     template_name = 'key_request/admin/all_requests.html'
     title = 'All Requests'
 

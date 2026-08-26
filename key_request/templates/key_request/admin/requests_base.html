@@ -70,11 +70,27 @@
               {% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
             </td>
 	        <td>
-						{% if form.is_new %}
-              <span class="badge">NEW</span>
-						{% else %}
-              {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
-						{% endif %}
+            {% if form.is_new %}
+                <span class="badge">NEW</span>
+            {% elif form.status_stats %}
+                {% if form.status_stats.total_declined > 0 or form.status_stats.total_insufficient > 0 %}
+                    {% if form.status_stats.total_declined > 0 %}
+                        <div><span class="badge badge-danger">DECLINED</span></div>
+                    {% endif %}
+                    {% if form.status_stats.total_insufficient > 0 %}
+                        <div><span class="badge badge-warning">INSUFFICIENT</span></div>
+                    {% endif %}
+                {% elif form.status_stats.total_approved == form.status_stats.total_approvers %}
+                    <span class="badge badge-success">APPROVED</span>
+                {% else  %}
+                    <span class="badge badge-secondary">PENDING {{ form.status_stats.total_approved }}/{{ form.status_stats.total_approvers }}</span>
+                {% endif %}
+                    <hr/>
+            {% endif %}
+
+                {% if not form.is_new %}
+                    {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+                {% endif %}
 	        </td>
           <td>
             {% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}

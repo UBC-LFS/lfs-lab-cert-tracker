@@ -4,8 +4,7 @@ from django.db.models import Q, Count, OuterRef, Subquery, Exists
 from key_request.functions import has_date_passed, make_request_form_identifier, all_pis_approved
 from django.utils import timezone
 
-from key_request.utils import REV_REQUEST_STATUS_DICT, APPROVED
-
+from key_request.utils import REV_REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
 
 class RequestFormProcessor:
     user = None
@@ -18,9 +17,6 @@ class RequestFormProcessor:
     def __init__(self, query, user):
         self.query = query
         self.user = user
-
-        self.label = "Form"
-        self.priority = 0
 
         # Query items
         # Rooms
@@ -46,37 +42,21 @@ class RequestFormProcessor:
 
         return filtered_rooms
 
-    def get_all_filtered_forms(self):
-
-        rooms = self.get_all_filtered_rooms()
-
-        latest_status_sq = RequestFormStatus.objects.filter(
-            form_id=OuterRef('pk'),
-            room__in=rooms,
-        ).order_by('-created_at').values('status')[:1]
-
-        forms = RequestForm.objects.filter(rooms__in=rooms).distinct().annotate(
-            status=Subquery(latest_status_sq)
-        )
-        filtered_forms = []
-
-        for form in forms:
-            if self._form_matches_filter(form):
-                is_new = False if form.status else True
-                form = self._annotate_form_object(form, None, is_new)
-                filtered_forms.append(form)
-
-        return filtered_forms
-
     def get_total_form_stats(self):
+        raise NotImplementedError
 
-        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms()).aggregate(
-            total_forms=Count('pk', distinct=True),
-            total_new_forms=Count('pk', filter=Q(requestformstatus__isnull=True), distinct=True),
-        )
-        return result['total_forms'], result['total_new_forms']
+   # === Abstract methods ===
 
-   # === Private methods ===
+    # status depends on scope so very little shared logic
+
+    def get_all_filtered_forms(self):
+        raise NotImplementedError
+
+    def _validate_form_status(self, form):
+        raise NotImplementedError
+
+
+    # === Private methods ===
 
     def _init_room_query(self):
         if not self.query:
@@ -96,19 +76,6 @@ class RequestFormProcessor:
         if self.name_q:
             self.name_q = self.name_q.lower()
 
-    def _validate_form_status(self, status):
-        if not self.status_q:
-            return True
-
-        if not status:
-            return self.status_q == "New"
-
-
-        if self.status_q in REV_REQUEST_STATUS_DICT.keys():
-            return status == REV_REQUEST_STATUS_DICT.get(self.status_q)
-
-        return False
-
     def _validate_name(self, user):
         if not self.name_q:
             return True
@@ -118,14 +85,157 @@ class RequestFormProcessor:
         return self.name_q in fullname
 
     def _form_matches_filter(self, form):
-        return self._validate_form_status(form.status) and self._validate_name(form.user)
+        return self._validate_form_status(form) and self._validate_name(form.user)
 
-    def _annotate_form_object(self, form, room, is_new):
-        form.is_new = is_new
-        form.label = self.label
-        form.priority = self.priority
-        form.room = room
-        return form
+class AdminRequestFormProcessor(RequestFormProcessor):
+
+    def __init__(self, query, user):
+        super().__init__(query, user)
+
+        self.request_scope_filters = {}
+
+    def get_all_filtered_forms(self):
+        rooms = self.get_all_filtered_rooms()
+
+        forms = RequestForm.objects.filter(rooms__in=rooms, **self.request_scope_filters).distinct()
+
+        filtered_forms = []
+
+        for form in forms:
+            # need the stats to determine if the status filter matches
+            form.status_stats = self._add_overall_status_stats(form)
+            form.is_new = form.status_stats['total_new'] == form.status_stats['total_approvers']
+            if self._form_matches_filter(form):
+                filtered_forms.append(form)
+
+        return filtered_forms
+
+    def get_total_form_stats(self):
+        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms(), **self.request_scope_filters).aggregate(
+            total_forms=Count('pk', distinct=True),
+            total_new_forms=Count('pk', filter=Q(requestformstatus__isnull=True), distinct=True),
+        )
+        return result['total_forms'], result['total_new_forms']
+
+    def _validate_form_status(self, form):
+
+        if not self.status_q:
+            # no status query
+            return True
+
+        if form.is_new:
+            # no status means new
+            return self.status_q == "New"
+
+        status = REV_REQUEST_STATUS_DICT.get(self.status_q, -1)
+
+        if status == APPROVED:
+            return form.status_stats['total_approved'] == form.status_stats['total_approvers']
+        elif status == DECLINED:
+            return form.status_stats['total_declined'] > 0
+        elif status == INSUFFICIENT:
+            return form.status_stats['total_insufficient'] > 0
+        else:
+            return False
+
+    def _add_overall_status_stats(self, form):
+
+        total_approved = 0
+        total_approvers = 0
+        total_new = 0
+        total_declined = 0
+        total_insufficient = 0
+
+        total_rooms_approved = 0
+
+        for room in form.rooms.all():
+            is_room_approved = True
+
+            if not room.managers.exists() and not room.groups.exists():
+                continue
+
+            # Managers: ALL approve
+            manager_ids = room.managers.all().values_list("id", flat=True)
+            num_managers = len(manager_ids)
+            total_approvers += num_managers
+
+            if num_managers > 0:
+                latest_status = RequestFormStatus.objects.filter(
+                    form_id=form.id,
+                    room_id=room.id,
+                    manager_id=OuterRef("pk")
+                ).order_by('-created_at')
+
+                managers_with_status = (User.objects.filter(id__in=manager_ids).annotate(
+                    latest_status=Subquery(latest_status.values('status')[:1])
+                ))
+
+                counts = managers_with_status.aggregate(
+                    approved_count=Count('id', filter=Q(latest_status=APPROVED)),
+                    declined_count=Count('id', filter=Q(latest_status=DECLINED)),
+                    insufficient_count=Count('id', filter=Q(latest_status=INSUFFICIENT))
+                )
+
+                total_approved += counts['approved_count']
+                total_declined += counts['declined_count']
+                total_insufficient += counts['insufficient_count']
+                total_new += (num_managers - (counts['approved_count'] + counts['declined_count'] + counts['insufficient_count']))
+
+                if num_managers != counts['approved_count']:
+                    is_room_approved = False
+
+            # Groups: at least one approve
+            for group in room.groups.all():
+                total_approvers += 1
+
+                latest_status = RequestFormStatus.objects.filter(
+                    form_id=form.id,
+                    room_id=room.id,
+                    group_id=group.id
+                ).order_by('-created_at').first()
+
+                if latest_status is None:
+                    total_new += 1
+                    is_room_approved = False
+                elif latest_status.status == APPROVED:
+                    total_approved += 1
+                elif latest_status.status == DECLINED:
+                    total_declined += 1
+                    is_room_approved = False
+                elif latest_status.status == INSUFFICIENT:
+                    total_insufficient += 1
+                    is_room_approved = False
+
+            if is_room_approved:
+                total_rooms_approved += 1
+
+        return {
+            'total_rooms': form.rooms.count(),
+            'total_rooms_approved': total_rooms_approved,
+            'total_approved': total_approved,
+            'total_approvers': total_approvers,
+            'total_declined': total_declined,
+            'total_insufficient': total_insufficient,
+            'total_new': total_new
+        }
+
+class SupervisorRequestFormProcessor(AdminRequestFormProcessor):
+
+    def __init__(self, query, user):
+        super().__init__(query, user)
+
+        self.request_scope_filters = {
+            "supervisor": self.user
+        }
+
+class ExpiredRequestFormProcessor(AdminRequestFormProcessor):
+    def __init__(self, query, user):
+        super().__init__(query, user)
+
+        self.request_scope_filters = {
+            "expiry_date__lt": timezone.now(),
+        }
+
 
 class ApplicantRequestFormProcessor:
 
@@ -213,8 +323,27 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         """Children override this to set self.manager, self.group, etc."""
         pass
 
+    def _validate_form_status(self, form):
+        status = form.status
+
+        if not self.status_q:
+            return True
+
+        if not status:
+            return self.status_q == "New"
+
+
+        if self.status_q in REV_REQUEST_STATUS_DICT.keys():
+            return status == REV_REQUEST_STATUS_DICT.get(self.status_q)
+
+        return False
+
     def _annotate_form_object(self, form, room, is_new):
-        super()._annotate_form_object(form, room, is_new)
+        form.is_new = is_new
+        form.room = room
+        form.priority = self.priority
+        form.label = self.label
+
         form.manager = None
         form.group = None
         return form
@@ -302,51 +431,6 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
         form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.current_manager.id)
         return form
 
-class SupervisorRequestFormProcessor(RequestFormProcessor):
-
-    def get_all_filtered_forms(self):
-
-        rooms = self.get_all_filtered_rooms()
-
-        latest_status_sq = RequestFormStatus.objects.filter(
-            form_id=OuterRef('pk'),
-            room__in=rooms,
-        ).order_by('-created_at').values('status')[:1]
-
-        forms = RequestForm.objects.filter(rooms__in=rooms, supervisor=self.user).distinct().annotate(
-            status=Subquery(latest_status_sq)
-        )
-        filtered_forms = []
-
-        for form in forms:
-            if self._form_matches_filter(form):
-                is_new = False if form.status else True
-                form = self._annotate_form_object(form, None, is_new)
-                filtered_forms.append(form)
-
-        return filtered_forms
-
-    def get_total_form_stats(self):
-
-        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms(), supervisor=self.user).aggregate(
-            total_forms=Count('pk', distinct=True),
-            total_new_forms=Count('pk', filter=Q(requestformstatus__isnull=True), distinct=True),
-        )
-        return result['total_forms'], result['total_new_forms']
-
-class ExpiredRequestFormProcessor(RequestFormProcessor):
-
-    def _form_matches_filter(self, form):
-        return has_date_passed(form.expiry_date) and super()._form_matches_filter(form)
-
-    def get_total_form_stats(self):
-
-        result = RequestForm.objects.filter(rooms__in=self.get_all_rooms(), expiry_date__lt=timezone.now()).aggregate(
-            total_forms=Count('pk', distinct=True),
-            total_new_forms=Count('pk', filter=Q(requestformstatus__isnull=True), distinct=True),
-        )
-        return result['total_forms'], result['total_new_forms']
-
 class DashboardCoordinator:
 
     def __init__(self, user, query, processor_classes=None):
@@ -375,7 +459,12 @@ class DashboardCoordinator:
             self.num_total_forms += total_forms
             self.num_new_forms += new_forms
 
-        self.forms = sorted(self.forms, key=lambda x: (x.submitted_at, x.priority), reverse=True)
+        self.forms = sorted(
+            self.forms,
+            key=lambda x: (x.submitted_at, getattr(x, "priority", 0) or 0),
+            reverse=True
+        )
+
         for i, form in enumerate(self.forms):
             form.counter = len(self.forms) - i
 
