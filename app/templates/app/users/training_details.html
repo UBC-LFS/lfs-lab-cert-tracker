@@ -51,7 +51,7 @@
 							{% if latest_user_cert.by_api %}
 								{{ latest_user_cert.cert.name }}
 							{% else %}
-								<a href="/app{{ latest_user_cert.cert_file.url }}" target="_blank">{{ latest_user_cert.cert.name }}</a>
+								<a href="/app{{ latest_user_cert.cert_file.url }}/download/" target="_blank">{{ latest_user_cert.cert.name }}</a>
 								<br />
 								<small class="text-secondary">Filename: {{ latest_user_cert.filename }}</small>
 							{% endif %}
