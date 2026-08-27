@@ -97,14 +97,15 @@ class AdminRequestFormProcessor(RequestFormProcessor):
     def get_all_filtered_forms(self):
         rooms = self.get_all_filtered_rooms()
 
-        forms = RequestForm.objects.filter(rooms__in=rooms, **self.request_scope_filters).distinct()
+        forms = RequestForm.objects.filter(rooms__in=rooms, **self.request_scope_filters).distinct().annotate(
+            is_new=Q(requestformstatus__isnull=True)
+        )
 
         filtered_forms = []
 
         for form in forms:
             # need the stats to determine if the status filter matches
             form.status_stats = self._add_overall_status_stats(form)
-            form.is_new = form.status_stats['total_new'] == form.status_stats['total_approvers']
             if self._form_matches_filter(form):
                 filtered_forms.append(form)
 
@@ -235,7 +236,6 @@ class ExpiredRequestFormProcessor(AdminRequestFormProcessor):
         self.request_scope_filters = {
             "expiry_date__lt": timezone.now(),
         }
-
 
 class ApplicantRequestFormProcessor:
 
