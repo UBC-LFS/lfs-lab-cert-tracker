@@ -7,3 +7,12 @@ def is_room_manager(request):
     return {
         'is_room_manager': exists
     }
+
+def is_request_supervisor(request):
+    exists = False
+    if request.user.is_authenticated:
+        exists = func.is_request_supervisor(request.user.id)
+
+    return {
+        'is_request_supervisor': exists
+    }

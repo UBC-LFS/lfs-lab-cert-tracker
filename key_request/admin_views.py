@@ -23,7 +23,7 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 
 from lfs_lab_cert_tracker.models import Lab, Cert
-from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request
+from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request, access_supervisor_admin_request
 from app import functions as appFunc
 from app.utils import NUM_PER_PAGE
 from .email_coordinator import ApprovalNotificationManager
@@ -34,19 +34,22 @@ from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .dashboard_coordinators import DashboardCoordinator, RequestFormProcessor, ExpiredRequestFormProcessor
+from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ExpiredRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
 GROUPS_PER_PAGE = 10
+@method_decorator([never_cache], name='dispatch')
+class RequestView(LoginRequiredMixin, View):
+    processor_classes = []
+    template_name = ''
+    title = "Requests"
+    show_actions_col = True
+    details_url_name = 'key_request:view_form_details'
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class AllRequests(LoginRequiredMixin, View):
+    def setup(self, request, *args, **kwargs):
+        setup = super().setup(request, *args, **kwargs)
 
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        method = request.GET.get('method', None)
-
-        query = {
+        self.query = {
             'building': request.GET.get('building'),
             'floor': request.GET.get('floor'),
             'number': request.GET.get('number'),
@@ -55,25 +58,11 @@ class AllRequests(LoginRequiredMixin, View):
             'status': request.GET.get('status')
         }
 
-        if method == 'save':
-            user_filter = UserFilter.objects.filter(user_id=request.user.id)
-            if user_filter.exists():
-                user_filter.update(json = query)
-                messages.success(request, 'Your filter has been updated successfully.')
-            else:
-                UserFilter.objects.create(user=request.user, json=query)
-                messages.success(request, 'Your filter has been saved successfully.')
+        return setup
 
-            # Create a new url
-            query_params = request.GET.copy()
-            query_params.pop('method', None)
-            encoded_params = query_params.urlencode()
-            base_url = request.path
-            new_url = f"{base_url}?{encoded_params}" if encoded_params else base_url
-
-            return redirect(new_url)
-
-        coordinator = DashboardCoordinator(request.user, query, [RequestFormProcessor])
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        coordinator = DashboardCoordinator(request.user, self.query, self.processor_classes)
         coordinator.run()
 
         form_list = coordinator.get_forms()
@@ -93,16 +82,51 @@ class AllRequests(LoginRequiredMixin, View):
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
+            form.details_url = reverse(self.details_url_name, args=[form.id]) + f'?t=selected_rooms&next={request.get_full_path()}'
 
-        return render(request, 'key_request/admin/all_requests.html', {
+        return render(request, self.template_name, {
             'total_forms': coordinator.get_total_forms(),
             'num_filtered_forms': coordinator.get_num_filtered_forms(),
             'forms': forms,
             'num_new_forms': coordinator.get_num_new_forms(),
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
-            'is_admin': True if request.user.is_superuser else False
+            'is_admin': True if request.user.is_superuser else False,
+            'title': self.title,
+            'show_actions_col': self.show_actions_col,
         })
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class AllRequests(RequestView):
+    processor_classes = [AdminRequestFormProcessor]
+    template_name = 'key_request/admin/all_requests.html'
+    title = 'All Requests'
+
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        method = request.GET.get('method', None)
+
+        if method == 'save':
+            user_filter = UserFilter.objects.filter(user_id=request.user.id)
+            if user_filter.exists():
+                user_filter.update(json = self.query)
+                messages.success(request, 'Your filter has been updated successfully.')
+            else:
+                UserFilter.objects.create(user=request.user, json=self.query)
+                messages.success(request, 'Your filter has been saved successfully.')
+
+            # Create a new url
+            query_params = request.GET.copy()
+            query_params.pop('method', None)
+            encoded_params = query_params.urlencode()
+            base_url = request.path
+            new_url = f"{base_url}?{encoded_params}" if encoded_params else base_url
+
+            return redirect(new_url)
+
+        return super().get(request, *args, **kwargs)
+
+
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
@@ -120,46 +144,17 @@ class AllRequests(LoginRequiredMixin, View):
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
-class ExpiredRequests(LoginRequiredMixin, View):
-
-    @method_decorator(require_GET)
-    def get(self, request, *args, **kwargs):
-        query = {
-            'building': request.GET.get('building'),
-            'floor': request.GET.get('floor'),
-            'number': request.GET.get('number'),
-            'room': request.GET.get('room'),
-            'name': request.GET.get('name'),
-            'status': request.GET.get('status')
-        }
-
-        coordinator = DashboardCoordinator(request.user, query, [ExpiredRequestFormProcessor])
-        coordinator.run()
-
-        form_list = coordinator.get_forms()
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(form_list, NUM_PER_PAGE)
-
-        try:
-            forms = paginator.page(page)
-        except PageNotAnInteger:
-            forms = paginator.page(1)
-        except EmptyPage:
-            forms = paginator.page(paginator.num_pages)
-
-        return render(request, 'key_request/admin/expired_requests.html', {
-            'total_forms': coordinator.get_total_forms(),
-            'num_filtered_forms': coordinator.get_num_filtered_forms(),
-            'forms': forms,
-            'req_status_dict': REQUEST_STATUS_DICT,
-            'search_filter_options': func.search_filter_options,
-            'is_admin': True if request.user.is_superuser else False
-        })
+class ExpiredRequests(RequestView):
+    processor_classes = [ExpiredRequestFormProcessor]
+    template_name = 'key_request/admin/expired_requests.html'
+    title = 'Expired Requests'
+    show_actions_col = False
 
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
+@method_decorator([never_cache, access_supervisor_admin_request], name='dispatch')
 class ViewFormDetails(LoginRequiredMixin, View):
+    back_label = 'All Requests'
+    show_email_tab = True
 
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
@@ -220,7 +215,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
         items = sorted(items, key=lambda x: (x['priority'], x['sorting_key']), reverse=False)
         self.form.all_approved = all_approved
 
-        return render(request, 'key_request/admin/view_form_details.html', {
+        return render(request, 'key_request/admin/form_details_base.html', {
             'form': self.form,
             'rooms': list(rooms),
             'items': items,
@@ -233,7 +228,9 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 'emails': self.url + '?t=emails&next=' + self.next
             },
             'tab': self.tab,
-            'next': self.next
+            'next': self.next,
+            'show_email_tab': self.show_email_tab,
+            'back_label': self.back_label,
         })
 
     def _create_item_with_entity_status(self, room, areas, entity_label, entities, priority):

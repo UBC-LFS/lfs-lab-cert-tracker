@@ -29,6 +29,11 @@ def get_headers(model):
     headers.append('Actions')
     return headers
 
+def is_request_supervisor(user_id):
+    if RequestForm.objects.count() == 0:
+        return False
+
+    return RequestForm.objects.filter(supervisor_id=user_id).exists()
 
 def is_room_approver(user_id):
     if Room.objects.count() == 0:
