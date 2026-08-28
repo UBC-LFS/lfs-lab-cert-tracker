@@ -153,7 +153,11 @@ class AdminRequestFormProcessor(RequestFormProcessor):
             is_room_approved = True
 
             if not room.managers.exists() and not room.groups.exists():
+                # Although there is no approver, this room cannot be approved
+                # We add a ghost approver, which represents the admin
+                total_approvers += 1
                 continue
+
 
             # Managers: ALL approve
             manager_ids = room.managers.all().values_list("id", flat=True)
