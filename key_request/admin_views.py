@@ -34,10 +34,13 @@ from .models import Room, UserFilter, RoomEmail
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ExpiredRequestFormProcessor
+from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ExpiredRequestFormProcessor, ArchivedRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
+
 GROUPS_PER_PAGE = 10
+
+
 @method_decorator([never_cache], name='dispatch')
 class RequestView(LoginRequiredMixin, View):
     processor_classes = []
@@ -126,8 +129,6 @@ class AllRequests(RequestView):
 
         return super().get(request, *args, **kwargs)
 
-
-
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         form_id = request.POST.get('form')
@@ -149,6 +150,26 @@ class ExpiredRequests(RequestView):
     template_name = 'key_request/admin/expired_requests.html'
     title = 'Expired Requests'
     show_actions_col = False
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class ArchivedRequests(RequestView):
+    processor_classes = [ArchivedRequestFormProcessor]
+    template_name = 'key_request/admin/archived_requests.html'
+    title = 'Archived Requests'
+    show_actions_col = True
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
+        form_id = request.POST.get('form_id')
+        form_archive = request.POST.get('form_archive')
+        if not form_id or not form_archive:
+            raise SuspiciousOperation
+        
+        is_archived = True if form_archive == 'archive' else False
+        RequestForm.objects.filter(id=form_id).update(is_archived=is_archived)
+        messages.success(request, 'The Request Form (ID: {0} has been archived successfully.'.format(form_id))
+        return HttpResponseRedirect(request.POST.get('next'))
 
 
 @method_decorator([never_cache, access_supervisor_admin_request], name='dispatch')

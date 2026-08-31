@@ -92,7 +92,9 @@ class AdminRequestFormProcessor(RequestFormProcessor):
     def __init__(self, query, user):
         super().__init__(query, user)
 
-        self.request_scope_filters = {}
+        self.request_scope_filters = {
+            "is_archived": False
+        }
 
     def get_all_filtered_forms(self):
         rooms = self.get_all_filtered_rooms()
@@ -238,7 +240,16 @@ class ExpiredRequestFormProcessor(AdminRequestFormProcessor):
         super().__init__(query, user)
 
         self.request_scope_filters = {
+            "is_archived": False,
             "expiry_date__lt": timezone.now(),
+        }
+
+class ArchivedRequestFormProcessor(AdminRequestFormProcessor):
+    def __init__(self, query, user):
+        super().__init__(query, user)
+
+        self.request_scope_filters = {
+            "is_archived": True,
         }
 
 class ApplicantRequestFormProcessor:

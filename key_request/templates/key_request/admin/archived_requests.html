@@ -1,0 +1,14 @@
+{% extends "lfs_lab_cert_tracker/base.html" %}
+
+{% block top_menu_nav %}
+	{% include "lfs_lab_cert_tracker/subpages/top_menu.html" %}
+	{% include 'app/subpages/return_message.html' with data=messages %}
+{% endblock %}
+
+{% block content %}
+
+{% include 'key_request/left_side_menu.html' %}
+
+{% include 'key_request/admin/requests_base.html' %}
+
+{% endblock %}

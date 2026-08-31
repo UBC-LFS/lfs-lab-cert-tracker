@@ -7,7 +7,7 @@
             <li class="mb-1">
                 {% concat_strings room.id manager.id as args %}
                 {% if form and form.id|get_status_by_manager:args %}
-                    <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+                    <span class="font-weight-semibold text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
                 {% else %}
                     <span>{{ manager.get_full_name }}</span>
                 {% endif %}
@@ -23,7 +23,7 @@
             <li class="mb-1">
                 {% concat_strings room.id group.id as args %}
                 {% if form and form.id|get_status_by_group:args %}
-                    <span class="font-weight-600 text-{% if form.id|get_status_by_group:args == 'Approved' %}success{% elif form.id|get_status_by_group:args == 'Declined' %}danger{% elif form.id|get_status_by_group:args == 'Insufficient Info' %}orange{% endif %}">{{ group.name }}</span>
+                    <span class="font-weight-semibold text-{% if form.id|get_status_by_group:args == 'Approved' %}success{% elif form.id|get_status_by_group:args == 'Declined' %}danger{% elif form.id|get_status_by_group:args == 'Insufficient Info' %}orange{% endif %}">{{ group.name }}</span>
                 {% else %}
                     <span>{{ group.name }}</span>
                 {% endif %}

@@ -37,14 +37,14 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
-         <th>Supervisor</th>
+        <th>Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted <br /> Date</th>
-          <th>Expiry <br /> Date</th>
-            {% if show_actions_col %}
-                <th>Action</th>
-            {% endif %}
+        <th>Expiry <br /> Date</th>
+        {% if show_actions_col %}
+          <th>Action</th>
+        {% endif %}
 	    </tr>
 	  </thead>
 	  <tbody>
@@ -71,26 +71,27 @@
             </td>
 	        <td>
             {% if form.is_new %}
-                <span class="badge">NEW</span>
-            {% elif form.status_stats %}
-                {% if form.status_stats.total_declined > 0 or form.status_stats.total_insufficient > 0 %}
-                    {% if form.status_stats.total_declined > 0 %}
-                        <div><span class="badge badge-danger">DECLINED</span></div>
-                    {% endif %}
-                    {% if form.status_stats.total_insufficient > 0 %}
-                        <div><span class="badge badge-warning">INSUFFICIENT</span></div>
-                    {% endif %}
-                {% elif form.status_stats.total_approved == form.status_stats.total_approvers %}
-                    <span class="badge badge-success">APPROVED</span>
-                {% else  %}
-                    <span class="badge badge-secondary">PENDING {{ form.status_stats.total_approved }}/{{ form.status_stats.total_approvers }}</span>
+              <span class="badge">NEW</span>
+
+						{% elif form.status_stats %}
+              {% if form.status_stats.total_declined > 0 or form.status_stats.total_insufficient > 0 %}
+                {% if form.status_stats.total_declined > 0 %}
+                  <div><span class="badge badge-danger">DECLINED</span></div>
                 {% endif %}
-                    <hr/>
+                {% if form.status_stats.total_insufficient > 0 %}
+                  <div><span class="badge badge-warning">INSUFFICIENT</span></div>
+                {% endif %}
+              {% elif form.status_stats.total_approved == form.status_stats.total_approvers %}
+                <span class="badge badge-success">APPROVED</span>
+              {% else  %}
+                <span class="badge badge-secondary">PENDING {{ form.status_stats.total_approved }}/{{ form.status_stats.total_approvers }}</span>
+              {% endif %}
+                <hr/>
             {% endif %}
 
-                {% if not form.is_new %}
-                    {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
-                {% endif %}
+            {% if not form.is_new %}
+              {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+            {% endif %}
 	        </td>
           <td>
             {% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
@@ -104,7 +105,86 @@
             </td>
           {% if show_actions_col %}
   	        <td>
-  	          <a class="d-block" href="{{ form.details_url }}">Details</a>
+							{% if title == 'All Requests' %}
+  	          	<a class="d-block" href="{{ form.details_url }}">Details</a>
+							{% endif %}
+
+							<button class="btn btn-warning btn-xs fs-xs btn-sm mt-2" type="button" data-toggle="modal" data-target="#form-archive-modal-{{ form.id }}">
+								{% if title == 'All Requests' %}
+									Archive
+								{% else %}
+									Unarchive
+								{% endif %}
+							</button>
+
+							<div class="modal fade" id="form-archive-modal-{{ form.id }}" tabindex="-1" role="dialog" aria-labelledby="form-archive-modal-label-{{ form.id }}" aria-hidden="true">
+							  <div class="modal-dialog" role="document">
+							    <div class="modal-content">
+							      <div class="modal-header">
+							        <h5 class="modal-title text-info" id="form-archive-modal-label-{{ form.id }}">Archive Request Form</h5>
+							        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							      </div>
+							      <div class="modal-body text-left">
+											<strong class="text-primary mb-2">INFORMATION</strong>
+
+											<ul class="list-minus-20">
+												<li>
+													<span class="font-weight-semibold">Request Form ID:</span> {{ form.id }}
+												</li>
+												<li>
+													<span class="font-weight-semibold">Full Name:</span> {{ form.user.get_full_name }}
+												</li>
+												<li>
+													<span class="font-weight-semibold">Building & Room Info:</span>
+
+													{% for room in form.rooms.all %}
+														{% if room.is_active %}
+															{{ room|display_room }}
+														{% else %}
+															<s>{{ room|display_room }}</s>
+														{% endif %}
+														{% if not forloop.last %}, {% endif %}
+													{% endfor %}
+												 </li>
+												 <li>
+													 <span class="font-weight-semibold">Supervisor:</span>
+													 {{ form.supervisor.get_full_name }}
+												 </li>
+												 <li>
+													 <span class="font-weight-semibold">Submitted Date:</span>
+													 {{ form.submitted_at }}
+												 </li>
+											</ul>
+
+											<h5 class="mt-3">
+												Are you sure you want to
+												<span class="text-chocolate">
+													{% if title == 'All Requests' %}
+														archive
+													{% else %}
+														unarchive
+													{% endif %}
+												</span>
+												this request form?
+											</h5>
+
+											<form action="{% url 'key_request:archived_requests' %}" method="POST">
+												{% csrf_token %}
+
+												<input type="hidden" name="form_id" value="{{ form.id }}" />
+												<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+												{% if title == 'All Requests' %}
+													<button class="btn btn-warning" type="submit" name="form_archive" value="archive">Archive</button>
+												{% else %}
+													<button class="btn btn-warning" type="submit" name="form_archive" value="unarchive">Unarchive</button>
+												{% endif %}
+											</form>
+
+							      </div>
+							    </div>
+							  </div>
+							</div>
   	        </td>
           {% endif %}
 	      </tr>

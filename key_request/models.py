@@ -126,6 +126,7 @@ class RequestForm(models.Model):
     after_hours_access = models.CharField(max_length=1, choices=AFTER_HOURS_ACCESS, default=None)
     working_alone = models.BooleanField(default=False)
     comment = models.TextField(null=True, blank=True)
+    is_archived = models.BooleanField(default=False)
 
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
