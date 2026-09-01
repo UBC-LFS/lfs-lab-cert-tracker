@@ -36,9 +36,7 @@ def is_request_supervisor(user_id):
     return RequestForm.objects.filter(supervisor_id=user_id).exists()
 
 def is_room_approver(user_id):
-    if Room.objects.count() == 0:
-        return False
-    return Room.objects.filter(Q(managers__id=user_id) | Q(groups__roles__user_id=user_id)).exists()
+    return Room.objects.filter(Q(managers__id=user_id) | Q(groups__roles__user_id=user_id)).exists() or is_request_supervisor(user_id)
 
 def is_approval_group_coordinator(user_id):
     if ApprovalGroup.objects.count() == 0:
@@ -126,8 +124,14 @@ def check_user_trainings(user, selected_rooms):
     return sorted(required_trainings, key=lambda x: x.name, reverse=False), total_missing, total_expired
 
 
-def make_request_form_identifier(room, form, entity_label, entity_id):
-    return f"{entity_label}:{entity_id}__{form.id}:{room.id}"
+def make_request_form_identifier(room, form, entity_label, entity_id, supervisor_type=None):
+    return json.dumps({
+        'entity_label': entity_label,
+        'entity_id': entity_id,
+        'form_id': form.id,
+        'room_id': room.id,
+        'supervisor_type': supervisor_type,
+    })
 
 
 # Returns True if all PIs have approved a room; If there are no managers or groups, returns False
@@ -140,11 +144,22 @@ def all_pis_approved(form, room):
     manager_ids = room.managers.all().values_list("id", flat=True)
     num_managers = len(manager_ids)
 
+    if form.supervisor:
+        latest_status = RequestFormStatus.objects.filter(
+            form_id=form.id,
+            room_id=room.id,
+            manager_id=form.supervisor.id,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value
+        ).order_by('-created_at').first()
+        if latest_status is None or latest_status.status != APPROVED:
+            return False
+
     if num_managers > 0:
         latest_status = RequestFormStatus.objects.filter(
             form_id=form.id,
             room_id=room.id,
-            manager_id=OuterRef("pk")
+            manager_id=OuterRef("pk"),
+            supervisor_type=RequestFormStatus.SupervisorType.ROOM.value
         ).order_by('-created_at')
 
         managers_with_status = (User.objects.filter(id__in=manager_ids).annotate(
@@ -168,6 +183,30 @@ def all_pis_approved(form, room):
             return False
 
     return True
+
+def create_and_process_request_form_identifier(identifier, operator, status):
+    entity_label = identifier.get('entity_label')
+    entity_id = identifier.get('entity_id')
+    form_id = identifier.get('form_id')
+    room_id = identifier.get('room_id')
+    supervisor_type = identifier.get('supervisor_type')
+
+    # TODO: fix so only supervisor_id [need to change model]
+    supervisor_id = entity_id if entity_label == 'supervisor_id' or entity_label == 'manager_id' else None
+    group_id = entity_id if entity_label == 'group_id' else None
+
+    if not form_id or not room_id or (not supervisor_id and not group_id):
+        return None
+
+    return RequestFormStatus(
+        form_id=form_id,
+        room_id=room_id,
+        manager_id=supervisor_id,
+        supervisor_type=supervisor_type if supervisor_id else None,
+        group_id=group_id,
+        operator_id=operator.id,
+        status=status,
+    )
 
 def get_area_ids_from_session(session, key, room=None):
     area_ids = [area.id for area in room.areas.all()] if room else []

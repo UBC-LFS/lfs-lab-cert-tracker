@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, supervisor_views
+from . import views
 from . import admin_views
 from . import manager_views
 from . import process_views
@@ -46,12 +46,6 @@ urlpatterns += [
 
     path('add-training-to-room/', admin_views.AddTrainingToRoom.as_view(), name='add_training_to_room'),
     path('delete-training-from-room/', admin_views.DeleteTrainingFromRoom.as_view(), name='delete_training_from_room')
-]
-
-# Supervisors
-urlpatterns += [
-    path('supervisor-dashboard/', supervisor_views.SupervisorRequests.as_view(), name='supervisor_dashboard'),
-    path('supervisor-dashboard/<int:form_id>/details/', supervisor_views.SupervisorRequestDetails.as_view(), name = 'supervisor_form_details')
 ]
 
 # Managers

@@ -1,7 +1,21 @@
 {% load custom_tags %}
 
+{% if form.supervisor %}
+    <div class="text-center text-muted font-italic small mb-1" style="list-style: none;">— Request Supervisor —</div>
+    <ul class="list-minus-20">
+        <li class="mb-1">
+            {% concat_strings room.id form.supervisor.id as args %}
+            {% if form and form.id|get_status_by_request_supervisor:args %}
+                <span class="font-weight-600 text-{% if form.id|get_status_by_request_supervisor:args == 'Approved' %}success{% elif form.id|get_status_by_request_supervisor:args == 'Declined' %}danger{% elif form.id|get_status_by_request_supervisor:args == 'Insufficient Info' %}orange{% endif %}">{{ form.supervisor.get_full_name }}</span>
+            {% else %}
+                <span>{{ form.supervisor.get_full_name }}</span>
+            {% endif %}
+        </li>
+    </ul>
+{% endif %}
+
 {% if room.managers.all %}
-    <div class="text-center text-muted font-italic small mb-1" style="list-style: none;">— PIs —</div>
+    <div class="text-center text-muted font-italic small mb-1" style="list-style: none;">— Room Supervisors —</div>
     <ul class="list-minus-20">
         {% for manager in room.managers.all %}
             <li class="mb-1">

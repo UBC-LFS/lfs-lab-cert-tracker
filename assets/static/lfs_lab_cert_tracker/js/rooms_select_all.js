@@ -7,11 +7,12 @@ $(document).ready(function() {
   });
 
   $('#selected-rooms .room-checkbox').on('click', function() {
-    const id = $(this).val();
+    const id = $(this).data('id');
 
     if ($(this).is(':checked')) {
       $(this).prop('checked', true);
       updateAllList[id] = {
+        'request_form_identifier': $(this).val(),
         'user': $(this).data('user'),
         'building': $(this).data('building'),
         'floor': $(this).data('floor'),
@@ -32,7 +33,9 @@ $(document).ready(function() {
         // New rooms are checked
         if ($self.data('is_new') === true) {
           $self.prop('checked', true);
-          updateAllList[$self.val()] = {
+
+          updateAllList[$self.data('id')] = {
+            'request_form_identifier': $self.val(),
             'user': $self.data('user'),
             'building': $self.data('building'),
             'floor': $self.data('floor'),
@@ -41,7 +44,7 @@ $(document).ready(function() {
         }
       } else {
         $self.prop('checked', false);
-        delete updateAllList[$self.val()];
+        delete updateAllList[$self.data('id')];
       }
     }
     updateInfo(updateAllList);
@@ -57,7 +60,7 @@ function updateInfo(list) {
     $('#update-all-num-2').html(updateAllNum);
   }
 
-  if (updateAllNum == 0) {
+  if (updateAllNum === 0) {
     // Disable the Update All button
     $('#update-all-btn').prop('disabled', true);
     $('#select-all-checkbox').prop('checked', false)
@@ -66,9 +69,15 @@ function updateInfo(list) {
     $('#update-all-btn').prop('disabled', false);
 
     // Display a list of clicked rooms in the pop-up window
-    items = '';
+    items = ``;
     for (const [key, value] of Object.entries(list)) {
-      items += '<li id="room_' + key + '"><input type="hidden" name="rooms[]" value="' + key + '" /><span class="text-primary">' + value['user'] + '</span>: ' + value['building'] + ' ' + value['floor'] + ' - Room ' + value['number'] + '</li>';
+      items +=
+          `
+          <li id="room_${key}">
+            <input type="hidden" name="rooms[]" value='${value['request_form_identifier']}'/>
+            <span>${value['building']} ${value['floor']} - Room ${value['number']}</span>
+          </li>
+          `
     }
     $('#update-all-list').html(items);
   }

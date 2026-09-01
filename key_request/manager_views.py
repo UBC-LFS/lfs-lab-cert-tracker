@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.views.decorators.cache import never_cache, cache_control
@@ -22,7 +24,7 @@ from .email_coordinator import ApprovalNotificationManager
 from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, ApprovalGroup
 from .forms import KeyRequestForm, ApprovalGroupForm, UserApprovalGroupForm
 from . import functions as func
-from .dashboard_coordinators import DashboardCoordinator
+from .dashboard_coordinators import DashboardCoordinator, GroupFormProcessor, ManagerFormProcessor
 from .utils import REQUEST_STATUS_DICT
 
 from datetime import date
@@ -74,40 +76,41 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form_id = request.POST.get('form')
-        room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager_id', None)
-        group_id = request.POST.get('group_id', None)
+        next_url = request.POST.get('next')
+        if not next_url:
+            raise SuspiciousOperation
+
+        request_form_identifier = request.POST.get('request_form_identifier')
+
+        try:
+            identifier = json.loads(request_form_identifier)
+        except (TypeError, json.JSONDecodeError):
+            messages.error(request, 'Error: Invalid request_form_identifier.')
+            return HttpResponseRedirect(next_url)
+
         status = request.POST.get('status')
-        next = request.POST.get('next')
 
         if not status:
             messages.error(request, 'Error: A status must be selected.')
-            if next:
-                return HttpResponseRedirect(next)
-            else:
-                return redirect('key_request:index')
-        
-        if not form_id or not room_id or (not manager_id and not group_id) or not next:
-            raise SuspiciousOperation
-        
-        request_form_status = RequestFormStatus.objects.create(
-            form_id = form_id,
-            room_id = room_id,
-            manager_id = manager_id,
-            group_id = group_id,
-            operator_id = request.user.id,
-            status = status
-        )
+            return HttpResponseRedirect(next_url)
 
+
+        rfs = func.create_and_process_request_form_identifier(identifier, status)
+
+        if not rfs:
+            messages.error(request, 'Error: Could not find the request form specified.')
+            return HttpResponseRedirect(next_url)
+
+        rfs.save()
+        room_id = identifier.get('room_id')
         room = Room.objects.filter(id=room_id).first()
 
-        email_manager = ApprovalNotificationManager([request_form_status], status, request.user)
+        email_manager = ApprovalNotificationManager([rfs], status, request.user)
         email_manager.send_email_notification()
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
 
-        return HttpResponseRedirect(next)
+        return HttpResponseRedirect(next_url)
 
 
 @method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
@@ -149,7 +152,8 @@ class ManagerRooms(LoginRequiredMixin, View):
             'name': request.GET.get('name')
         }
 
-        coordinator = DashboardCoordinator(request.user, query)
+        # Need to exclude the request supervisor from the list of rooms because they are not a manager of the room
+        coordinator = DashboardCoordinator(request.user, query, [ManagerFormProcessor, GroupFormProcessor])
         room_list = coordinator.get_all_rooms()
         total = len(room_list)
 

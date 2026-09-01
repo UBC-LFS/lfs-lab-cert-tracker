@@ -11,7 +11,7 @@
     {% include 'key_request/left_side_menu.html' %}
 
     <section class="main-content">
-        <h2 class="title">PI Dashboard</h2>
+        <h2 class="title">Supervisor Dashboard</h2>
 
         <p>This page includes a table to display all the applications for Key/Card Access/Alarm Request and update their status.</p>
 
@@ -67,7 +67,7 @@
                           {{ form.counter }}
                         {% endif %}
                     </td>
-                <td>{{ form.label }}</td>
+                    <td>{% include 'key_request/subpages/approver_badge.html' with label=form.label %}</td>
                     <td>{{ form.user.get_full_name }}</td>
                     <td>
                         {{ form.room.building.code }} {{ form.room.floor.name }} <br/>
@@ -99,6 +99,7 @@
                         {% else %}
                             N/A
                         {% endif %}
+                    {% if form.label == "Room Supervisor" or form.label == "Group" %}
 
                         <hr/>
 
@@ -114,13 +115,17 @@
                             <input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs"
                                    type="submit" value="Update"/>
                         </form>
+                {% endif %}
 
                     </td>
                     <td>
+                    {{ form.request_form_identifier }}
                         <input class="room-checkbox" type="checkbox"
                                value="{{ form.request_form_identifier }}"
+                               data-id="{{ forloop.counter }}"
                                data-user="{{ form.user.get_full_name }}"
-                               data-building="{{ form.room.building.code }}" data-floor="{{ form.room.floor.name }}"
+                               data-building="{{ form.room.building.code }}"
+                               data-floor="{{ form.room.floor.name }}"
                                data-number="{{ form.room.number }}"
                                data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"/>
                     </td>

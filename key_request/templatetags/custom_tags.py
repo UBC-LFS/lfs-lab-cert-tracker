@@ -71,6 +71,21 @@ def get_room(room_id):
     if room_id:
         return Room.objects.get(id=room_id)
 
+@register.filter
+def get_status_by_request_supervisor(form_id, args):
+    if not form_id:
+        return None
+    args_splited = args.split(',')
+    room_id = args_splited[0]
+    manager_id = args_splited[1]
+
+    supervisor_type = RequestFormStatus.SupervisorType.REQUEST.value
+
+    status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, manager_id=manager_id, supervisor_type=supervisor_type).order_by('-created_at')
+    if status_filtered.exists():
+        obj = status_filtered.first()
+        return REQUEST_STATUS_DICT[obj.status]
+    return None
 
 @register.filter
 def get_status_by_manager(form_id, args):
@@ -79,8 +94,10 @@ def get_status_by_manager(form_id, args):
     args_splited = args.split(',')
     room_id = args_splited[0]
     manager_id = args_splited[1]
+
+    supervisor_type = RequestFormStatus.SupervisorType.ROOM.value
     
-    status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, manager_id=manager_id).order_by('-created_at')
+    status_filtered = RequestFormStatus.objects.filter(form_id=form_id, room_id=room_id, manager_id=manager_id, supervisor_type=supervisor_type).order_by('-created_at')
     if status_filtered.exists():
         obj = status_filtered.first()
         return REQUEST_STATUS_DICT[obj.status]
