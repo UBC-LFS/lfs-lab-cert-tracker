@@ -95,7 +95,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
             return HttpResponseRedirect(next_url)
 
 
-        rfs = func.create_and_process_request_form_identifier(identifier, status)
+        rfs = func.create_and_process_request_form_identifier(identifier, request.user, status)
 
         if not rfs:
             messages.error(request, 'Error: Could not find the request form specified.')
