@@ -5,8 +5,8 @@
         "fields": {
         "name": "MacMillan",
         "code": "MCML",
-        "created_on": "2026-08-03",
-        "updated_on": "2026-08-03",
+        "created_on": "2026-08-01",
+        "updated_on": "2026-08-01",
         "slug": "mcml"
         }
     },
@@ -16,8 +16,8 @@
         "fields": {
         "name": "Food, Nutrition, and Health",
         "code": "FNH",
-        "created_on": "2026-08-03",
-        "updated_on": "2026-08-03",
+        "created_on": "2026-08-01",
+        "updated_on": "2026-08-01",
         "slug": "fnh"
         }
     },
@@ -27,8 +27,8 @@
         "fields": {
         "name": "Wesbrook",
         "code": "WESB",
-        "created_on": "2026-08-03",
-        "updated_on": "2026-08-03",
+        "created_on": "2026-08-01",
+        "updated_on": "2026-08-01",
         "slug": "wesb"
         }
     },
@@ -38,8 +38,8 @@
         "fields": {
         "name": "UBC Farm",
         "code": "UBC Farm",
-        "created_on": "2026-08-03",
-        "updated_on": "2026-08-03",
+        "created_on": "2026-08-01",
+        "updated_on": "2026-08-01",
         "slug": "ubc-farm"
         }
     },
@@ -49,8 +49,8 @@
         "fields": {
         "name": "Food and Beverage Innovation Centre",
         "code": "FBIC",
-        "created_on": "2026-08-03",
-        "updated_on": "2026-08-03",
+        "created_on": "2026-08-01",
+        "updated_on": "2026-08-01",
         "slug": "fbic"
         }
     }

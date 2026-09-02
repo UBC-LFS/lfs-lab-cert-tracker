@@ -8,31 +8,32 @@
 
 {% block content %}
 
-    {% include 'key_request/left_side_menu.html' %}
+  {% include 'key_request/left_side_menu.html' %}
 
-    <section class="main-content">
-        <nav>
-            <a href="{{ next }}">{{ back_label }}</a>
-            {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
-            <span class="text-secondary">Request Details</span>
-        </nav>
+  <section class="main-content">
+    <nav>
+      <a href="{{ next }}">{{ back_label }}</a>
+      {% include 'lfs_lab_cert_tracker/icons/arrow_right.html' %}
+      <span class="text-secondary">Request Details</span>
+    </nav>
 
-        <h3 class="title">Request Details</h3>
+    <h3 class="title">Request Details</h3>
 
-        {% include 'key_request/admin/_form_details_table.html' %}
+    {% include 'key_request/admin/_form_details_table.html' %}
 
-        <div class="mt-5">
-            <a class="btn btn-secondary" href="{{ next }}">Back to {{ back_label }}</a>
-        </div>
-    </section>
+    <div class="mt-5">
+      <a class="btn btn-secondary" href="{{ next }}">Back to {{ back_label }}</a>
+    </div>
+  </section>
+
 {% endblock %}
 
 {% block js %}
-    {% load static %}
-    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/rooms_select_all.js' %}"></script>
-    <script>
-        $(function () {
-            $('[data-toggle="tooltip"]').tooltip()
-        })
-    </script>
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/rooms_select_all.js' %}"></script>
+  <script>
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
 {% endblock %}

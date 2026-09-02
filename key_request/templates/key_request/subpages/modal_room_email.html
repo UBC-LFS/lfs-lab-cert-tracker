@@ -1,17 +1,19 @@
 {% load custom_tags %}
 
-{% with room_email_count=room|count_by_email_type:email_type %}
+{% concat_strings form.id email_type as form_email_type %}
+
+{% with room_email_count=room|count_by_email_type:form_email_type %}
   {% if room_email_count > 0 %}
     <br />
-    <button class="btn btn-info btn-sm mt-2" type="button" data-toggle="modal" data-target="#room-email-modal-{{ room.id }}-{{ email_type }}">
+    <button class="btn btn-info btn-sm mt-2" type="button" data-toggle="modal" data-target="#room-email-modal-{{ form.id }}-{{ room.id }}-{{ email_type }}">
       View ({{ room_email_count }})
     </button>
 
-    <div class="modal fade" id="room-email-modal-{{ room.id }}-{{ email_type }}" tabindex="-1" role="dialog" aria-labelledby="room-email-modal-label-{{ room.id }}-{{ email_type }}" aria-hidden="true">
+    <div class="modal fade" id="room-email-modal-{{ form.id }}-{{ room.id }}-{{ email_type }}" tabindex="-1" role="dialog" aria-labelledby="room-email-modal-label-{{ form.id }}-{{ room.id }}-{{ email_type }}" aria-hidden="true">
       <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title text-info" id="room-email-modal-label-{{ room.id }}-{{ email_type }}">Room Email (Type: {{ email_type }})</h5>
+            <h5 class="modal-title text-info" id="room-email-modal-label-{{ form.id }}-{{ room.id }}-{{ email_type }}">Room Email (Type: {{ email_type }})</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           </div>
           <div class="modal-body text-left">

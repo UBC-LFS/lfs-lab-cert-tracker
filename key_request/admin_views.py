@@ -131,7 +131,7 @@ class AllRequests(RequestView):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form_id = request.POST.get('form')
+        form_id = request.POST.get('form', None)
         manager_id = request.POST.get('manager_id', None)
         group_id = request.POST.get('group_id', None)
         operator = appFunc.get_user_name(request.user)
@@ -161,8 +161,8 @@ class ArchivedRequests(RequestView):
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        form_id = request.POST.get('form_id')
-        form_archive = request.POST.get('form_archive')
+        form_id = request.POST.get('form_id', None)
+        form_archive = request.POST.get('form_archive', None)
         if not form_id or not form_archive:
             raise SuspiciousOperation
         
@@ -345,17 +345,19 @@ class ViewFormDetails(LoginRequiredMixin, View):
 @require_http_methods(['POST'])
 def send_emails(request):
     user_id = request.POST.get('user_id', None)
+    form_id = request.POST.get('form_id', None)
     room_id = request.POST.get('room_id', None)
     expiry_date = request.POST.get('expiry_date', '')
     email_type = request.POST.get('email_type', None)
     next = request.POST.get('next', None)
 
-    if not user_id or not room_id or not email_type or not next:
+    if not user_id or not form_id or not room_id or not email_type or not next:
         raise SuspiciousOperation
 
     user = get_object_or_404(User, id=user_id)
+    form = get_object_or_404(RequestForm, id=form_id)
     room = get_object_or_404(Room, id=room_id)
-    sent = send(user, room, email_type, expiry_date)
+    sent = send(user, form, room, email_type, expiry_date)
     if sent:
         messages.success(request, 'Success! An email for the {0} has been sent.'.format(email_type))
     else:
@@ -364,7 +366,7 @@ def send_emails(request):
     return HttpResponseRedirect(next)
 
 
-def send(user, room, email_type, expiry_date):
+def send(user, form, room, email_type, expiry_date):
     room_name = func.display_room(room)
 
     title = ''
@@ -404,7 +406,7 @@ def send(user, room, email_type, expiry_date):
 
     if sent:
         msg = '<p>{0}</p><hr />{1}'.format(title, message)
-        RoomEmail.objects.create(user=user, room=room, type=email_type, message=msg)
+        RoomEmail.objects.create(user=user, form=form, room=room, type=email_type, message=msg)
         return True
     return False
 

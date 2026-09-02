@@ -34,6 +34,7 @@
 				<th>Status</th>
 				<th>Submitted Date</th>
 				<th>Expiry Date</th>
+				<th>Email Sent Date/Time</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -54,6 +55,9 @@
 						{% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at font_size='font-size-sm' %}
 					</td>
 					<td>{{ form.expiry_date }}</td>
+					<td>
+						{% include 'key_request/subpages/check_room_emails.html' %}
+					</td>
 				</tr>
 			{% empty %}
 				<tr>

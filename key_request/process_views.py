@@ -112,7 +112,7 @@ class SubmitForm(LoginRequiredMixin, View):
             return redirect('key_request:submit_form')
 
         form = KeyRequestForm(request.POST)
-
+    
         rooms = request.POST.getlist('rooms[]')
         operator = appFunc.get_user_name(request.user)
 

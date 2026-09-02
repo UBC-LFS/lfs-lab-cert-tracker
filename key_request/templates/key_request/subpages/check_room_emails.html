@@ -1,0 +1,28 @@
+{% load custom_tags %}
+
+<ul class="list-minus-20 text-left">
+  {% for room in form.rooms.all %}
+
+    <li {% if not forloop.last %}class="mb-3"{% endif %}>
+      <span class="font-weight-semibold font-size-sm">
+        {% if room.is_active %}
+          {{ room|display_room }}
+        {% else %}
+          <s>{{ room|display_room }}</s>
+        {% endif %}
+      </span>
+
+      <br />
+      {% with room_emails=room|check_room_emails:form.id %}
+        <ul class="list-minus-20 font-size-xs">
+          <li>
+            <span class="badge badge-primary">KEY</span> {{ room_emails.key }}</li>
+          <li>
+            <span class="badge badge-success">CARD</span> {{ room_emails.card_access }}</li>
+          <li>
+            <span class="badge badge-warning">ALARM</span> {{ room_emails.alarm }}</li>
+        </ul>
+      {% endwith %}
+    </li>
+  {% endfor %}
+</ul>

@@ -147,7 +147,8 @@ class RequestFormStatus(models.Model):
 
 class RoomEmail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    form = models.ForeignKey(RequestForm, on_delete=models.CASCADE, null=True, blank=True)
+    room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
     type = models.CharField(max_length=20)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

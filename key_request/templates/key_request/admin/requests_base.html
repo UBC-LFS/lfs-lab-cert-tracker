@@ -6,8 +6,8 @@
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h3>
 
-    {% if title == 'All Requests' %}
-        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+  {% if title == 'All Requests' %}
+    <div class="row bg-light-gray border px-3 py-4 font-size-sm">
   		<div class="col-md-9" style="border-right: 1px solid #bbb;">
   			{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
   		</div>
@@ -22,11 +22,10 @@
     <div class="row bg-light-gray border p-4 font-size-sm">
       {% include 'key_request/subpages/search_filters.html' with path='expired_requests' %}
     </div>
-    {% elif title == 'Supervisor Dashboard' %}
-        <div class="row bg-light-gray border px-3 py-4 font-size-sm">
-                {% include 'key_request/subpages/search_filters.html' with path='supervisor_dashboard' %}
-
-        </div>
+  {% elif title == 'Supervisor Dashboard' %}
+    <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+      {% include 'key_request/subpages/search_filters.html' with path='supervisor_dashboard' %}
+    </div>
   {% endif %}
 
 	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
@@ -53,17 +52,7 @@
 	        <td>{{ form.id }}</td>
 	        <td>{{ form.user.get_full_name }}</td>
 					<td class="text-left">
-						<ul class="list-minus-20">
-							{% for room in form.rooms.all %}
-								<li>
-									{% if room.is_active %}
-										{{ room|display_room }}
-									{% else %}
-										<s>{{ room|display_room }}</s>
-									{% endif %}
-								</li>
-							{% endfor %}
-						</ul>
+						{% include 'key_request/subpages/check_room_emails.html' %}
 					</td>
 					<td>{{ form.supervisor.get_full_name }}</td>
             <td>

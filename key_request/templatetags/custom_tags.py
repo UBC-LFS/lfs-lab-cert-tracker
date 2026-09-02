@@ -7,7 +7,7 @@ from key_request import functions as func
 from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
-from key_request.models import Room, RequestFormStatus, RequestForm, UserFilter
+from key_request.models import Room, RequestFormStatus, RoomEmail, RequestForm, UserFilter
 
 from django.template.defaultfilters import pluralize
 from datetime import date
@@ -88,8 +88,26 @@ def get_status_by_manager(form_id, args):
 
 
 @register.filter
-def count_by_email_type(room, type):
-    return room.roomemail_set.filter(type=type).count()
+def check_room_emails(room, form_id):
+    key_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='key').last()
+    card_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='card_access').last()
+    alarm_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='alarm').last()
+
+    return {
+        'key': key_email.created_at if key_email else None, 
+        'card_access': card_email.created_at if card_email else None, 
+        'alarm': alarm_email.created_at if alarm_email else None
+    }
+
+
+@register.filter
+def count_by_email_type(room, form_email_type):
+    arr = form_email_type.split(',')
+    if len(arr) > 2:
+        form_id = arr[0]
+        email_type = arr[1]
+        return RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type=email_type).count()
+    return 0
 
 
 @register.filter

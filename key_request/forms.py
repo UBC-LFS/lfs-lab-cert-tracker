@@ -195,7 +195,8 @@ class KeyRequestForm(forms.ModelForm):
             'employee_number': forms.TextInput(attrs={ 'class': 'form-control' }),
             'student_number': forms.TextInput(attrs={ 'class': 'form-control' }),
             'after_hours_access': forms.RadioSelect(),
-            'comment': forms.Textarea(attrs={ 'class':'form-control', 'rows': 5 })
+            'comment': forms.Textarea(attrs={ 'class':'form-control', 'rows': 5 }),
+            'is_archived': forms.HiddenInput()
         }
         help_texts = {
             'role': 'Maximum characters: 100',
