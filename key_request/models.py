@@ -81,6 +81,7 @@ class ApprovalGroupRole(models.Model):
         unique_together = ('group', 'user')
 
 
+# TODO Change managers to be supervisors
 class Room(models.Model):
     building = models.ForeignKey(Building, on_delete=models.DO_NOTHING)
     floor = models.ForeignKey(Floor, on_delete=models.DO_NOTHING)
@@ -135,13 +136,22 @@ class RequestForm(models.Model):
         ordering = ['-pk', '-submitted_at']
 
 
+
+# TODO Change manager to be supervisor; also change the related name
 class RequestFormStatus(models.Model):
+    class SupervisorType(models.IntegerChoices):
+        ROOM = 1, 'Room'
+        REQUEST = 2, 'Request'
+    
     form = models.ForeignKey(RequestForm, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
     manager = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_manager_set')
+    supervisor_type = models.IntegerField(choices=SupervisorType.choices, default=None, null=True, blank=True)
+
     group = models.ForeignKey(ApprovalGroup, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_group_set')
     operator = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_operator_set')
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
 

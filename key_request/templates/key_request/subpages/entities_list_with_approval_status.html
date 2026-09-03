@@ -1,33 +1,47 @@
 {% load custom_tags %}
 
+{% if form.supervisor %}
+  <div class="text-center text-muted font-italic small mb-1" style="list-style: none;">— Request Supervisor —</div>
+  <ul class="list-minus-20">
+    <li class="mb-1">
+      {% concat_strings room.id form.supervisor.id as args %}
+      {% if form and form.id|get_status_by_request_supervisor:args %}
+        <span class="font-weight-600 text-{% if form.id|get_status_by_request_supervisor:args == 'Approved' %}success{% elif form.id|get_status_by_request_supervisor:args == 'Declined' %}danger{% elif form.id|get_status_by_request_supervisor:args == 'Insufficient Info' %}orange{% endif %}">{{ form.supervisor.get_full_name }}</span>
+      {% else %}
+        <span>{{ form.supervisor.get_full_name }}</span>
+      {% endif %}
+    </li>
+  </ul>
+{% endif %}
+
 {% if room.managers.all %}
-    <div class="text-center text-muted font-italic small mb-1" style="list-style: none;">— PIs —</div>
-    <ul class="list-minus-20">
-        {% for manager in room.managers.all %}
-            <li class="mb-1">
-                {% concat_strings room.id manager.id as args %}
-                {% if form and form.id|get_status_by_manager:args %}
-                    <span class="font-weight-semibold text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
-                {% else %}
-                    <span>{{ manager.get_full_name }}</span>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+  <div class="text-center text-muted font-italic small mb-1" style="list-style: none;">— Room Supervisors —</div>
+  <ul class="list-minus-20">
+    {% for manager in room.managers.all %}
+      <li class="mb-1">
+        {% concat_strings room.id manager.id as args %}
+        {% if form and form.id|get_status_by_manager:args %}
+          <span class="font-weight-600 text-{% if form.id|get_status_by_manager:args == 'Approved' %}success{% elif form.id|get_status_by_manager:args == 'Declined' %}danger{% elif form.id|get_status_by_manager:args == 'Insufficient Info' %}orange{% endif %}">{{ manager.get_full_name }}</span>
+        {% else %}
+          <span>{{ manager.get_full_name }}</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
 {% endif %}
 
 {% if room.groups.all %}
-    <div class="text-center text-muted font-italic small mb-1 mt-2">— Groups —</div>
-    <ul class="list-minus-20">
-        {% for group in room.groups.all %}
-            <li class="mb-1">
-                {% concat_strings room.id group.id as args %}
-                {% if form and form.id|get_status_by_group:args %}
-                    <span class="font-weight-semibold text-{% if form.id|get_status_by_group:args == 'Approved' %}success{% elif form.id|get_status_by_group:args == 'Declined' %}danger{% elif form.id|get_status_by_group:args == 'Insufficient Info' %}orange{% endif %}">{{ group.name }}</span>
-                {% else %}
-                    <span>{{ group.name }}</span>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+  <div class="text-center text-muted font-italic small mb-1 mt-2">— Groups —</div>
+  <ul class="list-minus-20">
+    {% for group in room.groups.all %}
+      <li class="mb-1">
+        {% concat_strings room.id group.id as args %}
+        {% if form and form.id|get_status_by_group:args %}
+          <span class="font-weight-600 text-{% if form.id|get_status_by_group:args == 'Approved' %}success{% elif form.id|get_status_by_group:args == 'Declined' %}danger{% elif form.id|get_status_by_group:args == 'Insufficient Info' %}orange{% endif %}">{{ group.name }}</span>
+        {% else %}
+          <span>{{ group.name }}</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
 {% endif %}

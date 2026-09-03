@@ -7,17 +7,10 @@
     <li><a href="{% url 'key_request:index' %}">Key/Card/Alarm Request</a></li>
   </ul>
 
-    {% if is_request_supervisor %}
-    <hr />
-        <ul class="list-no-bullets">
-    <li><a href="{% url 'key_request:supervisor_dashboard' %}">Supervisor Dashboard</a></li>
-        </ul>
-    {% endif %}
-
   {% if is_room_manager %}
     <hr />
     <ul class="list-no-bullets">
-    	<li><a href="{% url 'key_request:manager_dashboard' %}">PI Dashboard</a></li>
+    	<li><a href="{% url 'key_request:manager_dashboard' %}">Supervisor Dashboard</a></li>
     	<li><a href="{% url 'key_request:manager_rooms' %}">Rooms</a></li>
         <li><a href="{% url 'key_request:manager_groups' %}">Approval Groups</a></li>
     </ul>

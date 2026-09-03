@@ -38,6 +38,7 @@ class ApprovalNotificationManager:
                 fully_approved.setdefault(form_id, []).append(room)
                 seen_rooms_applicant.add(room.id)
 
+            # TODO: add check for request supervisor approval
             if req.manager_id:
                 self._add_room_to_pi_rooms(form_pi_rooms, form_id, req.manager_id, room)
 
@@ -50,6 +51,11 @@ class ApprovalNotificationManager:
         return form_pi_rooms, form_group_rooms, fully_approved
 
     # Add functions -> ensures that ids are always ints
+
+    # TODO: create request supervisor approval email obj
+    def _add_room_to_request_supervisor_rooms(self):
+        pass
+
 
     def _add_room_to_pi_rooms(self, form_pi_rooms_obj, form_id, manager_id, room):
         manager_id = int(manager_id)

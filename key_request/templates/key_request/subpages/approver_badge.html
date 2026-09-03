@@ -1,0 +1,9 @@
+{% if label == "Group" %}
+  <span class="badge badge-info">Group</span>
+{% elif label == "Room Supervisor" %}
+  <span class="badge badge-primary">Room Supervisor</span>
+{% elif label == "Request Supervisor" %}
+  <span class="badge badge-warning">Request Supervisor</span>
+{% else %}
+  <span class="badge badge-secondary">Unassigned</span>
+{% endif %}

@@ -37,6 +37,8 @@ from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ExpiredRequestFormProcessor, ArchivedRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
+import json
+
 
 GROUPS_PER_PAGE = 10
 
@@ -177,6 +179,11 @@ class ViewFormDetails(LoginRequiredMixin, View):
     back_label = 'All Requests'
     show_email_tab = True
 
+    REQUEST_SUPERVISOR_PRIO = 0
+    MANAGER_PRIO = 1
+    GROUP_PRIO = 2
+    NO_APPROVER_PRIO = 3
+
     def setup(self, request, *args, **kwargs):
         setup = super().setup(request, *args, **kwargs)
 
@@ -208,6 +215,8 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         all_approved = True
 
+        request_supervisor = self.form.supervisor
+
         for room in self.form.rooms.all():
             rooms.add(room)
 
@@ -215,7 +224,37 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
             managers = room.managers.all()
             groups = room.groups.all()
-            if not managers and not groups:
+            has_managing_entity = False
+
+            if managers:
+                forms, approved = self._build_supervisor_items(
+                    room,
+                    areas,
+                    managers,
+                    RequestFormStatus.SupervisorType.ROOM.value
+                )
+                items += forms
+                all_approved &= approved
+                has_managing_entity = True
+
+            if groups:
+                forms, approved = self._build_group_items(room, areas, groups)
+                items += forms
+                all_approved &= approved
+                has_managing_entity = True
+
+            if request_supervisor:
+                forms, approved = self._build_supervisor_items(
+                    room,
+                    areas,
+                    [request_supervisor],
+                    RequestFormStatus.SupervisorType.REQUEST.value
+                )
+                items += forms
+                all_approved &= approved
+                has_managing_entity = True
+
+            if not has_managing_entity:
                 items.append({
                     'id': self.form.id,
                     'label': None,
@@ -223,17 +262,21 @@ class ViewFormDetails(LoginRequiredMixin, View):
                     'room': room,
                     'areas': areas,
                     # For sorting the list. Rooms without a managing entity are placed at the end
-                    'priority': 2,
-                    'sorting_key': f"{room.building.name}{room.floor.name}{room.number}"
+                    'priority': self.NO_APPROVER_PRIO,
+                    'sorting_key': f"{room.building.name}{room.floor.name}{room.number}",
                 })
-                all_approved = False
-            else:
-                manager_forms, manager_all_approved = self._create_item_with_entity_status(room, areas, 'manager', managers, 0)
-                group_forms, group_all_approved = self._create_item_with_entity_status(room, areas, 'group', groups, 1)
-                items += manager_forms + group_forms
-                all_approved &= manager_all_approved and group_all_approved
 
-        items = sorted(items, key=lambda x: (x['priority'], x['sorting_key']), reverse=False)
+        items = sorted(
+            items,
+            key=lambda x: (
+                x['room'].building.name,
+                x['room'].floor.name,
+                x['room'].number,
+                x['priority'],
+                x['sorting_key'],
+            ),
+            reverse=False,
+        )
         self.form.all_approved = all_approved
 
         return render(request, 'key_request/admin/form_details_base.html', {
@@ -254,81 +297,117 @@ class ViewFormDetails(LoginRequiredMixin, View):
             'back_label': self.back_label,
         })
 
-    def _create_item_with_entity_status(self, room, areas, entity_label, entities, priority):
+    def _build_supervisor_items(self, room, areas, supervisors, supervisor_type):
         items = []
-        if entity_label not in ['group', 'manager']:
-            return []
-
-        entity_filter_label = f"{entity_label}_id"
-
         all_approved = True
 
-        for entity in entities:
-            entity_filter = {
-                entity_filter_label: entity.id
-            }
-            status_filtered = RequestFormStatus.objects.filter(form_id=self.form.id, room_id=room.id, **entity_filter).order_by('-created_at')
-            is_new = not status_filtered.exists()
-            status = status_filtered
+        if supervisor_type == RequestFormStatus.SupervisorType.ROOM.value:
+            label = "Room Supervisor"
+            priority = self.MANAGER_PRIO
+        elif supervisor_type == RequestFormStatus.SupervisorType.REQUEST.value:
+            label = "Request Supervisor"
+            priority = self.REQUEST_SUPERVISOR_PRIO
+        else:
+            label = "Supervisor"
+            priority = self.NO_APPROVER_PRIO
 
-            if is_new:
-                status = None
+        for supervisor in supervisors:
+            status_qs = RequestFormStatus.objects.filter(
+                form_id=self.form.id,
+                room_id=room.id,
+                manager_id=supervisor.id,
+                supervisor_type=supervisor_type,
+            ).order_by('-created_at')
 
-            if not status or status.first().status != APPROVED:
+            status = status_qs
+            latest_status = status_qs.first() if status_qs.exists() else None
+            is_new = latest_status is None
+
+            if is_new or latest_status.status != APPROVED:
                 all_approved = False
-
-
-            if entity_label == 'group':
-                sorting_key = entity.name
-
-            if entity_label == 'manager':
-                sorting_key = entity.get_full_name()
 
             items.append({
                 'id': self.form.id,
-                'label': f'{entity_label.capitalize()} Form',
                 'form': self.form,
                 'room': room,
                 'areas': areas,
-                 entity_label: entity,
                 'status': status,
                 'is_new': is_new,
-                # Update all expects the format: <entity_label>:<entity_id>__<form.id>:<room_id>
-                'request_form_identifier': func.make_request_form_identifier(room, self.form, entity_filter_label, entity.id),
-                # For sorting the list of PI/Group (PI=prio_1; group=prio_2); sorting key is then name/get_full_name()
+                'label': label,
+                'supervisor': supervisor,
+                'request_form_identifier': func.make_request_form_identifier(
+                    room, self.form, "supervisor_id", supervisor.id, supervisor_type
+                ),
                 'priority': priority,
-                'sorting_key': sorting_key
+                'sorting_key': supervisor.get_full_name(),
             })
+
         return items, all_approved
 
+    def _build_group_items(self, room, areas, groups):
+        items = []
+        all_approved = True
+
+        for group in groups:
+            status_qs = RequestFormStatus.objects.filter(
+                form_id=self.form.id,
+                room_id=room.id,
+                group_id=group.id,
+            ).order_by('-created_at')
+
+            status = status_qs
+            latest_status = status_qs.first() if status_qs.exists() else None
+            is_new = latest_status is None
+
+            if is_new or latest_status.status != APPROVED:
+                all_approved = False
+
+            items.append({
+                'id': self.form.id,
+                'form': self.form,
+                'room': room,
+                'areas': areas,
+                'status': status,
+                'is_new': is_new,
+                'label': "Group",
+                'group': group,
+                'request_form_identifier': func.make_request_form_identifier(
+                    room, self.form, "group_id", group.id
+                ),
+                'priority': 2,
+                'sorting_key': group.name,
+            })
+
+        return items, all_approved
 
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
-        room_id = request.POST.get('room')
-        manager_id = request.POST.get('manager_id', None)
-        group_id = request.POST.get('group_id', None)
+        next_url = request.POST.get('next')
+        request_form_identifier = request.POST.get('request_form_identifier')
+
+        if not next_url or not request_form_identifier:
+            raise SuspiciousOperation
+
+        try:
+            identifier = json.loads(request_form_identifier)
+        except (TypeError, json.JSONDecodeError):
+            messages.error(request, 'Error: Invalid request_form_identifier.')
+            return HttpResponseRedirect(next_url)
 
         status = request.POST.get('status')
-        next = request.POST.get('next')
 
         if not status:
             messages.error(request, 'Error: A status must be selected.')
-            if next:
-                return HttpResponseRedirect(next)
-            else:
-                return redirect('key_request:index')
+            return HttpResponseRedirect(next_url)
 
-        if not self.form or not room_id or (not manager_id and not group_id) or not next:
-            raise SuspiciousOperation
+        room_id = identifier.get('room_id')
+        rfs = func.create_and_process_request_form_identifier(identifier, request.user, status)
 
-        rfs = RequestFormStatus.objects.create(
-            form_id = self.form.id,
-            room_id = room_id,
-            manager_id = manager_id,
-            group_id = group_id,
-            operator_id = request.user.id,
-            status = status
-        )
+        if not rfs:
+            messages.error(request, 'Error: Invalid request_form_identifier.')
+            return HttpResponseRedirect(next_url)
+
+        rfs.save()
 
         room = Room.objects.get(id=room_id)
 
@@ -336,7 +415,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
         email_coordinator.send_email_notification()
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
-        return HttpResponseRedirect(next)
+        return HttpResponseRedirect(next_url)
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -416,33 +495,29 @@ def send(user, form, room, email_type, expiry_date):
 @access_pi_admin_key_request
 @require_http_methods(['POST'])
 def update_all(request):
-    raw_rooms = request.POST.getlist('rooms[]')
+    checked_rooms = request.POST.getlist('rooms[]')
     status = request.POST.get('status')
-    if not raw_rooms:
+    next_url = request.POST.get('next')
+
+    if not checked_rooms or not next_url:
         raise SuspiciousOperation
 
     if status:
         rfs = []
-        for raw_room in raw_rooms:
-            # rooms in the format: <entity_label>:<entity_id>__<form.id>:<room_id>
 
-            room_sp = raw_room.split('__')
-            entity_tuple = room_sp[0].split(":")
-            entity_label = entity_tuple[0]
-            entity_id = entity_tuple[1]
+        for room in checked_rooms:
 
-            room_form_tuple = room_sp[1].split(":")
-            form_id = room_form_tuple[0]
-            room_id = room_form_tuple[1]
+            try:
+                identifier = json.loads(room)
+            except (TypeError, json.JSONDecodeError):
+                messages.error(request, 'Error: Invalid request_form_identifier.')
+                return HttpResponseRedirect(next_url)
 
-            form = RequestForm.objects.get(id=form_id)
-            rfs_obj = RequestFormStatus(
-                form = form,
-                room_id = room_id,
-                operator_id = request.user.id,
-                status = status
-            )
-            setattr(rfs_obj, entity_label, entity_id)
+            rfs_obj = func.create_and_process_request_form_identifier(identifier, request.user, status)
+
+            if not rfs_obj:
+                messages.error(request, 'Error: Invalid request_form_identifier.')
+                return HttpResponseRedirect(next_url)
 
             rfs.append(rfs_obj)
 
@@ -458,7 +533,7 @@ def update_all(request):
     else:
         messages.error(request, "Error! Please select the status, and try again.")
 
-    return HttpResponseRedirect(request.POST.get('next'))
+    return HttpResponseRedirect(next_url)
 
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')

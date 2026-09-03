@@ -18,7 +18,7 @@
                 <th>Building</th>
                 <th>Floor</th>
                 <th>Room</th>
-                <th>PI/Group</th>
+                <th>Approver</th>
                 <th>Operator</th>
                 <th>Status</th>
                 <th>Updated Date</th>
@@ -36,11 +36,20 @@
                     <td>{{ room.number }}</td>
                   {% endwith %}
                   <td>
-                      {% if st.group %}
-                          {{ st.group.name }}
-                      {% else %}
-                          {{ st.manager_id|get_user_full_name }}
-                      {% endif %}
+                    {# TODO: Make this check more robust#}
+                    {% if st.group %}
+                      {% include 'key_request/subpages/approver_badge.html' with label="Group" %}
+                      <br />
+                      {{ st.group.name }}
+                    {% elif st.supervisor_type == 1 %}
+                      {% include 'key_request/subpages/approver_badge.html' with label="Room Supervisor" %}
+                      <br />
+                      {{ st.manager_id|get_user_full_name }}
+                    {% else %}
+                      {% include 'key_request/subpages/approver_badge.html' with label="Request Supervisor" %}
+                      <br />
+                      {{ st.manager_id|get_user_full_name }}
+                    {% endif %}
                   </td>
                   <td>{{ st.operator_id|get_user_full_name }}</td>
                   <td>

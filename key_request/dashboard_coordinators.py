@@ -6,6 +6,9 @@ from django.utils import timezone
 
 from key_request.utils import REV_REQUEST_STATUS_DICT, APPROVED, DECLINED, INSUFFICIENT
 
+
+#  TODO: refactor to change manager to supervisor
+
 class RequestFormProcessor:
     user = None
     query = {}
@@ -154,17 +157,38 @@ class AdminRequestFormProcessor(RequestFormProcessor):
         for room in form.rooms.all():
             is_room_approved = True
 
-            if not room.managers.exists() and not room.groups.exists():
+            if not room.managers.exists() and not room.groups.exists() and not form.supervisor:
                 # Although there is no approver, this room cannot be approved
                 # We add a ghost approver, which represents the admin
                 total_approvers += 1
                 continue
 
-
             # Managers: ALL approve
             manager_ids = room.managers.all().values_list("id", flat=True)
             num_managers = len(manager_ids)
             total_approvers += num_managers
+
+            if form.supervisor:
+                total_approvers += 1
+                latest_status = RequestFormStatus.objects.filter(
+                    form_id=form.id,
+                    room_id=room.id,
+                    manager_id=form.supervisor.id,
+                    supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value
+                ).order_by('-created_at').first()
+
+                if latest_status is None:
+                    total_new += 1
+                    is_room_approved = False
+                elif latest_status.status == APPROVED:
+                    total_approved += 1
+                elif latest_status.status == DECLINED:
+                    total_declined += 1
+                    is_room_approved = False
+                elif latest_status.status == INSUFFICIENT:
+                    total_insufficient += 1
+                    is_room_approved = False
+
 
             if num_managers > 0:
                 latest_status = RequestFormStatus.objects.filter(
@@ -294,6 +318,11 @@ class EntityRequestFormProcessor(RequestFormProcessor):
                 forms += self._process_room_forms(room, room_forms)
         return forms
 
+    def _get_form_scope_filters(self):
+        """filters forms.
+        Override when the entity's relationship is per-form, not per-room."""
+        return {}
+    
     def _build_latest_status_subquery(self, room_id, **entity_filter):
         return RequestFormStatus.objects.filter(
             form_id=OuterRef('pk'),
@@ -304,7 +333,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
     def _get_latest_status_room_forms(self, room, latest_status_subquery):
 
         room_forms = (
-            RequestForm.objects.filter(rooms=room)
+            RequestForm.objects.filter(rooms=room, **self._get_form_scope_filters())
             .annotate(
                 status=Subquery(latest_status_subquery.values('status')[:1]),
                 status_created_at=Subquery(latest_status_subquery.values('created_at')[:1]),
@@ -416,23 +445,66 @@ class GroupFormProcessor(EntityRequestFormProcessor):
         form.request_form_identifier = make_request_form_identifier(room, form, 'group_id', self.current_group.id)
         return form
 
-class ManagerFormProcessor(EntityRequestFormProcessor):
+
+class RequestSupervisorFormProcessor(EntityRequestFormProcessor):
+    supervisor_type = RequestFormStatus.SupervisorType.REQUEST.value
+
 
     def __init__(self, query, user):
         super().__init__(query, user)
 
-        self.label = "Individual"
+        self.label = "Request Supervisor"
+        self.priority = 2
+
+    def get_all_rooms(self):
+        subquery = RequestForm.objects.filter(
+            supervisor=self.user,
+            rooms=OuterRef('pk')
+        )
+
+        return Room.objects.filter(Exists(subquery)).distinct()
+
+    def _get_form_scope_filters(self):
+        return {'supervisor': self.user}
+
+    def _get_entity_filters_for_room(self, room):
+        yield {"manager_id": self.user.id,
+               "supervisor_type": self.supervisor_type}
+
+    def _get_new_forms_subquery(self):
+        return RequestFormStatus.objects.filter(
+            manager=self.user,
+            supervisor_type=self.supervisor_type,
+            form=OuterRef('pk'),
+        )
+
+    def _annotate_form_object(self, form, room, is_new):
+        form = super()._annotate_form_object(form, room, is_new)
+        form.request_supervisor = self.user
+        form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.user.id, self.supervisor_type)
+        return form
+
+
+class ManagerFormProcessor(EntityRequestFormProcessor):
+
+    supervisor_type = RequestFormStatus.SupervisorType.ROOM.value
+
+    def __init__(self, query, user):
+        super().__init__(query, user)
+
+        self.label = "Room Supervisor"
         self.priority = 2
 
     def get_all_rooms(self):
         return Room.objects.filter(Q(managers=self.user)).distinct()
 
     def _get_entity_filters_for_room(self, room):
-        yield {"manager_id": self.user.id}
+        yield {"manager_id": self.user.id, "supervisor_type": self.supervisor_type}
 
     def _get_new_forms_subquery(self):
         return RequestFormStatus.objects.filter(
             manager=self.user,
+            supervisor_type=self.supervisor_type,
             form=OuterRef('pk'),
         )
 
@@ -443,8 +515,9 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
     def _annotate_form_object(self, form, room, is_new):
         form = super()._annotate_form_object(form, room, is_new)
         form.manager = self.current_manager
-        form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.current_manager.id)
+        form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.current_manager.id, self.supervisor_type)
         return form
+
 
 class DashboardCoordinator:
 
@@ -454,7 +527,7 @@ class DashboardCoordinator:
         self.num_new_forms = 0
         self.num_total_forms = 0
         self.forms = []
-        self.processor_classes = processor_classes or [ManagerFormProcessor, GroupFormProcessor]
+        self.processor_classes = processor_classes or [ManagerFormProcessor, GroupFormProcessor, RequestSupervisorFormProcessor]
         self.processors = [cls(query, user) for cls in self.processor_classes]
 
 
