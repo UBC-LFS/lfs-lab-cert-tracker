@@ -91,9 +91,11 @@ class Room(models.Model):
 
     areas = models.ManyToManyField(Lab)
     trainings = models.ManyToManyField(Cert)
+
     key = models.BooleanField(default=False)
     card_access = models.BooleanField(default=False)
     alarm = models.BooleanField(default=False)
+
     is_active = models.BooleanField(default=True)
     note = models.TextField(null=True, blank=True)
 
@@ -122,7 +124,6 @@ class RequestForm(models.Model):
     student_number = models.CharField(max_length=8, null=True, blank=True)
     
     supervisor = models.ForeignKey(User,  on_delete=models.SET_NULL, null=True, related_name='supervised_request_forms')
-    expiry_date = models.DateField(null=True, blank=True)
 
     after_hours_access = models.CharField(max_length=1, choices=AFTER_HOURS_ACCESS, default=None)
     working_alone = models.BooleanField(default=False)
@@ -134,7 +135,6 @@ class RequestForm(models.Model):
 
     class Meta:
         ordering = ['-pk', '-submitted_at']
-
 
 
 # TODO Change manager to be supervisor; also change the related name
@@ -151,6 +151,14 @@ class RequestFormStatus(models.Model):
     group = models.ForeignKey(ApprovalGroup, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_group_set')
     operator = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_operator_set')
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class RoomExpiryDate(models.Model):
+    form = models.ForeignKey(RequestForm, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
+    expiry_date = models.DateField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

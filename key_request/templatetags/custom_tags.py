@@ -7,7 +7,7 @@ from key_request import functions as func
 from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
-from key_request.models import Room, RequestFormStatus, RoomEmail, RequestForm, UserFilter
+from key_request.models import Room, RequestFormStatus, RoomEmail, RequestForm, UserFilter, RoomExpiryDate
 
 from django.template.defaultfilters import pluralize
 from datetime import date
@@ -132,6 +132,11 @@ def count_by_email_type(room, form_email_type):
 @register.filter
 def get_room_emails(room, type):
     return room.roomemail_set.filter(type=type)
+
+
+@register.filter
+def room_expiry_date(form, room_id):
+    return RoomExpiryDate.objects.filter(form_id=form.id, room_id=room_id).last()
 
 
 @register.filter

@@ -37,18 +37,21 @@
                   {% endwith %}
                   <td>
                     {# TODO: Make this check more robust#}
+                    
                     {% if st.group %}
-                      {% include 'key_request/subpages/approver_badge.html' with label="Group" %}
-                      <br />
                       {{ st.group.name }}
+                      <br />
+                      {% include 'key_request/subpages/approver_badge.html' with label="Group" %}
+
                     {% elif st.supervisor_type == 1 %}
+                      {{ st.manager_id|get_user_full_name }}
+                      <br />
                       {% include 'key_request/subpages/approver_badge.html' with label="Room Supervisor" %}
-                      <br />
-                      {{ st.manager_id|get_user_full_name }}
+
                     {% else %}
-                      {% include 'key_request/subpages/approver_badge.html' with label="Request Supervisor" %}
-                      <br />
                       {{ st.manager_id|get_user_full_name }}
+                      <br />
+                      {% include 'key_request/subpages/approver_badge.html' with label="Request Supervisor" %}
                     {% endif %}
                   </td>
                   <td>{{ st.operator_id|get_user_full_name }}</td>

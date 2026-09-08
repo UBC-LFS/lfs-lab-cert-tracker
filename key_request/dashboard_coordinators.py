@@ -290,7 +290,7 @@ class ApplicantRequestFormProcessor:
                 form.status_created_at = latest_status.first().created_at
             for room in form.rooms.all():
                 if not(all_pis_approved(form, room)):
-                    form.status = 'Pending by Supervisor'
+                    form.status = 'Pending <br /> by Supervisor'
                     form.status_created_at = None
                     break
 
@@ -322,7 +322,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         """filters forms.
         Override when the entity's relationship is per-form, not per-room."""
         return {}
-    
+
     def _build_latest_status_subquery(self, room_id, **entity_filter):
         return RequestFormStatus.objects.filter(
             form_id=OuterRef('pk'),

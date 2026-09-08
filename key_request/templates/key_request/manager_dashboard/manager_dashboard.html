@@ -46,7 +46,7 @@
           <th>Approval Role</th>
           <th>Applicant <br /> Full Name</th>
           <th>Building & <br /> Room Info</th>
-          <th>Supervisor</th>
+          <th>Requestor's <br /> Supervisor</th>
           <th>Details</th>
           <th>Status</th>
           <th>Expiry Date</th>
@@ -60,6 +60,7 @@
           {% for form in forms %}
             <tr>
               <td>
+                {{ form.id }} | {{ form.room.id }}
                 {% if request.user.is_superuser %}
                   {{ form.id }}
                 {% else %}
@@ -93,47 +94,48 @@
                 {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=form status=form.status %}
               </td>
               <td>
-                {% if form.expiry_date %}
-                  <span class="text-chocolate">{{ form.expiry_date|remaining_days|safe }}</span>
-                {% else %}
-                  N/A
-                {% endif %}
+                {% with room_expiry_date=form|room_expiry_date:form.room.id %}
+                  {% if room_expiry_date %}
+                    {{ room_expiry_date.expiry_date }}
+  									<br />
+                    <span class="text-chocolate">{{ room_expiry_date.expiry_date|remaining_days|safe }}</span>
+                  {% else %}
+                    N/A
+                  {% endif %}
 
-                {% if form.label == "Room Supervisor" or form.label == "Group" %}
-                  <hr />
-                  <form action="{% url 'key_request:update_expiry_date' %}" method="post">
-                    {% csrf_token %}
+                  {% if form.label == "Room Supervisor" or form.label == "Group" %}
+                    <hr />
+                    <form action="{% url 'key_request:update_expiry_date' %}" method="post">
+                      {% csrf_token %}
 
-                    <input class="form-control mb-1" type="date" name="expiry_date"
-                      value="{{ form.expiry_date|date_to_str }}"
-                    />
+                      <input class="form-control mb-1" type="date" name="expiry_date" value="{{ room_expiry_date.expiry_date|date_to_str }}" />
+                      <input type="hidden" name="form" value="{{ form.id }}" />
+                      <input type="hidden" name="room" value="{{ form.room.id }}" />
+                      <input type="hidden" name="next" value="{{ request.get_full_path }}" />
 
-                    <input type="hidden" name="form" value="{{ form.id }}" />
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-
-                    <input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs"
-                      type="submit" value="Update"
-                    />
-                  </form>
-                </td>
-                <td>
-                  <input class="room-checkbox" type="checkbox"
-                    value="{{ form.request_form_identifier }}"
-                    data-id="{{ forloop.counter }}"
-                    data-user="{{ form.user.get_full_name }}"
-                    data-building="{{ form.room.building.code }}"
-                    data-floor="{{ form.room.floor.name }}"
-                    data-number="{{ form.room.number }}"
-                    data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"
-                  />
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="100%">No request forms found</td>
-              </tr>
+                      <input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs" type="submit" value="Update" />
+                    </form>
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <td>
+                <input class="room-checkbox" type="checkbox"
+                  value="{{ form.request_form_identifier }}"
+                  data-id="{{ forloop.counter }}"
+                  data-user="{{ form.user.get_full_name }}"
+                  data-building="{{ form.room.building.code }}"
+                  data-floor="{{ form.room.floor.name }}"
+                  data-number="{{ form.room.number }}"
+                  data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"
+                />
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="100%">No request forms found</td>
+            </tr>
           {% endfor %}
-          </tbody>
+        </tbody>
       </table>
 
       <div class="d-flex justify-content-between align-items-start">

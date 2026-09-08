@@ -506,7 +506,6 @@ def update_all(request):
         rfs = []
 
         for room in checked_rooms:
-
             try:
                 identifier = json.loads(room)
             except (TypeError, json.JSONDecodeError):

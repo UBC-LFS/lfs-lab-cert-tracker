@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
-from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation
 from django.contrib.auth.mixins import LoginRequiredMixin
 from psycopg2 import IntegrityError
 
@@ -19,8 +19,8 @@ from lfs_lab_cert_tracker import settings
 from .admin_views import ViewApprovalGroups
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, ApprovalGroup
-from .forms import KeyRequestForm, ApprovalGroupForm, UserApprovalGroupForm
+from .models import Room, ApprovalGroupRole, RoomExpiryDate
+from .forms import UserApprovalGroupForm
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, GroupFormProcessor, ManagerFormProcessor
 from .utils import REQUEST_STATUS_DICT
@@ -117,10 +117,11 @@ class UpdateExpiryDate(LoginRequiredMixin, View):
     @method_decorator(require_POST)
     def post(self, request, *args, **kwargs):
         form_id = request.POST.get('form', None)
+        room_id = request.POST.get('room', None)
         expiry_date = request.POST.get('expiry_date', None)
         next = request.POST.get('next', None)
 
-        if not form_id or not next:
+        if not form_id or not room_id or not next:
             raise SuspiciousOperation
 
         if not expiry_date:
@@ -132,7 +133,7 @@ class UpdateExpiryDate(LoginRequiredMixin, View):
             messages.error(request, 'An error occurred. Please enter a valid <strong>Expiry Date</strong>.')
             return HttpResponseRedirect(next)
 
-        RequestForm.objects.filter(id=form_id).update(expiry_date=expiry_date)
+        RoomExpiryDate.objects.create(form_id=form_id, room_id=room_id, expiry_date=expiry_date)
         messages.success(request, 'Success! <strong>Expiry Date</strong> has been updated.')
         return HttpResponseRedirect(next)
 

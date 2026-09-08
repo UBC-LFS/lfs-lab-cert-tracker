@@ -32,7 +32,7 @@
 	      <th>ID</th>
 	      <th>Full Name</th>
 	      <th>Building & Room Info</th>
-        <th>Supervisor</th>
+        <th>Requestor's <br /> Supervisor</th>
 	      <th>Details</th>
 	      <th>Status <br /> History</th>
 	      <th>Submitted <br /> Date</th>
@@ -81,13 +81,27 @@
           <td>
             {% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
           </td>
-            <td>
-              {{ form.expiry_date }}
-              {% if form.expiry_date %}
-                <br />
-                <span class="text-chocolate font-size-xs">{{ form.expiry_date|remaining_days|safe }}</span>
-              {% endif %}
-            </td>
+          <td>
+						<ol>
+							{% for room in form.rooms.all %}
+								<li>
+									{% with room_expiry_date=form|room_expiry_date:room.id %}
+										{% if room_expiry_date %}
+											{{ room_expiry_date.expiry_date }}
+											<br />
+											<span class="text-chocolate font-size-xs">{{ room_expiry_date.expiry_date|remaining_days|safe }}</span>
+										{% else %}
+											N/A
+										{% endif %}
+									{% endwith %}
+
+									{% if not forloop.last %}
+										<hr />
+									{% endif %}
+								</li>
+							{% endfor %}
+						</ol>
+          </td>
           {% if show_actions_col %}
   	        <td>
 							{% if title == 'All Requests' %}
