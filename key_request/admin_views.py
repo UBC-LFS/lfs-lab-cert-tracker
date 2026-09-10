@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect, Http404, JsonResponse, QueryDict
 from django.utils.html import format_html
 from django.db.utils import IntegrityError
 from django.db.models.functions import Concat
-from django.db.models import Q, Case, When, IntegerField, Value, Exists, OuterRef
+from django.db.models import Q, Case, When, IntegerField, Value, Exists, OuterRef, Subquery
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
@@ -21,6 +21,7 @@ from django.shortcuts import get_object_or_404
 from django.apps import apps
 from django.core.mail import send_mail
 from django.core.validators import validate_email
+from django.utils import timezone
 
 from lfs_lab_cert_tracker.models import Lab, Cert
 from app.accesses import access_admin_only, access_pi_admin_key_request, access_group_coordinator_admin_key_request, access_supervisor_admin_request
@@ -30,15 +31,14 @@ from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room, ApprovalGroup, ApprovalGroupRole
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
-from .models import Room, UserFilter, RoomEmail
+from .models import Room, UserFilter, RoomEmail, RoomExpiryDate
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
-from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ExpiredRequestFormProcessor, ArchivedRequestFormProcessor
+from .dashboard_coordinators import DashboardCoordinator, AdminRequestFormProcessor, ArchivedRequestFormProcessor
 from .utils import REQUEST_STATUS_DICT, CREATE_ROOM_KEY, EDIT_ROOM_KEY, URL_NEXT, APPROVED
 
 import json
-
 
 GROUPS_PER_PAGE = 10
 
@@ -146,13 +146,6 @@ class AllRequests(RequestView):
         return HttpResponseRedirect(request.POST.get('next'))
 
 
-@method_decorator([never_cache, access_admin_only], name='dispatch')
-class ExpiredRequests(RequestView):
-    processor_classes = [ExpiredRequestFormProcessor]
-    template_name = 'key_request/admin/expired_requests.html'
-    title = 'Expired Requests'
-    show_actions_col = False
-
 
 @method_decorator([never_cache, access_admin_only], name='dispatch')
 class ArchivedRequests(RequestView):
@@ -167,11 +160,52 @@ class ArchivedRequests(RequestView):
         form_archive = request.POST.get('form_archive', None)
         if not form_id or not form_archive:
             raise SuspiciousOperation
-        
+
         is_archived = True if form_archive == 'archive' else False
         RequestForm.objects.filter(id=form_id).update(is_archived=is_archived)
         messages.success(request, 'The Request Form (ID: {0} has been archived successfully.'.format(form_id))
         return HttpResponseRedirect(request.POST.get('next'))
+
+
+@method_decorator([never_cache, access_admin_only], name='dispatch')
+class ExpiredRooms(RequestView):
+    @method_decorator(require_GET)
+    def get(self, request, *args, **kwargs):
+        expired_rooms = Room.objects.annotate(
+            latest_expiry_date=Subquery(
+                RoomExpiryDate.objects.filter(room_id=OuterRef('pk')).order_by('-created_at').values('expiry_date')[:1]
+            )
+        ).filter(
+            latest_expiry_date__lt=timezone.localdate()
+        )
+
+        building_q = request.GET.get('building')
+        floor_q = request.GET.get('floor')
+        number_q = request.GET.get('number')
+
+        if building_q:
+            expired_rooms = expired_rooms.filter(building__code__exact=building_q)
+        if floor_q:
+            expired_rooms = expired_rooms.filter(floor__name__exact=floor_q)
+        if number_q:
+            expired_rooms = expired_rooms.filter(number__exact=number_q)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(expired_rooms, 1)
+
+        try:
+            rooms = paginator.page(page)
+        except PageNotAnInteger:
+            rooms = paginator.page(1)
+        except EmptyPage:
+            rooms = paginator.page(paginator.num_pages)
+
+        return render(request, 'key_request/admin/expired_rooms.html', {
+            'total_rooms': len(expired_rooms),
+            'rooms': rooms,
+            'search_filter_options': func.search_filter_options,
+            'is_admin': True
+        })
 
 
 @method_decorator([never_cache, access_supervisor_admin_request], name='dispatch')
@@ -266,6 +300,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
                     'sorting_key': f"{room.building.name}{room.floor.name}{room.number}",
                 })
 
+
         items = sorted(
             items,
             key=lambda x: (
@@ -305,7 +340,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
             label = "Room Supervisor"
             priority = self.MANAGER_PRIO
         elif supervisor_type == RequestFormStatus.SupervisorType.REQUEST.value:
-            label = "Request Supervisor"
+            label = "Requestor's Supervisor"
             priority = self.REQUEST_SUPERVISOR_PRIO
         else:
             label = "Supervisor"
@@ -317,10 +352,10 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 room_id=room.id,
                 manager_id=supervisor.id,
                 supervisor_type=supervisor_type,
-            ).order_by('-created_at')
+            ).order_by('created_at')
 
             status = status_qs
-            latest_status = status_qs.first() if status_qs.exists() else None
+            latest_status = status_qs.last() if status_qs.exists() else None
             is_new = latest_status is None
 
             if is_new or latest_status.status != APPROVED:
@@ -353,10 +388,10 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 form_id=self.form.id,
                 room_id=room.id,
                 group_id=group.id,
-            ).order_by('-created_at')
+            ).order_by('created_at')
 
             status = status_qs
-            latest_status = status_qs.first() if status_qs.exists() else None
+            latest_status = status_qs.last() if status_qs.exists() else None
             is_new = latest_status is None
 
             if is_new or latest_status.status != APPROVED:

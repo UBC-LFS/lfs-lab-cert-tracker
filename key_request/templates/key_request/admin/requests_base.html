@@ -6,23 +6,17 @@
 		<small class="text-secondary">(Total: {{ total_forms }})</small>
 	</h3>
 
-  {% if title == 'All Requests' %}
-    <div class="row bg-light-gray border px-3 py-4 font-size-sm">
-  		<div class="col-md-9" style="border-right: 1px solid #bbb;">
-  			{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
-  		</div>
-  		<div class="col-md-3">
-  			<div class="text-center">
-  				<h5>Number of <br /> New Requests</h5>
-  				<a class="h4" href="{% url 'key_request:all_requests' %}?page=1&status=New">{{ num_new_forms }}</a>
-  			</div>
-  		</div>
-  	</div>
-  {% elif title == 'Expired Requests' %}
-    <div class="row bg-light-gray border p-4 font-size-sm">
-      {% include 'key_request/subpages/search_filters.html' with path='expired_requests' %}
-    </div>
-  {% endif %}
+  <div class="row bg-light-gray border px-3 py-4 font-size-sm">
+		<div class="col-md-9" style="border-right: 1px solid #bbb;">
+			{% include 'key_request/subpages/search_filters.html' with path='all_requests' %}
+		</div>
+		<div class="col-md-3">
+			<div class="text-center">
+				<h5>Number of <br /> New Requests</h5>
+				<a class="h4" href="{% url 'key_request:all_requests' %}?page=1&status=New">{{ num_new_forms }}</a>
+			</div>
+		</div>
+	</div>
 
 	{% include 'key_request/subpages/search_results.html' with total=num_filtered_forms items=forms %}
 
@@ -48,12 +42,12 @@
 	        <td>{{ form.id }}</td>
 	        <td>{{ form.user.get_full_name }}</td>
 					<td class="text-left">
-						{% include 'key_request/subpages/check_room_emails.html' %}
+						{% include 'key_request/subpages/check_room_emails.html' with form=form %}
 					</td>
 					<td>{{ form.supervisor.get_full_name }}</td>
-            <td>
-              {% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
-            </td>
+          <td>
+            {% include 'key_request/subpages/modal_request_form_details.html' with id=forloop.counter form=form is_admin=is_admin %}
+          </td>
 	        <td>
             {% if form.is_new %}
               <span class="badge">NEW</span>

@@ -3,11 +3,11 @@
 <div class="bd-callout bd-callout-info m-0">
   <div class="two-columns">
     <div class="column left-50" style="border-right:2px solid white;">
-      <h5>Requester Information</h5>
+      <h5>Requestor Information</h5>
       <ul class="list-minus-20">
         <li><strong>Full Name:</strong> {{ form.user.get_full_name }}</li>
         <li><strong>Email:</strong> {{ form.user.email }}</li>
-        <li><strong>Supervisor:</strong> {{ form.supervisor }}</li>
+        <li><strong>Requestor's Supervisor:</strong> {{ form.supervisor.get_full_name }}</li>
       </ul>
     </div>
     <div class="column right-50">
@@ -83,7 +83,9 @@
                 <span class="text-danger">No approver assigned</span>
               {% endif %}
             </td>
-            <td>{{ item.status.last.operator_id|get_user_full_name }}</td>
+            <td>
+              {{ item.status.last.operator_id|get_user_full_name }}
+            </td>
             <td>
               {% if item.room.note %}
                 {% include 'key_request/subpages/modal_room_note.html' with id=forloop.counter data=item.room.note %}
@@ -96,7 +98,7 @@
             </td>
             <td>
               {% if item.group or item.supervisor %}
-                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.first.status %}
+                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.last.status %}
               {% else %}
                 <a href="{% url 'key_request:edit_room' room_id=item.room.id %}?t=pis&next={{ request.get_full_path }}"
                   target="_blank" data-toggle="tooltip" data-placement="top"

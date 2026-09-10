@@ -37,7 +37,7 @@
                   {% endwith %}
                   <td>
                     {# TODO: Make this check more robust#}
-                    
+
                     {% if st.group %}
                       {{ st.group.name }}
                       <br />
@@ -51,7 +51,7 @@
                     {% else %}
                       {{ st.manager_id|get_user_full_name }}
                       <br />
-                      {% include 'key_request/subpages/approver_badge.html' with label="Request Supervisor" %}
+                      {% include 'key_request/subpages/approver_badge.html' with label="Requestor's Supervisor" %}
                     {% endif %}
                   </td>
                   <td>{{ st.operator_id|get_user_full_name }}</td>

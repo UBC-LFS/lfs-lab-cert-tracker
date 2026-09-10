@@ -453,7 +453,7 @@ class RequestSupervisorFormProcessor(EntityRequestFormProcessor):
     def __init__(self, query, user):
         super().__init__(query, user)
 
-        self.label = "Request Supervisor"
+        self.label = "Requestor's Supervisor"
         self.priority = 2
 
     def get_all_rooms(self):

@@ -172,6 +172,13 @@ def get_status_by_group(form_id, args):
         return REQUEST_STATUS_DICT[obj.status]
     return None
 
+
+@register.filter
+def get_expired_info(room):
+    return RoomExpiryDate.objects.filter(room_id=room.id).last()
+
+
+
 @register.simple_tag
 def get_status_by_room_and_form(form_id, room_id):
     if not form_id or not room_id:
