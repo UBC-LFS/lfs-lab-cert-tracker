@@ -214,9 +214,9 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
         subject = 'Confirmation of Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <p>You have submitted the following request on {1}. Your access request is awaiting your supervisor/PI approval. We have sent a reminder email to your supervisor/PI.</p>
+            <p>You have submitted the following request on {1}.</p>
             <ul>{2}</ul>
-            <p>Please prompt your supervisor/PI to log into <a href={3}>LFS Access and Training Record System (LFS ATRS)</a>, and go to <strong>Key/Card/Alarm Request Dashboard</strong> to view your request status. Thanks.</p>'''.format(
+            <p>Your access request is awaiting your supervisor/PI approval. We have sent a reminder email to your supervisor/PI. Please prompt your supervisor/PI to log into <a href={3}>LFS Access and Training Record System (LFS ATRS)</a>, and go to <strong>Key/Card/Alarm Request Dashboard</strong> to view your request status. Thanks.</p>'''.format(
                 receiver.get_full_name(),
                 submitted_at,
                 rooms,
@@ -227,9 +227,9 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
         subject = 'Notification of Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <p>{1} submitted a request form on {2}. The access request for {1} is awaiting your approval.</p>
+            <p>{1} submitted a request form on {2}.</p>
             <ul>{3}</ul>
-            <p>Please log into <a href={4}>LFS Access and Training Record System (LFS ATRS)</a>, and go to <strong>Key/Card/Alarm Request Dashboard</strong> to approve/decline the request.</p>
+            <p>The access request for {1} is awaiting your approval. Please log into <a href={4}>LFS Access and Training Record System (LFS ATRS)</a>, and go to <strong>Key/Card/Alarm Request Dashboard</strong> to approve/decline the request.</p>
             <p>If you require any assistance, please email <a href="mailto:lfs.facilities@ubc.ca">lfs.facilities@ubc.ca</a></p>'''.format(
                 receiver.get_full_name(),
                 applicant.get_full_name(),
