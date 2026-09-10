@@ -27,12 +27,12 @@
       {% endfor %}
     </select>
 
-    {% if path == 'all_requests' or path == 'manager_dashboard' %}
+    {% if path == 'all_requests' or path == 'archived_requests' or path == 'manager_dashboard' %}
       and
       <input type="text" name="name" value="{{ request.GET.name }}" placeholder="Applicant Name" />
     {% endif %}
 
-    {% if path == 'manager_dashboard' or path == 'all_requests' %}
+    {% if path == 'all_requests' or path == 'archived_requests' or path == 'manager_dashboard' %}
       <div class="mt-2">
         <select name="status">
           <option value="">Status</option>
@@ -50,6 +50,9 @@
       {% if path == 'all_requests' %}
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:all_requests' %}?page=1">Clear</a>
         <button class="btn btn-sm btn-warning" type="submit" name="method" value="save">Save</button>
+
+      {% elif path == 'archived_requests' %}
+        <a class="btn btn-sm btn-secondary" href="{% url 'key_request:archived_requests' %}?page=1">Clear</a>
 
       {% elif path == 'expired_rooms' %}
         <a class="btn btn-sm btn-secondary" href="{% url 'key_request:expired_rooms' %}?page=1">Clear</a>
