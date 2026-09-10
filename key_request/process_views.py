@@ -183,6 +183,11 @@ def send_email(form):
         subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
         send(form.user, subject, message)
 
+    # Send an email to the Requestor's supervisor
+    if form.supervisor:
+        subject, message = get_message(form.supervisor, user_rooms, 'supervisor', submitted_at, form.user)
+        send(form.supervisor, subject, message)
+
     # Send an email to the Rooms' PIs
     if len(pi_rooms.keys()) > 0:
         for key, value in pi_rooms.items():
@@ -190,7 +195,7 @@ def send_email(form):
                 rooms = ''
                 for item in value:
                     rooms += item['room']
-                subject, message = get_message(value[0]['pi'], rooms, 'pi', value[0]['submitted_at'], value[0]['applicant'])
+                subject, message = get_message(value[0]['pi'], rooms, 'supervisor', value[0]['submitted_at'], value[0]['applicant'])
                 send(value[0]['pi'], subject, message)
 
     # Send an email to amdins
@@ -209,22 +214,23 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
         subject = 'Confirmation of Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <p>You have submitted the following request on {1}.</p>
+            <p>You have submitted the following request on {1}. Your access request is awaiting your supervisor/PI approval. We have sent a reminder email to your supervisor/PI.</p>
             <ul>{2}</ul>
-            <p>Please visit <a href={3}>{3}</a> to check the status of your request. Thank you.</p>'''.format(
+            <p>Please prompt your supervisor/PI to log into <a href={3}>LFS Access and Training Record System (LFS ATRS)</a>, and go to <strong>Key/Card/Alarm Request Dashboard</strong> to view your request status. Thanks.</p>'''.format(
                 receiver.get_full_name(),
                 submitted_at,
                 rooms,
                 settings.SITE_URL
             )
 
-    elif option == 'pi':
+    elif option == 'supervisor':
         subject = 'Notification of Request at UBC LFS'
         message += '''\
             <p>Hi {0},</p>
-            <p>{1} submitted a request form on {2}.</p>
+            <p>{1} submitted a request form on {2}. The access request for {1} is awaiting your approval.</p>
             <ul>{3}</ul>
-            <p>Please visit <a href={4}>{4}</a> to check the status of {1}'s request form. Thank you.</p>'''.format(
+            <p>Please log into <a href={4}>LFS Access and Training Record System (LFS ATRS)</a>, and go to <strong>Key/Card/Alarm Request Dashboard</strong> to approve/decline the request.</p>
+            <p>If you require any assistance, please email <a href="mailto:lfs.facilities@ubc.ca">lfs.facilities@ubc.ca</a></p>'''.format(
                 receiver.get_full_name(),
                 applicant.get_full_name(),
                 submitted_at,

@@ -191,7 +191,7 @@ class ExpiredRooms(RequestView):
             expired_rooms = expired_rooms.filter(number__exact=number_q)
 
         page = request.GET.get('page', 1)
-        paginator = Paginator(expired_rooms, 1)
+        paginator = Paginator(expired_rooms, NUM_PER_PAGE)
 
         try:
             rooms = paginator.page(page)
@@ -511,6 +511,7 @@ def send(user, form, room, email_type, expiry_date):
 <div>
 <p>Hi {0},</p>
 <p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
+<p>A separate email will be sent to you with your personal alarm code and alarm panel use instructions.</p>
 <p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
 <p>Best regards,</p>
 <p>LFS Access and Training Record System (LFS ATRS)</p>

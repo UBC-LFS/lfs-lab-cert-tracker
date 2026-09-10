@@ -60,7 +60,6 @@
           {% for form in forms %}
             <tr>
               <td>
-                {{ form.id }} | {{ form.room.id }}
                 {% if request.user.is_superuser %}
                   {{ form.id }}
                 {% else %}

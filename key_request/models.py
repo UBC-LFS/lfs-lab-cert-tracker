@@ -162,9 +162,6 @@ class RoomExpiryDate(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['form_id', '-created_at']
-
 
 class RoomEmail(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
