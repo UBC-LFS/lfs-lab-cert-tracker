@@ -24,6 +24,7 @@ key_request/fixtures/prod_rooms.json
 key_request/fixtures/prod_room_areas.json
 key_request/fixtures/prod_room_trainings.json
 key_request/fixtures/prod_room_managers.json
+key_request/management
 *.xml
 .idea/
 /venv

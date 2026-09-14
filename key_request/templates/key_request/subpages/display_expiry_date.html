@@ -1,6 +1,6 @@
 {% load custom_tags %}
 
-<ol>
+<ol class="list-minus-20 text-left">
   {% for room in form.rooms.all %}
     <li>
       {% with room_expiry_date=form|room_expiry_date:room.id %}

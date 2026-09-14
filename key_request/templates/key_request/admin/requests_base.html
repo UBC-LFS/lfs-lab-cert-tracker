@@ -76,7 +76,7 @@
             {% include 'key_request/subpages/date_and_time.html' with data=form.submitted_at %}
           </td>
           <td>
-						<ol>
+						<ol class="list-minus-20 text-left">
 							{% for room in form.rooms.all %}
 								<li>
 									{% with room_expiry_date=form|room_expiry_date:room.id %}
