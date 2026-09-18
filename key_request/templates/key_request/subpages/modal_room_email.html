@@ -1,8 +1,8 @@
 {% load custom_tags %}
 
-{% concat_strings form.id email_type as form_email_type %}
+{% concat_strings form.user.id form.id email_type as form_info %}
 
-{% with room_emails=room|get_room_emails:form_email_type %}
+{% with room_emails=room|get_room_emails:form_info %}
 
   {% if room_emails|length > 0 %}
     <br />

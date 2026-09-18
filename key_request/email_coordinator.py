@@ -75,7 +75,6 @@ class ApprovalNotificationManager:
             .setdefault(group_id, []) \
             .append(room)
 
-
     def send_email_notification(self):
         if self.status != APPROVED:
             return
@@ -84,7 +83,7 @@ class ApprovalNotificationManager:
 
         emails_to_send = []
 
-        emails_to_send += self._send_pi_emails(form_pi_rooms, form_group_rooms)
+        # emails_to_send += self._send_pi_emails(form_pi_rooms, form_group_rooms)
         emails_to_send += self._send_applicant_emails(fully_approved)
         emails_to_send += self._send_admin_emails(fully_approved)
         self._send_multiple(emails_to_send)

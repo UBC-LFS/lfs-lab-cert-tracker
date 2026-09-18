@@ -314,7 +314,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
         )
         self.form.all_approved = all_approved
 
-        return render(request, 'key_request/admin/form_details_base.html', {
+        return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
             'rooms': list(rooms),
             'items': items,
@@ -471,16 +471,69 @@ def send_emails(request):
     user = get_object_or_404(User, id=user_id)
     form = get_object_or_404(RequestForm, id=form_id)
     room = get_object_or_404(Room, id=room_id)
-    sent = send(user, form, room, email_type, expiry_date)
-    if sent:
-        messages.success(request, 'Success! An email for the {0} has been sent.'.format(email_type))
+
+    sent_to_user = send_to_user(user, form, room, email_type, expiry_date)
+    if sent_to_user:
+        messages.success(request, 'Success! An email for the {0} has been sent to {1}.'.format(email_type, user.get_full_name()))
     else:
-        messages.error(request, 'An error occurred. Failed to send an email for the {0}.'.format(email_type))
+        messages.error(request, 'An error occurred. Failed to send an email to {0} for the {1}.'.format(user.get_full_name(), email_type))
+
+    if form.supervisor:
+        sent_to_req_sup = send_to_requestor_supervisor(user, form, room, email_type, expiry_date)
+        if sent_to_req_sup:
+            messages.success(request, "Success! An email for the {0} has been sent to the requestor's supervisor, {1}.".format(email_type, form.supervisor.get_full_name()))
+        else:
+            messages.error(request, "An error occurred. Failed to send an email to the requestor's supervisor, {0}, for the {1}.".format(form.supervisor.get_full_name(), email_type))
 
     return HttpResponseRedirect(next)
 
 
-def send(user, form, room, email_type, expiry_date):
+def send_to_requestor_supervisor(user, form, room, email_type, expiry_date):
+    supervisor = form.supervisor
+    room_name = func.display_room(room)
+
+    title = ''
+    message = ''
+    if email_type == 'key':
+        title = "{0}'s key request for rooms {1} has been sent to UBC Keydesk".format(user.get_full_name(), room_name)
+        message = """\
+<div>
+<p>Hi {0},</p>
+<p>{1}'s key request for {2} has been sent to UBC Keydesk. They will receive a notification email from UBC Keydesk when the key is ready for pickup. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
+</div>""".format(supervisor.get_full_name(), user.get_full_name(), room_name)
+
+    elif email_type == 'card_access':
+        title = "{0}'s card access request is set up for rooms {1}".format(user.get_full_name(), room_name)
+        message = """\
+<div>
+<p>Hi {0},</p>
+<p>{1}'s card access request is set up for {2} with an expiry date {3}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
+</div>""".format(supervisor.get_full_name(), user.get_full_name(), room_name, expiry_date)
+
+    elif email_type == 'alarm':
+        title = "{0}'s alarm code request is set up for rooms {1}".format(user.get_full_name(), room_name)
+        message = """\
+<div>
+<p>Hi {0},</p>
+<p>{1}'s alarm code request is set up for {2} with an expiry date {3}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
+</div>""".format(supervisor.get_full_name(), user.get_full_name(), room_name, expiry_date)
+
+    sent = send_mail(title, message, settings.EMAIL_FROM, [ supervisor.email ], fail_silently=False, html_message=message)
+
+    if sent:
+        msg = '<p>{0}</p><hr />{1}'.format(title, message)
+        RoomEmail.objects.create(user=supervisor, form=form, room=room, type=email_type, message=msg)
+        return True
+    return False
+
+
+def send_to_user(user, form, room, email_type, expiry_date):
     room_name = func.display_room(room)
 
     title = ''

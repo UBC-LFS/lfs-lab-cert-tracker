@@ -120,12 +120,13 @@ def check_room_emails(room, form_id):
 
 
 @register.filter
-def get_room_emails(room, form_email_type):
-    arr = form_email_type.split(',')
-    if len(arr) > 2:
-        form_id = arr[0]
-        email_type = arr[1]
-        return RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type=email_type)
+def get_room_emails(room, form_info):
+    arr = form_info.split(',')
+    if len(arr) > 3:
+        user_id = arr[0]
+        form_id = arr[1]
+        email_type = arr[2]
+        return RoomEmail.objects.filter(user_id=user_id, form_id=form_id, room_id=room.id, type=email_type)
 
 
 @register.filter

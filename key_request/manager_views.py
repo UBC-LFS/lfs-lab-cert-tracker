@@ -253,9 +253,7 @@ class EditManagerGroups(LoginRequiredMixin, View):
                 user_id=user.id
             )
 
-
             if not created:
-
                 msg = 'Warning! User {0} is already in the group.'.format(user.get_full_name())
                 if role.role != role_id:
                     role.role = role_id

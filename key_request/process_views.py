@@ -179,9 +179,9 @@ def send_email(form):
                 seen_pis_for_current_room.add(member.id)
 
     # Send an email to the user
-    if len(user_rooms) > 0:
-        subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
-        send(form.user, subject, message)
+    # if len(user_rooms) > 0:
+    #     subject, message = get_message(form.user, user_rooms, 'user', submitted_at)
+    #     send(form.user, subject, message)
 
     # Send an email to the Requestor's supervisor
     if form.supervisor:

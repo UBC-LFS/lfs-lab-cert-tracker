@@ -71,7 +71,7 @@
 						{% endif %}
 
             {% if not form.is_new %}
-              {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all %}
+              {% include 'key_request/subpages/modal_status_history.html' with id=forloop.counter data=form.requestformstatus_set.all|dictsort:"created_at" %}
             {% endif %}
 	        </td>
           <td>
