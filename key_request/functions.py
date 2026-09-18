@@ -140,8 +140,7 @@ def make_request_form_identifier(room, form, entity_label, entity_id, supervisor
 
 # Returns True if all PIs have approved a room; If there are no managers or groups, returns False
 def all_pis_approved(form, room):
-
-    if not room.managers.exists() and not room.groups.exists():
+    if not form.supervisor and not room.managers.exists() and not room.groups.exists():
         return False
 
     # Managers: ALL approve
@@ -154,7 +153,7 @@ def all_pis_approved(form, room):
             room_id=room.id,
             manager_id=form.supervisor.id,
             supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value
-        ).order_by('-created_at').first()
+        ).order_by('created_at').last()
         if latest_status is None or latest_status.status != APPROVED:
             return False
 
@@ -176,12 +175,11 @@ def all_pis_approved(form, room):
 
     # Groups: at least one approve
     for group in room.groups.all():
-
         latest_status = RequestFormStatus.objects.filter(
             form_id=form.id,
             room_id=room.id,
             group_id=group.id
-        ).order_by('-created_at').first()
+        ).order_by('created_at').last()
 
         if latest_status is None or latest_status.status != APPROVED:
             return False
