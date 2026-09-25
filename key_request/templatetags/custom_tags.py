@@ -108,9 +108,9 @@ def get_status_by_manager(form_id, args):
 
 @register.filter
 def check_room_emails(room, form_id):
-    key_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='key').last()
-    card_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='card_access').last()
-    alarm_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='alarm').last()
+    key_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='key').order_by('created_at').last()
+    card_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='card_access').order_by('created_at').last()
+    alarm_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='alarm').order_by('created_at').last()
 
     return {
         'key': key_email.created_at if key_email else None, 
@@ -126,7 +126,7 @@ def get_room_emails(room, form_info):
         user_id = arr[0]
         form_id = arr[1]
         email_type = arr[2]
-        return RoomEmail.objects.filter(user_id=user_id, form_id=form_id, room_id=room.id, type=email_type)
+        return RoomEmail.objects.filter(user_id=user_id, form_id=form_id, room_id=room.id, type=email_type).order_by('created_at')
 
 
 @register.filter
