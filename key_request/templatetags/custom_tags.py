@@ -111,11 +111,10 @@ def check_room_emails(room, form_id):
     key_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='key').order_by('created_at').last()
     card_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='card_access').order_by('created_at').last()
     alarm_email = RoomEmail.objects.filter(form_id=form_id, room_id=room.id, type='alarm').order_by('created_at').last()
-    
     return {
         'key': key_email.created_at if key_email else None, 
         'card_access': card_email.created_at if card_email else None, 
-        'alarm': alarm_email.created_at if alarm_email else None,
+        'alarm': alarm_email.created_at if alarm_email else None
     }
 
 

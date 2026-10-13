@@ -523,7 +523,6 @@ def send_to_requestor_supervisor(user, form, room, email_type, expiry_date):
 <p>Best regards,</p>
 <p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>""".format(supervisor.get_full_name(), user.get_full_name(), room_name, expiry_date)
-        
 
     sent = send_mail(title, message, settings.EMAIL_FROM, [ supervisor.email ], fail_silently=False, html_message=message)
 
