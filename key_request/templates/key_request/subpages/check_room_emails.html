@@ -38,14 +38,11 @@
               Not sent
             {% endif %}
           </li>
-          <li>
-            <span class="badge badge-danger">CODE REQUESTED</span>
-            {% if room_emails.code_request %}
-              {{ room_emails.code_request }}
-            {% else %}
-              Not sent
-            {% endif %}
-          </li>
+          {% if form.after_hours_access == '0' %}
+            <li>
+              <span class="badge badge-danger">CODE REQUESTED</span>
+            </li>
+          {% endif %}
         </ul>
       {% endwith %}
     </li>
