@@ -40,7 +40,10 @@
 	    {% for form in forms %}
 	      <tr>
 	        <td>{{ form.id }}</td>
-	        <td>{{ form.user.get_full_name }}</td>
+	        <td class="text-center">
+				<div>{{ form.user.get_full_name }}</div>
+				{% include 'key_request/subpages/modal_user_training_records.html' with data=form %}
+			</td>
 					<td class="text-left">
 						{% include 'key_request/subpages/check_room_emails.html' with form=form %}
 					</td>
