@@ -523,6 +523,16 @@ def send_to_requestor_supervisor(user, form, room, email_type, expiry_date):
 <p>Best regards,</p>
 <p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>""".format(supervisor.get_full_name(), user.get_full_name(), room_name, expiry_date)
+        
+    elif email_type == "after_hours_access":
+        title = "{0}'s after hours code request is set up for rooms {1}".format(user.get_full_name(), room_name)
+        message = """\
+<div>
+<p>Hi {0},</p>
+<p>{1}'s after hours code request is set up for {2} with an expiry date {3}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
+</div>""".format(supervisor.get_full_name(), user.get_full_name(), room_name, expiry_date)
 
     sent = send_mail(title, message, settings.EMAIL_FROM, [ supervisor.email ], fail_silently=False, html_message=message)
 
@@ -566,6 +576,16 @@ def send_to_user(user, form, room, email_type, expiry_date):
 <p>Your alarm code request is set up for {1} with an expiry date {2}.</p>
 <p>A separate email will be sent to you with your personal alarm code and alarm panel use instructions.</p>
 <p>If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
+<p>Best regards,</p>
+<p>LFS Access and Training Record System (LFS ATRS)</p>
+</div>'''.format(user.get_full_name(), room_name, expiry_date)
+        
+    elif email_type == 'after_hours_access':
+        title = 'Your after hours code request is set up for {0}'.format(room_name)
+        message = '''\
+<div>
+<p>Hi {0},</p>
+<p>Your after hours code request is set up for {1} with an expiry date {2}. Thanks. If you require further assistance, please email <a href="mailto:lfs.access@ubc.ca">lfs.access@ubc.ca</a>.</p>
 <p>Best regards,</p>
 <p>LFS Access and Training Record System (LFS ATRS)</p>
 </div>'''.format(user.get_full_name(), room_name, expiry_date)
