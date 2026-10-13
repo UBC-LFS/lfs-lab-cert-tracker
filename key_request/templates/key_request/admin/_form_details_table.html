@@ -154,7 +154,6 @@
           <th>Key</th>
           <th>Card Access</th>
           <th>Alarm</th>
-          <th>Code Request</th>
         </tr>
       </thead>
       <tbody>
@@ -227,18 +226,6 @@
                     {% if not room.alarm %}disabled{% endif %}>Send
                   </button>
                   {% include 'key_request/subpages/modal_room_email.html' with email_type='alarm' %}
-                {% else %}
-                  <button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
-                {% endif %}
-              </td>
-              <td>
-                {% if approved %}
-                  <button id="{{ room.id }}"
-                    class="btn btn-{% if form.after_hours_access == '0' %}success{% else %}danger{% endif %} btn-sm"
-                    type="submit" name="email_type" value="after_hours_access"
-                    {% if form.after_hours_access != '0' %}disabled{% endif %}>Send
-                  </button>
-                  {% include 'key_request/subpages/modal_room_email.html' with email_type='after_hours_access' %}
                 {% else %}
                   <button class="btn btn-secondary btn-sm" type="button" disabled>Send</button>
                 {% endif %}
