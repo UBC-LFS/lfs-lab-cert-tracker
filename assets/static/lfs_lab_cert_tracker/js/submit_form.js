@@ -7,12 +7,6 @@ $(document).ready(function() {
   const stud_parent = stud.parent().parent();
   const working_alone_parent = working_alone.parent().parent();
 
-  // Submit loading button
-  $('#request-form').on('submit', function() {
-    const submitInput = $('#submit-form-btn')
-    submitInput.val("Submitting...")
-    submitInput.attr('disabled', true)
-  });
 
   // Affiliation choices
   $('#id_affiliation input').on('change', function() {
