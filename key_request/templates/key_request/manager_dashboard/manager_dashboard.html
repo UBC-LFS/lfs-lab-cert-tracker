@@ -67,7 +67,10 @@
                 {% endif %}
               </td>
               <td>{% include 'key_request/subpages/approver_badge.html' with label=form.label %}</td>
-              <td>{{ form.user.get_full_name }}</td>
+              <td>
+                {{ form.user.get_full_name }}
+                {% include 'key_request/subpages/modal_user_training_records.html' with data=form %}
+              </td>
               <td>
                 {{ form.room.building.code }} {{ form.room.floor.name }} <br />
                 Room {{ form.room.number }}
