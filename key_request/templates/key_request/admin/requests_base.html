@@ -166,7 +166,7 @@
 												this request form?
 											</h5>
 
-											<form action="{% url 'key_request:archived_requests' %}" method="POST">
+											<form action="{% url 'key_request:archived_requests' %}" method="POST" class="js-loading-submit" data-loading-text="{% if title == 'All Requests' %}Archiving...{% else %}Unarchiving...{% endif %}">
 												{% csrf_token %}
 
 												<input type="hidden" name="form_id" value="{{ form.id }}" />

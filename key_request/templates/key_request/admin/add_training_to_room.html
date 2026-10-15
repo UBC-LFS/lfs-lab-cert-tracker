@@ -25,7 +25,7 @@
   				<p>
   					Number of selected rooms: <span id='update-all-num-2' class="font-weight-bold text-chocolate">0</span>
   				</p>
-  				<form action="" method="post">
+  				<form action="" method="post" class="js-loading-submit" data-loading-text="Updating...">
   					{% csrf_token %}
 
 						<select class="form-control font-size-sm" name="training">
@@ -55,4 +55,5 @@
 	{% load static %}
 	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/room_actions_helper.js' %}"></script>
 	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/add_training_to_room.js' %}"></script>
+	<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}
