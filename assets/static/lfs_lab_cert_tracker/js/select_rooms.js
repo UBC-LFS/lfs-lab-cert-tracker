@@ -138,6 +138,13 @@ $(document).ready(function() {
     }
   });
 
+  $(window).on('scroll', function() {
+    $('#back-to-top-button').toggleClass('show', $(this).scrollTop() > 800);
+  });
+
+  $('#back-to-top-button').on('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 });
 
 

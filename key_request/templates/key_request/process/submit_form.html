@@ -40,7 +40,7 @@
 	    </ul>
 	  </div>
 
-	  <form id="request-form" class="form-table-format" action="" method="post" novalidate>
+	  <form id="request-form" class="form-table-format js-loading-submit" data-loading-text="Submitting..."  action="" method="post" novalidate>
 	    {% csrf_token %}
 
 	    <table class="table table-borderless table-left-bold">
@@ -141,4 +141,5 @@
 {% block js %}
   {% load static %}
   <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/submit_form.js' %}"></script>
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}

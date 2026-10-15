@@ -8,7 +8,7 @@ AFFILIATIONS = [
 ]
 
 AFTER_HOURS_ACCESS = [
-    ('0', 'Yes, I will need after hours access'),
+    ('0', 'Yes, I need an alarm code for after hours access. Please note alarm codes are in short supply. Only choose this if you need it.'),
     ('1', 'No, I will not need after hours access')
 ]
 

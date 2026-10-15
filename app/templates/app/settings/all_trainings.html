@@ -66,7 +66,7 @@
 										</div>
 										<div class="modal-body text-left">
 											<div class="modal-item">
-												<form action="{% url 'app:edit_training' %}" method="post">
+												<form action="{% url 'app:edit_training' %}" method="post" class="js-loading-submit" data-loading-text="Updating...">
 													{% csrf_token %}
 
 													<div class="mb-3">
@@ -133,4 +133,9 @@
 
 {% include 'app/subpages/pagination.html' with data=trainings %}
 
+{% endblock %}
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}

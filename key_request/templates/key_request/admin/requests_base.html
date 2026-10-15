@@ -40,7 +40,10 @@
 	    {% for form in forms %}
 	      <tr>
 	        <td>{{ form.id }}</td>
-	        <td>{{ form.user.get_full_name }}</td>
+	        <td class="text-center">
+				{{ form.user.get_full_name }}
+				<div>{% include 'key_request/subpages/modal_user_training_records.html' with data=form %}</div>
+			</td>
 					<td class="text-left">
 						{% include 'key_request/subpages/check_room_emails.html' with form=form %}
 					</td>
@@ -163,16 +166,16 @@
 												this request form?
 											</h5>
 
-											<form action="{% url 'key_request:archived_requests' %}" method="POST">
+											<form action="{% url 'key_request:archived_requests' %}" method="POST" class="js-loading-submit">
 												{% csrf_token %}
 
 												<input type="hidden" name="form_id" value="{{ form.id }}" />
 												<input type="hidden" name="next" value="{{ request.get_full_path }}" />
 
 												{% if title == 'All Requests' %}
-													<button class="btn btn-warning" type="submit" name="form_archive" value="archive">Archive</button>
+													<button class="btn btn-warning" type="submit" name="form_archive" value="archive" data-loading-text="Archiving...">Archive</button>
 												{% else %}
-													<button class="btn btn-warning" type="submit" name="form_archive" value="unarchive">Unarchive</button>
+													<button class="btn btn-warning" type="submit" name="form_archive" value="unarchive" data-loading-text="Unarchiving...">Unarchive</button>
 												{% endif %}
 											</form>
 

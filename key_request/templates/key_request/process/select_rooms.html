@@ -66,6 +66,12 @@
 					<a class="btn btn-secondary mr-2" href="{% url 'key_request:index' %}">Go back</a>
 					<input id="select-rooms-continue" class="btn btn-primary" type="button" value="Continue" disabled data-post-url="{% url 'key_request:select_rooms' %}" data-next-url="{% url 'key_request:check_user_trainings' %}" data-token="{{ csrf_token }}" />
 				</div>
+
+				<div class="text-right">
+					<button id="back-to-top-button" class="btn btn-primary" type="button">
+						Back to Top
+					</button>
+				</div>
 	    </div>
 	  </div>
 	</form>
