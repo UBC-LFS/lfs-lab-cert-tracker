@@ -9,7 +9,7 @@
 		<div class="border bg-lighter-gray p-4">
 			{% include 'app/subpages/_form_note.html' %}
 
-			<form action="" method="post">
+			<form action="" method="post" class="js-loading-submit" data-loading-text="Creating...">
 				{% csrf_token %}
 
 				{% for field in form.visible_fields  %}
@@ -43,4 +43,9 @@
 
 </div>
 
+{% endblock %}
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}
