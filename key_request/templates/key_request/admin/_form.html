@@ -8,7 +8,7 @@
   </div>
 </nav>
 
-<form class="{{ tab }}-form" action="" method="POST">
+<form class="{{ tab }}-form js-loading-submit" data-loading-text="Updating..." action="" method="POST">
   {% csrf_token %}
 
   <section class="pt-5 create-room-tabs">
@@ -52,16 +52,20 @@
     <a class="btn btn-outline-secondary" href="{{ next }}">Cancel</a>
 
     {% if path == 'create_room' %}
-      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Create Room" />
+      {# Final creation action; overrides the form's default loading label. #}
+      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Create Room" data-loading-text="Creating..." />
     {% elif path == 'edit_room' %}
       <input type="hidden" name="next" value="{{ next }}" />
-      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Update Room" />
+      {# Saving changes to the existing room. #}
+      <input class="btn btn-primary mx-2 submit-btn" name="method" type="submit" value="Update Room" data-loading-text="Updating..." />
     {% endif %}
 
     {% if tab == 'trainings' %}
-      <input class="btn btn-warning" name="method" type="submit" value="Save and Back to Basic Info" />
+      {# Save this tab and return to Basic Info. #}
+      <input class="btn btn-warning" name="method" type="submit" value="Save and Back to Basic Info" data-loading-text="Saving..." />
     {% else %}
-      <input class="btn btn-warning submit-btn" name="method" type="submit" value="Save and Next" />
+      {# Save this tab and move to the next tab. #}
+      <input class="btn btn-warning submit-btn" name="method" type="submit" value="Save and Next" data-loading-text="Updating..." />
     {% endif %}
   </div>
 </form>

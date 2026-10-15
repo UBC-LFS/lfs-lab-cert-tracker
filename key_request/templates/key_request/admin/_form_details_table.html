@@ -186,7 +186,7 @@
               </ul>
             </td>
 
-            <form action="{% url 'key_request:send_emails' %}" method="POST">
+            <form action="{% url 'key_request:send_emails' %}" method="POST" class="js-loading-submit" data-loading-text="Sending...">
               {% csrf_token %}
 
               <input type="hidden" name="user_id" value="{{ form.user.id }}" />
