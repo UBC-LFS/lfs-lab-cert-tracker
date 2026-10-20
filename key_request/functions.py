@@ -237,7 +237,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
         )
     ) or group_id:
         form = RequestForm.objects.filter(pk=form_id).first()
-        room = Room.objects.filter(pk=room_id).first()                
+        room = Room.objects.filter(pk=room_id).first()
         if supervisor_id and supervisor_type in (
             RequestFormStatus.SupervisorType.REQUEST.value,
             RequestFormStatus.SupervisorType.ROOM.value,
@@ -268,17 +268,15 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                         operator_id=operator.id,
                         status=status,
                     ))
-                statuses.extend(
-                    RequestFormStatus(
+                for group in matching_groups:
+                    statuses.append(RequestFormStatus(
                         form_id=form_id,
                         room_id=room_id,
                         group_id=group.id,
                         operator_id=operator.id,
                         status=status,
-                    )
-                    for group in matching_groups
-                )
-        elif group_id:
+                    ))
+        if group_id:
             is_request_supervisor_member = bool(
                 form
                 and form.supervisor_id == operator.id
@@ -296,8 +294,6 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                     operator_id=operator.id,
                     status=status,
                 ))
-
-        
 
     return statuses
 
