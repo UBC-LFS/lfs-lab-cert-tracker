@@ -1,11 +1,14 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from unittest.mock import patch
+import json
 
 from key_request.dashboard_coordinators import ManagerFormProcessor, GroupFormProcessor, DashboardCoordinator
 from datetime import timedelta
 from django.utils import timezone
 from key_request.models import ApprovalGroup, ApprovalGroupRole, RequestFormStatus, Room, RequestForm, Building, Floor
+from key_request.functions import all_pis_approved
 from key_request.utils import REQUEST_STATUS, APPROVED, INSUFFICIENT, DECLINED
 
 LOGIN_URL = reverse('accounts:local_login')
@@ -443,3 +446,106 @@ class GroupTotalFormStatsTests(TestCase):
 
         self.assertEqual(total, 1)
         self.assertEqual(new, 1)
+
+
+class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
+    """
+    Requests where the requestor’s supervisor is also the room supervisor.
+    """
+    def setUp(self):
+        self.requestor = User.objects.create_user(username='testpi2', password='password')
+        self.supervisor = User.objects.create_superuser(
+            username='testadmin2', 
+            email='admin2@test.com', 
+            password='password'
+        )
+        building = Building.objects.create(name='A', code='A')
+        floor = Floor.objects.create(name='A1')
+        self.room = Room.objects.create(
+            building=building,
+            floor=floor,
+            number='R5',
+            key=True,
+            card_access=True,
+            alarm=True,
+            is_active=True,
+        )
+        self.room.managers.add(self.supervisor)
+        self.form = RequestForm.objects.create(
+            user=self.requestor,
+            supervisor=self.supervisor,
+            role='Test requester',
+            affiliation='3',
+            after_hours_access='1',
+            comment='Request key, card, and alarm access.',
+        )
+        self.form.rooms.add(self.room)
+
+    def submit_supervisor_status(self, status):
+        self.client.logout()
+        self.client.login(username='testadmin2', password='password')
+        identifier = {
+            'entity_label': 'manager_id',
+            'entity_id': self.supervisor.id,
+            'form_id': self.form.id,
+            'room_id': self.room.id,
+            'supervisor_type': RequestFormStatus.SupervisorType.ROOM.value,
+        }
+        with patch('key_request.manager_views.ApprovalNotificationManager.send_email_notification'):
+            return self.client.post(reverse('key_request:manager_dashboard'), {
+                'request_form_identifier': json.dumps(identifier),
+                'status': status,
+                'next': '/app/key-request/dashboard/',
+            })
+
+    def test_request_form_approved(self):
+        """
+        The request is approved since both the form supervisor and room supervisor is the same.
+        """
+        approval_response = self.submit_supervisor_status(APPROVED)
+        self.assertEqual(approval_response.status_code, 302)
+        statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, manager=self.supervisor
+        )
+        self.assertEqual(statuses.count(), 2)
+        self.assertSetEqual(
+            set(statuses.values_list('supervisor_type', flat=True)),
+            {
+                RequestFormStatus.SupervisorType.REQUEST.value,
+                RequestFormStatus.SupervisorType.ROOM.value,
+            },
+        )
+        self.assertEqual(set(statuses.values_list('status', flat=True)), {APPROVED})
+        self.assertTrue(all_pis_approved(self.form, self.room))
+
+    def test_shared_supervisor_approval_does_not_cover_another_room_supervisor(self):
+        """
+        The request stays pending since there is a second room supervisor.
+        """
+        second_supervisor = User.objects.create_user(
+            username='testpi3', password='password'
+        )
+        self.room.managers.add(second_supervisor)
+
+        approval_response = self.submit_supervisor_status(APPROVED)
+        self.assertEqual(approval_response.status_code, 302)
+
+        shared_supervisor_statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, manager=self.supervisor
+        )
+        self.assertEqual(shared_supervisor_statuses.count(), 2)
+        self.assertSetEqual(
+            set(shared_supervisor_statuses.values_list('supervisor_type', flat=True)),
+            {
+                RequestFormStatus.SupervisorType.REQUEST.value,
+                RequestFormStatus.SupervisorType.ROOM.value,
+            },
+        )
+        self.assertEqual(set(shared_supervisor_statuses.values_list('status', flat=True)), {APPROVED})
+        self.assertFalse(
+            RequestFormStatus.objects.filter(
+                form=self.form, room=self.room, manager=second_supervisor
+            ).exists()
+        )
+        self.assertFalse(all_pis_approved(self.form, self.room))
+
