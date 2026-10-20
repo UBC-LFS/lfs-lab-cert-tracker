@@ -4,7 +4,12 @@ from django.contrib.auth.models import User
 from unittest.mock import patch
 import json
 
-from key_request.dashboard_coordinators import ManagerFormProcessor, GroupFormProcessor, DashboardCoordinator
+from key_request.dashboard_coordinators import (
+    ApplicantRequestFormProcessor,
+    ManagerFormProcessor,
+    GroupFormProcessor,
+    DashboardCoordinator,
+)
 from datetime import timedelta
 from django.utils import timezone
 from key_request.models import ApprovalGroup, ApprovalGroupRole, RequestFormStatus, Room, RequestForm, Building, Floor
@@ -450,7 +455,7 @@ class GroupTotalFormStatsTests(TestCase):
 
 class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
     """
-    Requests where the requestor’s supervisor is also the room supervisor.
+    Requests where the requestor’s supervisor also approves for the room.
     """
     def setUp(self):
         self.requestor = User.objects.create_user(username='testpi2', password='password')
@@ -481,7 +486,9 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         )
         self.form.rooms.add(self.room)
 
-    def submit_supervisor_status(self, status):
+    def submit_supervisor_status(
+        self, status, supervisor_type=RequestFormStatus.SupervisorType.ROOM.value
+    ):
         self.client.logout()
         self.client.login(username='testadmin2', password='password')
         identifier = {
@@ -489,7 +496,23 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
             'entity_id': self.supervisor.id,
             'form_id': self.form.id,
             'room_id': self.room.id,
-            'supervisor_type': RequestFormStatus.SupervisorType.ROOM.value,
+            'supervisor_type': supervisor_type,
+        }
+        with patch('key_request.manager_views.ApprovalNotificationManager.send_email_notification'):
+            return self.client.post(reverse('key_request:manager_dashboard'), {
+                'request_form_identifier': json.dumps(identifier),
+                'status': status,
+                'next': '/app/key-request/dashboard/',
+            })
+
+    def submit_group_status(self, group, status):
+        self.client.logout()
+        self.client.login(username='testadmin2', password='password')
+        identifier = {
+            'entity_label': 'group_id',
+            'entity_id': group.id,
+            'form_id': self.form.id,
+            'room_id': self.room.id,
         }
         with patch('key_request.manager_views.ApprovalNotificationManager.send_email_notification'):
             return self.client.post(reverse('key_request:manager_dashboard'), {
@@ -549,3 +572,58 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         )
         self.assertFalse(all_pis_approved(self.form, self.room))
 
+    def test_requestor_supervisor_who_is_group_member_updates_both_roles(self):
+        self.room.managers.clear()
+        group = ApprovalGroup.objects.create(name='Room Supervisor Group')
+        other_member = User.objects.create_user(username='testpi3', password='password')
+        ApprovalGroupRole.objects.create(user=self.supervisor, group=group)
+        ApprovalGroupRole.objects.create(user=other_member, group=group)
+        self.room.groups.add(group)
+
+        approval_response = self.submit_supervisor_status(
+            APPROVED, RequestFormStatus.SupervisorType.REQUEST.value
+        )
+        self.assertEqual(approval_response.status_code, 302)
+
+        statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, manager=self.supervisor
+        )
+        self.assertEqual(statuses.count(), 1)
+        self.assertEqual(
+            statuses.get().supervisor_type,
+            RequestFormStatus.SupervisorType.REQUEST.value,
+        )
+        group_statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, group=group
+        )
+        self.assertEqual(group_statuses.count(), 1)
+        self.assertEqual(group_statuses.get().status, APPROVED)
+        self.assertTrue(all_pis_approved(self.form, self.room))
+        status_form = ApplicantRequestFormProcessor(self.requestor).get_all_status_annotated_forms([self.form])[0]
+        self.assertEqual(status_form.status, 'Approved')
+
+    def test_group_member_who_is_requestor_supervisor_updates_both_roles(self):
+        self.room.managers.clear()
+        group = ApprovalGroup.objects.create(name='Room Supervisor Group')
+        other_member = User.objects.create_user(username='testpi3', password='password')
+        ApprovalGroupRole.objects.create(user=self.supervisor, group=group)
+        ApprovalGroupRole.objects.create(user=other_member, group=group)
+        self.room.groups.add(group)
+
+        approval_response = self.submit_group_status(group, APPROVED)
+        self.assertEqual(approval_response.status_code, 302)
+
+        group_statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, group=group
+        )
+        request_supervisor_statuses = RequestFormStatus.objects.filter(
+            form=self.form,
+            room=self.room,
+            manager=self.supervisor,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+        )
+        self.assertEqual(group_statuses.count(), 1)
+        self.assertEqual(request_supervisor_statuses.count(), 1)
+        self.assertEqual(group_statuses.get().status, APPROVED)
+        self.assertEqual(request_supervisor_statuses.get().status, APPROVED)
+        self.assertTrue(all_pis_approved(self.form, self.room))

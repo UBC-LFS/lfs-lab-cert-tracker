@@ -230,30 +230,74 @@ def create_and_process_request_form_identifier(identifier, operator, status):
     )
 
     statuses = [request_status]
-    if supervisor_id and supervisor_type in (
-        RequestFormStatus.SupervisorType.REQUEST.value,
-        RequestFormStatus.SupervisorType.ROOM.value,
-    ):
-        form = RequestForm.objects.filter(pk=form_id).first()
-        room = Room.objects.filter(pk=room_id).first()
-        same_supervisor = bool(
-            form and room and form.supervisor_id == supervisor_id
-            and room.managers.filter(pk=supervisor_id).exists()
+    if (
+        supervisor_id and supervisor_type in (
+            RequestFormStatus.SupervisorType.REQUEST.value,
+            RequestFormStatus.SupervisorType.ROOM.value,
         )
-        if same_supervisor:
-            other_type = (
-                RequestFormStatus.SupervisorType.ROOM.value
-                if supervisor_type == RequestFormStatus.SupervisorType.REQUEST.value
-                else RequestFormStatus.SupervisorType.REQUEST.value
+    ) or group_id:
+        form = RequestForm.objects.filter(pk=form_id).first()
+        room = Room.objects.filter(pk=room_id).first()                
+        if supervisor_id and supervisor_type in (
+            RequestFormStatus.SupervisorType.REQUEST.value,
+            RequestFormStatus.SupervisorType.ROOM.value,
+        ):
+            is_room_manager = bool(
+                room and room.managers.filter(pk=supervisor_id).exists()
             )
-            statuses.append(RequestFormStatus(
-                form_id=form_id,
-                room_id=room_id,
-                manager_id=supervisor_id,
-                supervisor_type=other_type,
-                operator_id=operator.id,
-                status=status,
-            ))
+            matching_groups = (
+                room.groups.filter(roles__user_id=supervisor_id).distinct()
+                if room else ApprovalGroup.objects.none()
+            )
+            same_supervisor = bool(
+                form and room and form.supervisor_id == supervisor_id
+                and (is_room_manager or matching_groups.exists())
+            )
+            if same_supervisor:
+                if is_room_manager:
+                    other_type = (
+                        RequestFormStatus.SupervisorType.ROOM.value
+                        if supervisor_type == RequestFormStatus.SupervisorType.REQUEST.value
+                        else RequestFormStatus.SupervisorType.REQUEST.value
+                    )
+                    statuses.append(RequestFormStatus(
+                        form_id=form_id,
+                        room_id=room_id,
+                        manager_id=supervisor_id,
+                        supervisor_type=other_type,
+                        operator_id=operator.id,
+                        status=status,
+                    ))
+                statuses.extend(
+                    RequestFormStatus(
+                        form_id=form_id,
+                        room_id=room_id,
+                        group_id=group.id,
+                        operator_id=operator.id,
+                        status=status,
+                    )
+                    for group in matching_groups
+                )
+        elif group_id:
+            is_request_supervisor_member = bool(
+                form
+                and form.supervisor_id == operator.id
+                and ApprovalGroup.objects.filter(
+                    pk=group_id,
+                    roles__user_id=operator.id,
+                ).exists()
+            )
+            if is_request_supervisor_member:
+                statuses.append(RequestFormStatus(
+                    form_id=form_id,
+                    room_id=room_id,
+                    manager_id=operator.id,
+                    supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+                    operator_id=operator.id,
+                    status=status,
+                ))
+
+        
 
     return statuses
 
