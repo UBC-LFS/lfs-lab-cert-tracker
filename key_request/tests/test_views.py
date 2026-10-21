@@ -555,6 +555,9 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         self.assertFalse(all_pis_approved(self.form, self.room))
 
     def test_requestor_supervisor_who_is_group_member_updates_both_roles(self):
+        """
+        The request is approved by requestor's supervisor who also belongs to the approval room group.
+        """
         self.room.managers.clear()
         group = ApprovalGroup.objects.create(name='Room Supervisor Group')
         other_member = User.objects.create_user(username='testpi3', password='password')
@@ -585,6 +588,9 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         self.assertEqual(status_form.status, 'Approved')
 
     def test_group_member_who_is_requestor_supervisor_updates_both_roles(self):
+        """
+        The request is approved by a member in approval group who is also the requestor's supervisor.
+        """
         self.room.managers.clear()
         group = ApprovalGroup.objects.create(name='Room Supervisor Group')
         other_member = User.objects.create_user(username='testpi3', password='password')
