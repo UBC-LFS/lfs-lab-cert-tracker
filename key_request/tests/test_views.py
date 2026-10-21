@@ -484,7 +484,10 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         )
         self.form.rooms.add(self.room)
 
-    def record_approval(self, entity_label, entity_id, status=APPROVED, supervisor_type=None):
+    def record_approval(
+        self, entity_label, entity_id, status=APPROVED, supervisor_type=None,
+        operator=None,
+    ):
         identifier = {
             'entity_label': entity_label,
             'entity_id': entity_id,
@@ -493,15 +496,16 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
             'supervisor_type': supervisor_type,
         }
         statuses = create_and_process_request_form_identifier(
-            identifier, self.supervisor, status
+            identifier, operator or self.supervisor, status
         )
         self.assertIsNotNone(statuses)
         RequestFormStatus.objects.bulk_create(statuses)
         return statuses
 
-    def test_request_form_approved(self):
+    def test_same_room_and_request_supervisor(self):
         """
-        The request is approved since both the form supervisor and room supervisor is the same.
+        The request is approved by room supervisor and stays approved since both the
+        form supervisor and room supervisor are the same.
         """
         self.record_approval(
             'manager_id', self.supervisor.id,
@@ -521,9 +525,32 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         self.assertEqual(set(statuses.values_list('status', flat=True)), {APPROVED})
         self.assertTrue(all_pis_approved(self.form, self.room))
 
-    def test_shared_supervisor_approval_does_not_cover_another_room_supervisor(self):
+    def test_same_request_and_room_supervisor(self):
         """
-        The request stays pending since there is a second room supervisor.
+        The request is approved by form supervisor and stays approved since both the 
+        form supervisor and room supervisor are the same.
+        """
+        self.record_approval(
+            'manager_id', self.supervisor.id,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+        )
+
+        statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, manager=self.supervisor,
+        )
+        self.assertSetEqual(
+            set(statuses.values_list('supervisor_type', flat=True)),
+            {
+                RequestFormStatus.SupervisorType.REQUEST.value,
+                RequestFormStatus.SupervisorType.ROOM.value,
+            },
+        )
+        self.assertTrue(all_pis_approved(self.form, self.room))
+
+    def test_same_request_and_room_supervisor_with_additional_room_supervisor(self):
+        """
+        The request is approved by request supervisor who is also a room 
+        supervisor but stays pending since there are two room supervisors.
         """
         second_supervisor = User.objects.create_user(
             username='testpi3', password='password'
@@ -554,7 +581,39 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         )
         self.assertFalse(all_pis_approved(self.form, self.room))
 
-    def test_requestor_supervisor_who_is_group_member_updates_both_roles(self):
+    def test_different_room_and_request_supervisor(self):
+        """
+        The request is approved by room's supervisor but remains pending since
+        they are not the requestor's supervisor.
+        """
+        room_supervisor = User.objects.create_user(
+            username='different_room_supervisor', password='password'
+        )
+        self.room.managers.clear()
+        self.room.managers.add(room_supervisor)
+
+        self.record_approval(
+            'manager_id', room_supervisor.id,
+            supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
+            operator=room_supervisor,
+        )
+
+        self.assertTrue(RequestFormStatus.objects.filter(
+            form=self.form,
+            room=self.room,
+            manager=room_supervisor,
+            supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
+            status=APPROVED,
+        ).exists())
+        self.assertFalse(RequestFormStatus.objects.filter(
+            form=self.form,
+            room=self.room,
+            manager=self.supervisor,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+        ).exists())
+        self.assertFalse(all_pis_approved(self.form, self.room))
+
+    def test_same_request_and_room_supervisor_approval_group(self):
         """
         The request is approved by requestor's supervisor who also belongs to the approval room group.
         """
@@ -587,9 +646,10 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         status_form = ApplicantRequestFormProcessor(self.requestor).get_all_status_annotated_forms([self.form])[0]
         self.assertEqual(status_form.status, 'Approved')
 
-    def test_group_member_who_is_requestor_supervisor_updates_both_roles(self):
+    def test_same_room_and_request_supervisor_approval_group(self):
         """
-        The request is approved by a member in approval group who is also the requestor's supervisor.
+        The request is approved by a member in approval group of the room's
+        supervisor who is also the requestor's supervisor.
         """
         self.room.managers.clear()
         group = ApprovalGroup.objects.create(name='Room Supervisor Group')
@@ -614,3 +674,38 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         self.assertEqual(group_statuses.get().status, APPROVED)
         self.assertEqual(request_supervisor_statuses.get().status, APPROVED)
         self.assertTrue(all_pis_approved(self.form, self.room))
+
+    def test_different_room_and_request_supervisor_approval_group(self):
+        """
+        The request is approved by a member in approval group of room's supervisor but 
+        stays pending since they are not the requestor's supervisor.
+        """
+        self.room.managers.clear()
+        group = ApprovalGroup.objects.create(name='Room Supervisor Group')
+        other_member = User.objects.create_user(username='testpi3', password='password')
+        ApprovalGroupRole.objects.create(user=other_member, group=group)
+        self.room.groups.add(group)
+
+        self.record_approval(
+            'group_id', group.id, operator=other_member,
+        )
+
+        group_status = RequestFormStatus.objects.get(
+            form=self.form, room=self.room, group=group,
+        )
+        self.assertEqual(group_status.status, APPROVED)
+        self.assertFalse(
+            RequestFormStatus.objects.filter(
+                form=self.form,
+                room=self.room,
+                manager=self.supervisor,
+                supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+            ).exists()
+        )
+        self.assertFalse(all_pis_approved(self.form, self.room))
+        pending_form = ApplicantRequestFormProcessor(self.requestor).get_all_status_annotated_forms(
+            [self.form]
+        )[0]
+        self.assertEqual(pending_form.status, 'Pending <br /> by Supervisor')
+        self.assertTrue(pending_form.pending_request_supervisor)
+        self.assertFalse(pending_form.pending_room_supervisor)
