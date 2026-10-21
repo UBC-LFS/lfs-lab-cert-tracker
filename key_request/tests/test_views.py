@@ -1,8 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from unittest.mock import patch
-import json
 
 from key_request.dashboard_coordinators import (
     ApplicantRequestFormProcessor,
@@ -13,7 +11,7 @@ from key_request.dashboard_coordinators import (
 from datetime import timedelta
 from django.utils import timezone
 from key_request.models import ApprovalGroup, ApprovalGroupRole, RequestFormStatus, Room, RequestForm, Building, Floor
-from key_request.functions import all_pis_approved
+from key_request.functions import all_pis_approved, create_and_process_request_form_identifier
 from key_request.utils import REQUEST_STATUS, APPROVED, INSUFFICIENT, DECLINED
 
 LOGIN_URL = reverse('accounts:local_login')
@@ -486,47 +484,29 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         )
         self.form.rooms.add(self.room)
 
-    def submit_supervisor_status(
-        self, status, supervisor_type=RequestFormStatus.SupervisorType.ROOM.value
-    ):
-        self.client.logout()
-        self.client.login(username='testadmin2', password='password')
+    def record_approval(self, entity_label, entity_id, status=APPROVED, supervisor_type=None):
         identifier = {
-            'entity_label': 'manager_id',
-            'entity_id': self.supervisor.id,
+            'entity_label': entity_label,
+            'entity_id': entity_id,
             'form_id': self.form.id,
             'room_id': self.room.id,
             'supervisor_type': supervisor_type,
         }
-        with patch('key_request.manager_views.ApprovalNotificationManager.send_email_notification'):
-            return self.client.post(reverse('key_request:manager_dashboard'), {
-                'request_form_identifier': json.dumps(identifier),
-                'status': status,
-                'next': '/app/key-request/dashboard/',
-            })
-
-    def submit_group_status(self, group, status):
-        self.client.logout()
-        self.client.login(username='testadmin2', password='password')
-        identifier = {
-            'entity_label': 'group_id',
-            'entity_id': group.id,
-            'form_id': self.form.id,
-            'room_id': self.room.id,
-        }
-        with patch('key_request.manager_views.ApprovalNotificationManager.send_email_notification'):
-            return self.client.post(reverse('key_request:manager_dashboard'), {
-                'request_form_identifier': json.dumps(identifier),
-                'status': status,
-                'next': '/app/key-request/dashboard/',
-            })
+        statuses = create_and_process_request_form_identifier(
+            identifier, self.supervisor, status
+        )
+        self.assertIsNotNone(statuses)
+        RequestFormStatus.objects.bulk_create(statuses)
+        return statuses
 
     def test_request_form_approved(self):
         """
         The request is approved since both the form supervisor and room supervisor is the same.
         """
-        approval_response = self.submit_supervisor_status(APPROVED)
-        self.assertEqual(approval_response.status_code, 302)
+        self.record_approval(
+            'manager_id', self.supervisor.id,
+            supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
+        )
         statuses = RequestFormStatus.objects.filter(
             form=self.form, room=self.room, manager=self.supervisor
         )
@@ -550,8 +530,10 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         )
         self.room.managers.add(second_supervisor)
 
-        approval_response = self.submit_supervisor_status(APPROVED)
-        self.assertEqual(approval_response.status_code, 302)
+        self.record_approval(
+            'manager_id', self.supervisor.id,
+            supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
+        )
 
         shared_supervisor_statuses = RequestFormStatus.objects.filter(
             form=self.form, room=self.room, manager=self.supervisor
@@ -580,10 +562,10 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         ApprovalGroupRole.objects.create(user=other_member, group=group)
         self.room.groups.add(group)
 
-        approval_response = self.submit_supervisor_status(
-            APPROVED, RequestFormStatus.SupervisorType.REQUEST.value
+        self.record_approval(
+            'manager_id', self.supervisor.id,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
         )
-        self.assertEqual(approval_response.status_code, 302)
 
         statuses = RequestFormStatus.objects.filter(
             form=self.form, room=self.room, manager=self.supervisor
@@ -610,8 +592,7 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         ApprovalGroupRole.objects.create(user=other_member, group=group)
         self.room.groups.add(group)
 
-        approval_response = self.submit_group_status(group, APPROVED)
-        self.assertEqual(approval_response.status_code, 302)
+        self.record_approval('group_id', group.id)
 
         group_statuses = RequestFormStatus.objects.filter(
             form=self.form, room=self.room, group=group
