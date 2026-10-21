@@ -709,3 +709,130 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         self.assertEqual(pending_form.status, 'Pending <br /> by Supervisor')
         self.assertTrue(pending_form.pending_request_supervisor)
         self.assertFalse(pending_form.pending_room_supervisor)
+
+
+class RequestStatusCombinationTests(TestCase):
+    """Test applicant status and pending-role calculation across approver combinations."""
+
+    def setUp(self):
+        self.requestor = User.objects.create_user(username='requestor', password='password')
+        self.user1 = User.objects.create_user(username='user1', password='password')
+        self.user2 = User.objects.create_user(username='user2', password='password')
+        self.user3 = User.objects.create_user(username='user3', password='password')
+        self.building = Building.objects.create(name='Test Building', code='TEST')
+        self.floor = Floor.objects.create(name='Test Floor')
+        self.room = Room.objects.create(
+            building=self.building,
+            floor=self.floor,
+            number='R1',
+            key=True,
+            card_access=True,
+            alarm=True,
+            is_active=True,
+        )
+        self.room.managers.add(self.user1)
+        self.form = RequestForm.objects.create(
+            user=self.requestor,
+            supervisor=self.user2,
+            role='Test requester',
+            affiliation='3',
+            after_hours_access='1',
+        )
+        self.form.rooms.add(self.room)
+
+        self.group = ApprovalGroup.objects.create(name='Room Supervisor Group')
+        ApprovalGroupRole.objects.create(user=self.user1, group=self.group)
+        ApprovalGroupRole.objects.create(user=self.user2, group=self.group)
+
+    def record_decision(self, entity_label, entity_id, operator, status, supervisor_type=None):
+        identifier = {
+            'entity_label': entity_label,
+            'entity_id': entity_id,
+            'form_id': self.form.id,
+            'room_id': self.room.id,
+            'supervisor_type': supervisor_type,
+        }
+        statuses = create_and_process_request_form_identifier(identifier, operator, status)
+        RequestFormStatus.objects.bulk_create(statuses)
+
+    def assert_status(self, expected_request_pending, expected_room_pending):
+        processor = ApplicantRequestFormProcessor(self.requestor)
+        form = processor.get_all_status_annotated_forms([self.form])[0]
+        self.assertEqual(
+            processor.get_pending_supervisor_roles(self.form),
+            (expected_request_pending, expected_room_pending),
+        )
+        if expected_request_pending or expected_room_pending:
+            self.assertEqual(form.status, 'Pending <br /> by Supervisor')
+            self.assertEqual(form.pending_request_supervisor, expected_request_pending)
+            self.assertEqual(form.pending_room_supervisor, expected_room_pending)
+        else:
+            self.assertEqual(form.status, 'Approved')
+
+    def test_pending_roles_and_applicant_status_for_approval_combinations(self):
+        """
+            Case Number | Room Approver Type (Individual / Approval Group) | Request Supervisor == Room Supervisor |
+            Supervisor Who Submits Decision | Decision Status | Request Approval Pending | Room Approval Pending
+
+            For e.g. Case 2: the room supervisor is an individual person, the request supervisor is not the room supervisor,
+            and the request supervisor has approved. The room supervisor's approval is still pending.
+        """
+        cases = [
+            (1, 'individual', False, None, None, True, True),
+            (2, 'individual', False, 'request', APPROVED, False, True),
+            (3, 'individual', False, 'room', APPROVED, True, False),
+            (4, 'individual', True, 'request', APPROVED, False, False),
+            (5, 'individual', True, 'room', APPROVED, False, False),
+            (6, 'group', True, 'request', APPROVED, False, False),
+            (7, 'group', True, 'room', APPROVED, False, False),
+            (8, 'individual', False, 'request', DECLINED, True, True),
+            (9, 'individual', False, 'room', DECLINED, True, True),
+            (10, 'individual', True, 'request', DECLINED, True, True),
+            (11, 'individual', True, 'room', DECLINED, True, True),
+            (12, 'group', True, 'request', DECLINED, True, True),
+            (13, 'group', True, 'room', DECLINED, True, True),
+            (14, 'group', False, 'request', APPROVED, False, True),
+            (15, 'group', False, 'room', APPROVED, True, False),
+        ]
+
+        for case_num, room_type, same_person, approving_role, decision, request_pending, room_pending in cases:
+            with self.subTest(case=case_num):
+                RequestFormStatus.objects.filter(form=self.form, room=self.room).delete()
+                self.room.managers.clear()
+                self.room.groups.clear()
+
+                request_supervisor = self.user1 if same_person else self.user2
+                self.form.supervisor = request_supervisor
+                self.form.save(update_fields=['supervisor'])
+
+                if room_type == 'individual':
+                    room_manager = request_supervisor if same_person else self.user1
+                    self.room.managers.add(room_manager)
+                    group = None
+                else:
+                    group = ApprovalGroup.objects.create(
+                        name=f'Room Supervisor Group {case_num}'
+                    )
+                    group_member = request_supervisor if same_person else self.user1
+                    ApprovalGroupRole.objects.create(user=group_member, group=group)
+                    self.room.groups.add(group)
+
+                if approving_role == 'request':
+                    self.record_decision(
+                        'manager_id', request_supervisor.id, request_supervisor,
+                        decision, RequestFormStatus.SupervisorType.REQUEST.value,
+                    )
+                elif approving_role == 'room':
+                    if room_type == 'individual':
+                        self.record_decision(
+                            'manager_id', room_manager.id, room_manager,
+                            decision, RequestFormStatus.SupervisorType.ROOM.value,
+                        )
+                    else:
+                        self.assertIsNotNone(group, f'Case {case_num} should have a room approval group')
+                        group_operator = request_supervisor if same_person else self.user1
+                        self.record_decision(
+                            'group_id', group.id, group_operator, decision,
+                        )
+
+                self.assert_status(request_pending, room_pending)
