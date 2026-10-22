@@ -257,7 +257,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
             ))
 
         for group in approval_groups_that_requestor_is_in_for_the_room:
-            statuses.append(
+            statuses.extend(
                 RequestFormStatus(
                     form_id=form_id,
                     room_id=room_id,
