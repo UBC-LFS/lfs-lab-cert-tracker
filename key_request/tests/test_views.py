@@ -710,6 +710,32 @@ class SameRequestorAndRoomSupervisorApprovalTests(TestCase):
         self.assertTrue(pending_form.pending_request_supervisor)
         self.assertFalse(pending_form.pending_room_supervisor)
 
+    def test_group_approval_by_request_supervisor_who_is_room_manager(self):
+        """
+        A group approval also satisfies both individual roles held by the approver.
+        """
+        group = ApprovalGroup.objects.create(name='Room Supervisor Group')
+        ApprovalGroupRole.objects.create(user=self.supervisor, group=group)
+        self.room.groups.add(group)
+
+        self.record_approval('group_id', group.id)
+
+        group_status = RequestFormStatus.objects.get(
+            form=self.form, room=self.room, group=group,
+        )
+        individual_statuses = RequestFormStatus.objects.filter(
+            form=self.form, room=self.room, manager=self.supervisor,
+        )
+        self.assertEqual(group_status.status, APPROVED)
+        self.assertSetEqual(
+            set(individual_statuses.values_list('supervisor_type', flat=True)),
+            {
+                RequestFormStatus.SupervisorType.REQUEST.value,
+                RequestFormStatus.SupervisorType.ROOM.value,
+            },
+        )
+        self.assertTrue(all_pis_approved(self.form, self.room))
+
 
 class RequestStatusCombinationTests(TestCase):
     """Test applicant status and pending-role calculation across approver combinations."""
