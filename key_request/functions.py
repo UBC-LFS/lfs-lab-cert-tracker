@@ -147,7 +147,8 @@ def all_pis_approved(form, room):
     manager_ids = room.managers.all().values_list("id", flat=True)
     num_managers = len(manager_ids)
 
-    if form.supervisor:
+    same_supervisor = bool(form.supervisor and room.managers.filter(pk=form.supervisor_id).exists())
+    if form.supervisor and not same_supervisor:
         latest_status = RequestFormStatus.objects.filter(
             form_id=form.id,
             room_id=room.id,
@@ -168,6 +169,23 @@ def all_pis_approved(form, room):
         managers_with_status = (User.objects.filter(id__in=manager_ids).annotate(
             latest_status=Subquery(latest_status.values('status')[:1])
         ))
+
+        # When the requestor's supervisor is also a room supervisor, one approval
+        # by that person satisfies both roles. Prefer the latest status across
+        # the two role types when counting that decision.
+        if same_supervisor:
+            combined_status = RequestFormStatus.objects.filter(
+                form_id=form.id,
+                room_id=room.id,
+                manager_id=OuterRef("pk"),
+                supervisor_type__in=[
+                    RequestFormStatus.SupervisorType.REQUEST.value,
+                    RequestFormStatus.SupervisorType.ROOM.value,
+                ],
+            ).order_by('-created_at')
+            managers_with_status = managers_with_status.annotate(
+                latest_status=Subquery(combined_status.values('status')[:1])
+            )
 
         approved_count = managers_with_status.filter(latest_status=APPROVED).count()
         if approved_count != num_managers:
@@ -201,7 +219,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
     if not form_id or not room_id or (not supervisor_id and not group_id):
         return None
 
-    return RequestFormStatus(
+    request_status = RequestFormStatus(
         form_id=form_id,
         room_id=room_id,
         manager_id=supervisor_id,
@@ -210,6 +228,74 @@ def create_and_process_request_form_identifier(identifier, operator, status):
         operator_id=operator.id,
         status=status,
     )
+
+    statuses = [request_status]
+    form = RequestForm.objects.filter(pk=form_id).first()
+    room = Room.objects.filter(pk=room_id).first()
+
+    # If approver is an individual and is also the requestor's supervisor
+    if form.supervisor_id == supervisor_id:
+
+        is_room_supervisor = room and room.managers.filter(pk=supervisor_id).exists()
+        approval_groups_that_requestor_is_in_for_the_room = list(
+            room.groups.filter(roles__user_id=supervisor_id).distinct()
+        ) if room else []
+
+        if is_room_supervisor:
+            other_type = (
+                RequestFormStatus.SupervisorType.ROOM.value
+                if supervisor_type == RequestFormStatus.SupervisorType.REQUEST.value
+                else RequestFormStatus.SupervisorType.REQUEST.value
+            )
+            statuses.append(RequestFormStatus(
+                form_id=form_id,
+                room_id=room_id,
+                manager_id=supervisor_id,
+                supervisor_type=other_type,
+                operator_id=operator.id,
+                status=status,
+            ))
+
+        for group in approval_groups_that_requestor_is_in_for_the_room:
+            statuses.append(
+                RequestFormStatus(
+                    form_id=form_id,
+                    room_id=room_id,
+                    group_id=group.id,
+                    operator_id=operator.id,
+                    status=status,
+                )
+            )
+
+    # If the approver is an approval group and the requestor's supervisor is apart of it
+    if (
+        group_id
+        and form.supervisor_id == operator.id
+        and ApprovalGroup.objects.filter(
+            pk=group_id,
+            roles__user_id=operator.id,
+        ).exists()
+    ):
+        statuses.append(RequestFormStatus(
+            form_id=form_id,
+            room_id=room_id,
+            manager_id=operator.id,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+            operator_id=operator.id,
+            status=status,
+        ))
+
+        if room and room.managers.filter(pk=operator.id).exists():
+            statuses.append(RequestFormStatus(
+                form_id=form_id,
+                room_id=room_id,
+                manager_id=operator.id,
+                supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
+                operator_id=operator.id,
+                status=status,
+            ))
+
+    return statuses
 
 
 def get_area_ids_from_session(session, key, room=None):

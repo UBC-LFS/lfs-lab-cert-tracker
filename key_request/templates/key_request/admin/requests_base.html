@@ -92,6 +92,17 @@
 										{% else %}
 											N/A
 										{% endif %}
+										{% if is_admin %}
+											<form class="js-loading-submit mt-1" data-loading-text="Updating..." action="{% url 'key_request:update_expiry_date' %}" method="post">
+												{% csrf_token %}
+												<input class="form-control mb-1" type="date" name="expiry_date" value="{{ room_expiry_date.expiry_date|date_to_str }}" />
+												<input type="hidden" name="form" value="{{ form.id }}" />
+												<input type="hidden" name="room" value="{{ room.id }}" />
+												<input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+												<input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs d-block mx-auto" type="submit" value="Update" />
+											</form>
+										{% endif %}
 									{% endwith %}
 
 									{% if not forloop.last %}
