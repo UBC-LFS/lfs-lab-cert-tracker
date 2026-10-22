@@ -41,7 +41,9 @@
 	      <tr>
 	        <td>{{ form.id }}</td>
 	        <td class="text-center">
-				{{ form.user.get_full_name }}
+				<div>
+					{{ form.user.get_full_name }}
+				</div>
 				{% include 'key_request/subpages/modal_user_training_records.html' with data=form %}
 			</td>
 					<td class="text-left">
