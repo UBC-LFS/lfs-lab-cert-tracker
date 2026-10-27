@@ -281,6 +281,78 @@ class ApplicantRequestFormProcessor:
     def __init__(self, user):
         self.user = user
 
+    def get_pending_supervisor_roles(self, form):
+        pending_request_supervisor = False
+        pending_room_supervisor = False
+
+        for room in form.rooms.all():
+            same_supervisor = bool(
+                form.supervisor_id
+                and room.managers.filter(pk=form.supervisor_id).exists()
+            )
+
+            if form.supervisor_id:
+                request_statuses = RequestFormStatus.objects.filter(
+                    form_id=form.id,
+                    room_id=room.id,
+                    manager_id=form.supervisor_id,
+                    supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
+                )
+                if same_supervisor:
+                    request_statuses = RequestFormStatus.objects.filter(
+                        form_id=form.id,
+                        room_id=room.id,
+                        manager_id=form.supervisor_id,
+                        supervisor_type__in=[
+                            RequestFormStatus.SupervisorType.REQUEST.value,
+                            RequestFormStatus.SupervisorType.ROOM.value,
+                        ],
+                    )
+                latest_request_status = request_statuses.order_by('-created_at').first()
+                if latest_request_status is None or latest_request_status.status != APPROVED:
+                    pending_request_supervisor = True
+
+            for manager in room.managers.all():
+                room_statuses = RequestFormStatus.objects.filter(
+                    form_id=form.id,
+                    room_id=room.id,
+                    manager_id=manager.id,
+                    supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
+                )
+                if manager.id == form.supervisor_id:
+                    room_statuses = RequestFormStatus.objects.filter(
+                        form_id=form.id,
+                        room_id=room.id,
+                        manager_id=manager.id,
+                        supervisor_type__in=[
+                            RequestFormStatus.SupervisorType.REQUEST.value,
+                            RequestFormStatus.SupervisorType.ROOM.value,
+                        ],
+                    )
+                latest_room_status = room_statuses.order_by('-created_at').first()
+                if latest_room_status is None or latest_room_status.status != APPROVED:
+                    pending_room_supervisor = True
+
+            for group in room.groups.all():
+                group_decisions = RequestFormStatus.objects.filter(
+                    form_id=form.id,
+                    room_id=room.id,
+                ).filter(
+                    Q(group_id=group.id)
+                    | Q(
+                        manager_id__in=group.members.values('id'),
+                        supervisor_type__in=[
+                            RequestFormStatus.SupervisorType.REQUEST.value,
+                            RequestFormStatus.SupervisorType.ROOM.value,
+                        ],
+                    )
+                )
+                latest_group_decision = group_decisions.order_by('-created_at').first()
+                if latest_group_decision is None or latest_group_decision.status != APPROVED:
+                    pending_room_supervisor = True
+
+        return pending_request_supervisor, pending_room_supervisor
+
     def get_all_status_annotated_forms(self, forms):
 
         for form in forms:
@@ -293,6 +365,11 @@ class ApplicantRequestFormProcessor:
                     form.status = 'Pending <br /> by Supervisor'
                     form.status_created_at = None
                     break
+            if form.status == 'Pending <br /> by Supervisor':
+                (
+                    form.pending_request_supervisor,
+                    form.pending_room_supervisor,
+                ) = self.get_pending_supervisor_roles(form)
 
         return forms
 

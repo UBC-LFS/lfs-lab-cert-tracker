@@ -105,7 +105,7 @@
                     N/A
                   {% endif %}
 
-                  {% if form.label == "Room Supervisor" or form.label == "Group" %}
+                  {% if form.label == "Room Supervisor" or form.label == "Group" or request.user.is_superuser %}
                     <hr />
                     <form class="js-loading-submit" data-loading-text="Updating..." action="{% url 'key_request:update_expiry_date' %}" method="post">
                       {% csrf_token %}

@@ -46,7 +46,7 @@
 						{% include 'key_request/subpages/modal_request_form_details.html' with id=form.id form=form is_admin=is_admin %}
 					</td>
 					<td>
-						{% include 'key_request/subpages/request_status.html' with data=form.status %}
+						{% include 'key_request/subpages/request_status.html' with data=form.status pending_request_supervisor=form.pending_request_supervisor pending_room_supervisor=form.pending_room_supervisor %}
 						{% if form.status == 'Approved' %}
 							{% include 'key_request/subpages/date_and_time.html' with data=form.status_created_at font_size='font-size-sm' %}
 						{% endif %}
