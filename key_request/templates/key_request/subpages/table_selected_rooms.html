@@ -16,6 +16,10 @@
         <th>Approvers</th>
       {% endif %}
 
+      {% if form %}
+        <th>Supervisors' Comment</th>
+      {% endif %}
+
       <th>Required Trainings</th>
 
       {% if is_admin %}
@@ -55,6 +59,27 @@
             <span class="badge badge-danger">NO APPROVERS</span>
           </td>
           {% endif %}
+      {% endif %}
+
+      {% if form %}
+        <td class="text-left">
+          {% latest_comments_by_approver form room as latest_comments %}
+          {% for status_entry in latest_comments %}
+            <div class="mb-2">
+              <span class="font-weight-semibold">
+                {% if status_entry.group %}
+                  {{ status_entry.group.name }}:
+                {% else %}
+                  {{ status_entry.manager_id|get_user_full_name }}:
+                {% endif %}
+              </span>
+              <br />
+              {{ status_entry.comment|linebreaksbr }}
+            </div>
+          {% empty %}
+            N/A
+          {% endfor %}
+        </td>
       {% endif %}
 
       <td class="text-left">

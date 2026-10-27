@@ -94,7 +94,7 @@
                 {% endif %}
 
                 <hr />
-                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=form status=form.status %}
+                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=form status=form.status status_comment=form.status_comment %}
               </td>
               <td>
                 {% with room_expiry_date=form|room_expiry_date:form.room.id %}
