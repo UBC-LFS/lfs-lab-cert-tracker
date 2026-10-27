@@ -81,7 +81,7 @@ func sendToPIs(db utils.Database, allUsers map[int]map[string]interface{}, allUs
 			body := utils.EmailTemplate(utils.DisplayUserInfo(pi, "no-email"), message)
 
 			// fmt.Println(pi["email"], body)
-			utils.SendEmail(pi["email"].(string), body)
+			utils.SendEmail(utils.DisplayUserInfo(pi, "no-email"), pi["email"].(string), body)
 
 			numPis++
 		}
