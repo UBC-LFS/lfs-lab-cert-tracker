@@ -1,14 +1,18 @@
-<form class="d-flex js-loading-submit" data-loading-text="Updating..." action="" method="post">
+<form class="js-loading-submit w-100" data-loading-text="Updating..." action="" method="post">
   {% csrf_token %}
 
-  <select class="form-control-xs" name="status">
-    <option value="">Select</option>
-    {% for id, status_str in req_status_dict.items %}
-      <option value="{{ id }}" {% if status == id %}selected{% endif %}>{{ status_str }}</option>
-    {% endfor %}
-  </select>
+  <div class="d-flex align-items-center mb-1">
+    <select class="form-control-xs mr-2" name="status">
+      <option value="">Select</option>
+      {% for id, status_str in req_status_dict.items %}
+        <option value="{{ id }}" {% if status == id %}selected{% endif %}>{{ status_str }}</option>
+      {% endfor %}
+    </select>
+    <input class="btn btn-{% if form.is_new %}warning{% else %}secondary{% endif %} btn-xs" type="submit" value="Update" />
+  </div>
+
+  <input class="form-control form-control-xs w-100" type="text" name="comment" placeholder="Comment (optional)" value="{{ status_comment|default_if_none:'' }}" />
 
   <input type="hidden" name="request_form_identifier" value="{{ form.request_form_identifier }}" />
   <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-  <input class="btn btn-{% if form.is_new %}warning{% else %}secondary{% endif %} btn-xs ml-2" type="submit" value="Update" />
 </form>

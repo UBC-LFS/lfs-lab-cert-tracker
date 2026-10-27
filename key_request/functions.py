@@ -205,7 +205,7 @@ def all_pis_approved(form, room):
     return True
 
 
-def create_and_process_request_form_identifier(identifier, operator, status):
+def create_and_process_request_form_identifier(identifier, operator, status, comment=None):
     entity_label = identifier.get('entity_label')
     entity_id = identifier.get('entity_id')
     form_id = identifier.get('form_id')
@@ -227,6 +227,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
         group_id=group_id,
         operator_id=operator.id,
         status=status,
+        comment=comment,
     )
 
     statuses = [request_status]
@@ -254,6 +255,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                 supervisor_type=other_type,
                 operator_id=operator.id,
                 status=status,
+                comment=comment,
             ))
 
         for group in approval_groups_that_requestor_is_in_for_the_room:
@@ -264,6 +266,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                     group_id=group.id,
                     operator_id=operator.id,
                     status=status,
+                    comment=comment,
                 )
             )
 
@@ -283,6 +286,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
             supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
             operator_id=operator.id,
             status=status,
+            comment=comment,
         ))
 
         if room and room.managers.filter(pk=operator.id).exists():
@@ -293,6 +297,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                 supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
                 operator_id=operator.id,
                 status=status,
+                comment=comment,
             ))
 
     return statuses

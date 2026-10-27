@@ -414,6 +414,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
             .annotate(
                 status=Subquery(latest_status_subquery.values('status')[:1]),
                 status_created_at=Subquery(latest_status_subquery.values('created_at')[:1]),
+                status_comment=Subquery(latest_status_subquery.values('comment')[:1]),
                 status_count=Subquery(
                     latest_status_subquery.values('form_id')
                     .annotate(c=Count('id'))
