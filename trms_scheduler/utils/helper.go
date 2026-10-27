@@ -31,11 +31,11 @@ func EmailTemplate(recipientName string, content string) string {
 	return body
 }
 
-func SendEmail(recipient string, body string) {
+func SendEmail(recipientName string, recipient string, body string) {
 	host := os.Getenv("LFS_LAB_CERT_TRACKER_EMAIL_HOST")
 	port := "25"
 	sender := os.Getenv("LFS_LAB_CERT_TRACKER_EMAIL_FROM")
-	subject := "Training Record Notification at UBC LFS"
+	subject := "Training Record Notification for " + recipientName
 
 	msg := []byte("To: " + recipient + "\r\n" +
 		"From: " + sender + "\r\n" +
@@ -79,7 +79,7 @@ func SendToUsers(users map[string][]string, days int, path string) {
 
 		body := EmailTemplate(recipientName, content)
 		// fmt.Println(recipientEmail, body)
-		SendEmail(recipientEmail, body)
+		SendEmail(recipientName, recipientEmail, body)
 	}
 	fmt.Println("Sent to Users:", len(users))
 }
@@ -113,7 +113,7 @@ func SendToPIs(pis map[string][]map[string]interface{}, days int, path string) {
 
 		body := EmailTemplate(recipientName, content)
 		// fmt.Println(recipientEmail, body)
-		SendEmail(recipientEmail, body)
+		SendEmail(recipientName, recipientEmail, body)
 	}
 
 	fmt.Println("Sent to PIs:", len(pis))
@@ -155,7 +155,7 @@ func SendToAdmins(db Database, users map[string][]string, days int, path string)
 
 		body := EmailTemplate(recipientName, content)
 		// fmt.Println(recipientEmail, body)
-		SendEmail(recipientEmail, body)
+		SendEmail(recipientName, recipientEmail, body)
 	}
 
 	fmt.Println("Sent to Admins:", len(admins))
