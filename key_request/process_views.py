@@ -224,7 +224,7 @@ def get_message(receiver, rooms, option, submitted_at, applicant=None):
             )
 
     elif option == 'supervisor':
-        subject = 'Notification of Request at UBC LFS'
+        subject = 'New Request for {}'.format(applicant.get_full_name())
         message += '''\
             <p>Hi {0},</p>
             <p>{1} submitted a request form on {2}.</p>

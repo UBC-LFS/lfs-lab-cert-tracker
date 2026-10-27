@@ -272,7 +272,7 @@ class ApprovalNotificationManager:
 
     def _make_admin_summary_message(self, admin, applicant, room_info):
         """Single summary email to the admin with all approved rooms."""
-        subject = "Notification: Request Approval Summary at UBC LFS"
+        subject = "Request Approved for {}".format(display_user_full_name(applicant))
         message = '''\
         <div>
             <p>Hi {0} (ATRS Administrator),</p>
