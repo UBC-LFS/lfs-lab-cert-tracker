@@ -134,7 +134,7 @@
                                 id="deactivate-group-id"></span>)</h5></div>
                         <div class="mb-3">Members: <span id="group-members-string"></span></div>
 
-                        <form action="{% url 'key_request:change_activation' %}" method="post">
+                        <form class="js-loading-submit" data-loading-text="Deactivating..." action="{% url 'key_request:change_activation' %}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="method" value="deactivate"/>
                             <input type="hidden" name="group" value=""/>
@@ -161,7 +161,7 @@
                                 id="activate-group-id"></span>)</h5></div>
                         <div class="mb-3">Members: <span id="group-members-string"></span></div>
 
-                        <form action="{% url 'key_request:change_activation' %}" method="post">
+                        <form class="update-status-form js-loading-submit" data-loading-text="Activating..." action="{% url 'key_request:change_activation' %}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="method" value="activate"/>
                             <input type="hidden" name="group" value=""/>
@@ -179,5 +179,5 @@
 {% block js %}
     {% load static %}
     <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/Group/LoadGroupChangeActivationModal.js' %}"></script>
-
+    <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}

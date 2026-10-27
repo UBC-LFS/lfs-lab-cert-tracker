@@ -20,7 +20,7 @@
 		</ul>
 	</div>
 
-	<form class="key-request-form" action="" method="POST">
+	<form class="key-request-form js-loading-submit" action="" method="POST">
 	  {% csrf_token %}
 
 	  <div class="row">
@@ -64,7 +64,13 @@
 				<div class="text-center border bg-lighter-gray pt-3 pb-4" style="margin-top:100px">
 					<p>Click the <span class="text-primary">Continue</span> button below to proceed.</p>
 					<a class="btn btn-secondary mr-2" href="{% url 'key_request:index' %}">Go back</a>
-					<input id="select-rooms-continue" class="btn btn-primary" type="button" value="Continue" disabled data-post-url="{% url 'key_request:select_rooms' %}" data-next-url="{% url 'key_request:check_user_trainings' %}" data-token="{{ csrf_token }}" />
+					<input id="select-rooms-continue" class="btn btn-primary" type="button" value="Continue" disabled data-loading-text="Continuing..." data-post-url="{% url 'key_request:select_rooms' %}" data-next-url="{% url 'key_request:check_user_trainings' %}" data-token="{{ csrf_token }}" />
+				</div>
+
+				<div class="text-right">
+					<button id="back-to-top-button" class="btn btn-primary" type="button">
+						Back to Top
+					</button>
 				</div>
 	    </div>
 	  </div>
@@ -81,5 +87,5 @@
 
 {% load static %}
 <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/select_rooms.js' %}"></script>
-
+<script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,42 @@
+{% load custom_tags %}
+
+<button class="btn btn-info btn-sm" type="button" data-toggle="modal" data-target="#key-request-user-training-records-modal-{{ data.id }}">Trainings</button>
+
+<div class="modal fade" id="key-request-user-training-records-modal-{{ data.id }}" tabindex="-1" role="dialog" aria-labelledby="key-request-user-training-records-modal-label-{{ data.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="key-request-user-training-records-modal-label-{{ data.id }}">{{ data.user.get_full_name }}'s Training Records</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+        <p>Total Training Records: <strong class="text-primary">{{ data.user.usercert_set.all|length }}</strong></p>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Training</th>
+              <th>Completion Date</th>
+              <th>Uploaded Date</th>
+              <th>Certificate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in data.user.usercert_set.all %}
+              <tr>
+                <td>{{ record.cert.name }}</td>
+                <td>{{ record.completion_date }}</td>
+                <td>{{ record.uploaded_date }}</td>
+                <td>
+                  <a href="{% url 'app:training_details' user_id=data.user.id training_id=record.cert_id %}">View record</a>
+                  {% if record.by_api %}<span class="badge badge-warning">CANVAS</span>{% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5">No training records found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

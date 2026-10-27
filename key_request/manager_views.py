@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.views.decorators.cache import never_cache, cache_control
 from django.shortcuts import render, redirect
 from django.http import HttpResponseRedirect
@@ -19,7 +20,7 @@ from lfs_lab_cert_tracker import settings
 from .admin_views import ViewApprovalGroups
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, ApprovalGroupRole, RoomExpiryDate
+from .models import Room, RequestForm, ApprovalGroupRole, RoomExpiryDate
 from .forms import UserApprovalGroupForm
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, GroupFormProcessor, ManagerFormProcessor
@@ -27,6 +28,8 @@ from .utils import REQUEST_STATUS_DICT
 
 import json
 from datetime import date
+
+from app import functions as appFunc
 
 
 @method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
@@ -128,13 +131,57 @@ class UpdateExpiryDate(LoginRequiredMixin, View):
             messages.error(request, 'An error occurred. <strong>Expiry Date:</strong> This field is required.')
             return HttpResponseRedirect(next)
 
-        duration = func.convert_str_to_date(expiry_date) - date.today()
+        new_expiry_date = func.convert_str_to_date(expiry_date)
+        duration = new_expiry_date - date.today()
+        
         if duration.days < 0:
             messages.error(request, 'An error occurred. Please enter a valid <strong>Expiry Date</strong>.')
             return HttpResponseRedirect(next)
 
-        RoomExpiryDate.objects.create(form_id=form_id, room_id=room_id, expiry_date=expiry_date)
+        previous_expiry = RoomExpiryDate.objects.filter(
+            form_id=form_id,
+            room_id=room_id
+        ).order_by('-created_at').first()
+        previous_expiry_date = previous_expiry.expiry_date if previous_expiry else None
+        
+        RoomExpiryDate.objects.create(form_id=form_id, room_id=room_id, expiry_date=new_expiry_date)
         messages.success(request, 'Success! <strong>Expiry Date</strong> has been updated.')
+
+        if previous_expiry_date != new_expiry_date:
+            admins = User.objects.filter(is_active=True, is_superuser=True)
+            valid_admins = [admin for admin in admins if settings.EMAIL_FROM and appFunc.check_email_valid(admin.email)]
+            if valid_admins:
+                form = RequestForm.objects.select_related('user').get(pk=form_id)
+                room = Room.objects.select_related('building', 'floor').get(pk=room_id)
+                room_label = func.display_room(room)
+                previous_label = previous_expiry_date.isoformat() if previous_expiry_date else 'N/A'
+                subject = 'Room access expiry date changed'
+                message = (
+                    f"<p>The room access expiry date for {form.user.get_full_name()}'s request "
+                    f"(Form #{form.id}, {room_label}) was changed by "
+                    f"{request.user.get_full_name()}.</p>"
+                    f"<p>Previous expiry date: {previous_label}<br>"
+                    f"New expiry date: {new_expiry_date.isoformat()}</p>"
+                )
+
+                failed_recipients = []
+                for admin in valid_admins:
+                    sent = send_mail(
+                        subject,
+                        message,
+                        settings.EMAIL_FROM,
+                        [admin.email],
+                        fail_silently=False,
+                        html_message=message,
+                    )
+                    
+                    if not sent:
+                        failed_recipients.append(admin.email)
+
+                if failed_recipients:
+                    messages.warning(request, 'The expiry date was updated, but the admin notification email could not be sent.')
+            else:
+                messages.warning(request, 'The expiry date was updated, but no active admin has a valid email address for notification.')
         return HttpResponseRedirect(next)
 
 

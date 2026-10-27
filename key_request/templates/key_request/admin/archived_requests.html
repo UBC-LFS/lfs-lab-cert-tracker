@@ -12,3 +12,8 @@
 {% include 'key_request/admin/requests_base.html' with path='archived_requests' %}
 
 {% endblock %}
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
+{% endblock %}

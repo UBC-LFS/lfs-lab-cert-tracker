@@ -50,7 +50,7 @@
 										</button>
 									</div>
 									<div class="modal-body text-left">
-										<form action="{% url 'app:edit_area' %}" method="post">
+										<form action="{% url 'app:edit_area' %}" method="post" class="js-loading-submit" data-loading-text="Updating...">
 											{% csrf_token %}
 
 											<div class="mb-3">
@@ -94,4 +94,9 @@
 
 {% include 'app/subpages/pagination.html' with data=areas %}
 
+{% endblock %}
+
+{% block js %}
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lfs_lab_cert_tracker/js/form_submit_loading.js' %}"></script>
 {% endblock %}

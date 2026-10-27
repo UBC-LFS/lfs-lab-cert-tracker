@@ -11,7 +11,7 @@
 
 <input type="hidden" name="validate_group_url" id="validate_group_url" value="{{ validate_group_url }}">
 
-<form action="" method="POST" id="room-group-form">
+<form action="" method="POST" id="room-group-form" class="js-loading-submit">
     {% csrf_token %}
     {% if next %}
         <input type="hidden" name="next" value="{{ next }}">
@@ -108,9 +108,9 @@
             <a class="btn btn-outline-secondary" href="{% url 'key_request:all_groups' %}">Cancel</a>
         {% endif %}
             {% if path == 'create_group' %}
-                <input class="btn btn-primary mx-2" type="submit" value="Create Group" />
+                <input class="btn btn-primary mx-2" type="submit" value="Create Group" data-loading-text="Creating..." />
             {% elif path == 'edit_group' %}
-                <input class="btn btn-primary mx-2" type="submit" value="Update Group" />
+                <input class="btn btn-primary mx-2" type="submit" value="Update Group" data-loading-text="Updating..." />
             {% endif %}
         </div>
 
