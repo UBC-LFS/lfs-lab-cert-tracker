@@ -1,4 +1,10 @@
 $(document).ready(function() {
+  $('.js-loading-navigation').on('click', function() {
+    const link = $(this);
+    link.text(link.data('loading-text') || 'Loading...');
+    link.addClass('disabled').attr('aria-disabled', 'true');
+  });
+
   $('.js-loading-submit').on('submit', function(event) {
     // Use the button that started this submission; fall back for scripted submits.
     const clickedSubmit = event.originalEvent && event.originalEvent.submitter;
