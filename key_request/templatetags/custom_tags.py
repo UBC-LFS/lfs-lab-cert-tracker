@@ -65,6 +65,23 @@ def get_user_full_name(user_id):
         if user:
             return appFunc.get_user_name(user)
 
+@register.simple_tag
+def latest_comments_by_approver(form, room):
+    statuses = RequestFormStatus.objects.filter(
+        form=form,
+        room=room,
+        comment__isnull=False,
+    ).exclude(comment='').select_related('group', 'manager').order_by('-created_at', '-pk')
+
+    latest_by_approver = {}
+    for status in statuses:
+        if status.group_id:
+            approver_key = ('group', status.group_id)
+        else:
+            approver_key = ('manager', status.manager_id, status.supervisor_type, status.operator_id)
+        latest_by_approver.setdefault(approver_key, status)
+
+    return list(latest_by_approver.values())
 
 @register.filter
 def get_room(room_id):
