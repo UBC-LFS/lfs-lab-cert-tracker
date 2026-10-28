@@ -66,22 +66,20 @@ def get_user_full_name(user_id):
             return appFunc.get_user_name(user)
 
 @register.simple_tag
-def latest_comments_by_approver(form, room):
+def latest_supervisor_comments(form, supervisor_type):
+    """Return the latest non-empty comment for each supervisor and room."""
     statuses = RequestFormStatus.objects.filter(
         form=form,
-        room=room,
+        supervisor_type=supervisor_type,
         comment__isnull=False,
-    ).exclude(comment='').select_related('group', 'manager').order_by('-created_at', '-pk')
+    ).exclude(comment='').select_related('manager', 'room').order_by(
+        '-created_at', '-pk'
+    )
 
-    latest_by_approver = {}
+    latest_by_supervisor = {}
     for status in statuses:
-        if status.group_id:
-            approver_key = ('group', status.group_id)
-        else:
-            approver_key = ('manager', status.manager_id, status.supervisor_type, status.operator_id)
-        latest_by_approver.setdefault(approver_key, status)
-
-    return list(latest_by_approver.values())
+        latest_by_supervisor.setdefault((status.manager_id, status.room_id), status)
+    return list(latest_by_supervisor.values())
 
 @register.filter
 def get_room(room_id):
