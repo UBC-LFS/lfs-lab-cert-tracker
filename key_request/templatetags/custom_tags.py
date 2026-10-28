@@ -8,7 +8,7 @@ from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
 from key_request.models import Room, RequestFormStatus, RoomEmail, RequestForm, UserFilter, RoomExpiryDate
-from key_request.dashboard_coordinators import get_room_pending_supervisor_roles
+from key_request.dashboard_coordinators import ApplicantRequestFormProcessor
 
 from django.template.defaultfilters import pluralize
 from datetime import date
@@ -89,7 +89,7 @@ def latest_supervisor_comments(form, supervisor_type, room=None):
 @register.simple_tag
 def room_pending_supervisor_roles(form, room):
     """Return the approval state of a room and which supervisors are still pending."""
-    pending_request_supervisor, pending_room_supervisor = get_room_pending_supervisor_roles(form, room)
+    pending_request_supervisor, pending_room_supervisor = ApplicantRequestFormProcessor(None).get_pending_supervisor_roles(form, [room])
     return {
         'approved': func.all_pis_approved(form, room),
         'pending_request_supervisor': pending_request_supervisor,
