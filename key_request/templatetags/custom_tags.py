@@ -8,6 +8,7 @@ from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
 from key_request.models import Room, RequestFormStatus, RoomEmail, RequestForm, UserFilter, RoomExpiryDate
+from key_request.dashboard_coordinators import get_room_pending_supervisor_roles
 
 from django.template.defaultfilters import pluralize
 from datetime import date
@@ -66,20 +67,35 @@ def get_user_full_name(user_id):
             return appFunc.get_user_name(user)
 
 @register.simple_tag
-def latest_supervisor_comments(form, supervisor_type):
-    """Return the latest non-empty comment for each supervisor and room."""
+def latest_supervisor_comments(form, supervisor_type, room=None):
+    """Return the latest non-empty supervisor comment, optionally for a single room."""
     statuses = RequestFormStatus.objects.filter(
         form=form,
         supervisor_type=supervisor_type,
         comment__isnull=False,
-    ).exclude(comment='').select_related('manager', 'room').order_by(
-        '-created_at', '-pk'
     )
+    if room:
+        statuses = statuses.filter(room=room)
 
-    latest_by_supervisor = {}
-    for status in statuses:
-        latest_by_supervisor.setdefault((status.manager_id, status.room_id), status)
-    return list(latest_by_supervisor.values())
+    return statuses.exclude(
+        comment=''
+    ).select_related(
+        'manager', 'room'
+    ).order_by(
+        '-created_at', '-pk'
+    )[:1]
+
+
+@register.simple_tag
+def room_pending_supervisor_roles(form, room):
+    """Return the approval state of a room and which supervisors are still pending."""
+    pending_request_supervisor, pending_room_supervisor = get_room_pending_supervisor_roles(form, room)
+    return {
+        'approved': func.all_pis_approved(form, room),
+        'pending_request_supervisor': pending_request_supervisor,
+        'pending_room_supervisor': pending_room_supervisor,
+    }
+
 
 @register.filter
 def get_room(room_id):
