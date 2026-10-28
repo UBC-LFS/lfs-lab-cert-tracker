@@ -1,6 +1,7 @@
 from django import template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.urls import reverse
 
 from key_request import functions as func
@@ -69,9 +70,14 @@ def get_user_full_name(user_id):
 @register.simple_tag
 def latest_supervisor_comments(form, supervisor_type, room=None):
     """Return the latest non-empty supervisor comment, optionally for a single room."""
+    supervisor_filter = Q(supervisor_type=supervisor_type)
+
+    if int(supervisor_type) == RequestFormStatus.SupervisorType.ROOM.value:
+        supervisor_filter |= Q(group__isnull=False)
+
     statuses = RequestFormStatus.objects.filter(
+        supervisor_filter,
         form=form,
-        supervisor_type=supervisor_type,
         comment__isnull=False,
     )
     if room:
@@ -80,7 +86,7 @@ def latest_supervisor_comments(form, supervisor_type, room=None):
     return statuses.exclude(
         comment=''
     ).select_related(
-        'manager', 'room'
+        'manager', 'group', 'room'
     ).order_by(
         '-created_at', '-pk'
     )[:1]
