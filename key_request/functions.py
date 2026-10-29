@@ -270,30 +270,31 @@ def create_and_process_request_form_identifier(identifier, operator, status, com
                 )
             )
 
-    # If the approver is an approval group and the requestor's supervisor is apart of it
+    # If the approver is an approval group and the requestor's supervisor is apart of it.
     if (
         group_id
-        and form.supervisor_id == operator.id
+        and form.supervisor_id
+        and (form.supervisor_id == operator.id or operator.is_superuser)
         and ApprovalGroup.objects.filter(
             pk=group_id,
-            roles__user_id=operator.id,
+            roles__user_id=form.supervisor_id,
         ).exists()
     ):
         statuses.append(RequestFormStatus(
             form_id=form_id,
             room_id=room_id,
-            manager_id=operator.id,
+            manager_id=form.supervisor_id,
             supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
             operator_id=operator.id,
             status=status,
             comment=comment,
         ))
 
-        if room and room.managers.filter(pk=operator.id).exists():
+        if room and room.managers.filter(pk=form.supervisor_id).exists():
             statuses.append(RequestFormStatus(
                 form_id=form_id,
                 room_id=room_id,
-                manager_id=operator.id,
+                manager_id=form.supervisor_id,
                 supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
                 operator_id=operator.id,
                 status=status,
