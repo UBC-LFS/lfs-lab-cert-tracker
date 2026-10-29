@@ -281,11 +281,11 @@ class ApplicantRequestFormProcessor:
     def __init__(self, user):
         self.user = user
 
-    def get_pending_supervisor_roles(self, form):
+    def get_pending_supervisor_roles(self, form, rooms=None):
         pending_request_supervisor = False
         pending_room_supervisor = False
 
-        for room in form.rooms.all():
+        for room in rooms if rooms is not None else form.rooms.all():
             same_supervisor = bool(
                 form.supervisor_id
                 and room.managers.filter(pk=form.supervisor_id).exists()
@@ -414,6 +414,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
             .annotate(
                 status=Subquery(latest_status_subquery.values('status')[:1]),
                 status_created_at=Subquery(latest_status_subquery.values('created_at')[:1]),
+                status_comment=Subquery(latest_status_subquery.values('comment')[:1]),
                 status_count=Subquery(
                     latest_status_subquery.values('form_id')
                     .annotate(c=Count('id'))

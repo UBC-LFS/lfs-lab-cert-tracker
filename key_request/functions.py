@@ -205,7 +205,7 @@ def all_pis_approved(form, room):
     return True
 
 
-def create_and_process_request_form_identifier(identifier, operator, status):
+def create_and_process_request_form_identifier(identifier, operator, status, comment=None):
     entity_label = identifier.get('entity_label')
     entity_id = identifier.get('entity_id')
     form_id = identifier.get('form_id')
@@ -227,6 +227,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
         group_id=group_id,
         operator_id=operator.id,
         status=status,
+        comment=comment,
     )
 
     statuses = [request_status]
@@ -254,6 +255,7 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                 supervisor_type=other_type,
                 operator_id=operator.id,
                 status=status,
+                comment=comment,
             ))
 
         for group in approval_groups_that_requestor_is_in_for_the_room:
@@ -264,35 +266,39 @@ def create_and_process_request_form_identifier(identifier, operator, status):
                     group_id=group.id,
                     operator_id=operator.id,
                     status=status,
+                    comment=comment,
                 )
             )
 
-    # If the approver is an approval group and the requestor's supervisor is apart of it
+    # If the approver is an approval group and the requestor's supervisor is apart of it.
     if (
         group_id
-        and form.supervisor_id == operator.id
+        and form.supervisor_id
+        and (form.supervisor_id == operator.id or operator.is_superuser)
         and ApprovalGroup.objects.filter(
             pk=group_id,
-            roles__user_id=operator.id,
+            roles__user_id=form.supervisor_id,
         ).exists()
     ):
         statuses.append(RequestFormStatus(
             form_id=form_id,
             room_id=room_id,
-            manager_id=operator.id,
+            manager_id=form.supervisor_id,
             supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value,
             operator_id=operator.id,
             status=status,
+            comment=comment,
         ))
 
-        if room and room.managers.filter(pk=operator.id).exists():
+        if room and room.managers.filter(pk=form.supervisor_id).exists():
             statuses.append(RequestFormStatus(
                 form_id=form_id,
                 room_id=room_id,
-                manager_id=operator.id,
+                manager_id=form.supervisor_id,
                 supervisor_type=RequestFormStatus.SupervisorType.ROOM.value,
                 operator_id=operator.id,
                 status=status,
+                comment=comment,
             ))
 
     return statuses

@@ -1,6 +1,7 @@
 from django import template
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.urls import reverse
 
 from key_request import functions as func
@@ -8,6 +9,7 @@ from app import functions as appFunc
 from key_request.utils import REQUEST_STATUS_DICT
 from key_request.forms import KEY_REQUEST_LABELS
 from key_request.models import Room, RequestFormStatus, RoomEmail, RequestForm, UserFilter, RoomExpiryDate
+from key_request.dashboard_coordinators import ApplicantRequestFormProcessor
 
 from django.template.defaultfilters import pluralize
 from datetime import date
@@ -64,6 +66,41 @@ def get_user_full_name(user_id):
         user = User.objects.filter(id=user_id).first()
         if user:
             return appFunc.get_user_name(user)
+
+@register.simple_tag
+def latest_supervisor_comments(form, supervisor_type, room=None):
+    """Return the latest non-empty supervisor comment, optionally for a single room."""
+    supervisor_filter = Q(supervisor_type=supervisor_type)
+
+    if int(supervisor_type) == RequestFormStatus.SupervisorType.ROOM.value:
+        supervisor_filter |= Q(group__isnull=False)
+
+    statuses = RequestFormStatus.objects.filter(
+        supervisor_filter,
+        form=form,
+        comment__isnull=False,
+    )
+    if room:
+        statuses = statuses.filter(room=room)
+
+    return statuses.exclude(
+        comment=''
+    ).select_related(
+        'manager', 'group', 'room'
+    ).order_by(
+        '-created_at', '-pk'
+    )[:1]
+
+
+@register.simple_tag
+def room_pending_supervisor_roles(form, room):
+    """Return the approval state of a room and which supervisors are still pending."""
+    pending_request_supervisor, pending_room_supervisor = ApplicantRequestFormProcessor(None).get_pending_supervisor_roles(form, [room])
+    return {
+        'approved': func.all_pis_approved(form, room),
+        'pending_request_supervisor': pending_request_supervisor,
+        'pending_room_supervisor': pending_room_supervisor,
+    }
 
 
 @register.filter

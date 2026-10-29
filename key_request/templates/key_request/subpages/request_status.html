@@ -1,9 +1,52 @@
-{% if data == 'Pending <br /> by Supervisor' %}
-    {% if pending_request_supervisor %}<span class="badge badge-light">PENDING BY <br /> REQUESTOR'S SUPERVISOR</span><br />{% endif %}
-    {% if pending_room_supervisor %}<span class="badge badge-light">PENDING BY <br /> ROOM SUPERVISOR</span>{% endif %}
-    {% if not pending_request_supervisor and not pending_room_supervisor %}
-        <span class="badge badge-light">{{ data.upper|safe }}</span>
-    {% endif %}
+{% load custom_tags %}
+{% if data == 'Pending <br /> by Supervisor' and form %}
+    <ol class="list-minus-20 text-left">
+        {% for room in form.rooms.all %}
+            {% room_pending_supervisor_roles form room as room_status %}
+            <li>
+                {% if room_status.approved %}
+                    <span class="badge badge-success">APPROVED</span>
+                {% else %}
+                    {% if room_status.pending_request_supervisor %}
+                        <span class="badge badge-light text-wrap">PENDING BY <wbr> REQUESTOR'S SUPERVISOR</span>
+                        <br />
+                        {% latest_supervisor_comments form 2 room as request_supervisor_comments %}
+                        {% with status=request_supervisor_comments.0 %}
+                            {% if status %}
+                                <small class="text-muted">{{ status.comment }}</small>
+                                <br />
+                            {% else %}
+                                <small class="text-muted"> N/A </small>
+                                <br />
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                    {% if room_status.pending_room_supervisor %}
+                        <span class="badge badge-light text-wrap">PENDING BY <wbr> ROOM SUPERVISOR</span>
+                        <br />
+                        {% latest_supervisor_comments form 1 room as room_supervisor_comments %}
+                        {% with status=room_supervisor_comments.0 %}
+                            {% if status %}
+                                <small class="text-muted">{{ status.comment }} </small>
+                                <br />
+                            {% else %}
+                                <small class="text-muted"> N/A </small>
+                                <br />
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                    {% if not room_status.pending_request_supervisor and not room_status.pending_room_supervisor %}
+                        <span class="badge badge-light">{{ data.upper|safe }}</span>
+                    {% endif %}
+                {% endif %}
+            </li>
+            {% if not forloop.last %}
+            <hr />
+          {% endif %}
+        {% endfor %}
+    </ol>
+{% elif data == 'Pending <br /> by Supervisor' %}
+    <span class="badge badge-light">{{ data.upper|safe }}</span>
 {% else %}
     <span class="badge badge-{% if data == 'Submitted' %}light{% elif data == 'Approved' %}success{% elif data == 'Declined' %}danger{% elif data == 'Insufficient Info' %}warning{% else %}light{% endif %}">{{ data.upper|safe }}</span>
 {% endif %}
