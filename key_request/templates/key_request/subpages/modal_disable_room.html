@@ -1,0 +1,46 @@
+{% load custom_tags %}
+
+<button class="btn btn-outline-danger mt-2 btn-xs" type="button" data-toggle="modal" data-target="#form-disable-rooms-modal-{{ form.id }}">
+  Disable Room(s) From Request
+</button>
+
+<div class="modal fade" id="form-disable-rooms-modal-{{ form.id }}" tabindex="-1" role="dialog" aria-labelledby="form-disable-rooms-modal-label-{{ form.id }}" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="form-disable-rooms-modal-label-{{ form.id }}">Disable Room(s) From Request</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+        <p>
+          Request Form ID: {{ form.id }} ({{ form.user.get_full_name }})
+        </p>
+        <p class="text-secondary font-size-sm">
+          Disabled rooms are no longer included in the approval status of this request.
+        </p>
+
+        <ul class="list-group">
+          {% for room in form.rooms.all %}
+            {% with is_disabled=room.id|is_in:form.disabled_room_ids %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                {% if is_disabled %}
+                  <s class="text-secondary">{{ room|display_room }}</s>
+                {% else %}
+                  <span>{{ room|display_room }}</span>
+                {% endif %}
+
+                <form class="js-loading-submit" data-loading-text="Disabling..." action="{% url 'key_request:toggle_disable_room' form_id=form.id room_id=room.id %}" method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                  {% if not is_disabled %}
+                    <button class="btn btn-outline-danger btn-no-hover btn-xs" type="submit" name="action" value="disable" data-loading-text="Disabling...">Disable</button>
+                  {% endif %}
+                </form>
+              </li>
+            {% endwith %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
