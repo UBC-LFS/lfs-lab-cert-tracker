@@ -11,7 +11,7 @@
     <input class="btn btn-{% if form.is_new %}warning{% else %}secondary{% endif %} btn-xs" type="submit" value="Update" />
   </div>
 
-  <input class="form-control form-control-xs w-100" type="text" name="comment" placeholder="Comment (optional)" value="{{ status_comment|default_if_none:'' }}" />
+  {% include 'key_request/subpages/modal_room_comment.html' with id=form.request_form_identifier|slugify data=status_comment %}
 
   <input type="hidden" name="request_form_identifier" value="{{ form.request_form_identifier }}" />
   <input type="hidden" name="next" value="{{ request.get_full_path }}" />
