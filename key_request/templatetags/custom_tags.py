@@ -69,7 +69,7 @@ def get_user_full_name(user_id):
 
 @register.simple_tag
 def latest_supervisor_comments(form, supervisor_type, room=None):
-    """Return the latest non-empty supervisor comment, optionally for a single room."""
+    """Return the latest non-empty comment from each supervisor/group, optionally for a single room."""
     supervisor_filter = Q(supervisor_type=supervisor_type)
 
     if int(supervisor_type) == RequestFormStatus.SupervisorType.ROOM.value:
@@ -83,13 +83,19 @@ def latest_supervisor_comments(form, supervisor_type, room=None):
     if room:
         statuses = statuses.filter(room=room)
 
-    return statuses.exclude(
+    statuses = statuses.exclude(
         comment=''
     ).select_related(
         'manager', 'group', 'room'
     ).order_by(
         '-created_at', '-pk'
-    )[:1]
+    )
+
+    latest = {}
+    for status in statuses:
+        key = ('group', status.group_id) if status.group_id else ('manager', status.manager_id)
+        latest.setdefault(key, status)
+    return list(latest.values())
 
 
 @register.simple_tag

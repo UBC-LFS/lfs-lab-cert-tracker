@@ -25,15 +25,20 @@
                         <span class="badge badge-light text-wrap">PENDING BY <wbr> ROOM SUPERVISOR</span>
                         <br />
                         {% latest_supervisor_comments form 1 room as room_supervisor_comments %}
-                        {% with status=room_supervisor_comments.0 %}
-                            {% if status %}
-                                <small class="text-muted">{{ status.comment }} </small>
-                                <br />
-                            {% else %}
-                                <small class="text-muted"> N/A </small>
-                                <br />
-                            {% endif %}
-                        {% endwith %}
+                        {% if room_supervisor_comments %}
+                            <ul class="list-minus-20 text-left mb-0">
+                                {% for status in room_supervisor_comments %}
+                                    <li>
+                                        <small class="text-muted">
+                                            {% if status.group %}{{ status.group.name }}{% else %}{{ status.manager_id|get_user_full_name|default:"Room Supervisor" }}{% endif %}: {{ status.comment }}
+                                        </small>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <small class="text-muted"> N/A </small>
+                            <br />
+                        {% endif %}
                     {% endif %}
                     {% if not room_status.pending_request_supervisor and not room_status.pending_room_supervisor %}
                         <span class="badge badge-light">{{ data.upper|safe }}</span>
