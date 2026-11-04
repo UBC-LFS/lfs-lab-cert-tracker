@@ -38,7 +38,7 @@ class Index(LoginRequiredMixin, View):
 
 
         for form in forms:
-            room_ids = form.rooms.all().values_list('id', flat=True)
+            room_ids = form.active_rooms.values_list('id', flat=True)
             user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, room_ids)
             form.user_trainings = user_trainings
             form.total_missing = total_missing
