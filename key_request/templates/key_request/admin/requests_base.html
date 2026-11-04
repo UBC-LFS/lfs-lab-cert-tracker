@@ -59,13 +59,13 @@
 
 						{% elif form.status_stats %}
 
-							{% if form.status_stats.total_approved == form.status_stats.total_approvers %}
+							{% if form.status_stats.is_approved %}
 								<span class="badge badge-success">APPROVED</span>
 
-              {% elif form.status_stats.total_declined == form.status_stats.total_approvers %}
+              {% elif form.status_stats.total_approvers and form.status_stats.total_declined == form.status_stats.total_approvers %}
 								<span class="badge badge-danger">DECLINED</span>
 
-							{% elif form.status_stats.total_insufficient == form.status_stats.total_approvers %}
+							{% elif form.status_stats.total_approvers and form.status_stats.total_insufficient == form.status_stats.total_approvers %}
                   <span class="badge badge-warning">INSUFFICIENT</span>
 
               {% else  %}

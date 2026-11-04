@@ -312,7 +312,8 @@ class ViewFormDetails(LoginRequiredMixin, View):
             ),
             reverse=False,
         )
-        self.form.all_approved = all_approved
+        # With every room disabled there are no approvals, so the request is not approved
+        self.form.all_approved = all_approved and bool(rooms)
 
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
