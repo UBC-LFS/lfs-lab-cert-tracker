@@ -136,7 +136,7 @@ class AdminRequestFormProcessor(RequestFormProcessor):
         status = REV_REQUEST_STATUS_DICT.get(self.status_q, -1)
 
         if status == APPROVED:
-            return form.status_stats['total_approved'] == form.status_stats['total_approvers']
+            return form.status_stats['is_approved']
         elif status == DECLINED:
             return form.status_stats['total_declined'] > 0
         elif status == INSUFFICIENT:
@@ -241,6 +241,8 @@ class AdminRequestFormProcessor(RequestFormProcessor):
                 total_rooms_approved += 1
 
         return {
+            # No approvers means every room is disabled; that is not an approval
+            'is_approved': total_approvers > 0 and total_approved == total_approvers,
             'total_rooms': form.active_rooms.count(),
             'total_rooms_approved': total_rooms_approved,
             'total_approved': total_approved,
@@ -360,11 +362,12 @@ class ApplicantRequestFormProcessor:
             latest_status = form.requestformstatus_set.all().order_by('-created_at')
             if latest_status:
                 form.status_created_at = latest_status.first().created_at
-            for room in form.active_rooms:
-                if not(all_pis_approved(form, room)):
-                    form.status = 'Pending <br /> by Supervisor'
-                    form.status_created_at = None
-                    break
+
+            active_rooms = list(form.active_rooms)
+            # A request with every room disabled has nothing approved, so it is not Approved
+            if not active_rooms or not all(all_pis_approved(form, room) for room in active_rooms):
+                form.status = 'Pending <br /> by Supervisor'
+                form.status_created_at = None
             if form.status == 'Pending <br /> by Supervisor':
                 (
                     form.pending_request_supervisor,
