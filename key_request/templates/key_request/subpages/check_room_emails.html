@@ -2,9 +2,10 @@
 
 <ol class="list-minus-20 text-left">
   {% for room in form.rooms.all %}
-    <li>
+    {% with is_disabled=room.id|is_in:form.disabled_room_ids %}
+    <li {% if is_disabled %}class="text-secondary"{% endif %}>
       <span class="font-weight-semibold font-size-sm">
-        {% if room.is_active %}
+        {% if room.is_active and not is_disabled %}
           {{ room|display_room }}
         {% else %}
           <s>{{ room|display_room }}</s>
@@ -52,6 +53,7 @@
         </ul>
       {% endwith %}
     </li>
+    {% endwith %}
 
     {% if not forloop.last %}
       <hr />
