@@ -31,7 +31,7 @@ from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room, ApprovalGroup, ApprovalGroupRole
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
-from .models import Room, UserFilter, RoomEmail, RoomExpiryDate
+from .models import Room, UserFilter, RoomEmail, RoomExpiryDate, RequestFormDisabledRoom
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
@@ -623,6 +623,25 @@ def update_all(request):
             messages.warning(request, 'There are no request forms to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
+
+    return HttpResponseRedirect(next_url)
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def disable_room_in_request(request, form_id, room_id):
+    """ Disable a room from a request so it no longer counts towards approval."""
+    next_url = request.POST.get('next')
+    if not next_url:
+        raise SuspiciousOperation
+
+    form = get_object_or_404(RequestForm, id=form_id)
+    room = get_object_or_404(form.rooms, id=room_id)
+
+    RequestFormDisabledRoom.objects.get_or_create(form=form, room=room, defaults={'disabled_by': request.user})
+    messages.success(request, 'Success! {0} has been disabled from request {1}.'.format(func.display_room(room), form.id))
 
     return HttpResponseRedirect(next_url)
 
