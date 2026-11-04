@@ -251,7 +251,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         request_supervisor = self.form.supervisor
 
-        for room in self.form.rooms.all():
+        for room in self.form.active_rooms:
             rooms.add(room)
 
             areas = [area.name for area in room.areas.all()]
