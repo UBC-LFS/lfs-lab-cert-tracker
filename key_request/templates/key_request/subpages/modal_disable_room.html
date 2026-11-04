@@ -29,13 +29,13 @@
                   <span>{{ room|display_room }}</span>
                 {% endif %}
 
-                <form class="js-loading-submit" data-loading-text="Disabling..." action="{% url 'key_request:toggle_disable_room' form_id=form.id room_id=room.id %}" method="post">
-                  {% csrf_token %}
-                  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-                  {% if not is_disabled %}
-                    <button class="btn btn-outline-danger btn-no-hover btn-xs" type="submit" name="action" value="disable" data-loading-text="Disabling...">Disable</button>
-                  {% endif %}
-                </form>
+                {% if not is_disabled %}
+                  <form class="js-loading-submit" data-loading-text="Disabling..." action="{% url 'key_request:disable_room_in_request' form_id=form.id room_id=room.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                    <button class="btn btn-outline-danger btn-no-hover btn-xs" type="submit" data-loading-text="Disabling...">Disable</button>
+                  </form>
+                {% endif %}
               </li>
             {% endwith %}
           {% endfor %}

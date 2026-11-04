@@ -4,11 +4,13 @@
         {% for room in form.rooms.all %}
             {% room_pending_supervisor_roles form room as room_status %}
             <li>
-                {% if room_status.approved %}
+                {% if room.id in form.disabled_room_ids %}
+                    <small>This room is disabled by Admin.</small>
+                {% elif room_status.approved %}
                     <span class="badge badge-success">APPROVED</span>
                 {% else %}
                     {% if room_status.pending_request_supervisor %}
-                        <span class="badge badge-light text-wrap">PENDING BY <wbr> REQUESTOR'S SUPERVISOR</span>
+                        <span class="badge badge-light text-wrap">PENDING BY <wbr>REQUESTOR'S SUPERVISOR</span>
                         <br />
                         {% latest_supervisor_comments form 2 room as request_supervisor_comments %}
                         {% with status=request_supervisor_comments.0 %}
@@ -22,7 +24,7 @@
                         {% endwith %}
                     {% endif %}
                     {% if room_status.pending_room_supervisor %}
-                        <span class="badge badge-light text-wrap">PENDING BY <wbr> ROOM SUPERVISOR</span>
+                        <span class="badge badge-light text-wrap">PENDING BY <wbr>ROOM SUPERVISOR</span>
                         <br />
                         {% latest_supervisor_comments form 1 room as room_supervisor_comments %}
                         {% if room_supervisor_comments %}
