@@ -21,23 +21,19 @@
 
         <ul class="list-group">
           {% for room in form.rooms.all %}
-            {% with is_disabled=room.id|is_in:form.disabled_room_ids %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                {% if is_disabled %}
-                  <s class="text-secondary">{{ room|display_room }}</s>
-                {% else %}
-                  <span>{{ room|display_room }}</span>
-                {% endif %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              {% if room.id in form.disabled_room_ids %}
+                <s class="text-secondary">{{ room|display_room }}</s>
+              {% else %}
+                <span>{{ room|display_room }}</span>
 
-                {% if not is_disabled %}
-                  <form class="js-loading-submit" data-loading-text="Disabling..." action="{% url 'key_request:disable_room_in_request' form_id=form.id room_id=room.id %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
-                    <button class="btn btn-outline-danger btn-no-hover btn-xs" type="submit" data-loading-text="Disabling...">Disable</button>
-                  </form>
-                {% endif %}
-              </li>
-            {% endwith %}
+                <form class="js-loading-submit" data-loading-text="Disabling..." action="{% url 'key_request:disable_room_in_request' form_id=form.id room_id=room.id %}" method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                  <button class="btn btn-outline-danger btn-no-hover btn-xs" type="submit" data-loading-text="Disabling...">Disable</button>
+                </form>
+              {% endif %}
+            </li>
           {% endfor %}
         </ul>
       </div>
