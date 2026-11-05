@@ -1,4 +1,4 @@
-from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm
+from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm, RequestFormDisabledRoom
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, OuterRef, Subquery, Exists
 from key_request.functions import has_date_passed, make_request_form_identifier, all_pis_approved
@@ -136,7 +136,7 @@ class AdminRequestFormProcessor(RequestFormProcessor):
         status = REV_REQUEST_STATUS_DICT.get(self.status_q, -1)
 
         if status == APPROVED:
-            return form.status_stats['total_approved'] == form.status_stats['total_approvers']
+            return form.status_stats['is_approved']
         elif status == DECLINED:
             return form.status_stats['total_declined'] > 0
         elif status == INSUFFICIENT:
@@ -154,7 +154,7 @@ class AdminRequestFormProcessor(RequestFormProcessor):
 
         total_rooms_approved = 0
 
-        for room in form.rooms.all():
+        for room in form.active_rooms:
             is_room_approved = True
 
             if not room.managers.exists() and not room.groups.exists() and not form.supervisor:
@@ -241,7 +241,9 @@ class AdminRequestFormProcessor(RequestFormProcessor):
                 total_rooms_approved += 1
 
         return {
-            'total_rooms': form.rooms.count(),
+            # No approvers means every room is disabled; that is not an approval
+            'is_approved': total_approvers > 0 and total_approved == total_approvers,
+            'total_rooms': form.active_rooms.count(),
             'total_rooms_approved': total_rooms_approved,
             'total_approved': total_approved,
             'total_approvers': total_approvers,
@@ -285,7 +287,7 @@ class ApplicantRequestFormProcessor:
         pending_request_supervisor = False
         pending_room_supervisor = False
 
-        for room in rooms if rooms is not None else form.rooms.all():
+        for room in rooms if rooms is not None else form.active_rooms:
             same_supervisor = bool(
                 form.supervisor_id
                 and room.managers.filter(pk=form.supervisor_id).exists()
@@ -360,11 +362,12 @@ class ApplicantRequestFormProcessor:
             latest_status = form.requestformstatus_set.all().order_by('-created_at')
             if latest_status:
                 form.status_created_at = latest_status.first().created_at
-            for room in form.rooms.all():
-                if not(all_pis_approved(form, room)):
-                    form.status = 'Pending <br /> by Supervisor'
-                    form.status_created_at = None
-                    break
+
+            active_rooms = list(form.active_rooms)
+            # A request with every room disabled has nothing approved, so it is not Approved
+            if not active_rooms or not all(all_pis_approved(form, room) for room in active_rooms):
+                form.status = 'Pending <br /> by Supervisor'
+                form.status_created_at = None
             if form.status == 'Pending <br /> by Supervisor':
                 (
                     form.pending_request_supervisor,
@@ -412,6 +415,8 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         room_forms = (
             RequestForm.objects.filter(rooms=room, **self._get_form_scope_filters())
             .annotate(
+                # Disabled rooms are still listed (strikethrough) but need no action
+                is_disabled=Exists(RequestFormDisabledRoom.objects.filter(form_id=OuterRef('pk'), room_id=room.id)),
                 status=Subquery(latest_status_subquery.values('status')[:1]),
                 status_created_at=Subquery(latest_status_subquery.values('created_at')[:1]),
                 status_comment=Subquery(latest_status_subquery.values('comment')[:1]),
@@ -451,6 +456,10 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         if not self.status_q:
             return True
 
+        # A disabled room has no status of its own, so it never matches a status filter
+        if form.is_disabled:
+            return False
+
         if not status:
             return self.status_q == "New"
 
@@ -483,7 +492,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
                 room_forms = self._get_latest_status_room_forms(room, latest_status)
 
                 total_forms += room_forms.count()
-                total_new_forms += room_forms.filter(status_count__isnull=True).count()
+                total_new_forms += room_forms.filter(status_count__isnull=True, is_disabled=False).count()
 
         return total_forms, total_new_forms
 

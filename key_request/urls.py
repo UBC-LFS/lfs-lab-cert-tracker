@@ -20,6 +20,7 @@ urlpatterns += [
     path('forms/<int:form_id>/details/', admin_views.ViewFormDetails.as_view(), name='view_form_details'),
     path('func/update/all/', admin_views.update_all, name='update_all'),
     path('func/emails/send/', admin_views.send_emails, name='send_emails'),
+    path('forms/<int:form_id>/rooms/<int:room_id>/disable/', admin_views.disable_room_in_request, name='disable_room_in_request'),
 
     # Rooms
     path('all-rooms/', admin_views.AllRooms.as_view(), name='all_rooms'),
