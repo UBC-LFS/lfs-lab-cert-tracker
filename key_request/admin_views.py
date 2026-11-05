@@ -367,6 +367,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 'room': room,
                 'areas': areas,
                 'status': status,
+                'status_comment': latest_status.comment if latest_status else '',
                 'is_new': is_new,
                 'label': label,
                 'supervisor': supervisor,
@@ -403,6 +404,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
                 'room': room,
                 'areas': areas,
                 'status': status,
+                'status_comment': latest_status.comment if latest_status else '',
                 'is_new': is_new,
                 'label': "Group",
                 'group': group,
@@ -430,23 +432,24 @@ class ViewFormDetails(LoginRequiredMixin, View):
             return HttpResponseRedirect(next_url)
 
         status = request.POST.get('status')
+        comment = request.POST.get('comment', '').strip() or None
 
         if not status:
             messages.error(request, 'Error: A status must be selected.')
             return HttpResponseRedirect(next_url)
 
         room_id = identifier.get('room_id')
-        rfs = func.create_and_process_request_form_identifier(identifier, request.user, status)
+        rfs_list = func.create_and_process_request_form_identifier(identifier, request.user, status, comment)
 
-        if not rfs:
+        if not rfs_list:
             messages.error(request, 'Error: Invalid request_form_identifier.')
             return HttpResponseRedirect(next_url)
 
-        rfs.save()
+        rfs_list = RequestFormStatus.objects.bulk_create(rfs_list)
 
         room = Room.objects.get(id=room_id)
 
-        email_coordinator = ApprovalNotificationManager([rfs], status, request.user)
+        email_coordinator = ApprovalNotificationManager(rfs_list, status, request.user)
         email_coordinator.send_email_notification()
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))

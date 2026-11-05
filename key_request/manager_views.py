@@ -91,12 +91,13 @@ class ManagerDashboard(LoginRequiredMixin, View):
             return HttpResponseRedirect(next_url)
 
         status = request.POST.get('status')
+        comment = request.POST.get('comment', '').strip() or None
 
         if not status:
             messages.error(request, 'Error: A status must be selected.')
             return HttpResponseRedirect(next_url)
         
-        rfs_list = func.create_and_process_request_form_identifier(identifier, request.user, status)
+        rfs_list = func.create_and_process_request_form_identifier(identifier, request.user, status, comment)
 
         if not rfs_list:
             messages.error(request, 'Error: Could not find the request form specified.')
