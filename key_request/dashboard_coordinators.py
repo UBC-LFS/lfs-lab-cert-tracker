@@ -523,6 +523,24 @@ class GroupFormProcessor(EntityRequestFormProcessor):
             form=OuterRef('pk'),
         )
 
+    def _build_latest_status_subquery(self, room_id, **entity_filter):
+        """A group member's decision covers the group for everyone except the requestor's
+        supervisor, whose own approval is still required. When the user is the requestor's
+        supervisor, the merged row shows their own Requestor's Supervisor status instead."""
+        is_request_supervisor = Q(form__supervisor_id=self.user.id)
+        own_request_supervisor_status = Q(
+            manager_id=self.user.id,
+            supervisor_type=RequestSupervisorFormProcessor.supervisor_type,
+        )
+
+        return RequestFormStatus.objects.filter(
+            form_id=OuterRef('pk'),
+            room_id=room_id,
+        ).filter(
+            (~is_request_supervisor & Q(**entity_filter))
+            | (is_request_supervisor & own_request_supervisor_status)
+        ).order_by('-created_at')
+
     def _set_current_entity(self, room, **entity_filter):
         group_id = entity_filter.get('group_id')
         self.current_group = self.user_groups.filter(pk=group_id).first() if group_id else None
