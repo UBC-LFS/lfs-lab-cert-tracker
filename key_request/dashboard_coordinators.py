@@ -474,6 +474,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         form.room = room
         form.priority = self.priority
         form.label = self.label
+        form.labels = [self.label]
 
         form.manager = None
         form.group = None
@@ -522,6 +523,24 @@ class GroupFormProcessor(EntityRequestFormProcessor):
             form=OuterRef('pk'),
         )
 
+    def _build_latest_status_subquery(self, room_id, **entity_filter):
+        """A group member's decision covers the group for everyone except the requestor's
+        supervisor, whose own approval is still required. When the user is the requestor's
+        supervisor, the merged row shows their own Requestor's Supervisor status instead."""
+        is_request_supervisor = Q(form__supervisor_id=self.user.id)
+        own_request_supervisor_status = Q(
+            manager_id=self.user.id,
+            supervisor_type=RequestSupervisorFormProcessor.supervisor_type,
+        )
+
+        return RequestFormStatus.objects.filter(
+            form_id=OuterRef('pk'),
+            room_id=room_id,
+        ).filter(
+            (~is_request_supervisor & Q(**entity_filter))
+            | (is_request_supervisor & own_request_supervisor_status)
+        ).order_by('-created_at')
+
     def _set_current_entity(self, room, **entity_filter):
         group_id = entity_filter.get('group_id')
         self.current_group = self.user_groups.filter(pk=group_id).first() if group_id else None
@@ -529,18 +548,21 @@ class GroupFormProcessor(EntityRequestFormProcessor):
     def _annotate_form_object(self, form, room, is_new):
         form = super()._annotate_form_object(form, room, is_new)
         form.group = self.current_group
+        if form.supervisor_id == self.user.id:
+            form.labels.append(RequestSupervisorFormProcessor.label_text)
         form.request_form_identifier = make_request_form_identifier(room, form, 'group_id', self.current_group.id)
         return form
 
 
 class RequestSupervisorFormProcessor(EntityRequestFormProcessor):
     supervisor_type = RequestFormStatus.SupervisorType.REQUEST.value
+    label_text = "Requestor's Supervisor"
 
 
     def __init__(self, query, user):
         super().__init__(query, user)
 
-        self.label = "Requestor's Supervisor"
+        self.label = self.label_text
         self.priority = 2
 
     def get_all_rooms(self):
@@ -549,7 +571,18 @@ class RequestSupervisorFormProcessor(EntityRequestFormProcessor):
             rooms=OuterRef('pk')
         )
 
-        return Room.objects.filter(Exists(subquery)).distinct()
+        user_active_approval_groups = ApprovalGroup.objects.filter(
+            group_rooms=OuterRef('pk'),
+            roles__user=self.user,
+            is_active=True,
+        )
+
+        return (
+            Room.objects.filter(Exists(subquery))
+            .exclude(managers=self.user)
+            .exclude(Exists(user_active_approval_groups))
+            .distinct()
+        )
 
     def _get_form_scope_filters(self):
         return {'supervisor': self.user}
@@ -602,6 +635,8 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
     def _annotate_form_object(self, form, room, is_new):
         form = super()._annotate_form_object(form, room, is_new)
         form.manager = self.current_manager
+        if form.supervisor_id == self.current_manager.id:
+            form.labels.append(RequestSupervisorFormProcessor.label_text)
         form.request_form_identifier = make_request_form_identifier(room, form, 'manager_id', self.current_manager.id, self.supervisor_type)
         return form
 
