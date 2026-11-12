@@ -163,7 +163,7 @@ class ArchivedRequests(RequestView):
 
         is_archived = True if form_archive == 'archive' else False
         RequestForm.objects.filter(id=form_id).update(is_archived=is_archived)
-        messages.success(request, 'The Request Form (ID: {0} has been archived successfully.'.format(form_id))
+        messages.success(request, 'The Request Form (ID: {0}) has been {1} successfully.'.format(form_id, 'archived' if is_archived else 'unarchived'))
         return HttpResponseRedirect(request.POST.get('next'))
 
 
