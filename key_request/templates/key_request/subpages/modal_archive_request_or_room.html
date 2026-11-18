@@ -1,0 +1,111 @@
+{% load custom_tags %}
+
+{% comment %}
+  Archive / unarchive confirmation modal.
+  - archive_request=True (admin pages): archives the whole request for everyone.
+  - room=<room> (Supervisor Dashboard / Archived Rooms): archives only that room, only for the current user.
+  `modal_id` keeps ids unique when a request is listed more than once on a page.
+{% endcomment %}
+
+{% with archive_request=archive_request|default:False modal_key=modal_id|default:form.id %}
+{% with is_archived=form|is_archived_for:archive_request %}
+
+<button class="btn btn-warning btn-xs fs-xs btn-sm mt-2" type="button" data-toggle="modal" data-target="#form-archive-modal-{{ modal_key }}">
+    {% if is_archived %}
+        Unarchive
+    {% else %}
+        Archive
+    {% endif %}
+</button>
+
+<div class="modal fade" id="form-archive-modal-{{ modal_key }}" tabindex="-1" role="dialog" aria-labelledby="form-archive-modal-label-{{ modal_key }}" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="form-archive-modal-label-{{ modal_key }}">
+            {% if is_archived %}Unarchive{% else %}Archive{% endif %}
+            {% if archive_request %}Request Form{% else %}Room{% endif %}
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+                <strong class="text-primary mb-2">INFORMATION</strong>
+
+                <ul class="list-minus-20">
+                    <li>
+                        <span class="font-weight-semibold">Request Form ID:</span> {{ form.id }}
+                    </li>
+                    <li>
+                        <span class="font-weight-semibold">Full Name:</span> {{ form.user.get_full_name }}
+                    </li>
+                    <li>
+                        <span class="font-weight-semibold">Building & Room Info:</span>
+
+                        {% if not archive_request %}
+                            {{ room|display_room }}
+                        {% else %}
+                            {% for room in form.rooms.all %}
+                                {% if room.is_active and room.id not in form.disabled_room_ids %}
+                                    {{ room|display_room }}
+                                {% else %}
+                                    <s>{{ room|display_room }}</s>
+                                {% endif %}
+                                {% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                     </li>
+                     <li>
+                         <span class="font-weight-semibold">Supervisor:</span>
+                         {{ form.supervisor.get_full_name }}
+                     </li>
+                     <li>
+                         <span class="font-weight-semibold">Submitted Date:</span>
+                         {{ form.submitted_at }}
+                     </li>
+                </ul>
+
+                <h5 class="mt-3">
+                    Are you sure you want to
+                    <span class="text-chocolate">
+                        {% if is_archived %}
+                            unarchive
+                        {% else %}
+                            archive
+                        {% endif %}
+                    </span>
+                    this {% if archive_request %}request form{% else %}room{% endif %}?
+                </h5>
+
+                {% if not archive_request %}
+                    <p class="text-secondary font-size-sm">
+                        {% if is_archived %}
+                            It will return to your Supervisor Dashboard.
+                        {% else %}
+                            It will move to Archived Rooms.
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                <form action="{% if archive_request %}{% url 'key_request:archived_requests' %}{% else %}{% url 'key_request:archive_room' %}{% endif %}" method="POST" class="js-loading-submit">
+                    {% csrf_token %}
+
+                    <input type="hidden" name="form_id" value="{{ form.id }}" />
+                    {% if not archive_request %}
+                        <input type="hidden" name="room_id" value="{{ room.id }}" />
+                    {% endif %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+
+                    {% if is_archived %}
+                        <button class="btn btn-warning" type="submit" name="form_archive" value="unarchive" data-loading-text="Unarchiving...">Unarchive</button>
+                    {% else %}
+                        <button class="btn btn-warning" type="submit" name="form_archive" value="archive" data-loading-text="Archiving...">Archive</button>
+                    {% endif %}
+                </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endwith %}
+{% endwith %}
