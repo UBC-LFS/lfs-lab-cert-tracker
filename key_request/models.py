@@ -160,6 +160,19 @@ class RequestFormDisabledRoom(models.Model):
         unique_together = ('form', 'room')
 
 
+class RequestFormArchivedRoom(models.Model):
+    """ A room of a request that a supervisor archived from their own Supervisor Dashboard.
+    It only hides the room for that user; it does not affect approvals or other users. """
+
+    form = models.ForeignKey(RequestForm, on_delete=models.CASCADE, related_name='archived_rooms')
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='archived_request_rooms')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('form', 'room', 'user')
+
+
 # TODO Change manager to be supervisor; also change the related name
 class RequestFormStatus(models.Model):
     class SupervisorType(models.IntegerChoices):
