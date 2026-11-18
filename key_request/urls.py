@@ -55,7 +55,9 @@ urlpatterns += [
 urlpatterns += [
     path('rooms/', manager_views.ManagerRooms.as_view(), name='manager_rooms'),
     path('dashboard/expiry-date/update/', manager_views.UpdateExpiryDate.as_view(), name='update_expiry_date'),
-    path('dashboard/', manager_views.ManagerDashboard.as_view(), name='manager_dashboard')
+    path('dashboard/', manager_views.ManagerDashboard.as_view(), name='manager_dashboard'),
+    path('dashboard/archived-rooms/', manager_views.ArchivedRooms.as_view(), name='archived_rooms'),
+    path('dashboard/rooms/archive/', manager_views.archive_room, name='archive_room')
 ]
 
 
