@@ -34,6 +34,10 @@ from app import functions as appFunc
 
 @method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ManagerDashboard(LoginRequiredMixin, View):
+    # The Archived Rooms page reuses this view and template with these switched
+    archived = False
+    path = 'manager_dashboard'
+    title = 'Supervisor Dashboard'
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -46,7 +50,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
         }
 
         # NOTE: there is one form PER group and one form PER manager
-        coordinator = DashboardCoordinator(request.user, query)
+        coordinator = DashboardCoordinator(request.user, query, archived=self.archived)
         coordinator.run()
 
         page = request.GET.get('page', 1)
@@ -73,7 +77,10 @@ class ManagerDashboard(LoginRequiredMixin, View):
             'post_url': reverse('key_request:manager_dashboard'),
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
-            'is_admin': True if request.user.is_superuser else False
+            'is_admin': True if request.user.is_superuser else False,
+            'title': self.title,
+            'path': self.path,
+            'is_archived_page': self.archived,
         })
 
     @method_decorator(require_POST)
@@ -114,6 +121,11 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
         return HttpResponseRedirect(next_url)
 
+class ArchivedRooms(ManagerDashboard):
+    """Rooms the user archived from their Supervisor Dashboard. Read-only apart from Unarchive."""
+    archived = True
+    path = 'archived_rooms'
+    title = 'Archived Rooms'
 
 @method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class UpdateExpiryDate(LoginRequiredMixin, View):
