@@ -17,6 +17,15 @@ from datetime import date
 
 register = template.Library()
 
+
+@register.filter
+def is_archived_for(form, archive_request):
+    """Whether the archive modal should offer Unarchive: the whole request archived by an admin
+    (archive_request=True), or this room of the request archived by the current user."""
+    if archive_request:
+        return form.is_archived
+    return getattr(form, 'is_archived_by_user', False)
+
 @register.simple_tag(takes_context=True)
 def param_replace(context, **kwargs):
     d = context['request'].GET.copy()
