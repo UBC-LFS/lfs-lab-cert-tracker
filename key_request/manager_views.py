@@ -20,7 +20,7 @@ from lfs_lab_cert_tracker import settings
 from .admin_views import ViewApprovalGroups
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, RoomExpiryDate
+from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, RoomExpiryDate, RequestFormArchivedRoom
 from .forms import UserApprovalGroupForm
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, GroupFormProcessor, ManagerFormProcessor
@@ -34,6 +34,10 @@ from app import functions as appFunc
 
 @method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class ManagerDashboard(LoginRequiredMixin, View):
+    # The Archived Rooms page reuses this view and template with these switched
+    archived = False
+    path = 'manager_dashboard'
+    title = 'Supervisor Dashboard'
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
@@ -46,7 +50,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
         }
 
         # NOTE: there is one form PER group and one form PER manager
-        coordinator = DashboardCoordinator(request.user, query)
+        coordinator = DashboardCoordinator(request.user, query, archived=self.archived)
         coordinator.run()
 
         page = request.GET.get('page', 1)
@@ -73,7 +77,10 @@ class ManagerDashboard(LoginRequiredMixin, View):
             'post_url': reverse('key_request:manager_dashboard'),
             'req_status_dict': REQUEST_STATUS_DICT,
             'search_filter_options': func.search_filter_options,
-            'is_admin': True if request.user.is_superuser else False
+            'is_admin': True if request.user.is_superuser else False,
+            'title': self.title,
+            'path': self.path,
+            'is_archived_page': self.archived,
         })
 
     @method_decorator(require_POST)
@@ -114,6 +121,11 @@ class ManagerDashboard(LoginRequiredMixin, View):
 
         return HttpResponseRedirect(next_url)
 
+class ArchivedRooms(ManagerDashboard):
+    """Rooms the user archived from their Supervisor Dashboard. Read-only apart from Unarchive."""
+    archived = True
+    path = 'archived_rooms'
+    title = 'Archived Rooms'
 
 @method_decorator([never_cache, access_pi_admin_key_request], name='dispatch')
 class UpdateExpiryDate(LoginRequiredMixin, View):
@@ -317,6 +329,30 @@ class EditManagerGroups(LoginRequiredMixin, View):
 
         return HttpResponseRedirect(reverse('key_request:manager_edit_group', kwargs={'group_id': self.group.id}))
 
+@login_required
+@require_POST
+@access_pi_admin_key_request
+def archive_room(request):
+    """Archives or unarchives one room of a request for the current user only."""
+    form_id = request.POST.get('form_id')
+    room_id = request.POST.get('room_id')
+    action = request.POST.get('form_archive')
+    next_url = request.POST.get('next')
+
+    try:
+        form = RequestForm.objects.get(pk=form_id)
+        room = Room.objects.get(pk=room_id)
+
+        if action == 'archive':
+            RequestFormArchivedRoom.objects.get_or_create(form=form, room=room, user=request.user)
+        else:
+            RequestFormArchivedRoom.objects.filter(form=form, room=room, user=request.user).delete()
+
+        messages.success(request, 'Success! Request Form (ID: {0}) for {1} has been {2}d.'.format(form.id, func.display_room(room), action))
+    except (RequestForm.DoesNotExist, Room.DoesNotExist, ValueError):
+        messages.error(request, 'Error! Failed to {0} the room. The request form or room may no longer exist.'.format(action))
+
+    return HttpResponseRedirect(next_url)
 
 @login_required(login_url=settings.LOGIN_URL)
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
