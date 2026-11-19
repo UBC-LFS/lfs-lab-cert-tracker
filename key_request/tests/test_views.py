@@ -884,3 +884,97 @@ class RequestStatusCombinationTests(TestCase):
                         )
 
                 self.assert_status(request_pending, room_pending)
+
+
+class MergedGroupAndRequestSupervisorStatusTests(TestCase):
+    """user1 and user2 are in approvalgroup1 for room1, and user2 is the requestor's supervisor.
+    user2 has one merged Group + Requestor's Supervisor row, which shows the group's latest decision."""
+
+    def setUp(self):
+        self.user1 = User.objects.create_user(username='merged_user1', password='password')
+        self.user2 = User.objects.create_user(username='merged_user2', password='password')
+        self.requestor = User.objects.create_user(username='merged_requestor', password='password')
+
+        building = Building.objects.create(name='Merged', code='MRG')
+        floor = Floor.objects.create(name='M1')
+        self.room = Room.objects.create(building=building, floor=floor, number='1')
+
+        self.group = ApprovalGroup.objects.create(name='approvalgroup1')
+        ApprovalGroupRole.objects.create(group=self.group, user=self.user1)
+        ApprovalGroupRole.objects.create(group=self.group, user=self.user2)
+        self.room.groups.add(self.group)
+
+        self.form = RequestForm.objects.create(user=self.requestor, supervisor=self.user2, after_hours_access='1')
+        self.form.rooms.set([self.room])
+
+    def dashboard(self, user, query=None):
+        """Run the Supervisor Dashboard for the user, optionally with search filters."""
+        coordinator = DashboardCoordinator(user, query or {})
+        coordinator.run()
+        return coordinator
+
+    def only_row(self, user):
+        """The user's dashboard must have exactly one row for this request and room, which is returned."""
+        forms = self.dashboard(user).get_forms()
+        self.assertEqual(len(forms), 1)
+        return forms[0]
+
+    def test_other_member_approval_is_shown_on_merged_row(self):
+        """
+        user1 approves for the group. user2's single merged row (Group + Requestor's Supervisor)
+        shows that approval, is no longer new, and drops out of the New filter and count.
+        user1's own group row shows the same decision.
+        """
+        RequestFormStatus.objects.create(form=self.form, room=self.room, group=self.group, operator=self.user1, status=APPROVED)
+
+        # user1's group approval shows on user2's merged row
+        row = self.only_row(self.user2)
+        self.assertEqual(row.labels, ['Group', "Requestor's Supervisor"])
+        self.assertEqual(row.status, APPROVED)
+        self.assertFalse(row.is_new)
+
+        # The row has a status now, so it is not listed under status=New or counted as new
+        coordinator = self.dashboard(self.user2, {'status': 'New'})
+        self.assertEqual(coordinator.get_forms(), [])
+        self.assertEqual(coordinator.get_num_new_forms(), 0)
+
+        # user1 sees the same group decision
+        self.assertEqual(self.only_row(self.user1).status, APPROVED)
+
+    def test_request_supervisor_decision_is_shown(self):
+        """
+        user1 approves for the group, then user2 declines from the merged row.
+        The merged row shows user2's later decline and its comment, not user1's earlier approval.
+        user1's group row also shows the decline and comment, since it is the group's latest decision.
+        """
+        # user1 approves for the group first
+        RequestFormStatus.objects.create(
+            form=self.form, room=self.room, group=self.group, operator=self.user1, status=APPROVED,
+            comment='Looks good.',
+        )
+        row = self.only_row(self.user2)
+        self.assertEqual(row.status, APPROVED)
+        self.assertEqual(row.status_comment, 'Looks good.')
+
+        # user2 deciding from the merged row saves both the group and requestor's supervisor statuses
+        RequestFormStatus.objects.create(
+            form=self.form, room=self.room, group=self.group, operator=self.user2, status=DECLINED,
+            comment='Missing training records.',
+        )
+        RequestFormStatus.objects.create(
+            form=self.form, room=self.room, manager=self.user2,
+            supervisor_type=RequestFormStatus.SupervisorType.REQUEST.value, operator=self.user2, status=DECLINED,
+            comment='Missing training records.',
+        )
+
+        # The latest decision and its comment win, and the row is not counted as new
+        row = self.only_row(self.user2)
+        self.assertEqual(row.status, DECLINED)
+        self.assertEqual(row.status_comment, 'Missing training records.')
+        self.assertFalse(row.is_new)
+        self.assertEqual(self.dashboard(self.user2).get_num_new_forms(), 0)
+
+        # user1 sees user2's decline and comment as the group's decision, replacing their own approval
+        user1_row = self.only_row(self.user1)
+        self.assertEqual(user1_row.status, DECLINED)
+        self.assertEqual(user1_row.status_comment, 'Missing training records.')
