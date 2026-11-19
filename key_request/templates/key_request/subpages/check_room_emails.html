@@ -14,6 +14,7 @@
       <br />
       {% with room_emails=room|check_room_emails:form.id %}
         <ul class="list-minus-20 font-size-xs">
+          {% if room.key %}
           <li>
             <span class="badge badge-primary">KEY</span>
             {% if room_emails.key %}
@@ -22,6 +23,8 @@
               Not sent
             {% endif %}
           </li>
+          {% endif %}
+          {% if room.card_access %}
           <li>
             <span class="badge badge-success">CARD</span>
             {% if room_emails.card_access %}
@@ -30,6 +33,8 @@
               Not sent
             {% endif %}
           </li>
+          {% endif %}
+          {% if room.alarm %}
           <li>
             <span class="badge badge-warning">ALARM</span>
             {% if room_emails.alarm %}
@@ -38,6 +43,7 @@
               Not sent
             {% endif %}
           </li>
+          {% endif %}
           {% if form.after_hours_access == '0' %}
             <li>
               <span class="badge badge-danger">CODE REQUESTED</span>

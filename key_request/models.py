@@ -151,6 +151,7 @@ class RequestFormStatus(models.Model):
     group = models.ForeignKey(ApprovalGroup, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_group_set')
     operator = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL, related_name='requestformstatus_operator_set')
     status = models.CharField(max_length=1, choices=REQUEST_STATUS, default=None)
+    comment = models.TextField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
