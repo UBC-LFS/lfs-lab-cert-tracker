@@ -1,1 +1,9 @@
-<span class="badge badge-{% if data == 'Submitted' %}light{% elif data == 'Approved' %}success{% elif data == 'Declined' %}danger{% elif data == 'Insufficient Info' %}warning{% else %}light{% endif %}">{{ data.upper|safe }}</span>
+{% if data == 'Pending <br /> by Supervisor' %}
+    {% if pending_request_supervisor %}<span class="badge badge-light">PENDING BY <br /> REQUESTOR'S SUPERVISOR</span><br />{% endif %}
+    {% if pending_room_supervisor %}<span class="badge badge-light">PENDING BY <br /> ROOM SUPERVISOR</span>{% endif %}
+    {% if not pending_request_supervisor and not pending_room_supervisor %}
+        <span class="badge badge-light">{{ data.upper|safe }}</span>
+    {% endif %}
+{% else %}
+    <span class="badge badge-{% if data == 'Submitted' %}light{% elif data == 'Approved' %}success{% elif data == 'Declined' %}danger{% elif data == 'Insufficient Info' %}warning{% else %}light{% endif %}">{{ data.upper|safe }}</span>
+{% endif %}

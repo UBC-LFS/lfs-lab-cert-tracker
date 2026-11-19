@@ -20,7 +20,7 @@ from lfs_lab_cert_tracker import settings
 from .admin_views import ViewApprovalGroups
 from .email_coordinator import ApprovalNotificationManager
 
-from .models import Room, RequestForm, ApprovalGroupRole, RoomExpiryDate
+from .models import Room, RequestForm, RequestFormStatus, ApprovalGroupRole, RoomExpiryDate
 from .forms import UserApprovalGroupForm
 from . import functions as func
 from .dashboard_coordinators import DashboardCoordinator, GroupFormProcessor, ManagerFormProcessor
@@ -96,17 +96,17 @@ class ManagerDashboard(LoginRequiredMixin, View):
             messages.error(request, 'Error: A status must be selected.')
             return HttpResponseRedirect(next_url)
         
-        rfs = func.create_and_process_request_form_identifier(identifier, request.user, status)
+        rfs_list = func.create_and_process_request_form_identifier(identifier, request.user, status)
 
-        if not rfs:
+        if not rfs_list:
             messages.error(request, 'Error: Could not find the request form specified.')
             return HttpResponseRedirect(next_url)
 
-        rfs.save()
+        rfs_list = RequestFormStatus.objects.bulk_create(rfs_list)
         room_id = identifier.get('room_id')
         room = Room.objects.filter(id=room_id).first()
 
-        email_manager = ApprovalNotificationManager([rfs], status, request.user)
+        email_manager = ApprovalNotificationManager(rfs_list, status, request.user)
         email_manager.send_email_notification()
 
         messages.success(request, 'Success! The status of {0} has been updated.'.format(func.display_room(room)))
