@@ -367,8 +367,6 @@ class ApplicantRequestFormProcessor:
             # A request with every room disabled has nothing approved, so it is not Approved
             if not active_rooms or not all(all_pis_approved(form, room) for room in active_rooms):
                 form.status = 'Pending <br /> by Supervisor'
-                form.status_created_at = None
-            if form.status == 'Pending <br /> by Supervisor':
                 (
                     form.pending_request_supervisor,
                     form.pending_room_supervisor,
