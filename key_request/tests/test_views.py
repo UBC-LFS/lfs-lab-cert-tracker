@@ -923,7 +923,7 @@ class MergedGroupAndRequestSupervisorStatusTests(TestCase):
         """
         user1 approves for the group. user2's single merged row (Group + Requestor's Supervisor)
         shows that approval, is no longer new, and drops out of the New filter and count.
-        user1's own group row shows the same decision.
+        The request is still not approved, because user2 has not decided as the requestor's supervisor.
         """
         RequestFormStatus.objects.create(form=self.form, room=self.room, group=self.group, operator=self.user1, status=APPROVED)
 
@@ -940,6 +940,12 @@ class MergedGroupAndRequestSupervisorStatusTests(TestCase):
 
         # user1 sees the same group decision
         self.assertEqual(self.only_row(self.user1).status, APPROVED)
+
+        # The group approved, but the requestor's supervisor (user2) has not, so the request is still pending
+        self.assertFalse(all_pis_approved(self.form, self.room))
+        applicant_form = ApplicantRequestFormProcessor(self.requestor).get_all_status_annotated_forms([self.form])[0]
+        self.assertTrue(applicant_form.pending_request_supervisor)
+        self.assertFalse(applicant_form.pending_room_supervisor)
 
     def test_request_supervisor_decision_is_shown(self):
         """
