@@ -611,7 +611,7 @@ def update_all(request):
                 messages.error(request, 'Error: Invalid request_form_identifier.')
                 return HttpResponseRedirect(next_url)
 
-            rfs.append(rfs_obj)
+            rfs.extend(rfs_obj)
 
         if len(rfs) > 0:
             request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
@@ -619,7 +619,7 @@ def update_all(request):
             email_coordinator = ApprovalNotificationManager(request_status_forms, status, request.user)
             email_coordinator.send_email_notification()
 
-            messages.success(request, 'Success! The number of request forms ({0}) have been updated.'.format(len(request_status_forms)))
+            messages.success(request, 'Success! The number of request forms ({0}) have been updated.'.format(len(checked_rooms)))
         else:
             messages.warning(request, 'There are no request forms to update.')
     else:
