@@ -59,7 +59,7 @@
 
 						{% elif form.status_stats %}
 
-							{% if form.status_stats.total_approved == form.status_stats.total_approvers %}
+							{% if form.status_stats.is_approved %}
 								<span class="badge badge-success">APPROVED</span>
 
               {% elif form.status_stats.total_declined == form.status_stats.total_approvers %}
@@ -94,7 +94,7 @@
 										{% else %}
 											N/A
 										{% endif %}
-										{% if is_admin %}
+										{% if is_admin and room.id not in form.disabled_room_ids %}
 											<form class="js-loading-submit mt-1" data-loading-text="Updating..." action="{% url 'key_request:update_expiry_date' %}" method="post">
 												{% csrf_token %}
 												<input class="form-control mb-1" type="date" name="expiry_date" value="{{ room_expiry_date.expiry_date|date_to_str }}" />
@@ -149,7 +149,7 @@
 													<span class="font-weight-semibold">Building & Room Info:</span>
 
 													{% for room in form.rooms.all %}
-														{% if room.is_active %}
+														{% if room.is_active and room.id not in form.disabled_room_ids %}
 															{{ room|display_room }}
 														{% else %}
 															<s>{{ room|display_room }}</s>
@@ -196,6 +196,9 @@
 							    </div>
 							  </div>
 							</div>
+
+							{% include 'key_request/subpages/modal_disable_room.html' with form=form %}
+							
   	        </td>
           {% endif %}
 	      </tr>
