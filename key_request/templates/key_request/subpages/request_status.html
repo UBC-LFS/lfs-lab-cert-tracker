@@ -8,6 +8,7 @@
                     <small>This room is disabled by Admin.</small>
                 {% elif room_status.approved %}
                     <span class="badge badge-success">APPROVED</span>
+                    {% include 'key_request/subpages/date_and_time.html' with data=form.status_created_at font_size='font-size-sm' %}
                 {% else %}
                     {% if room_status.pending_request_supervisor %}
                         <span class="badge badge-light text-wrap">PENDING BY <wbr>REQUESTOR'S SUPERVISOR</span>
