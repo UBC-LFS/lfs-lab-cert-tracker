@@ -98,7 +98,7 @@
             </td>
             <td>
               {% if item.group or item.supervisor %}
-                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.last.status %}
+                {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=item status=item.status.last.status status_comment=item.status.last.comment %}
               {% else %}
                 <a href="{% url 'key_request:edit_room' room_id=item.room.id %}?t=pis&next={{ request.get_full_path }}"
                   target="_blank" data-toggle="tooltip" data-placement="top"

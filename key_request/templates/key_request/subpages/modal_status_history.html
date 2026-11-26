@@ -21,6 +21,7 @@
                 <th>Approver</th>
                 <th>Operator</th>
                 <th>Status</th>
+                <th>Comment</th>
                 <th>Updated Date</th>
               </tr>
             </thead>
@@ -58,6 +59,7 @@
                   <td>
                     {% include 'key_request/subpages/request_status.html' with data=st.status|get_status_display %}
                   </td>
+                  <td>{{ st.comment|default:"N/A" }}</td>
                   <td>
                     {% include 'key_request/subpages/date_and_time.html' with data=st.created_at %}
                   </td>
