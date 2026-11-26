@@ -1,4 +1,4 @@
-from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm, RequestFormDisabledRoom
+from key_request.models import Room, RequestFormStatus, ApprovalGroup, RequestForm, RequestFormDisabledRoom, RequestFormArchivedRoom
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, OuterRef, Subquery, Exists
 from key_request.functions import has_date_passed, make_request_form_identifier, all_pis_approved
@@ -367,8 +367,6 @@ class ApplicantRequestFormProcessor:
             # A request with every room disabled has nothing approved, so it is not Approved
             if not active_rooms or not all(all_pis_approved(form, room) for room in active_rooms):
                 form.status = 'Pending <br /> by Supervisor'
-                form.status_created_at = None
-            if form.status == 'Pending <br /> by Supervisor':
                 (
                     form.pending_request_supervisor,
                     form.pending_room_supervisor,
@@ -384,6 +382,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         # entity data for form
         self.label = "Entity"
         self.priority = 0
+        self.archived = False
 
     def get_all_filtered_forms(self):
 
@@ -415,6 +414,10 @@ class EntityRequestFormProcessor(RequestFormProcessor):
         room_forms = (
             RequestForm.objects.filter(rooms=room, **self._get_form_scope_filters())
             .annotate(
+                # Archiving is per user, so a room archived by this user is only hidden for them
+                is_archived_by_user=Exists(RequestFormArchivedRoom.objects.filter(
+                    form_id=OuterRef('pk'), room_id=room.id, user_id=self.user.id,
+                )),
                 # Disabled rooms are still listed (strikethrough) but need no action
                 is_disabled=Exists(RequestFormDisabledRoom.objects.filter(form_id=OuterRef('pk'), room_id=room.id)),
                 status=Subquery(latest_status_subquery.values('status')[:1]),
@@ -426,6 +429,7 @@ class EntityRequestFormProcessor(RequestFormProcessor):
                     .values('c')[:1]
                 ),
             )
+            .filter(is_archived_by_user=self.archived)
         )
 
         return room_forms
@@ -626,7 +630,7 @@ class ManagerFormProcessor(EntityRequestFormProcessor):
 
 class DashboardCoordinator:
 
-    def __init__(self, user, query, processor_classes=None):
+    def __init__(self, user, query, processor_classes=None, archived=False):
         self.user = user
         self.query = query
         self.num_new_forms = 0
@@ -634,6 +638,8 @@ class DashboardCoordinator:
         self.forms = []
         self.processor_classes = processor_classes or [ManagerFormProcessor, GroupFormProcessor, RequestSupervisorFormProcessor]
         self.processors = [cls(query, user) for cls in self.processor_classes]
+        for processor in self.processors:
+            processor.archived = archived
 
 
     def run(self):

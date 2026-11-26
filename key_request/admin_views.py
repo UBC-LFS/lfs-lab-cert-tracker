@@ -163,7 +163,7 @@ class ArchivedRequests(RequestView):
 
         is_archived = True if form_archive == 'archive' else False
         RequestForm.objects.filter(id=form_id).update(is_archived=is_archived)
-        messages.success(request, 'The Request Form (ID: {0} has been archived successfully.'.format(form_id))
+        messages.success(request, 'The Request Form (ID: {0}) has been {1} successfully.'.format(form_id, 'archived' if is_archived else 'unarchived'))
         return HttpResponseRedirect(request.POST.get('next'))
 
 
@@ -611,7 +611,7 @@ def update_all(request):
                 messages.error(request, 'Error: Invalid request_form_identifier.')
                 return HttpResponseRedirect(next_url)
 
-            rfs.append(rfs_obj)
+            rfs.extend(rfs_obj)
 
         if len(rfs) > 0:
             request_status_forms = RequestFormStatus.objects.bulk_create(rfs)
@@ -619,7 +619,7 @@ def update_all(request):
             email_coordinator = ApprovalNotificationManager(request_status_forms, status, request.user)
             email_coordinator.send_email_notification()
 
-            messages.success(request, 'Success! The number of request forms ({0}) have been updated.'.format(len(request_status_forms)))
+            messages.success(request, 'Success! The number of request forms ({0}) have been updated.'.format(len(checked_rooms)))
         else:
             messages.warning(request, 'There are no request forms to update.')
     else:
