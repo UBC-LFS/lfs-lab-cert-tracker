@@ -37,12 +37,21 @@
         {% endif %}
       </td>
       <td class="text-left">
-        {{ room|display_room }}
-        <ul class="list-minus-20">
-          {% for area in room.areas.all %}
-            <li class="text-secondary font-size-sm">{{ area.name }}</li>
-          {% endfor%}
-        </ul>
+        {% if form and room.id in form.disabled_room_ids %}
+          <s class="text-secondary">{{ room|display_room }}</s>
+          <ul class="list-minus-20">
+            {% for area in room.areas.all %}
+              <li class="text-secondary font-size-sm"><s>{{ area.name }}</s></li>
+            {% endfor%}
+          </ul>
+        {% else %}
+          {{ room|display_room }}
+          <ul class="list-minus-20">
+            {% for area in room.areas.all %}
+              <li class="text-secondary font-size-sm">{{ area.name }}</li>
+            {% endfor%}
+          </ul>
+        {% endif %}
       </td>
 
       {% if is_admin %}

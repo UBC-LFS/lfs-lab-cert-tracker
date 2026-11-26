@@ -31,7 +31,7 @@ from .email_coordinator import ApprovalNotificationManager
 
 from .models import Room, ApprovalGroup, ApprovalGroupRole
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus, ApprovalGroupForm
-from .models import Room, UserFilter, RoomEmail, RoomExpiryDate
+from .models import Room, UserFilter, RoomEmail, RoomExpiryDate, RequestFormDisabledRoom
 from .forms import BuildingForm, FloorForm, RoomForm, RequestForm, RequestFormStatus
 from .mixins import RoomActionsMixin
 from . import functions as func
@@ -83,7 +83,7 @@ class RequestView(LoginRequiredMixin, View):
             forms = paginator.page(paginator.num_pages)
 
         for form in forms:
-            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, [room.id for room in form.rooms.all()])
+            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, [room.id for room in form.active_rooms])
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
@@ -237,7 +237,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
     @method_decorator(require_GET)
     def get(self, request, *args, **kwargs):
-        user_trainings, total_missing, total_expired = func.check_user_trainings(self.form.user, [room.id for room in self.form.rooms.all()])
+        user_trainings, total_missing, total_expired = func.check_user_trainings(self.form.user, [room.id for room in self.form.active_rooms])
         self.form.user_trainings = user_trainings
         self.form.total_missing = total_missing
         self.form.total_expired = total_expired
@@ -251,7 +251,7 @@ class ViewFormDetails(LoginRequiredMixin, View):
 
         request_supervisor = self.form.supervisor
 
-        for room in self.form.rooms.all():
+        for room in self.form.active_rooms:
             rooms.add(room)
 
             areas = [area.name for area in room.areas.all()]
@@ -312,7 +312,8 @@ class ViewFormDetails(LoginRequiredMixin, View):
             ),
             reverse=False,
         )
-        self.form.all_approved = all_approved
+        # With every room disabled there are no approvals, so the request is not approved
+        self.form.all_approved = all_approved and bool(rooms)
 
         return render(request, 'key_request/admin/view_form_details.html', {
             'form': self.form,
@@ -623,6 +624,25 @@ def update_all(request):
             messages.warning(request, 'There are no request forms to update.')
     else:
         messages.error(request, "Error! Please select the status, and try again.")
+
+    return HttpResponseRedirect(next_url)
+
+
+@login_required(login_url=settings.LOGIN_URL)
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@access_admin_only
+@require_http_methods(['POST'])
+def disable_room_in_request(request, form_id, room_id):
+    """ Disable a room from a request so it no longer counts towards approval."""
+    next_url = request.POST.get('next')
+    if not next_url:
+        raise SuspiciousOperation
+
+    form = get_object_or_404(RequestForm, id=form_id)
+    room = get_object_or_404(form.rooms, id=room_id)
+
+    RequestFormDisabledRoom.objects.get_or_create(form=form, room=room, defaults={'disabled_by': request.user})
+    messages.success(request, 'Success! {0} has been disabled from request {1}.'.format(func.display_room(room), form.id))
 
     return HttpResponseRedirect(next_url)
 

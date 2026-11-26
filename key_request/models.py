@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.utils.functional import cached_property
 from django.contrib.auth.models import User, Group
 from lfs_lab_cert_tracker.models import Lab, Cert
 from django.db.models import Q, CheckConstraint
@@ -135,6 +136,28 @@ class RequestForm(models.Model):
 
     class Meta:
         ordering = ['-pk', '-submitted_at']
+
+    @cached_property
+    def disabled_room_ids(self):
+        return set(self.disabled_rooms.values_list('room_id', flat=True))
+
+    @property
+    def active_rooms(self):
+        """Rooms in this request that count towards approval (excludes rooms disabled by an admin)."""
+        return self.rooms.exclude(id__in=self.disabled_room_ids)
+
+
+class RequestFormDisabledRoom(models.Model):
+    """ A room an admin has disabled from a request. """
+
+    form = models.ForeignKey(RequestForm, on_delete=models.CASCADE, related_name='disabled_rooms')
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    disabled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='disabled_request_rooms')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('form', 'room')
 
 
 # TODO Change manager to be supervisor; also change the related name

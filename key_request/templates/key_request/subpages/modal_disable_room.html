@@ -1,0 +1,42 @@
+{% load custom_tags %}
+
+<button class="btn btn-outline-danger mt-2 btn-xs" type="button" data-toggle="modal" data-target="#form-disable-rooms-modal-{{ form.id }}">
+  Disable Room(s) From Request
+</button>
+
+<div class="modal fade" id="form-disable-rooms-modal-{{ form.id }}" tabindex="-1" role="dialog" aria-labelledby="form-disable-rooms-modal-label-{{ form.id }}" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-info" id="form-disable-rooms-modal-label-{{ form.id }}">Disable Room(s) From Request</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-left">
+        <p>
+          Request Form ID: {{ form.id }} ({{ form.user.get_full_name }})
+        </p>
+        <p class="text-secondary font-size-sm">
+          Disabled rooms are no longer included in the approval status of this request.
+        </p>
+
+        <ul class="list-group">
+          {% for room in form.rooms.all %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              {% if room.id in form.disabled_room_ids %}
+                <s class="text-secondary">{{ room|display_room }}</s>
+              {% else %}
+                <span>{{ room|display_room }}</span>
+
+                <form class="js-loading-submit" data-loading-text="Disabling..." action="{% url 'key_request:disable_room_in_request' form_id=form.id room_id=room.id %}" method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}" />
+                  <button class="btn btn-outline-danger btn-no-hover btn-xs" type="submit" data-loading-text="Disabling...">Disable</button>
+                </form>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

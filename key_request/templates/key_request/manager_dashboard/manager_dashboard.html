@@ -72,8 +72,15 @@
                 {% include 'key_request/subpages/modal_user_training_records.html' with data=form %}
               </td>
               <td>
-                {{ form.room.building.code }} {{ form.room.floor.name }} <br />
-                Room {{ form.room.number }}
+                {% if form.is_disabled %}
+                  <s class="text-secondary">
+                    {{ form.room.building.code }} {{ form.room.floor.name }} <br />
+                    Room {{ form.room.number }}
+                  </s>
+                {% else %}
+                  {{ form.room.building.code }} {{ form.room.floor.name }} <br />
+                  Room {{ form.room.number }}
+                {% endif %}
               </td>
               <td>{{ form.supervisor.get_full_name }}</td>
               <td>
@@ -85,6 +92,9 @@
                 </span>
               </td>
               <td>
+                {% if form.is_disabled %}
+                  <small>This room is disabled by Admin.</small>
+                {% else %}
                 {% if form.is_new %}
                   <span class="badge badge-light">NEW</span>
                 {% else %}
@@ -94,6 +104,7 @@
 
                 <hr />
                 {% include 'key_request/subpages/update_status_form.html' with post_url=post_url form=form status=form.status status_comment=form.status_comment %}
+                {% endif %}
               </td>
               <td>
                 {% with room_expiry_date=form|room_expiry_date:form.room.id %}
@@ -105,6 +116,7 @@
                     N/A
                   {% endif %}
 
+                  {% if not form.is_disabled %}
                   {% if form.label == "Room Supervisor" or form.label == "Group" or request.user.is_superuser %}
                     <hr />
                     <form class="js-loading-submit" data-loading-text="Updating..." action="{% url 'key_request:update_expiry_date' %}" method="post">
@@ -118,9 +130,11 @@
                       <input class="btn btn-{% if form.expiry_date %}secondary{% else %}warning{% endif %} btn-xs" type="submit" value="Update" />
                     </form>
                   {% endif %}
+                  {% endif %}
                 {% endwith %}
               </td>
               <td>
+                {% if not form.is_disabled %}
                 <input class="room-checkbox" type="checkbox"
                   value="{{ form.request_form_identifier }}"
                   data-id="{{ forloop.counter }}"
@@ -130,6 +144,7 @@
                   data-number="{{ form.room.number }}"
                   data-is_new="{% if form.is_new %}true{% else %}false{% endif %}"
                 />
+                {% endif %}
               </td>
             </tr>
           {% empty %}

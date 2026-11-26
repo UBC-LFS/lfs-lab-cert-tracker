@@ -60,7 +60,7 @@ class ManagerDashboard(LoginRequiredMixin, View):
             forms = paginator.page(paginator.num_pages)
 
         for form in forms:
-            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, [room.id for room in form.rooms.all()])
+            user_trainings, total_missing, total_expired = func.check_user_trainings(form.user, [room.id for room in form.active_rooms])
             form.user_trainings = user_trainings
             form.total_missing = total_missing
             form.total_expired = total_expired
