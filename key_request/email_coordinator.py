@@ -215,7 +215,7 @@ class ApprovalNotificationManager:
 
     def _make_manager_message(self, manager, room_info):
         """PI email not the operator."""
-        subject = "Notification: Request Approval at UBC LFS"
+        subject = "Request Approved for {}".format(display_user_full_name(manager))
         message = '''\
         <div>
             <p>Hi {0},</p>
