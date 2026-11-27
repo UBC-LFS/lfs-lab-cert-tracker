@@ -336,20 +336,11 @@ class ApplicantRequestFormProcessor:
                     pending_room_supervisor = True
 
             for group in room.groups.all():
-                group_decisions = RequestFormStatus.objects.filter(
+                latest_group_decision = RequestFormStatus.objects.filter(
                     form_id=form.id,
                     room_id=room.id,
-                ).filter(
-                    Q(group_id=group.id)
-                    | Q(
-                        manager_id__in=group.members.values('id'),
-                        supervisor_type__in=[
-                            RequestFormStatus.SupervisorType.REQUEST.value,
-                            RequestFormStatus.SupervisorType.ROOM.value,
-                        ],
-                    )
-                )
-                latest_group_decision = group_decisions.order_by('-created_at').first()
+                    group_id=group.id,
+                ).order_by('-created_at').first()
                 if latest_group_decision is None or latest_group_decision.status != APPROVED:
                     pending_room_supervisor = True
 
